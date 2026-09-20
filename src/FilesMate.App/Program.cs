@@ -1,6 +1,7 @@
 using FilesMate.App.Navigation;
 using FilesMate.App.Services;
 using FilesMate.Platform.Windows.Associations;
+using FilesMate.Platform.Windows.Processes;
 
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -28,6 +29,23 @@ public static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // Installed copies may be started by a terminal, installer or development tool. Leave its closing
+        // job before taking the single-instance lock or consuming a language-restart session.
+        if (!IsUiTestBuild && args is not ["--unregister-folder-handler"] && DetachedProcess.IsInKillOnCloseJob())
+        {
+            try
+            {
+                if (Array.IndexOf(args, "--detached") >= 0)
+                    throw new System.ComponentModel.Win32Exception("The file manager still belongs to a closing job after relaunch.");
+                DetachedProcess.Start(Environment.ProcessPath!, [.. args, "--detached"]);
+            }
+            catch (System.ComponentModel.Win32Exception error)
+            {
+                App.LogFailure("IndependentLaunch", error);
+                Environment.ExitCode = 1;
+            }
+            return;
+        }
         var restartIndex = Array.IndexOf(args, "--language-restart");
         if (restartIndex >= 0)
         {
@@ -70,7 +88,8 @@ public static class Program
 
         WinRT.ComWrappersSupport.InitializeComWrappers();
         var argv = Environment.GetCommandLineArgs().Where(arg =>
-            !arg.Equals("--native-shell", StringComparison.OrdinalIgnoreCase)
+            !arg.Equals("--detached", StringComparison.Ordinal)
+            && !arg.Equals("--native-shell", StringComparison.OrdinalIgnoreCase)
             && !arg.Equals("--no-native-shell", StringComparison.OrdinalIgnoreCase)).ToArray();
         TryParkWorkingDirectory();
         var launch = LanguageRestart is null ? LaunchPath.Parse(argv) : new LaunchTarget(null, null, "general");

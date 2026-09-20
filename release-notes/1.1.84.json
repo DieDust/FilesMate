@@ -1,0 +1,5 @@
+{
+  "zh-CN": "修复从安装器或开发工具启动后，文件管理器、后台搜索及其打开的程序可能随启动工具一起退出的问题。启动程序时验证进程组隔离，正确处理嵌套进程组，并统一文件双击、新窗口、预览链接及 CompactMate 的启动方式。",
+  "en-US": "Fixed an issue where the file manager, background search and applications opened through them could exit when the installer or development tool that started FilesMate closed. Process launches now verify isolation from nested jobs. File activation, new windows, preview links and CompactMate use the same independent launch path.",
+  "ja-JP": "インストーラーや開発ツールから起動した場合に、起動元の終了とともにファイルマネージャー、バックグラウンド検索、およびそこから開いたアプリも終了する問題を修正しました。入れ子のジョブから起動プロセスが分離されていることを確認します。ファイルを開く操作、新規ウィンドウ、プレビューのリンク、CompactMate の起動方法を統一しました。"
+}

@@ -41,23 +41,30 @@ public static class DetachedProcess
         var directory = Path.GetDirectoryName(executable);
         var flags = hidden ? Kernel32.CreateNoWindow : 0u;
         if (TryCreateProcess(executable, arguments, directory, flags | Kernel32.CreateBreakawayFromJob, out var pid, out var error)) return pid;
-        // ACCESS_DENIED here means the job disallows breakaway. Explorer lives outside every tool job, so let
-        // the desktop shell create the process; failing that, inherit the job rather than not launching at all.
+        // A successful CREATE_BREAKAWAY_FROM_JOB can leave the child inside an outer job. The child is
+        // checked while suspended below, before it can execute user code. Delegate to the desktop shell
+        // if any job remains; never silently retry with inherited lifetime.
         if (error != Kernel32.ErrorAccessDenied || !IsInJob()) throw new Win32Exception(error);
         if (TryOpenViaExplorer(executable, JoinArguments(arguments), directory: directory)) return 0;
-        if (TryCreateProcess(executable, arguments, directory, flags, out pid, out error)) return pid;
         throw new Win32Exception(error);
     }
 
     /// <summary>
     /// Opens a shell target (file, folder, URL, shortcut or <c>shell:AppsFolder\…</c> item) with its default
-    /// verb. Inside a kill-on-close job the launch is delegated to Explorer so the target survives us.
+    /// verb. Inside a job the launch is delegated to Explorer so the target does not inherit our lifetime.
     /// </summary>
-    public static void Open(string target, string? arguments = null)
+    public static void Open(string target, string? arguments = null, string? directory = null)
     {
-        if (IsInKillOnCloseJob() && TryOpenViaExplorer(target, arguments)) return;
+        // QueryInformationJobObject only describes the immediate job, not every ancestor. Shell targets
+        // cannot be suspended and checked like executables, so delegate whenever any job is present.
+        if (IsInJob())
+        {
+            if (TryOpenViaExplorer(target, arguments, directory: directory)) return;
+            throw new Win32Exception(Kernel32.ErrorAccessDenied, "Could not start the application independently through Windows Explorer.");
+        }
         var start = new ProcessStartInfo(target) { UseShellExecute = true };
         if (arguments is not null) start.Arguments = arguments;
+        if (directory is not null) start.WorkingDirectory = directory;
         using var process = Process.Start(start);
     }
 
@@ -104,17 +111,43 @@ public static class DetachedProcess
     {
         var startup = new STARTUPINFOW { cb = Marshal.SizeOf<STARTUPINFOW>() };
         var commandLine = new StringBuilder(BuildCommandLine(executable, arguments));
-        if (!Kernel32.CreateProcess(executable, commandLine, 0, 0, false, flags, 0, directory, ref startup, out var process))
+        if (!Kernel32.CreateProcess(executable, commandLine, 0, 0, false, flags | Kernel32.CreateSuspended, 0, directory, ref startup, out var process))
         {
             error = Marshal.GetLastWin32Error();
             pid = 0;
             return false;
         }
-        Kernel32.CloseHandle(process.hThread);
-        Kernel32.CloseHandle(process.hProcess);
-        error = 0;
-        pid = process.dwProcessId;
-        return true;
+        var resumed = false;
+        pid = 0;
+        try
+        {
+            if (!Kernel32.IsProcessInJob(process.hProcess, 0, out var inJob))
+            {
+                error = Marshal.GetLastWin32Error();
+                return false;
+            }
+            if (inJob)
+            {
+                error = Kernel32.ErrorAccessDenied;
+                return false;
+            }
+            if (Kernel32.ResumeThread(process.hThread) == uint.MaxValue)
+            {
+                error = Marshal.GetLastWin32Error();
+                return false;
+            }
+            resumed = true;
+            error = 0;
+            pid = process.dwProcessId;
+            return true;
+        }
+        finally
+        {
+            // This is only our newly created, still-suspended child. It has executed no application code.
+            if (!resumed) Kernel32.TerminateProcess(process.hProcess, 1);
+            Kernel32.CloseHandle(process.hThread);
+            Kernel32.CloseHandle(process.hProcess);
+        }
     }
 
     /// <summary>Builds a CreateProcess command line that CommandLineToArgvW parses back into the same arguments.</summary>

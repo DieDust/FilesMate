@@ -33,7 +33,11 @@ internal static class ApplicationShell
         }
         // Launching in-process makes the application our child, so it would inherit any kill-on-close job we
         // could not leave. Explorer sits outside such jobs; let it invoke the AppsFolder item for us.
-        if (DetachedProcess.IsInKillOnCloseJob() && DetachedProcess.TryOpenViaExplorer(entry.LaunchPath)) return;
+        if (DetachedProcess.IsInJob())
+        {
+            DetachedProcess.Open(entry.LaunchPath);
+            return;
+        }
         // Shell.Application can return the same RCW to the catalog and launcher
         // threads. FinalReleaseComObject on either thread then disconnects the
         // other caller while it is still invoking the item. Let the runtime own

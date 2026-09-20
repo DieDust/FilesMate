@@ -23,6 +23,7 @@
     <Project Path="tests/FilesMate.IntegrationTests/FilesMate.IntegrationTests.csproj" />
     <Project Path="tests/FilesMate.PerformanceTests/FilesMate.PerformanceTests.csproj" />
     <Project Path="tests/FilesMate.Platform.Windows.Tests/FilesMate.Platform.Windows.Tests.csproj" />
+    <Project Path="tests/FilesMate.ProcessIsolation.Fixture/FilesMate.ProcessIsolation.Fixture.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/FilesMate.BrandAssets/FilesMate.BrandAssets.csproj" />

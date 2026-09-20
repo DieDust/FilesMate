@@ -604,7 +604,7 @@ public sealed partial class PreviewPane : UserControl
                     if (args.Cancel && args.IsUserInitiated && Uri.TryCreate(args.Uri, UriKind.Absolute, out var link)
                         && link.Host != "filesmate-preview.local" && link.Scheme is "https" or "http")
                     {
-                        try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(link.AbsoluteUri) { UseShellExecute = true }); }
+                        try { FilesMate.Platform.Windows.Processes.DetachedProcess.Open(link.AbsoluteUri); }
                         catch (Exception error) when (error is System.ComponentModel.Win32Exception or InvalidOperationException) { ShowDetails(Loc.Get("Preview_LinkFailed")); }
                     }
                 };

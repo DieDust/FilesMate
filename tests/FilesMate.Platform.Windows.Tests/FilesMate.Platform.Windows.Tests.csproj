@@ -20,6 +20,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\FilesMate.Platform.Windows\FilesMate.Platform.Windows.csproj" />
+    <ProjectReference Include="..\FilesMate.ProcessIsolation.Fixture\FilesMate.ProcessIsolation.Fixture.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
+  <Target Name="CopyProcessIsolationFixture" AfterTargets="Build">
+    <ItemGroup>
+      <IsolationFixtureFiles Include="$(MSBuildProjectDirectory)\..\FilesMate.ProcessIsolation.Fixture\bin\$(Configuration)\net10.0\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(IsolationFixtureFiles)" DestinationFolder="$(OutDir)ProcessIsolationFixture\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

@@ -65,13 +65,21 @@ public static class Program
             return;
         }
         if (Array.IndexOf(args, "--background") >= 0 && Array.IndexOf(args, "--configure") < 0 && !FeatureSetup.Load(profile).Completed) return;
-        if (Array.IndexOf(args, "--detached") < 0 && DetachedProcess.IsInKillOnCloseJob())
+        if (DetachedProcess.IsInKillOnCloseJob())
         {
-            // Whoever started us (installer, terminal, IDE agent, file manager) wrapped us in a job that dies
-            // with them. A resident hotkey listener must not, and neither may the applications it launches:
-            // continue as a fresh process outside that job. "--detached" stops a nested job from looping this.
-            try { DetachedProcess.Start(Environment.ProcessPath!, [.. args, "--detached"]); return; }
-            catch (System.ComponentModel.Win32Exception error) { Trace.TraceWarning("Could not leave the parent job: " + error.Message); }
+            // The marker limits relaunch attempts; it must never override the actual job membership.
+            try
+            {
+                if (Array.IndexOf(args, "--detached") >= 0)
+                    throw new System.ComponentModel.Win32Exception("The search process still belongs to a closing job after relaunch.");
+                DetachedProcess.Start(Environment.ProcessPath!, [.. args, "--detached"]);
+            }
+            catch (System.ComponentModel.Win32Exception error)
+            {
+                Trace.TraceError("Could not leave the parent job: " + error.Message);
+                Environment.ExitCode = 1;
+            }
+            return;
         }
         using var mutex = new Mutex(true, @"Local\" + GlobalSearchConfiguration.PipeName(profile), out var created);
         if (!created)

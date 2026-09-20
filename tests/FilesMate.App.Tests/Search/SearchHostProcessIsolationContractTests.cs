@@ -39,7 +39,7 @@ public sealed class SearchHostProcessIsolationContractTests
         Assert.Contains("DetachedProcess.Start(ManagerPath, [\"--search-action\", id])", program, StringComparison.Ordinal);
         var shell = File.ReadAllText(Path.Combine(HostRoot, "ApplicationShell.cs"));
         Assert.Contains("DetachedProcess.Open(entry.LaunchPath)", shell, StringComparison.Ordinal);
-        Assert.Contains("DetachedProcess.TryOpenViaExplorer(entry.LaunchPath)", shell, StringComparison.Ordinal);
+        Assert.Contains("DetachedProcess.IsInJob()", shell, StringComparison.Ordinal);
         Assert.Contains("DetachedProcess.Open(row.Path)", File.ReadAllText(Path.Combine(HostRoot, "PaletteWindow.xaml.cs")), StringComparison.Ordinal);
         Assert.Contains("DetachedProcess.Open(link.AbsoluteUri)", File.ReadAllText(Path.Combine(HostRoot, "PaletteWindow.Documents.cs")), StringComparison.Ordinal);
     }

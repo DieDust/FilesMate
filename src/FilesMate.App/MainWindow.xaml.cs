@@ -1356,12 +1356,7 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        Process.Start(new ProcessStartInfo
-        {
-            FileName = exe,
-            Arguments = "\"" + path + "\"",
-            UseShellExecute = true,
-        });
+        FilesMate.Platform.Windows.Processes.DetachedProcess.Start(exe, [path]);
     }
 
     public void OpenSettings(string? section = null)

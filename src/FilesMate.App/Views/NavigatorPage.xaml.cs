@@ -1910,7 +1910,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             // Keep that wait on an STA worker so the navigator continues painting.
             await ShellOperationWorker.RunAsync(() =>
             {
-                using var process = Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+                FilesMate.Platform.Windows.Processes.DetachedProcess.Open(path);
             });
         }
         catch (Exception ex)

@@ -7,6 +7,7 @@ internal static partial class Kernel32
 {
     internal const uint CreateBreakawayFromJob = 0x01000000;
     internal const uint CreateNoWindow = 0x08000000;
+    internal const uint CreateSuspended = 0x00000004;
 
     internal const uint JobObjectLimitKillOnJobClose = 0x00002000;
     internal const int JobObjectExtendedLimitInformation = 9;
@@ -31,6 +32,13 @@ internal static partial class Kernel32
 
     [DllImport("kernel32.dll", ExactSpelling = true)]
     internal static extern nint GetCurrentProcess();
+
+    [DllImport("kernel32.dll", ExactSpelling = true, SetLastError = true)]
+    internal static extern uint ResumeThread(nint thread);
+
+    [DllImport("kernel32.dll", ExactSpelling = true, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool TerminateProcess(nint process, uint exitCode);
 
     [DllImport("kernel32.dll", ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
