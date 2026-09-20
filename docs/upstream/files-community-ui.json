@@ -1,0 +1,18 @@
+{
+  "upstreamRepository": "https://github.com/files-community/Files",
+  "upstreamCommit": "abdfcb543adc7fcdf7f75672feb83760c48d9087",
+  "licenseEvidence": {
+    "project": "src/Files.App/Files.App.csproj",
+    "projectHeader": "Copyright (c) Files Community. Licensed under the MIT License.",
+    "licenseFile": "LICENSE-MIT"
+  },
+  "files": [
+    {
+      "source": "src/Files.App/Styles/TabBarStyles.xaml",
+      "sourceBlob": "b57dc3d3d9fec860b5a5e892696efc1a060dd5bd",
+      "target": "src/FilesMate.App/Themes/TabBarStyles.xaml",
+      "license": "MIT",
+      "adaptation": "Resource keys and control-template bindings adapted for FilesMate."
+    }
+  ]
+}

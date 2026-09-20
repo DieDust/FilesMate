@@ -1,0 +1,328 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="FilesMate.App.Views.NavigatorPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:glass="using:FilesMate.App.Controls.Glass"
+    xmlns:favorites="using:FilesMate.App.Controls.Favorites"
+    xmlns:home="using:FilesMate.App.Controls.Home"
+    xmlns:nav="using:FilesMate.App.Controls.Navigation"
+    xmlns:omni="using:FilesMate.App.Controls.Omnibar"
+    xmlns:panes="using:FilesMate.App.Controls.Panes"
+    xmlns:preview="using:FilesMate.App.Controls.Preview"
+    xmlns:surface="using:FilesMate.App.Controls.FileSurface"
+    xmlns:toolbar="using:FilesMate.App.Controls.Toolbar"
+    Background="Transparent"
+    Loaded="Page_Loaded">
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator Invoked="BackAccelerator_Invoked" Key="Left" Modifiers="Menu" />
+        <KeyboardAccelerator Invoked="ForwardAccelerator_Invoked" Key="Right" Modifiers="Menu" />
+        <KeyboardAccelerator Invoked="UpAccelerator_Invoked" Key="Up" Modifiers="Menu" />
+        <KeyboardAccelerator
+            x:Name="AddressEditAccelerator"
+            Invoked="AddressEditAccelerator_Invoked"
+            Key="L"
+            Modifiers="Control" />
+        <KeyboardAccelerator
+            x:Name="SearchAccelerator"
+            Invoked="SearchAccelerator_Invoked"
+            Key="F"
+            Modifiers="Control" />
+        <KeyboardAccelerator x:Name="RefreshAccelerator" Invoked="RefreshAccelerator_Invoked" Key="F5" />
+        <KeyboardAccelerator Invoked="ClosePaneAccelerator_Invoked" Key="Escape" />
+        <KeyboardAccelerator x:Name="CutAccelerator" Invoked="CutAccelerator_Invoked" Key="X" Modifiers="Control" />
+        <KeyboardAccelerator x:Name="CopyAccelerator" Invoked="CopyAccelerator_Invoked" Key="C" Modifiers="Control" />
+        <KeyboardAccelerator x:Name="CopyPathAccelerator" Invoked="CopyPathAccelerator_Invoked" Key="C" Modifiers="Control,Shift" />
+        <KeyboardAccelerator x:Name="PasteAccelerator" Invoked="PasteAccelerator_Invoked" Key="V" Modifiers="Control" />
+        <KeyboardAccelerator x:Name="UndoAccelerator" Invoked="UndoAccelerator_Invoked" Key="Z" Modifiers="Control" />
+        <KeyboardAccelerator x:Name="RedoAccelerator" Invoked="RedoAccelerator_Invoked" Key="Y" Modifiers="Control" />
+        <KeyboardAccelerator x:Name="NewFolderAccelerator" Invoked="NewFolderAccelerator_Invoked" Key="N" Modifiers="Control,Shift" />
+        <KeyboardAccelerator x:Name="RenameAccelerator" Invoked="RenameAccelerator_Invoked" Key="F2" />
+        <KeyboardAccelerator x:Name="RecycleAccelerator" Invoked="RecycleAccelerator_Invoked" Key="Delete" />
+        <KeyboardAccelerator x:Name="PermanentDeleteAccelerator" Invoked="PermanentDeleteAccelerator_Invoked" Key="Delete" Modifiers="Shift" />
+        <KeyboardAccelerator x:Name="PropertiesAccelerator" Invoked="PropertiesAccelerator_Invoked" Key="Enter" Modifiers="Menu" />
+        <KeyboardAccelerator x:Name="TerminalAccelerator" Invoked="TerminalAccelerator_Invoked" Key="T" Modifiers="Control,Menu" />
+        <KeyboardAccelerator x:Name="PreviewAccelerator" Invoked="PreviewAccelerator_Invoked" Key="P" Modifiers="Menu" />
+        <KeyboardAccelerator x:Name="DualPaneAccelerator" Invoked="DualPaneAccelerator_Invoked" Key="S" Modifiers="Control,Shift" />
+        <KeyboardAccelerator x:Name="CommandPaletteAccelerator" Invoked="CommandPaletteAccelerator_Invoked" Key="P" Modifiers="Control,Shift" />
+    </Page.KeyboardAccelerators>
+    <Grid x:Name="ShellRoot">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="WidthStates">
+                <VisualStateGroup.Transitions>
+                    <VisualTransition GeneratedDuration="0:0:0" />
+                </VisualStateGroup.Transitions>
+                <VisualState x:Name="Narrow">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ShellSplit.DisplayMode" Value="Inline" />
+                        <Setter Target="Omni.ForceCompactNav" Value="True" />
+                        <Setter Target="Commands.ShowCommandLabels" Value="False" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Compact">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="720" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ShellSplit.DisplayMode" Value="Inline" />
+                        <Setter Target="Omni.ForceCompactNav" Value="True" />
+                        <Setter Target="Commands.ShowCommandLabels" Value="False" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Medium">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="900" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ShellSplit.DisplayMode" Value="Inline" />
+                        <Setter Target="Omni.ForceCompactNav" Value="False" />
+                        <Setter Target="Commands.ShowCommandLabels" Value="False" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1180" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="ShellSplit.DisplayMode" Value="Inline" />
+                        <Setter Target="Omni.ForceCompactNav" Value="False" />
+                        <Setter Target="Commands.ShowCommandLabels" Value="True" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <SplitView
+            x:Name="ShellSplit"
+            Background="{ThemeResource FilesMate.FileArea.BackgroundBrush}"
+            CompactPaneLength="52"
+            DisplayMode="Inline"
+            OpenPaneLength="236"
+            PaneBackground="Transparent"
+            PaneOpened="ShellSplit_PaneOpened">
+            <SplitView.Pane>
+                <glass:LiquidGlassSurface
+                    x:Name="SidebarHost"
+                    Background="{ThemeResource FilesMate.Sidebar.BackgroundBrush}"
+                    BorderBrush="{ThemeResource FilesMate.Shell.SeparatorBrush}"
+                    BorderThickness="0,0,1,0"
+                    CornerRadius="0"
+                    Shadow="{x:Null}"
+                    SurfaceKind="Sidebar"
+                    Style="{StaticResource FilesMate.LiquidGlassSurfaceStyle}">
+                    <Grid>
+                        <nav:NavigationSidebar
+                            x:Name="Sidebar"
+                            PinnedLocationsChanged="Sidebar_PinnedLocationsChanged"
+                            PlaceChosen="Places_PlaceChosen"
+                            OpenInNewTabRequested="Sidebar_OpenInNewTabRequested"
+                            OpenInNewWindowRequested="Sidebar_OpenInNewWindowRequested"
+                            WhoLocksRequested="Sidebar_WhoLocksRequested"
+                            SettingsClicked="Sidebar_SettingsClicked" />
+                        <Border
+                            x:Name="PaneResizeThumb"
+                            Width="6"
+                            HorizontalAlignment="Right"
+                            Background="Transparent"
+                            PointerPressed="PaneResize_PointerPressed"
+                            PointerMoved="PaneResize_PointerMoved"
+                            PointerReleased="PaneResize_PointerReleased"
+                            PointerEntered="PaneResize_PointerEntered"
+                            PointerExited="PaneResize_PointerExited"
+                            PointerCaptureLost="PaneResize_PointerCaptureLost" />
+                    </Grid>
+                </glass:LiquidGlassSurface>
+            </SplitView.Pane>
+            <Grid x:Name="ContentRoot">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border
+                    x:Name="ContentChrome"
+                    Background="{ThemeResource FilesMate.CommandBar.BackgroundBrush}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="{StaticResource FilesMate.Row.Omnibar}" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="{StaticResource FilesMate.Row.CommandBar}" />
+                        </Grid.RowDefinitions>
+
+                        <Grid
+                            x:Name="OmnibarRow"
+                            Padding="8,4,12,0"
+                            ColumnSpacing="{StaticResource FilesMate.Space.2}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button
+                                x:Name="PaneToggle"
+                                Click="PaneToggle_Click"
+                                AutomationProperties.Name="Show navigation"
+                                Style="{StaticResource ToolbarIconButtonStyle}"
+                                ToolTipService.ToolTip="Show navigation"
+                                Visibility="Visible">
+                                <FontIcon x:Name="PaneToggleIcon" FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE76B;" />
+                            </Button>
+                            <omni:Omnibar
+                                x:Name="Omni"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                BackClicked="Toolbar_BackClicked"
+                                CrumbClicked="Address_CrumbClicked"
+                                SearchChosen="Omni_SearchChosen"
+                                ForwardClicked="Toolbar_ForwardClicked"
+                                ModeCanceled="Omni_ModeCanceled"
+                                PathSubmitted="Omni_PathSubmitted"
+                                RefreshClicked="Toolbar_RefreshClicked"
+                                UpClicked="Toolbar_UpClicked" />
+                        </Grid>
+
+                        <favorites:FavoritesBar x:Name="Favorites" Grid.Row="1" />
+                        <Grid
+                            x:Name="CommandBarRow"
+                            Grid.Row="2"
+                            Padding="4,0,8,4">
+                            <glass:LiquidGlassSurface
+                                x:Name="CommandBarCard"
+                                SurfaceKind="Command"
+                                Style="{StaticResource FilesMate.CommandBarCardStyle}">
+                                <toolbar:AdaptiveCommandToolbar
+                                    x:Name="Commands"
+                                    HorizontalAlignment="Stretch"
+                                    CommandInvoked="Commands_CommandInvoked"
+                                    CopyPathClicked="Commands_CopyPathClicked"
+                                    DualPaneClicked="Commands_DualPaneClicked"
+                                    FolderSizesClicked="Commands_FolderSizesClicked"
+                                    LayoutChanged="Commands_LayoutChanged"
+                                    PreviewClicked="Commands_PreviewClicked"
+                                    SortRequested="Commands_SortRequested" />
+                            </glass:LiquidGlassSurface>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Grid
+                    x:Name="FilePaneRow"
+                    Grid.Row="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition x:Name="PreviewSplitterColumn" Width="0" />
+                            <ColumnDefinition x:Name="PreviewColumn" Width="0" />
+                        </Grid.ColumnDefinitions>
+                        <panes:WorkspaceSplitView x:Name="WorkspaceSplit">
+                            <panes:WorkspaceSplitView.LeftContent>
+                                <surface:FilePaneChrome
+                                    x:Name="PaneChrome"
+                                    IsActive="True"
+                                    GoUpRequested="PaneChrome_GoUpRequested"
+                                    RetryRequested="PaneChrome_RetryRequested">
+                                    <Grid>
+                                        <surface:FileDetailsSurface
+                                            x:Name="FileSurface"
+                                            CopyPathRequested="FileSurface_CopyPathRequested"
+                                            OpenInNewTabRequested="FileSurface_OpenInNewTabRequested"
+                                            OpenRequested="FileSurface_OpenRequested"
+                                            RefreshRequested="FileSurface_RefreshRequested"
+                                            SelectionChanged="FileSurface_SelectionChanged"
+                                            SortRequested="FileSurface_SortRequested"
+                                            UpRequested="FileSurface_UpRequested"
+                                            BackRequested="FileSurface_BackRequested"
+                                            ForwardRequested="FileSurface_ForwardRequested" />
+                                        <ContentControl
+                                            x:Name="HomeContainer"
+                                            Visibility="Collapsed"
+                                            HorizontalContentAlignment="Stretch"
+                                            VerticalContentAlignment="Stretch" />
+                                    </Grid>
+                                </surface:FilePaneChrome>
+                            </panes:WorkspaceSplitView.LeftContent>
+                        </panes:WorkspaceSplitView>
+                        <Border
+                            x:Name="PreviewResizeThumb"
+                            Grid.Column="1"
+                            Width="6"
+                            Background="Transparent"
+                            Visibility="Collapsed"
+                            PointerPressed="PreviewResize_PointerPressed"
+                            PointerMoved="PreviewResize_PointerMoved"
+                            PointerReleased="PreviewResize_PointerReleased"
+                            PointerEntered="PreviewResize_PointerEntered"
+                            PointerExited="PreviewResize_PointerExited"
+                            PointerCaptureLost="PreviewResize_PointerCaptureLost" />
+                        <ContentControl
+                            x:Name="PreviewContainer"
+                            Grid.Column="2"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch"
+                            Margin="0,0,8,8"
+                            Visibility="Collapsed" />
+                    </Grid>
+                </Grid>
+            </Grid>
+        </SplitView>
+        <Grid
+            x:Name="LockOverlay"
+            Canvas.ZIndex="40"
+            Visibility="Collapsed">
+            <Border
+                Background="{ThemeResource FilesMate.SettingsOverlay.ScrimBrush}"
+                Tapped="LockOverlayScrim_Tapped" />
+            <Border
+                MinWidth="360"
+                MaxWidth="640"
+                Margin="28"
+                Padding="20,16"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="{ThemeResource FilesMate.Menu.BackgroundBrush}"
+                BorderBrush="{ThemeResource FilesMate.Card.BorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock
+                        x:Name="LockOverlayTitle"
+                        Margin="0,0,0,12"
+                        FontSize="20"
+                        FontWeight="SemiBold"
+                        Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+                    <ContentControl
+                        x:Name="LockOverlayHost"
+                        Grid.Row="1"
+                        Margin="0,0,0,12"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        VerticalContentAlignment="Stretch" />
+                    <Button
+                        x:Name="LockOverlayClose"
+                        Grid.Row="2"
+                        MinWidth="84"
+                        HorizontalAlignment="Right"
+                        Click="LockOverlayClose_Click"
+                        Style="{StaticResource GlassButtonStyle}" />
+                </Grid>
+            </Border>
+        </Grid>
+        <Border x:Name="ShelfCard" Canvas.ZIndex="45" Visibility="Collapsed"
+                Width="360" HorizontalAlignment="Left" VerticalAlignment="Top"
+                Background="Transparent"
+                BorderBrush="{ThemeResource FilesMate.LiquidGlass.BorderBrush}" BorderThickness="1" CornerRadius="12">
+            <Grid>
+                <glass:FrostedBackdrop CornerRadius="11" Visibility="{Binding Visibility, ElementName=ShelfCard}" />
+                <ContentControl x:Name="ShelfContent" HorizontalContentAlignment="Stretch" />
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

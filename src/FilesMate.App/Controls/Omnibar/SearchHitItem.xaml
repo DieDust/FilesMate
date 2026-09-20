@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="FilesMate.App.Controls.Omnibar.SearchHitItem"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    IsTabStop="False">
+    <Grid ColumnSpacing="10" MinHeight="40" Padding="0,4">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="20" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid Width="20" Height="20" VerticalAlignment="Center">
+            <FontIcon
+                x:Name="Glyph"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                FontFamily="Segoe Fluent Icons"
+                FontSize="16"
+                Glyph="&#xE8A5;" />
+            <Image
+                x:Name="IconImage"
+                Width="20"
+                Height="20"
+                Stretch="Uniform"
+                Visibility="Collapsed" />
+        </Grid>
+        <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+            <TextBlock x:Name="NameText" FontSize="14" Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}" TextTrimming="CharacterEllipsis" />
+            <TextBlock
+                x:Name="PathText"
+                FontSize="12"
+                Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                TextTrimming="CharacterEllipsis" />
+        </StackPanel>
+    </Grid>
+</UserControl>

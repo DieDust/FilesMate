@@ -1,0 +1,5 @@
+{
+  "zh-CN": "补齐同名文件的替换选项，与跳过、保留两者一起显示。冲突弹窗并排展示双方路径、大小和修改时间，并标注较新的项目；确认按钮随所选操作变化。同名文件夹仍采用合并，并单独询问内部文件冲突。替换前完整准备新文件，保留旧版本供当前会话撤销和重做，历史失效时清理备份。保护被占用的文件、弹窗期间发生变化的文件和撤销前的新修改；批量规则区分文件、文件夹和类型冲突。新增界面及真实文件回归测试。",
+  "en-US": "Added Replace alongside Skip and Keep both for conflicting files. The dialog compares paths, sizes and modification times, marks the newer item, and labels the confirmation button for the selected action. Matching folders are merged with separate prompts for conflicting files inside. Replacements are prepared before publication and previous versions are retained for undo and redo within the current session, then cleaned up when their history expires. Added protections for locked files, changed comparisons and edits made before undo, with separate batch policies for files, folders and type conflicts. Added UI and real-file regression tests.",
+  "ja-JP": "同名ファイルに「置き換える」を追加し、「スキップ」「両方を保持」と選択できるようにしました。双方のパス、サイズ、更新日時を並べ、新しい項目を表示します。確認ボタンの表示も選択した操作に合わせます。同名フォルダーは統合し、内部のファイルの競合は別途確認します。新しいファイルを準備してから置き換え、現在のセッションで元に戻す・やり直す操作ができるよう以前の内容を保持し、履歴が失効するとバックアップを削除します。使用中のファイル、確認中の変更、取り消し前の編集を保護し、ファイル・フォルダー・種類の競合ごとに一括処理を分けました。実ファイルと画面の回帰テストも追加しました。"
+}

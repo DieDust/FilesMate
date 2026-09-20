@@ -1,0 +1,79 @@
+## Build
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+artifacts/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+project.lock.json
+project.fragment.lock.json
+
+## Visual Studio / IDEs
+.vs/
+.idea/
+*.rsuser
+*.DotSettings.user
+*.code-workspace
+
+## NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+## Test / coverage
+TestResults/
+[Cc]overage/
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+
+## BenchmarkDotNet
+BenchmarkDotNet.Artifacts/
+
+## WinUI / MSIX
+AppPackages/
+BundleArtifacts/
+Package.StoreAssociation.xml
+_pkginfo.txt
+*.appx
+*.appxbundle
+*.appxupload
+*.msix
+*.msixbundle
+*.pri
+*.pdb
+!src/**/*.pdb
+
+## Generated data
+**/FilesMatePerf*/
+**/perf-data/
+
+## OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.stackdump
+
+## Secrets
+update-signing.key
+*.pfx
+*.p12
+.env
+.env.*
+*.snk
+
+## Local assistant settings and signing credentials
+.claude/
+.codex/
+*.key
+*.pem
+*.cer
+*.crt
+*.capture.json

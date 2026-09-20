@@ -1,0 +1,33 @@
+<UserControl x:Class="FilesMate.App.Views.UpdateProgressView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:loc="using:FilesMate.App.Localization">
+    <StackPanel Spacing="20">
+        <StackPanel Spacing="4">
+            <TextBlock x:Name="VersionLabel" FontSize="13" TextWrapping="Wrap" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"/>
+            <TextBlock x:Name="DemoLabel" Text="{loc:LocalizedText Key=Update_DemoProgress}" Visibility="Collapsed"
+                       TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"/>
+        </StackPanel>
+        <StackPanel Spacing="8">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock x:Name="StatusText" Text="{loc:LocalizedText Key=Update_Connecting}" TextWrapping="Wrap" Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"/>
+                <TextBlock x:Name="PercentText" Grid.Column="1" Text="0%" Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"/>
+            </Grid>
+            <ProgressBar x:Name="DownloadProgress" Minimum="0" Maximum="100" Value="0" Height="4"/>
+            <TextBlock x:Name="BytesText" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"/>
+        </StackPanel>
+        <StackPanel x:Name="NotesSection" Spacing="8">
+            <TextBlock Text="{loc:LocalizedText Key=Update_ReleaseNotes}" FontSize="13" FontWeight="SemiBold" Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"/>
+            <ScrollViewer MaxHeight="120" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <TextBlock x:Name="NotesText" TextWrapping="Wrap" FontSize="13" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"/>
+            </ScrollViewer>
+        </StackPanel>
+        <Grid ColumnSpacing="16" Padding="0,4,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <TextBlock x:Name="FooterText" Text="{loc:LocalizedText Key=Update_InstallHint}" FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap"
+                       Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"/>
+            <Button x:Name="CancelButton" Grid.Column="1" Content="{loc:LocalizedText Key=Update_CancelDownload}" Padding="14,5" MinWidth="88" Click="Cancel_Click"/>
+        </Grid>
+    </StackPanel>
+</UserControl>

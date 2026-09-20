@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="FilesMate.App.Views.FileLockDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:FilesMate.App.Views"
+    xmlns:sidebar="using:FilesMate.App.Controls.Navigation"
+    Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}">
+    <UserControl.Resources>
+        <sidebar:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+    </UserControl.Resources>
+    <Grid MaxWidth="560" RowSpacing="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Border
+                Height="36"
+                Padding="10,0,8,0"
+                Background="{ThemeResource FilesMate.Item.HoverBrush}"
+                BorderBrush="{ThemeResource FilesMate.Divider.Brush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Width="20" Height="20" VerticalAlignment="Center">
+                        <FontIcon
+                            x:Name="TargetGlyph"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontFamily="Segoe Fluent Icons"
+                            FontSize="16"
+                            Glyph="&#xE8A5;" />
+                        <Image
+                            x:Name="TargetIcon"
+                            Width="20"
+                            Height="20"
+                            Stretch="Uniform"
+                            Visibility="Collapsed" />
+                    </Grid>
+                    <Grid Grid.Column="1">
+                        <TextBlock
+                            x:Name="PathText"
+                            VerticalAlignment="Center"
+                            FontSize="13"
+                            TextTrimming="CharacterEllipsis"
+                            PointerPressed="PathText_PointerPressed" />
+                        <TextBox
+                            x:Name="PathBox"
+                            MinHeight="0"
+                            Padding="0,0,0,2"
+                            VerticalAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            AcceptsReturn="True"
+                            IsTabStop="False"
+                            TextWrapping="NoWrap"
+                            Visibility="Collapsed"
+                            GettingFocus="PathBox_GettingFocus"
+                            KeyDown="PathBox_KeyDown"
+                            LostFocus="PathBox_LostFocus">
+                            <TextBox.Resources>
+                                <SolidColorBrush x:Key="TextControlBackground" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlBorderBrush" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlBorderBrushDisabled" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlButtonBackground" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlButtonForeground" Color="Transparent" />
+                                <Thickness x:Key="TextControlThemePadding">0,0,0,2</Thickness>
+                                <x:Double x:Key="TextControlThemeMinHeight">20</x:Double>
+                                <Thickness x:Key="TextControlBorderThemeThickness">0</Thickness>
+                                <Thickness x:Key="TextControlBorderThemeThicknessFocused">0</Thickness>
+                                <Thickness x:Key="TextControlBorderThemeThicknessPointerOver">0</Thickness>
+                            </TextBox.Resources>
+                        </TextBox>
+                    </Grid>
+                </Grid>
+            </Border>
+            <Button
+                x:Name="BrowseButton"
+                Grid.Column="1"
+                Width="36"
+                Height="36"
+                MinWidth="36"
+                Padding="0"
+                Click="Browse_Click"
+                IsTabStop="False"
+                Style="{StaticResource QuietButtonStyle}">
+                <FontIcon FontFamily="Segoe Fluent Icons" FontSize="14" Glyph="&#xE712;" />
+            </Button>
+            <Button
+                x:Name="RefreshButton"
+                Grid.Column="2"
+                Width="36"
+                Height="36"
+                MinWidth="36"
+                Padding="0"
+                Click="Refresh_Click"
+                IsTabStop="False"
+                Style="{StaticResource QuietButtonStyle}">
+                <FontIcon FontFamily="Segoe Fluent Icons" FontSize="14" Glyph="&#xE72C;" />
+            </Button>
+        </Grid>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
+            <Button
+                x:Name="UnlockButton"
+                MinWidth="0"
+                Padding="12,6"
+                Click="Unlock_Click"
+                Style="{StaticResource GlassButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="14" Glyph="&#xE785;" />
+                    <TextBlock x:Name="UnlockLabel" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button
+                x:Name="DeleteButton"
+                MinWidth="0"
+                Padding="12,6"
+                Click="Delete_Click"
+                Style="{StaticResource GlassButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="14" Glyph="&#xE74D;" />
+                    <TextBlock x:Name="DeleteLabel" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button
+                x:Name="OtherButton"
+                MinWidth="0"
+                Padding="12,6"
+                Style="{StaticResource GlassButtonStyle}">
+                <Button.Flyout>
+                    <MenuFlyout x:Name="OtherFlyout" Placement="Bottom">
+                        <MenuFlyoutItem x:Name="EndTaskItem" Click="EndTask_Click" />
+                    </MenuFlyout>
+                </Button.Flyout>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="14" Glyph="&#xE70D;" />
+                    <TextBlock x:Name="OtherLabel" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+        <TextBlock
+            x:Name="ProcessesHeader"
+            Grid.Row="2"
+            Style="{StaticResource FilesMate.SectionHeaderStyle}" />
+        <Border
+            Grid.Row="3"
+            MinHeight="160"
+            MaxHeight="320"
+            Padding="6,8"
+            Background="{ThemeResource FilesMate.Item.HoverBrush}"
+            BorderBrush="{ThemeResource FilesMate.Divider.Brush}"
+            BorderThickness="1"
+            CornerRadius="8">
+            <Grid>
+                <ProgressRing
+                    x:Name="LoadingRing"
+                    Width="28"
+                    Height="28"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IsActive="True" />
+                <TextBlock
+                    x:Name="EmptyText"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontSize="13"
+                    Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                    TextAlignment="Center"
+                    TextWrapping="Wrap"
+                    Visibility="Collapsed" />
+                <ScrollViewer
+                    x:Name="ProcessScroll"
+                    Opacity="0"
+                    IsHitTestVisible="False"
+                    VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="ProcessList">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="local:FileLockNode">
+                                <StackPanel Spacing="4">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="28" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button
+                                            Width="28"
+                                            Height="28"
+                                            MinWidth="28"
+                                            Padding="0"
+                                            VerticalAlignment="Center"
+                                            Click="Expand_Click"
+                                            Style="{StaticResource QuietButtonStyle}"
+                                            Visibility="{x:Bind HasChildren, Converter={StaticResource BoolToVisibility}}">
+                                            <FontIcon
+                                                FontFamily="Segoe Fluent Icons"
+                                                FontSize="10"
+                                                Glyph="{x:Bind ExpandGlyph, Mode=OneWay}" />
+                                        </Button>
+                                        <local:FileLockNodeView Grid.Column="1" />
+                                    </Grid>
+                                    <ItemsControl
+                                        Margin="28,0,0,0"
+                                        ItemsSource="{x:Bind Children}"
+                                        Visibility="{x:Bind IsExpanded, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Spacing="4" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="local:FileLockNode">
+                                                <local:FileLockNodeView />
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

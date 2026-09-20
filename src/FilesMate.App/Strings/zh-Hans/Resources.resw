@@ -1,0 +1,2953 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated from Localization/StringTable*.cs. Run scripts/sync-localization-resources.ps1; do not edit here. -->
+<root>
+  <data name="AboutBody" xml:space="preserve">
+    <value>带云母玻璃壳的 Windows 文件管理器。</value>
+  </data>
+  <data name="AboutLead" xml:space="preserve">
+    <value>FilesMate</value>
+  </data>
+  <data name="AboutTitle" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="AboutVersion" xml:space="preserve">
+    <value>版本 {0}</value>
+  </data>
+  <data name="AccentColor" xml:space="preserve">
+    <value>强调色</value>
+  </data>
+  <data name="AccentDescription" xml:space="preserve">
+    <value>用于选中、玻璃高光和拖放目标的命名颜色。</value>
+  </data>
+  <data name="Accent_Blue" xml:space="preserve">
+    <value>蓝</value>
+  </data>
+  <data name="Accent_BlueGray" xml:space="preserve">
+    <value>蓝灰</value>
+  </data>
+  <data name="Accent_BrickRed" xml:space="preserve">
+    <value>砖红</value>
+  </data>
+  <data name="Accent_CoolBlue" xml:space="preserve">
+    <value>冷蓝</value>
+  </data>
+  <data name="Accent_Default" xml:space="preserve">
+    <value>默认</value>
+  </data>
+  <data name="Accent_Gold" xml:space="preserve">
+    <value>金</value>
+  </data>
+  <data name="Accent_Gray" xml:space="preserve">
+    <value>灰</value>
+  </data>
+  <data name="Accent_Green" xml:space="preserve">
+    <value>绿</value>
+  </data>
+  <data name="Accent_Iris" xml:space="preserve">
+    <value>鸢尾</value>
+  </data>
+  <data name="Accent_Mint" xml:space="preserve">
+    <value>薄荷</value>
+  </data>
+  <data name="Accent_Orange" xml:space="preserve">
+    <value>橙</value>
+  </data>
+  <data name="Accent_Overcast" xml:space="preserve">
+    <value>阴天</value>
+  </data>
+  <data name="Accent_Red" xml:space="preserve">
+    <value>红</value>
+  </data>
+  <data name="Accent_Rose" xml:space="preserve">
+    <value>玫红</value>
+  </data>
+  <data name="Accent_Seafoam" xml:space="preserve">
+    <value>海沫</value>
+  </data>
+  <data name="Accent_Storm" xml:space="preserve">
+    <value>风暴</value>
+  </data>
+  <data name="Accent_Violet" xml:space="preserve">
+    <value>紫</value>
+  </data>
+  <data name="AccessDenied_Body" xml:space="preserve">
+    <value>请申请权限，或打开其他文件夹。</value>
+  </data>
+  <data name="AccessDenied_Title" xml:space="preserve">
+    <value>没有访问权限</value>
+  </data>
+  <data name="Action_CloseDualPane" xml:space="preserve">
+    <value>关闭双栏</value>
+  </data>
+  <data name="Action_ClosePreviewPane" xml:space="preserve">
+    <value>关闭预览栏</value>
+  </data>
+  <data name="Action_CloseQuickPreview" xml:space="preserve">
+    <value>关闭快速预览</value>
+  </data>
+  <data name="Action_CopyFolderPath" xml:space="preserve">
+    <value>复制当前文件夹路径</value>
+  </data>
+  <data name="Action_CopySelectedPaths" xml:space="preserve">
+    <value>复制所选项目路径</value>
+  </data>
+  <data name="Action_FailedPrefix" xml:space="preserve">
+    <value>无法执行操作：</value>
+  </data>
+  <data name="Action_IconView" xml:space="preserve">
+    <value>图标视图</value>
+  </data>
+  <data name="Action_NoMatch" xml:space="preserve">
+    <value>没有匹配的功能</value>
+  </data>
+  <data name="Action_OpenDualPane" xml:space="preserve">
+    <value>打开双栏</value>
+  </data>
+  <data name="Action_OpenPreviewPane" xml:space="preserve">
+    <value>打开预览栏</value>
+  </data>
+  <data name="Action_OpenSettings" xml:space="preserve">
+    <value>打开设置</value>
+  </data>
+  <data name="Action_QuickPreview" xml:space="preserve">
+    <value>快速预览</value>
+  </data>
+  <data name="Action_RedoFile" xml:space="preserve">
+    <value>重做文件操作</value>
+  </data>
+  <data name="Action_RefreshFolder" xml:space="preserve">
+    <value>刷新文件夹</value>
+  </data>
+  <data name="Action_ReopenTab" xml:space="preserve">
+    <value>恢复关闭的标签页</value>
+  </data>
+  <data name="Action_SearchHint" xml:space="preserve">
+    <value>搜索功能，例如：终端、重命名、排序</value>
+  </data>
+  <data name="Action_SortColumn" xml:space="preserve">
+    <value>按{0}排序</value>
+  </data>
+  <data name="Action_SortPrefix" xml:space="preserve">
+    <value>按</value>
+  </data>
+  <data name="Action_ToggleFolderSizes" xml:space="preserve">
+    <value>显示或隐藏文件夹大小</value>
+  </data>
+  <data name="Action_ToggleHidden" xml:space="preserve">
+    <value>显示或隐藏隐藏文件</value>
+  </data>
+  <data name="Action_UndoFile" xml:space="preserve">
+    <value>撤销上一次文件操作</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>添加</value>
+  </data>
+  <data name="Address" xml:space="preserve">
+    <value>地址</value>
+  </data>
+  <data name="Address_HiddenAncestors" xml:space="preserve">
+    <value>显示上级目录</value>
+  </data>
+  <data name="AdvancedLead" xml:space="preserve">
+    <value>清理过期的图标缓存，打开 FilesMate 保存数据的文件夹，或将 FilesMate 登记为当前用户的默认文件夹处理程序。</value>
+  </data>
+  <data name="AdvancedTitle" xml:space="preserve">
+    <value>高级</value>
+  </data>
+  <data name="AlphabetDualPaneDescription" xml:space="preserve">
+    <value>双栏会压缩每一栏的阅读空间；开启后才允许左右两栏继续显示字母快速定位。</value>
+  </data>
+  <data name="AlphabetDualPaneTitle" xml:space="preserve">
+    <value>在双栏模式中显示</value>
+  </data>
+  <data name="AlphabetMinimumItemsDescription" xml:space="preserve">
+    <value>项目较少、一眼就能找到时使用普通滚动条，不额外占用列表空间。设置为 0 表示不限制数量。</value>
+  </data>
+  <data name="AlphabetMinimumItemsTitle" xml:space="preserve">
+    <value>最少项目数</value>
+  </data>
+  <data name="AlphabetNavigationDescription" xml:space="preserve">
+    <value>按名称排序时显示字母栏、字母气泡和范围提示。关闭后使用普通滚动条。</value>
+  </data>
+  <data name="AlphabetNavigationSection" xml:space="preserve">
+    <value>字母快速定位</value>
+  </data>
+  <data name="AlphabetNavigationTitle" xml:space="preserve">
+    <value>启用字母快速定位</value>
+  </data>
+  <data name="Alphabet_AccessibleName" xml:space="preserve">
+    <value>按首字母快速定位</value>
+  </data>
+  <data name="Alphabet_QuickNavigation" xml:space="preserve">
+    <value>字母快速定位</value>
+  </data>
+  <data name="Alphabet_SetupHint" xml:space="preserve">
+    <value>显示字母栏、字母气泡和范围提示；关闭后使用普通滚动条。</value>
+  </data>
+  <data name="AppName" xml:space="preserve">
+    <value>FilesMate</value>
+  </data>
+  <data name="App_EntryUnavailable" xml:space="preserve">
+    <value>应用已卸载或启动入口失效，请稍后重新搜索。</value>
+  </data>
+  <data name="App_TrayDescription" xml:space="preserve">
+    <value>文件管理与全局搜索</value>
+  </data>
+  <data name="AppearanceTitle" xml:space="preserve">
+    <value>外观</value>
+  </data>
+  <data name="Application" xml:space="preserve">
+    <value>应用</value>
+  </data>
+  <data name="Applying" xml:space="preserve">
+    <value>正在应用…</value>
+  </data>
+  <data name="Attribute_Archive" xml:space="preserve">
+    <value>存档</value>
+  </data>
+  <data name="Attribute_Compressed" xml:space="preserve">
+    <value>压缩</value>
+  </data>
+  <data name="Attribute_Encrypted" xml:space="preserve">
+    <value>加密</value>
+  </data>
+  <data name="Attribute_Link" xml:space="preserve">
+    <value>链接</value>
+  </data>
+  <data name="Attribute_Offline" xml:space="preserve">
+    <value>脱机</value>
+  </data>
+  <data name="Audio" xml:space="preserve">
+    <value>音频</value>
+  </data>
+  <data name="BackToSearch" xml:space="preserve">
+    <value>返回搜索</value>
+  </data>
+  <data name="BackToSearchSettings" xml:space="preserve">
+    <value>返回搜索设置</value>
+  </data>
+  <data name="BackToSettings" xml:space="preserve">
+    <value>返回设置</value>
+  </data>
+  <data name="Backdrop" xml:space="preserve">
+    <value>窗口材质</value>
+  </data>
+  <data name="BackdropAcrylic" xml:space="preserve">
+    <value>亚克力</value>
+  </data>
+  <data name="BackdropDescription" xml:space="preserve">
+    <value>亚克力或云母会透过桌面着色窗口；纯色使用窗口底色。</value>
+  </data>
+  <data name="BackdropMica" xml:space="preserve">
+    <value>云母</value>
+  </data>
+  <data name="BackdropMicaAlt" xml:space="preserve">
+    <value>云母 Alt</value>
+  </data>
+  <data name="BackdropSolid" xml:space="preserve">
+    <value>纯色</value>
+  </data>
+  <data name="BackgroundSearch" xml:space="preserve">
+    <value>后台搜索</value>
+  </data>
+  <data name="Backup_Clear" xml:space="preserve">
+    <value>清除当前撤销历史</value>
+  </data>
+  <data name="Backup_ClearHint" xml:space="preserve">
+    <value>清除历史会永久删除其备份版本，不能再撤销/重做。异常退出残留或已被修改的备份会保留：点击下方位置检查、恢复所需文件后，可自行删除。旧版本未登记的目录不会仅凭名称自动删除。</value>
+  </data>
+  <data name="Backup_Cleared" xml:space="preserve">
+    <value>当前历史已清除。仍列出的位置需要检查，其中的文件未被删除。</value>
+  </data>
+  <data name="Backup_DestructiveHint" xml:space="preserve">
+    <value>已有内容将被永久替换，不保留旧版本。本次整个批量操作无法撤销；替换成功后，之前的撤销/重做历史也会清除。这个选择仅适用于当前文件。</value>
+  </data>
+  <data name="Backup_LimitHint" xml:space="preserve">
+    <value>撤销需要预留 {0} MiB（当前 {1} / 256 MiB），已超过备份限制或备份不可用。可以跳过、保留两者、取消后管理备份，或明确选择不可撤销的替换。</value>
+  </data>
+  <data name="Backup_LocationUnavailable" xml:space="preserve">
+    <value>这个备份位置暂时不可用，请刷新备份列表或重新连接所在磁盘。</value>
+  </data>
+  <data name="Backup_Manage" xml:space="preserve">
+    <value>管理备份</value>
+  </data>
+  <data name="Backup_Policy" xml:space="preserve">
+    <value>当前会话最多保留 5 次操作。替换备份合计最多预留 256 MiB、单个文件最多 64 MiB（最多 256 个文件），按新旧版本中较大的一个预留。正常关闭最后一个窗口时清理。</value>
+  </data>
+  <data name="Backup_Remnants" xml:space="preserve">
+    <value>磁盘上仍有之前会话留下的撤销备份</value>
+  </data>
+  <data name="Backup_ReplaceWithoutUndo" xml:space="preserve">
+    <value>替换且无法撤销</value>
+  </data>
+  <data name="Backup_ReservationHint" xml:space="preserve">
+    <value>撤销将在目标磁盘预留 {0} MiB（当前 {1} / 256 MiB），最多保留 5 次操作。可在设置 → 文件与文件夹中查看和清理。</value>
+  </data>
+  <data name="Backup_Title" xml:space="preserve">
+    <value>撤销备份</value>
+  </data>
+  <data name="Backup_UnprotectedCount" xml:space="preserve">
+    <value>{0} 项未保留备份，本次操作无法撤销</value>
+  </data>
+  <data name="Backup_Usage" xml:space="preserve">
+    <value>撤销/重做预留：{0} / 256 MiB · {1} 个备份位置</value>
+  </data>
+  <data name="CacheCleared" xml:space="preserve">
+    <value>图标和缩略图缓存已清理。</value>
+  </data>
+  <data name="CacheSection" xml:space="preserve">
+    <value>维护</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="CannotRenameMultiple" xml:space="preserve">
+    <value>无法同时重命名多个项目</value>
+  </data>
+  <data name="Category_AddCustom" xml:space="preserve">
+    <value>添加自定义分类</value>
+  </data>
+  <data name="Category_All" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="Category_Buttons" xml:space="preserve">
+    <value>分类按钮</value>
+  </data>
+  <data name="Category_Duplicate" xml:space="preserve">
+    <value>分类名称不能重复。</value>
+  </data>
+  <data name="Category_EditHint" xml:space="preserve">
+    <value>开关控制显示，箭头调整顺序；修改自动保存</value>
+  </data>
+  <data name="Category_ExtensionsExample" xml:space="preserve">
+    <value>后缀，例如 jpg, png</value>
+  </data>
+  <data name="Category_ExtensionsExampleLong" xml:space="preserve">
+    <value>后缀，例如 jpg, png, psd</value>
+  </data>
+  <data name="Category_ExtensionsHint" xml:space="preserve">
+    <value>后缀示例：jpg, png, psd</value>
+  </data>
+  <data name="Category_InvalidExtensions" xml:space="preserve">
+    <value>请输入 1–64 个后缀，例如 jpg, png，不包含路径或通配符。</value>
+  </data>
+  <data name="Category_Limit" xml:space="preserve">
+    <value>最多可添加 32 个分类。</value>
+  </data>
+  <data name="Category_Manage" xml:space="preserve">
+    <value>管理分类</value>
+  </data>
+  <data name="Category_Media" xml:space="preserve">
+    <value>影音</value>
+  </data>
+  <data name="Category_Name" xml:space="preserve">
+    <value>分类名称</value>
+  </data>
+  <data name="Category_NameExample" xml:space="preserve">
+    <value>分类名称，例如设计图片</value>
+  </data>
+  <data name="Category_NameRequired" xml:space="preserve">
+    <value>请填写分类名称。</value>
+  </data>
+  <data name="Category_Show" xml:space="preserve">
+    <value>显示此分类</value>
+  </data>
+  <data name="Category_Title" xml:space="preserve">
+    <value>搜索分类</value>
+  </data>
+  <data name="Category_VisibleRequired" xml:space="preserve">
+    <value>至少保留一个可见分类。</value>
+  </data>
+  <data name="ClassicExplorerDescription" xml:space="preserve">
+    <value>打开真正的 Windows 资源管理器窗口。</value>
+  </data>
+  <data name="ClassicExplorerFailed" xml:space="preserve">
+    <value>无法打开原版资源管理器。</value>
+  </data>
+  <data name="ClassicExplorerOpen" xml:space="preserve">
+    <value>打开</value>
+  </data>
+  <data name="ClassicExplorerTitle" xml:space="preserve">
+    <value>原版资源管理器</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>清空</value>
+  </data>
+  <data name="ClearCache" xml:space="preserve">
+    <value>清理缓存</value>
+  </data>
+  <data name="Clipboard_Busy" xml:space="preserve">
+    <value>剪贴板忙，请重试。</value>
+  </data>
+  <data name="Clipboard_BusyShort" xml:space="preserve">
+    <value>剪贴板忙，请重试</value>
+  </data>
+  <data name="Clipboard_CopyCount" xml:space="preserve">
+    <value>已复制 {0} 项</value>
+  </data>
+  <data name="Clipboard_CutCount" xml:space="preserve">
+    <value>已剪切 {0} 项</value>
+  </data>
+  <data name="Clipboard_DimensionsTooLarge" xml:space="preserve">
+    <value>图片尺寸过大，请通过图片应用另存为。</value>
+  </data>
+  <data name="Clipboard_ImageName" xml:space="preserve">
+    <value>截图 </value>
+  </data>
+  <data name="Clipboard_ImageTooLarge" xml:space="preserve">
+    <value>图片过大，请通过图片应用另存为。</value>
+  </data>
+  <data name="Clipboard_SaveImage" xml:space="preserve">
+    <value>保存剪贴板图片</value>
+  </data>
+  <data name="Clipboard_SaveText" xml:space="preserve">
+    <value>保存剪贴板文字</value>
+  </data>
+  <data name="Clipboard_TextName" xml:space="preserve">
+    <value>文本 </value>
+  </data>
+  <data name="Clipboard_TextTooLong" xml:space="preserve">
+    <value>剪贴板文字过长，请分批保存。</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="CloseEscape" xml:space="preserve">
+    <value>关闭 (Esc)</value>
+  </data>
+  <data name="ClosePreview" xml:space="preserve">
+    <value>关闭预览</value>
+  </data>
+  <data name="Column_Modified" xml:space="preserve">
+    <value>修改日期</value>
+  </data>
+  <data name="Column_Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="Column_Size" xml:space="preserve">
+    <value>大小</value>
+  </data>
+  <data name="Column_Type" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="Columns_Reset" xml:space="preserve">
+    <value>恢复默认列</value>
+  </data>
+  <data name="CommandPalette" xml:space="preserve">
+    <value>搜索功能</value>
+  </data>
+  <data name="Command_AddTags" xml:space="preserve">
+    <value>添加标签</value>
+  </data>
+  <data name="Command_BatchRename" xml:space="preserve">
+    <value>批量重命名</value>
+  </data>
+  <data name="Command_ChangeLayout" xml:space="preserve">
+    <value>视图</value>
+  </data>
+  <data name="Command_Compress" xml:space="preserve">
+    <value>压缩</value>
+  </data>
+  <data name="Command_Compress7z" xml:space="preserve">
+    <value>压缩为 7z</value>
+  </data>
+  <data name="Command_CompressNew" xml:space="preserve">
+    <value>新建压缩包…</value>
+  </data>
+  <data name="Command_CompressZip" xml:space="preserve">
+    <value>压缩为 ZIP</value>
+  </data>
+  <data name="Command_Copy" xml:space="preserve">
+    <value>复制</value>
+  </data>
+  <data name="Command_CopyPath" xml:space="preserve">
+    <value>复制路径</value>
+  </data>
+  <data name="Command_CopyPathQuoted" xml:space="preserve">
+    <value>复制带引号的路径</value>
+  </data>
+  <data name="Command_CreateShortcut" xml:space="preserve">
+    <value>创建快捷方式</value>
+  </data>
+  <data name="Command_Cut" xml:space="preserve">
+    <value>剪切</value>
+  </data>
+  <data name="Command_Extract" xml:space="preserve">
+    <value>解压</value>
+  </data>
+  <data name="Command_ExtractHere" xml:space="preserve">
+    <value>解压到此处</value>
+  </data>
+  <data name="Command_ExtractToFolder" xml:space="preserve">
+    <value>解压到同名文件夹</value>
+  </data>
+  <data name="Command_ExtractToOther" xml:space="preserve">
+    <value>解压到其他文件夹…</value>
+  </data>
+  <data name="Command_ManageTags" xml:space="preserve">
+    <value>管理标签</value>
+  </data>
+  <data name="Command_New" xml:space="preserve">
+    <value>新建</value>
+  </data>
+  <data name="Command_NewFile" xml:space="preserve">
+    <value>新建文件</value>
+  </data>
+  <data name="Command_NewFolder" xml:space="preserve">
+    <value>新建文件夹</value>
+  </data>
+  <data name="Command_Open" xml:space="preserve">
+    <value>打开</value>
+  </data>
+  <data name="Command_OpenInCompactMate" xml:space="preserve">
+    <value>用 CompactMate 打开</value>
+  </data>
+  <data name="Command_OpenInNewTab" xml:space="preserve">
+    <value>在新标签页中打开</value>
+  </data>
+  <data name="Command_OpenInNewWindow" xml:space="preserve">
+    <value>在新窗口中打开</value>
+  </data>
+  <data name="Command_OpenInTerminal" xml:space="preserve">
+    <value>在终端中打开</value>
+  </data>
+  <data name="Command_OpenWith" xml:space="preserve">
+    <value>打开方式</value>
+  </data>
+  <data name="Command_Paste" xml:space="preserve">
+    <value>粘贴</value>
+  </data>
+  <data name="Command_PermanentDelete" xml:space="preserve">
+    <value>永久删除</value>
+  </data>
+  <data name="Command_PinToSidebar" xml:space="preserve">
+    <value>固定到侧栏</value>
+  </data>
+  <data name="Command_Properties" xml:space="preserve">
+    <value>属性</value>
+  </data>
+  <data name="Command_Recycle" xml:space="preserve">
+    <value>移到回收站</value>
+  </data>
+  <data name="Command_Refresh" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="Command_Rename" xml:space="preserve">
+    <value>重命名</value>
+  </data>
+  <data name="Command_SelectAll" xml:space="preserve">
+    <value>全选</value>
+  </data>
+  <data name="Command_Share" xml:space="preserve">
+    <value>共享</value>
+  </data>
+  <data name="Command_ShowMoreOptions" xml:space="preserve">
+    <value>显示更多选项</value>
+  </data>
+  <data name="Command_SmartExtract" xml:space="preserve">
+    <value>智能解压到此处</value>
+  </data>
+  <data name="Command_UnpinFromSidebar" xml:space="preserve">
+    <value>取消固定</value>
+  </data>
+  <data name="Command_WhoLocks" xml:space="preserve">
+    <value>谁在占用</value>
+  </data>
+  <data name="Confirm" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="ConfirmDeleteBody" xml:space="preserve">
+    <value>此操作无法撤销。</value>
+  </data>
+  <data name="ConfirmDeleteSettingDescription" xml:space="preserve">
+    <value>永久删除选中项目之前先进行确认。</value>
+  </data>
+  <data name="ConfirmDeleteSettingTitle" xml:space="preserve">
+    <value>确认永久删除</value>
+  </data>
+  <data name="ConfirmDeleteTitle" xml:space="preserve">
+    <value>永久删除？</value>
+  </data>
+  <data name="ConfirmRemove" xml:space="preserve">
+    <value>确认移除</value>
+  </data>
+  <data name="CopyDiagnostics" xml:space="preserve">
+    <value>复制诊断信息</value>
+  </data>
+  <data name="CopyFullPath" xml:space="preserve">
+    <value>复制完整路径</value>
+  </data>
+  <data name="CopyFullPathShortcut" xml:space="preserve">
+    <value>复制完整路径 · Ctrl+Shift+C</value>
+  </data>
+  <data name="CopyToOtherPane" xml:space="preserve">
+    <value>复制到另一栏…</value>
+  </data>
+  <data name="Cover_Choose" xml:space="preserve">
+    <value>选择文件夹封面</value>
+  </data>
+  <data name="Cover_DirectChild" xml:space="preserve">
+    <value>请选择直接位于此文件夹中的图片或视频。</value>
+  </data>
+  <data name="Cover_Reset" xml:space="preserve">
+    <value>恢复自动封面</value>
+  </data>
+  <data name="DataFolderDescription" xml:space="preserve">
+    <value>快捷键、外观和资源管理器偏好都保存在此文件夹。</value>
+  </data>
+  <data name="DataFolderTitle" xml:space="preserve">
+    <value>应用数据</value>
+  </data>
+  <data name="DateAccessed" xml:space="preserve">
+    <value>访问日期</value>
+  </data>
+  <data name="DateFormatDescription" xml:space="preserve">
+    <value>使用 Windows 区域格式，或固定的年-月-日时间戳。</value>
+  </data>
+  <data name="DateFormatIso" xml:space="preserve">
+    <value>ISO</value>
+  </data>
+  <data name="DateFormatSystem" xml:space="preserve">
+    <value>Windows</value>
+  </data>
+  <data name="DateFormatTitle" xml:space="preserve">
+    <value>日期格式</value>
+  </data>
+  <data name="DefaultAppDescription" xml:space="preserve">
+    <value>开启后，让 Windows 打开某个文件夹的程序会进入 FilesMate。任务栏里的「文件资源管理器」和 Win+E 仍是系统原版。</value>
+  </data>
+  <data name="DefaultAppFailed" xml:space="preserve">
+    <value>无法更新默认文件夹处理程序。</value>
+  </data>
+  <data name="DefaultAppTitle" xml:space="preserve">
+    <value>设为默认文件管理器</value>
+  </data>
+  <data name="DefaultAppUpdated" xml:space="preserve">
+    <value>默认文件夹处理程序已更新。</value>
+  </data>
+  <data name="DefaultViewDescription" xml:space="preserve">
+    <value>新标签页使用此布局。仍可随时从工具栏切换详细信息和图标。</value>
+  </data>
+  <data name="DefaultViewTitle" xml:space="preserve">
+    <value>默认视图</value>
+  </data>
+  <data name="Delete_FailedPrefix" xml:space="preserve">
+    <value>无法删除：</value>
+  </data>
+  <data name="Desktop" xml:space="preserve">
+    <value>桌面</value>
+  </data>
+  <data name="DetailsPane" xml:space="preserve">
+    <value>详细信息</value>
+  </data>
+  <data name="DetailsView" xml:space="preserve">
+    <value>详细信息视图</value>
+  </data>
+  <data name="DiagnosticsCopied" xml:space="preserve">
+    <value>诊断信息已复制</value>
+  </data>
+  <data name="Display" xml:space="preserve">
+    <value>显示</value>
+  </data>
+  <data name="Documents" xml:space="preserve">
+    <value>文档</value>
+  </data>
+  <data name="Done" xml:space="preserve">
+    <value>完成</value>
+  </data>
+  <data name="Downloads" xml:space="preserve">
+    <value>下载</value>
+  </data>
+  <data name="Drag_CopyTo" xml:space="preserve">
+    <value>复制到此文件夹</value>
+  </data>
+  <data name="Drag_FailedPrefix" xml:space="preserve">
+    <value>无法拖出文件：</value>
+  </data>
+  <data name="Drag_MoveTo" xml:space="preserve">
+    <value>移动到此文件夹</value>
+  </data>
+  <data name="DualPane" xml:space="preserve">
+    <value>双栏</value>
+  </data>
+  <data name="Empty_Body" xml:space="preserve">
+    <value>这里还没有可显示的内容。</value>
+  </data>
+  <data name="Empty_FilteredBody" xml:space="preserve">
+    <value>试试其他筛选条件。</value>
+  </data>
+  <data name="Empty_FilteredTitle" xml:space="preserve">
+    <value>没有匹配的项目</value>
+  </data>
+  <data name="Empty_Title" xml:space="preserve">
+    <value>此文件夹为空</value>
+  </data>
+  <data name="EnumerationDescription" xml:space="preserve">
+    <value>文件夹内容会渐进加载，不会阻塞窗口交互。</value>
+  </data>
+  <data name="EnumerationTitle" xml:space="preserve">
+    <value>异步枚举</value>
+  </data>
+  <data name="Error_CompactMateMissing" xml:space="preserve">
+    <value>未找到 CompactMate，无法压缩或解压。</value>
+  </data>
+  <data name="Error_InvalidName" xml:space="preserve">
+    <value>名称无效。</value>
+  </data>
+  <data name="Error_NoFolder" xml:space="preserve">
+    <value>当前没有打开的文件夹。</value>
+  </data>
+  <data name="Error_SaveAppearance" xml:space="preserve">
+    <value>无法保存外观设置。</value>
+  </data>
+  <data name="Error_ShareUnavailable" xml:space="preserve">
+    <value>这些项目当前无法使用 Windows 共享。</value>
+  </data>
+  <data name="ExitBackgroundSearch" xml:space="preserve">
+    <value>退出后台搜索</value>
+  </data>
+  <data name="Extension" xml:space="preserve">
+    <value>扩展名</value>
+  </data>
+  <data name="Favorites_Add" xml:space="preserve">
+    <value>添加到收藏栏</value>
+  </data>
+  <data name="Favorites_AddAction" xml:space="preserve">
+    <value>收藏</value>
+  </data>
+  <data name="Favorites_AddFolder" xml:space="preserve">
+    <value>收藏当前文件夹</value>
+  </data>
+  <data name="Favorites_AddTo" xml:space="preserve">
+    <value>收藏到</value>
+  </data>
+  <data name="Favorites_Added" xml:space="preserve">
+    <value>已收藏</value>
+  </data>
+  <data name="Favorites_AlreadyInGroup" xml:space="preserve">
+    <value>此分组已收藏该文件。</value>
+  </data>
+  <data name="Favorites_Bar" xml:space="preserve">
+    <value>收藏栏</value>
+  </data>
+  <data name="Favorites_Capacity" xml:space="preserve">
+    <value>最多收藏 {0} 项，请先整理收藏栏。</value>
+  </data>
+  <data name="Favorites_Changed" xml:space="preserve">
+    <value>收藏列表已变化，请重新排序。</value>
+  </data>
+  <data name="Favorites_CloseManager" xml:space="preserve">
+    <value>关闭收藏整理</value>
+  </data>
+  <data name="Favorites_Contents" xml:space="preserve">
+    <value>收藏内容</value>
+  </data>
+  <data name="Favorites_Count" xml:space="preserve">
+    <value>{0} 项收藏</value>
+  </data>
+  <data name="Favorites_DataTooLarge" xml:space="preserve">
+    <value>收藏数据过大，请先备份并整理。</value>
+  </data>
+  <data name="Favorites_DropHint" xml:space="preserve">
+    <value>拖入文件或文件夹，随时打开</value>
+  </data>
+  <data name="Favorites_DuplicateTarget" xml:space="preserve">
+    <value>目标分组已有同一文件，未移动任何收藏。</value>
+  </data>
+  <data name="Favorites_Group" xml:space="preserve">
+    <value>收藏分组</value>
+  </data>
+  <data name="Favorites_GroupAtRoot" xml:space="preserve">
+    <value>收藏分组只能放在收藏栏上。</value>
+  </data>
+  <data name="Favorites_GroupDrop" xml:space="preserve">
+    <value>拖入文件，添加到此分组</value>
+  </data>
+  <data name="Favorites_GroupEmpty" xml:space="preserve">
+    <value>此分组暂无收藏</value>
+  </data>
+  <data name="Favorites_GroupTooltip" xml:space="preserve">
+    <value>{0} · 收藏分组</value>
+  </data>
+  <data name="Favorites_Hide" xml:space="preserve">
+    <value>隐藏收藏栏</value>
+  </data>
+  <data name="Favorites_InvalidId" xml:space="preserve">
+    <value>收藏标识无效。</value>
+  </data>
+  <data name="Favorites_InvalidNesting" xml:space="preserve">
+    <value>收藏分组层级无效。</value>
+  </data>
+  <data name="Favorites_InvalidPath" xml:space="preserve">
+    <value>收藏路径无效。</value>
+  </data>
+  <data name="Favorites_LocalOnly" xml:space="preserve">
+    <value>请选择本地文件或文件夹。</value>
+  </data>
+  <data name="Favorites_Manage" xml:space="preserve">
+    <value>整理收藏</value>
+  </data>
+  <data name="Favorites_ManageMenu" xml:space="preserve">
+    <value>整理收藏…</value>
+  </data>
+  <data name="Favorites_MissingGroup" xml:space="preserve">
+    <value>收藏分组已不存在。</value>
+  </data>
+  <data name="Favorites_MissingItem" xml:space="preserve">
+    <value>收藏项已不存在。</value>
+  </data>
+  <data name="Favorites_MissingItems" xml:space="preserve">
+    <value>部分收藏已不存在，请刷新后重试。</value>
+  </data>
+  <data name="Favorites_More" xml:space="preserve">
+    <value>更多收藏</value>
+  </data>
+  <data name="Favorites_MoreMenu" xml:space="preserve">
+    <value>更多收藏…</value>
+  </data>
+  <data name="Favorites_Move" xml:space="preserve">
+    <value>移动收藏</value>
+  </data>
+  <data name="Favorites_MoveIntoGroup" xml:space="preserve">
+    <value>移动到此收藏分组</value>
+  </data>
+  <data name="Favorites_Name" xml:space="preserve">
+    <value>收藏名称</value>
+  </data>
+  <data name="Favorites_NameHint" xml:space="preserve">
+    <value>分组或收藏名称</value>
+  </data>
+  <data name="Favorites_NameLength" xml:space="preserve">
+    <value>名称须为 1–120 个字符。</value>
+  </data>
+  <data name="Favorites_NewGroup" xml:space="preserve">
+    <value>新建收藏分组</value>
+  </data>
+  <data name="Favorites_NewGroupMenu" xml:space="preserve">
+    <value>新建收藏分组…</value>
+  </data>
+  <data name="Favorites_NoMatch" xml:space="preserve">
+    <value>没有匹配的收藏</value>
+  </data>
+  <data name="Favorites_ReadFailed" xml:space="preserve">
+    <value>收藏数据未能读取，原文件已保留：</value>
+  </data>
+  <data name="Favorites_ReferenceHint" xml:space="preserve">
+    <value>只保存位置，不复制或移动原文件。</value>
+  </data>
+  <data name="Favorites_Remove" xml:space="preserve">
+    <value>移除收藏</value>
+  </data>
+  <data name="Favorites_RemoveGroup" xml:space="preserve">
+    <value>移除收藏分组</value>
+  </data>
+  <data name="Favorites_RemoveGroupConfirm" xml:space="preserve">
+    <value>移除“{0}”及其中的收藏引用？原文件不会删除。</value>
+  </data>
+  <data name="Favorites_RemoveHint" xml:space="preserve">
+    <value>所选分组中的收藏也会移除，原文件保留。再次点击“确认移除”继续。</value>
+  </data>
+  <data name="Favorites_Rename" xml:space="preserve">
+    <value>重命名收藏</value>
+  </data>
+  <data name="Favorites_ResizeBottom" xml:space="preserve">
+    <value>拖动下边缘调整收藏页高度</value>
+  </data>
+  <data name="Favorites_ResizeTop" xml:space="preserve">
+    <value>拖动上边缘调整收藏页高度</value>
+  </data>
+  <data name="Favorites_Search" xml:space="preserve">
+    <value>搜索收藏</value>
+  </data>
+  <data name="Favorites_SearchHint" xml:space="preserve">
+    <value>搜索名称或路径</value>
+  </data>
+  <data name="Favorites_SelectionHint" xml:space="preserve">
+    <value>空白处拖框多选 · Ctrl 点选 · Shift 连选；拖动收藏可排序或移入分组。</value>
+  </data>
+  <data name="Favorites_SettingsHint" xml:space="preserve">
+    <value>在地址栏下方显示常用文件、文件夹和收藏分组。隐藏不会删除收藏。</value>
+  </data>
+  <data name="Favorites_SetupHint" xml:space="preserve">
+    <value>把常用文件、文件夹收藏到地址栏下方，支持分组展开。</value>
+  </data>
+  <data name="Favorites_Show" xml:space="preserve">
+    <value>显示收藏栏</value>
+  </data>
+  <data name="FileExtensions" xml:space="preserve">
+    <value>文件后缀</value>
+  </data>
+  <data name="FileListSection" xml:space="preserve">
+    <value>文件列表</value>
+  </data>
+  <data name="FileManager" xml:space="preserve">
+    <value>文件管理器</value>
+  </data>
+  <data name="FileName" xml:space="preserve">
+    <value>文件名</value>
+  </data>
+  <data name="FileOperationsDescription" xml:space="preserve">
+    <value>支持新建、剪切、复制、粘贴、重命名和移到回收站。Ctrl+Z 撤销上一步，Ctrl+Y 重做。</value>
+  </data>
+  <data name="FileOperationsTitle" xml:space="preserve">
+    <value>文件操作</value>
+  </data>
+  <data name="FilePreview" xml:space="preserve">
+    <value>文件预览</value>
+  </data>
+  <data name="FilesBody" xml:space="preserve">
+    <value>打开、在新标签页打开、复制路径、刷新、排序，以及详细信息或大图标。</value>
+  </data>
+  <data name="FilesFoldersLead" xml:space="preserve">
+    <value>管理名称、日期和浏览时的日常文件操作。</value>
+  </data>
+  <data name="FilesFoldersTitle" xml:space="preserve">
+    <value>文件与文件夹</value>
+  </data>
+  <data name="FilesHeader" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="FilesTitle" xml:space="preserve">
+    <value>现在可用</value>
+  </data>
+  <data name="Files_ActionFailed" xml:space="preserve">
+    <value>无法执行文件操作</value>
+  </data>
+  <data name="Files_Busy" xml:space="preserve">
+    <value>已有文件操作正在进行，请稍候。</value>
+  </data>
+  <data name="Files_ClosingAfterOperation" xml:space="preserve">
+    <value>FilesMate — 正在完成文件操作，完成后关闭</value>
+  </data>
+  <data name="Files_CopyOtherPane" xml:space="preserve">
+    <value>复制到另一栏</value>
+  </data>
+  <data name="Files_CreatedCopiedCount" xml:space="preserve">
+    <value>已创建或复制 {0} 个项目</value>
+  </data>
+  <data name="Files_DestinationSummary" xml:space="preserve">
+    <value>{0} 个项目
+
+目标文件夹：
+{1}</value>
+  </data>
+  <data name="Files_FolderConflict" xml:space="preserve">
+    <value>已存在同名文件夹</value>
+  </data>
+  <data name="Files_FolderConflictHint" xml:space="preserve">
+    <value>要合并到“{0}”吗？同名文件会保留在原文件夹中，不会覆盖已有内容。选择跳过可保持两个文件夹不变。</value>
+  </data>
+  <data name="Files_GroupSelection" xml:space="preserve">
+    <value>将 {0} 个项目移入新文件夹</value>
+  </data>
+  <data name="Files_GroupedCount" xml:space="preserve">
+    <value>已将 {0} 个项目整理到新文件夹</value>
+  </data>
+  <data name="Files_InvalidDestination" xml:space="preserve">
+    <value>目标不能是原位置、所选文件夹本身或它的子文件夹。</value>
+  </data>
+  <data name="Files_KeepExtension" xml:space="preserve">
+    <value>请保留 {0} 扩展名。</value>
+  </data>
+  <data name="Files_Merge" xml:space="preserve">
+    <value>合并</value>
+  </data>
+  <data name="Files_MergePartial" xml:space="preserve">
+    <value>跳过了 {0} 个同名或链接项目，{1} 个项目未能处理。未移动的内容仍保留在原文件夹中，已完成的移动可以撤销。</value>
+  </data>
+  <data name="Files_Merged" xml:space="preserve">
+    <value>已合并文件夹</value>
+  </data>
+  <data name="Files_MoveOtherPane" xml:space="preserve">
+    <value>移动到另一栏</value>
+  </data>
+  <data name="Files_NameConflict" xml:space="preserve">
+    <value>已存在同名项目</value>
+  </data>
+  <data name="Files_NameConflictHint" xml:space="preserve">
+    <value>“{0}”已存在，没有覆盖任何内容。请跳过本次修改后，换一个名称。</value>
+  </data>
+  <data name="Files_NameExists" xml:space="preserve">
+    <value>这个名称已存在，请换一个名称。</value>
+  </data>
+  <data name="Files_NotReady" xml:space="preserve">
+    <value>文件管理器尚未就绪，请重新执行操作。</value>
+  </data>
+  <data name="Files_OperationCancelled" xml:space="preserve">
+    <value>操作已取消</value>
+  </data>
+  <data name="Files_ParentUnknown" xml:space="preserve">
+    <value>无法确定所在文件夹。</value>
+  </data>
+  <data name="Files_PermanentlyDeletedCount" xml:space="preserve">
+    <value>已永久删除 {0} 个项目，这些项目无法撤销。</value>
+  </data>
+  <data name="Files_RecycledCount" xml:space="preserve">
+    <value>已将 {0} 个项目移到回收站</value>
+  </data>
+  <data name="Files_RecycledUndoOnly" xml:space="preserve">
+    <value>另有 {0} 个项目已移到回收站，撤销仅恢复这些项目。</value>
+  </data>
+  <data name="Files_RenamedMovedCount" xml:space="preserve">
+    <value>已完成 {0} 个项目的移动或重命名</value>
+  </data>
+  <data name="Files_Skip" xml:space="preserve">
+    <value>跳过</value>
+  </data>
+  <data name="Files_TargetExists" xml:space="preserve">
+    <value>目标名称已存在，请重试。</value>
+  </data>
+  <data name="Files_UndoRecycledOnly" xml:space="preserve">
+    <value>恢复回收站项目</value>
+  </data>
+  <data name="FilterFolder" xml:space="preserve">
+    <value>搜索文件</value>
+  </data>
+  <data name="FolderView_Reset" xml:space="preserve">
+    <value>重置此文件夹的视图</value>
+  </data>
+  <data name="FoldersSection" xml:space="preserve">
+    <value>文件夹</value>
+  </data>
+  <data name="FullPath" xml:space="preserve">
+    <value>完整路径</value>
+  </data>
+  <data name="GeneralLead" xml:space="preserve">
+    <value>选择启动位置，以及新文件夹如何打开。</value>
+  </data>
+  <data name="GeneralTitle" xml:space="preserve">
+    <value>常规</value>
+  </data>
+  <data name="GlassEffectBalanced" xml:space="preserve">
+    <value>平衡</value>
+  </data>
+  <data name="GlassEffectImmersive" xml:space="preserve">
+    <value>沉浸</value>
+  </data>
+  <data name="GlassEffectOff" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="GlassEffects" xml:space="preserve">
+    <value>玻璃效果</value>
+  </data>
+  <data name="GlassEffectsDescription" xml:space="preserve">
+    <value>调整整体静态玻璃表面的通透度和层次感，不使用鼠标追光或自动流光。</value>
+  </data>
+  <data name="GlassSection" xml:space="preserve">
+    <value>玻璃</value>
+  </data>
+  <data name="GlobalSearch" xml:space="preserve">
+    <value>全局搜索</value>
+  </data>
+  <data name="GlobalShortcut" xml:space="preserve">
+    <value>全局快捷键</value>
+  </data>
+  <data name="GoUp" xml:space="preserve">
+    <value>返回上级</value>
+  </data>
+  <data name="GroupSelection" xml:space="preserve">
+    <value>新建文件夹并移入所选项目</value>
+  </data>
+  <data name="HideSettings" xml:space="preserve">
+    <value>收起设置</value>
+  </data>
+  <data name="Home" xml:space="preserve">
+    <value>主页</value>
+  </data>
+  <data name="Home_Customize" xml:space="preserve">
+    <value>自定义主页</value>
+  </data>
+  <data name="Home_Drives" xml:space="preserve">
+    <value>驱动器</value>
+  </data>
+  <data name="Home_MoveDown" xml:space="preserve">
+    <value>向下移动</value>
+  </data>
+  <data name="Home_MoveUp" xml:space="preserve">
+    <value>向上移动</value>
+  </data>
+  <data name="Home_ResetLayout" xml:space="preserve">
+    <value>恢复主页默认布局</value>
+  </data>
+  <data name="Home_ShowSection" xml:space="preserve">
+    <value>显示此分区</value>
+  </data>
+  <data name="Home_SystemLocations" xml:space="preserve">
+    <value>系统位置（在 Windows 中打开）</value>
+  </data>
+  <data name="Home_UserDirectories" xml:space="preserve">
+    <value>用户目录</value>
+  </data>
+  <data name="Home_UserFolder" xml:space="preserve">
+    <value>用户</value>
+  </data>
+  <data name="IconCacheDescription" xml:space="preserve">
+    <value>如果图标或缩略图显示过期，可以清理缓存。</value>
+  </data>
+  <data name="IconCacheTitle" xml:space="preserve">
+    <value>图标和缩略图缓存</value>
+  </data>
+  <data name="InvertSelection" xml:space="preserve">
+    <value>反向选择</value>
+  </data>
+  <data name="KnownFoldersDescription" xml:space="preserve">
+    <value>桌面、文档、下载、图片、音乐和视频会显示在侧栏中。</value>
+  </data>
+  <data name="KnownFoldersTitle" xml:space="preserve">
+    <value>常用文件夹</value>
+  </data>
+  <data name="Language_Description" xml:space="preserve">
+    <value>切换后自动重启主程序和正在运行的后台搜索，并恢复标签页；如有文件传输，会先等待完成。</value>
+  </data>
+  <data name="Language_RestartFailed" xml:space="preserve">
+    <value>语言已保存，但自动重启未完成，请点击重试。</value>
+  </data>
+  <data name="Language_Retry" xml:space="preserve">
+    <value>重试重启</value>
+  </data>
+  <data name="Language_SaveFailed" xml:space="preserve">
+    <value>无法保存语言，已保留原来的选择。</value>
+  </data>
+  <data name="Language_Saved" xml:space="preserve">
+    <value>已保存，正在自动重启；如有文件传输，将等待完成…</value>
+  </data>
+  <data name="Language_System" xml:space="preserve">
+    <value>跟随 Windows 语言</value>
+  </data>
+  <data name="Language_Title" xml:space="preserve">
+    <value>显示语言</value>
+  </data>
+  <data name="Later" xml:space="preserve">
+    <value>稍后</value>
+  </data>
+  <data name="LaunchApplication" xml:space="preserve">
+    <value>启动应用</value>
+  </data>
+  <data name="Layout_Details" xml:space="preserve">
+    <value>详细信息</value>
+  </data>
+  <data name="Layout_ExtraLargeIcons" xml:space="preserve">
+    <value>超大图标</value>
+  </data>
+  <data name="Layout_HugeIcons" xml:space="preserve">
+    <value>巨型图标（128）</value>
+  </data>
+  <data name="Layout_Icons" xml:space="preserve">
+    <value>图标</value>
+  </data>
+  <data name="Layout_JumboIcons" xml:space="preserve">
+    <value>特大图标（192）</value>
+  </data>
+  <data name="Layout_LargeIcons" xml:space="preserve">
+    <value>大图标</value>
+  </data>
+  <data name="Layout_MaximumIcons" xml:space="preserve">
+    <value>最大图标（256）</value>
+  </data>
+  <data name="Layout_MediumIcons" xml:space="preserve">
+    <value>中图标</value>
+  </data>
+  <data name="Layout_SmallIcons" xml:space="preserve">
+    <value>小图标</value>
+  </data>
+  <data name="LocalDisk" xml:space="preserve">
+    <value>本地磁盘</value>
+  </data>
+  <data name="Lock_Browse" xml:space="preserve">
+    <value>浏览</value>
+  </data>
+  <data name="Lock_Delete" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Lock_DeleteFailed" xml:space="preserve">
+    <value>无法删除此项目。{0}</value>
+  </data>
+  <data name="Lock_Empty" xml:space="preserve">
+    <value>没有程序占用此文件。</value>
+  </data>
+  <data name="Lock_EndFailed" xml:space="preserve">
+    <value>无法结束该进程。</value>
+  </data>
+  <data name="Lock_EndTask" xml:space="preserve">
+    <value>结束进程</value>
+  </data>
+  <data name="Lock_HandleCount" xml:space="preserve">
+    <value>{0} 个对象</value>
+  </data>
+  <data name="Lock_Other" xml:space="preserve">
+    <value>其他</value>
+  </data>
+  <data name="Lock_Pid" xml:space="preserve">
+    <value>PID {0}</value>
+  </data>
+  <data name="Lock_Processes" xml:space="preserve">
+    <value>占用进程</value>
+  </data>
+  <data name="Lock_Refresh" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="Lock_ScanFailed" xml:space="preserve">
+    <value>无法查看哪些程序占用了此文件。</value>
+  </data>
+  <data name="Lock_Service" xml:space="preserve">
+    <value>服务：{0}</value>
+  </data>
+  <data name="Lock_Unlock" xml:space="preserve">
+    <value>解锁</value>
+  </data>
+  <data name="MemoryDescription" xml:space="preserve">
+    <value>文件行和图块采用虚拟化，不会为每个项目创建单独的视图模型。</value>
+  </data>
+  <data name="MemoryTitle" xml:space="preserve">
+    <value>有界界面状态</value>
+  </data>
+  <data name="Menu_FolderAppearance" xml:space="preserve">
+    <value>文件夹外观</value>
+  </data>
+  <data name="Menu_New" xml:space="preserve">
+    <value>新建</value>
+  </data>
+  <data name="Menu_Selection" xml:space="preserve">
+    <value>选择项目</value>
+  </data>
+  <data name="Menu_SystemFailed" xml:space="preserve">
+    <value>无法加载系统右键菜单。</value>
+  </data>
+  <data name="Move" xml:space="preserve">
+    <value>移动</value>
+  </data>
+  <data name="MoveDown" xml:space="preserve">
+    <value>下移</value>
+  </data>
+  <data name="MoveEarlier" xml:space="preserve">
+    <value>向前移动</value>
+  </data>
+  <data name="MoveLater" xml:space="preserve">
+    <value>向后移动</value>
+  </data>
+  <data name="MoveTo" xml:space="preserve">
+    <value>移动到</value>
+  </data>
+  <data name="MoveToMenu" xml:space="preserve">
+    <value>移动到…</value>
+  </data>
+  <data name="MoveToOtherPane" xml:space="preserve">
+    <value>移动到另一栏…</value>
+  </data>
+  <data name="MoveUp" xml:space="preserve">
+    <value>上移</value>
+  </data>
+  <data name="MultitaskingLead" xml:space="preserve">
+    <value>在多个位置之间工作，同时保留当前文件夹的状态。</value>
+  </data>
+  <data name="MultitaskingTitle" xml:space="preserve">
+    <value>多任务</value>
+  </data>
+  <data name="Music" xml:space="preserve">
+    <value>音乐</value>
+  </data>
+  <data name="Nav_Back" xml:space="preserve">
+    <value>后退</value>
+  </data>
+  <data name="Nav_Cloud" xml:space="preserve">
+    <value>云盘</value>
+  </data>
+  <data name="Nav_Drives" xml:space="preserve">
+    <value>驱动器</value>
+  </data>
+  <data name="Nav_Forward" xml:space="preserve">
+    <value>前进</value>
+  </data>
+  <data name="Nav_More" xml:space="preserve">
+    <value>更多</value>
+  </data>
+  <data name="Nav_Network" xml:space="preserve">
+    <value>网络</value>
+  </data>
+  <data name="Nav_Pinned" xml:space="preserve">
+    <value>已固定</value>
+  </data>
+  <data name="Nav_Refresh" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="Nav_Tags" xml:space="preserve">
+    <value>标签</value>
+  </data>
+  <data name="Nav_Up" xml:space="preserve">
+    <value>向上</value>
+  </data>
+  <data name="Nav_Wsl" xml:space="preserve">
+    <value>WSL</value>
+  </data>
+  <data name="NetworkDrive" xml:space="preserve">
+    <value>网络驱动器</value>
+  </data>
+  <data name="NewFileName" xml:space="preserve">
+    <value>新建文件.txt</value>
+  </data>
+  <data name="NewGroup" xml:space="preserve">
+    <value>新建分组</value>
+  </data>
+  <data name="NewGroupName" xml:space="preserve">
+    <value>新分组名称</value>
+  </data>
+  <data name="NewTab" xml:space="preserve">
+    <value>新建标签页</value>
+  </data>
+  <data name="NewTabTooltip" xml:space="preserve">
+    <value>新建标签页 (Ctrl+T)</value>
+  </data>
+  <data name="NextFile" xml:space="preserve">
+    <value>下一个文件</value>
+  </data>
+  <data name="NotFound_Body" xml:space="preserve">
+    <value>它可能已被移动或删除。</value>
+  </data>
+  <data name="NotFound_Title" xml:space="preserve">
+    <value>找不到此文件夹</value>
+  </data>
+  <data name="Off" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="Offline_Body" xml:space="preserve">
+    <value>请检查连接后重试。</value>
+  </data>
+  <data name="Offline_Title" xml:space="preserve">
+    <value>此位置处于脱机状态</value>
+  </data>
+  <data name="On" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="OpenDataFolder" xml:space="preserve">
+    <value>打开文件夹</value>
+  </data>
+  <data name="OpenFailed_Body" xml:space="preserve">
+    <value>出了点问题，请重试。</value>
+  </data>
+  <data name="OpenFailed_Title" xml:space="preserve">
+    <value>无法打开此文件夹</value>
+  </data>
+  <data name="OpenFilesMate" xml:space="preserve">
+    <value>打开 FilesMate</value>
+  </data>
+  <data name="OpenFolderFirst" xml:space="preserve">
+    <value>请先打开一个文件夹。</value>
+  </data>
+  <data name="OpenFoldersNewTabDescription" xml:space="preserve">
+    <value>双击文件夹时在单独的标签页打开，不替换当前标签页。</value>
+  </data>
+  <data name="OpenFoldersNewTabTitle" xml:space="preserve">
+    <value>在新标签页中打开文件夹</value>
+  </data>
+  <data name="OpenGroup" xml:space="preserve">
+    <value>打开分组</value>
+  </data>
+  <data name="OpenInExistingWindowDescription" xml:space="preserve">
+    <value>从 QQ 等其它程序打开文件夹时，进入已在运行的 FilesMate，并在新标签页中打开，不会另起一个程序，也不会替换你原来正在看的文件夹。</value>
+  </data>
+  <data name="OpenInExistingWindowTitle" xml:space="preserve">
+    <value>只使用一个应用窗口</value>
+  </data>
+  <data name="Open_FailedPrefix" xml:space="preserve">
+    <value>无法打开：</value>
+  </data>
+  <data name="Opening" xml:space="preserve">
+    <value>正在打开…</value>
+  </data>
+  <data name="Order_SaveFailed" xml:space="preserve">
+    <value>保存失败，已恢复原顺序：</value>
+  </data>
+  <data name="PageLoadError_Body" xml:space="preserve">
+    <value>FilesMate 已保留当前窗口。若要反馈问题，请复制诊断信息。</value>
+  </data>
+  <data name="PageLoadError_Title" xml:space="preserve">
+    <value>无法打开此页面</value>
+  </data>
+  <data name="ParentFolder" xml:space="preserve">
+    <value>所在文件夹</value>
+  </data>
+  <data name="Path_Copied" xml:space="preserve">
+    <value>已复制路径</value>
+  </data>
+  <data name="PerformanceSection" xml:space="preserve">
+    <value>性能</value>
+  </data>
+  <data name="Pictures" xml:space="preserve">
+    <value>图片</value>
+  </data>
+  <data name="PreviewCompatible" xml:space="preserve">
+    <value>兼容预览</value>
+  </data>
+  <data name="PreviewContentTab" xml:space="preserve">
+    <value>预览</value>
+  </data>
+  <data name="PreviewEmpty" xml:space="preserve">
+    <value>选择一个项目以预览。</value>
+  </data>
+  <data name="PreviewFolderProperties" xml:space="preserve">
+    <value>文件夹
+修改时间：{0}
+项目：{1}</value>
+  </data>
+  <data name="PreviewInfoTab" xml:space="preserve">
+    <value>信息</value>
+  </data>
+  <data name="PreviewMediaError" xml:space="preserve">
+    <value>此格式暂时无法在这里播放，请打开文件播放。</value>
+  </data>
+  <data name="PreviewNative" xml:space="preserve">
+    <value>原生预览</value>
+  </data>
+  <data name="PreviewNextPage" xml:space="preserve">
+    <value>下一页</value>
+  </data>
+  <data name="PreviewPaneTitle" xml:space="preserve">
+    <value>预览（Alt+P）</value>
+  </data>
+  <data name="PreviewPdfHint" xml:space="preserve">
+    <value>无法预览此 PDF，请打开文件查看。</value>
+  </data>
+  <data name="PreviewPlay" xml:space="preserve">
+    <value>播放</value>
+  </data>
+  <data name="PreviewPreviousPage" xml:space="preserve">
+    <value>上一页</value>
+  </data>
+  <data name="PreviewProperties" xml:space="preserve">
+    <value>大小：{0}
+修改时间：{1}</value>
+  </data>
+  <data name="PreviewTruncated" xml:space="preserve">
+    <value>预览已截断到 1 MiB。</value>
+  </data>
+  <data name="Preview_AttributeSeparator" xml:space="preserve">
+    <value>、</value>
+  </data>
+  <data name="Preview_Attributes" xml:space="preserve">
+    <value>属性</value>
+  </data>
+  <data name="Preview_Category" xml:space="preserve">
+    <value>类别</value>
+  </data>
+  <data name="Preview_Chart" xml:space="preserve">
+    <value>图表预览</value>
+  </data>
+  <data name="Preview_ChartData" xml:space="preserve">
+    <value>数据</value>
+  </data>
+  <data name="Preview_ChartEmpty" xml:space="preserve">
+    <value>此图表没有可用的已保存数据。</value>
+  </data>
+  <data name="Preview_ChartLimits" xml:space="preserve">
+    <value>已保存的图表数据（最多 8 个系列、每系列 32 项）</value>
+  </data>
+  <data name="Preview_Collapse" xml:space="preserve">
+    <value>收起预览</value>
+  </data>
+  <data name="Preview_ContentTooLarge" xml:space="preserve">
+    <value>文档内容过大，请打开文件查看。</value>
+  </data>
+  <data name="Preview_Created" xml:space="preserve">
+    <value>创建日期</value>
+  </data>
+  <data name="Preview_DocumentFailed" xml:space="preserve">
+    <value>无法预览此文档</value>
+  </data>
+  <data name="Preview_DocumentTooLarge" xml:space="preserve">
+    <value>文档超过 64 MB，请打开文件查看完整内容。</value>
+  </data>
+  <data name="Preview_DocumentUnavailable" xml:space="preserve">
+    <value>无法预览此文档，请打开文件查看。</value>
+  </data>
+  <data name="Preview_EmbeddedImage" xml:space="preserve">
+    <value>文档内嵌图片</value>
+  </data>
+  <data name="Preview_EmptyText" xml:space="preserve">
+    <value>空文本文档</value>
+  </data>
+  <data name="Preview_Hidden" xml:space="preserve">
+    <value>隐藏</value>
+  </data>
+  <data name="Preview_ImageUnsupported" xml:space="preserve">
+    <value>此图片格式或大小超出预览范围，请打开原文件查看。</value>
+  </data>
+  <data name="Preview_Interrupted" xml:space="preserve">
+    <value>预览已中断，请重新选择文件</value>
+  </data>
+  <data name="Preview_InvalidDocument" xml:space="preserve">
+    <value>无法预览此文档，文件可能已加密、损坏或格式不受支持。请打开文件查看。</value>
+  </data>
+  <data name="Preview_Items" xml:space="preserve">
+    <value>项目</value>
+  </data>
+  <data name="Preview_LegacyCharts" xml:space="preserve">
+    <value>此旧版工作簿的图片或图表无法转换；单元格内容仍可预览。</value>
+  </data>
+  <data name="Preview_LegacyImages" xml:space="preserve">
+    <value>此旧版工作簿的部分图片无法读取，请打开原文件查看。</value>
+  </data>
+  <data name="Preview_LinkFailed" xml:space="preserve">
+    <value>无法打开此链接</value>
+  </data>
+  <data name="Preview_Loading" xml:space="preserve">
+    <value>正在预览…</value>
+  </data>
+  <data name="Preview_LoadingCompatible" xml:space="preserve">
+    <value>正在加载兼容预览…</value>
+  </data>
+  <data name="Preview_LoadingNative" xml:space="preserve">
+    <value>正在加载原生预览…</value>
+  </data>
+  <data name="Preview_Location" xml:space="preserve">
+    <value>位置</value>
+  </data>
+  <data name="Preview_MemoryLimit" xml:space="preserve">
+    <value>文档较复杂，已停止预览以减少内存占用。请打开文件查看。</value>
+  </data>
+  <data name="Preview_None" xml:space="preserve">
+    <value>暂无可用预览，可打开文件查看</value>
+  </data>
+  <data name="Preview_PdfTooLarge" xml:space="preserve">
+    <value>PDF 超过 2 GB，请打开文件查看。</value>
+  </data>
+  <data name="Preview_PieChart" xml:space="preserve">
+    <value>饼图预览</value>
+  </data>
+  <data name="Preview_ReadFailed" xml:space="preserve">
+    <value>暂时无法读取此文件</value>
+  </data>
+  <data name="Preview_ReadOnly" xml:space="preserve">
+    <value>只读</value>
+  </data>
+  <data name="Preview_ResizeBottom" xml:space="preserve">
+    <value>调整预览下边缘</value>
+  </data>
+  <data name="Preview_ResizeBottomLeft" xml:space="preserve">
+    <value>调整预览左下角</value>
+  </data>
+  <data name="Preview_ResizeBottomRight" xml:space="preserve">
+    <value>调整预览右下角</value>
+  </data>
+  <data name="Preview_ResizeLeft" xml:space="preserve">
+    <value>调整预览左边缘</value>
+  </data>
+  <data name="Preview_ResizeRight" xml:space="preserve">
+    <value>调整预览右边缘</value>
+  </data>
+  <data name="Preview_ResizeTop" xml:space="preserve">
+    <value>调整预览上边缘</value>
+  </data>
+  <data name="Preview_ResizeTopLeft" xml:space="preserve">
+    <value>调整预览左上角</value>
+  </data>
+  <data name="Preview_ResizeTopRight" xml:space="preserve">
+    <value>调整预览右上角</value>
+  </data>
+  <data name="Preview_SheetImages" xml:space="preserve">
+    <value>此工作表的部分图片或图表无法预览，请打开原文件查看。</value>
+  </data>
+  <data name="Preview_SheetLimits" xml:space="preserve">
+    <value>最多预览 20 个工作表，每表 500 行、64 列。显示已保存的值，不重新计算公式；图片和常见图表在表格下方显示，复杂绘图请打开原文件查看。</value>
+  </data>
+  <data name="Preview_SheetTruncated" xml:space="preserve">
+    <value>已截取部分单元格，请打开文件查看完整表格。</value>
+  </data>
+  <data name="Preview_Simplified" xml:space="preserve">
+    <value>简化预览 · 此文档的部分格式无法还原，请打开文件查看完整排版。</value>
+  </data>
+  <data name="Preview_SlideHint" xml:space="preserve">
+    <value>幻灯片预览 · 图片、文字、表格及常见图表；复杂母版、动画和特殊效果请打开原文件查看。</value>
+  </data>
+  <data name="Preview_SlideLimits" xml:space="preserve">
+    <value>最多预览 100 页；内嵌图片总量限制为 8 MB。</value>
+  </data>
+  <data name="Preview_SlideNumber" xml:space="preserve">
+    <value>第 {0} 页</value>
+  </data>
+  <data name="Preview_SpreadsheetValues" xml:space="preserve">
+    <value>表格内容预览 · 显示已保存的单元格值</value>
+  </data>
+  <data name="Preview_StartFailed" xml:space="preserve">
+    <value>无法启动文档预览。</value>
+  </data>
+  <data name="Preview_System" xml:space="preserve">
+    <value>系统</value>
+  </data>
+  <data name="Preview_TextLimit" xml:space="preserve">
+    <value>已显示前 256 KB · 打开文件查看完整内容</value>
+  </data>
+  <data name="Preview_TextUnsupported" xml:space="preserve">
+    <value>此文件暂不支持文本预览</value>
+  </data>
+  <data name="Preview_Timeout" xml:space="preserve">
+    <value>文档较复杂，预览超时。请打开文件查看。</value>
+  </data>
+  <data name="Preview_UnavailableShort" xml:space="preserve">
+    <value>无法预览此文档，可打开文件查看</value>
+  </data>
+  <data name="Preview_WebViewFailed" xml:space="preserve">
+    <value>无法初始化文档预览，请重新打开预览或检查 WebView2。</value>
+  </data>
+  <data name="PreviousFile" xml:space="preserve">
+    <value>上一个文件</value>
+  </data>
+  <data name="ProgramFile" xml:space="preserve">
+    <value>程序文件</value>
+  </data>
+  <data name="Recycle_ConfirmPrefix" xml:space="preserve">
+    <value>是否将以下项目移到回收站？
+
+</value>
+  </data>
+  <data name="ReduceMotion" xml:space="preserve">
+    <value>减少动画</value>
+  </data>
+  <data name="ReduceMotionDescription" xml:space="preserve">
+    <value>开启后减弱动效。若 Windows 已关闭动画，FilesMate 无法强制打开。</value>
+  </data>
+  <data name="ReduceMotionOn" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="ReduceMotionSystem" xml:space="preserve">
+    <value>系统</value>
+  </data>
+  <data name="RemovableDrive" xml:space="preserve">
+    <value>可移动磁盘</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>移除</value>
+  </data>
+  <data name="RemoveGroup" xml:space="preserve">
+    <value>移除分组</value>
+  </data>
+  <data name="RenameApplyCount" xml:space="preserve">
+    <value>重命名 {0} 项</value>
+  </data>
+  <data name="RenameBaseExample" xml:space="preserve">
+    <value>例如：旅行照片</value>
+  </data>
+  <data name="RenameBaseName" xml:space="preserve">
+    <value>统一名称</value>
+  </data>
+  <data name="RenameChanged" xml:space="preserve">
+    <value>将修改</value>
+  </data>
+  <data name="RenameDigits" xml:space="preserve">
+    <value>编号格式</value>
+  </data>
+  <data name="RenameDuplicate" xml:space="preserve">
+    <value>新名称重复</value>
+  </data>
+  <data name="RenameExists" xml:space="preserve">
+    <value>此名称已被其他文件或文件夹占用</value>
+  </data>
+  <data name="RenameExtensionHint" xml:space="preserve">
+    <value>默认保留文件扩展名；文件夹按完整名称处理。</value>
+  </data>
+  <data name="RenameFind" xml:space="preserve">
+    <value>查找</value>
+  </data>
+  <data name="RenameFooter" xml:space="preserve">
+    <value>检查新名称后再应用。完成后可按 Ctrl+Z 撤销。</value>
+  </data>
+  <data name="RenameGroupMenu" xml:space="preserve">
+    <value>重命名分组…</value>
+  </data>
+  <data name="RenameHelpAffix" xml:space="preserve">
+    <value>保留原名称，在名称前后添加指定文字。</value>
+  </data>
+  <data name="RenameHelpCase" xml:space="preserve">
+    <value>将名称中的字母统一为大写或小写，其他字符保持不变。</value>
+  </data>
+  <data name="RenameHelpNumber" xml:space="preserve">
+    <value>使用统一名称加连续编号，编号顺序与右侧预览顺序一致。</value>
+  </data>
+  <data name="RenameHelpReplace" xml:space="preserve">
+    <value>替换名称中的匹配文字；替换内容留空可删除。</value>
+  </data>
+  <data name="RenameHelpTitle" xml:space="preserve">
+    <value>规则说明</value>
+  </data>
+  <data name="RenameIncludeExtension" xml:space="preserve">
+    <value>同时修改扩展名</value>
+  </data>
+  <data name="RenameLower" xml:space="preserve">
+    <value>全部小写</value>
+  </data>
+  <data name="RenameMatchCase" xml:space="preserve">
+    <value>区分大小写</value>
+  </data>
+  <data name="RenameMenu" xml:space="preserve">
+    <value>重命名…</value>
+  </data>
+  <data name="RenameModeAffix" xml:space="preserve">
+    <value>添加前缀或后缀</value>
+  </data>
+  <data name="RenameModeCase" xml:space="preserve">
+    <value>转换大小写</value>
+  </data>
+  <data name="RenameModeNumber" xml:space="preserve">
+    <value>统一名称与编号</value>
+  </data>
+  <data name="RenameModeReplace" xml:space="preserve">
+    <value>查找与替换</value>
+  </data>
+  <data name="RenameNew" xml:space="preserve">
+    <value>新名称</value>
+  </data>
+  <data name="RenameNumberHint" xml:space="preserve">
+    <value>编号按右侧列表顺序递增。默认保留文件扩展名。</value>
+  </data>
+  <data name="RenameNumberRequired" xml:space="preserve">
+    <value>请填写统一名称和整数起始编号</value>
+  </data>
+  <data name="RenameOperation" xml:space="preserve">
+    <value>命名方式</value>
+  </data>
+  <data name="RenameOriginal" xml:space="preserve">
+    <value>原名称</value>
+  </data>
+  <data name="RenamePrefix" xml:space="preserve">
+    <value>名称前添加</value>
+  </data>
+  <data name="RenameRemoveHint" xml:space="preserve">
+    <value>留空即可删除匹配文字</value>
+  </data>
+  <data name="RenameReplace" xml:space="preserve">
+    <value>替换为</value>
+  </data>
+  <data name="RenameResetRules" xml:space="preserve">
+    <value>重置规则</value>
+  </data>
+  <data name="RenameStart" xml:space="preserve">
+    <value>起始编号</value>
+  </data>
+  <data name="RenameSuffix" xml:space="preserve">
+    <value>名称后添加</value>
+  </data>
+  <data name="RenameSummary" xml:space="preserve">
+    <value>已选 {0} 项 · 将修改 {1} 项 · {2} 项有问题</value>
+  </data>
+  <data name="RenameUnchanged" xml:space="preserve">
+    <value>未变化</value>
+  </data>
+  <data name="RenameUndoHint" xml:space="preserve">
+    <value>重命名后可按 Ctrl+Z 撤销</value>
+  </data>
+  <data name="RenameUpper" xml:space="preserve">
+    <value>全部大写</value>
+  </data>
+  <data name="ResizePreview" xml:space="preserve">
+    <value>拖动调整预览大小</value>
+  </data>
+  <data name="ResizeVertical" xml:space="preserve">
+    <value>上下拖动调整高度</value>
+  </data>
+  <data name="Restore" xml:space="preserve">
+    <value>恢复</value>
+  </data>
+  <data name="RestoreAll" xml:space="preserve">
+    <value>全部恢复</value>
+  </data>
+  <data name="RestoreLastSessionDescription" xml:space="preserve">
+    <value>启动 FilesMate 时重新打开上次关闭前的标签页和文件夹。</value>
+  </data>
+  <data name="RestoreLastSessionTitle" xml:space="preserve">
+    <value>恢复上次的标签页</value>
+  </data>
+  <data name="RestoreSidebarDefaults" xml:space="preserve">
+    <value>恢复默认</value>
+  </data>
+  <data name="ResultOrder" xml:space="preserve">
+    <value>结果排序</value>
+  </data>
+  <data name="ResultOrder_Edit" xml:space="preserve">
+    <value>调整顺序</value>
+  </data>
+  <data name="ResultOrder_Hint" xml:space="preserve">
+    <value>靠前的类型优先显示，与文件管理器同步</value>
+  </data>
+  <data name="ResultOrder_SharedHint" xml:space="preserve">
+    <value>与文件管理器共用排序设置</value>
+  </data>
+  <data name="Retry" xml:space="preserve">
+    <value>重试</value>
+  </data>
+  <data name="RevealFile" xml:space="preserve">
+    <value>打开所在位置</value>
+  </data>
+  <data name="RevealFileShortcut" xml:space="preserve">
+    <value>打开所在位置 · Ctrl+Enter</value>
+  </data>
+  <data name="SafetySection" xml:space="preserve">
+    <value>安全</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="SaveTo" xml:space="preserve">
+    <value>保存到</value>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>已保存</value>
+  </data>
+  <data name="SavedAutomatically" xml:space="preserve">
+    <value>已自动保存</value>
+  </data>
+  <data name="SavedPrefix" xml:space="preserve">
+    <value>已保存 · </value>
+  </data>
+  <data name="SearchAutoRefresh" xml:space="preserve">
+    <value>自动更新索引</value>
+  </data>
+  <data name="SearchAutoRefreshDescription" xml:space="preserve">
+    <value>完成过一次索引后，若索引超过一天未更新，会在 FilesMate 打开时在后台重建。</value>
+  </data>
+  <data name="SearchCancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="SearchChangeLocation" xml:space="preserve">
+    <value>更改</value>
+  </data>
+  <data name="SearchDepth" xml:space="preserve">
+    <value>最大文件夹深度</value>
+  </data>
+  <data name="SearchDepthDescription" xml:space="preserve">
+    <value>默认从每个所选驱动器往下 6 层。无限制会扫描整个驱动器。</value>
+  </data>
+  <data name="SearchDepthUnlimited" xml:space="preserve">
+    <value>无限制</value>
+  </data>
+  <data name="SearchDone" xml:space="preserve">
+    <value>索引已完成。</value>
+  </data>
+  <data name="SearchDrives" xml:space="preserve">
+    <value>驱动器</value>
+  </data>
+  <data name="SearchExclusions" xml:space="preserve">
+    <value>排除路径</value>
+  </data>
+  <data name="SearchExclusionsDescription" xml:space="preserve">
+    <value>每行一个路径或文件夹名，例如 C:\Windows 或 node_modules。</value>
+  </data>
+  <data name="SearchIdle" xml:space="preserve">
+    <value>在开始索引之前，文件名索引保持关闭。</value>
+  </data>
+  <data name="SearchIndex" xml:space="preserve">
+    <value>索引</value>
+  </data>
+  <data name="SearchIndexDescription" xml:space="preserve">
+    <value>扫描所选驱动器，并跳过排除路径。全盘扫描可能需要很长时间。</value>
+  </data>
+  <data name="SearchIndexSection" xml:space="preserve">
+    <value>索引</value>
+  </data>
+  <data name="SearchIndexTitle" xml:space="preserve">
+    <value>文件名索引</value>
+  </data>
+  <data name="SearchLead" xml:space="preserve">
+    <value>先建立文件名索引，再用地址栏旁边的搜索框查找。完成第一次索引后，若超过一天未更新，FilesMate 会在应用打开时在后台刷新。</value>
+  </data>
+  <data name="SearchLocation" xml:space="preserve">
+    <value>索引文件</value>
+  </data>
+  <data name="SearchParallel" xml:space="preserve">
+    <value>同时扫描多个驱动器</value>
+  </data>
+  <data name="SearchParallelDescription" xml:space="preserve">
+    <value>将多个所选驱动器加入队列。索引仍在后台运行。</value>
+  </data>
+  <data name="SearchPlaceholder" xml:space="preserve">
+    <value>搜索文件</value>
+  </data>
+  <data name="SearchPlaceholderFolder" xml:space="preserve">
+    <value>搜索此文件夹</value>
+  </data>
+  <data name="SearchPlaceholderHome" xml:space="preserve">
+    <value>搜索全部文件</value>
+  </data>
+  <data name="SearchProgress" xml:space="preserve">
+    <value>进度</value>
+  </data>
+  <data name="SearchRankArchive" xml:space="preserve">
+    <value>压缩包</value>
+  </data>
+  <data name="SearchRankAudio" xml:space="preserve">
+    <value>音乐</value>
+  </data>
+  <data name="SearchRankCode" xml:space="preserve">
+    <value>代码</value>
+  </data>
+  <data name="SearchRankDescription" xml:space="preserve">
+    <value>拖动调整类型优先级。同一类型按名称从 A 到 Z 排列。</value>
+  </data>
+  <data name="SearchRankDocument" xml:space="preserve">
+    <value>文档</value>
+  </data>
+  <data name="SearchRankFolder" xml:space="preserve">
+    <value>文件夹</value>
+  </data>
+  <data name="SearchRankImage" xml:space="preserve">
+    <value>图片</value>
+  </data>
+  <data name="SearchRankOther" xml:space="preserve">
+    <value>其他文件</value>
+  </data>
+  <data name="SearchRankProgram" xml:space="preserve">
+    <value>程序</value>
+  </data>
+  <data name="SearchRankSection" xml:space="preserve">
+    <value>结果排序</value>
+  </data>
+  <data name="SearchRankShortcut" xml:space="preserve">
+    <value>快捷方式</value>
+  </data>
+  <data name="SearchRankVideo" xml:space="preserve">
+    <value>视频</value>
+  </data>
+  <data name="SearchShortcut" xml:space="preserve">
+    <value>搜索快捷键</value>
+  </data>
+  <data name="SearchStatErrors" xml:space="preserve">
+    <value>已跳过</value>
+  </data>
+  <data name="SearchStatFiles" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="SearchStatFolders" xml:space="preserve">
+    <value>文件夹</value>
+  </data>
+  <data name="SearchStatIndexed" xml:space="preserve">
+    <value>已索引</value>
+  </data>
+  <data name="SearchTitle" xml:space="preserve">
+    <value>搜索</value>
+  </data>
+  <data name="Search_AllIndexed" xml:space="preserve">
+    <value>搜索所有已索引文件</value>
+  </data>
+  <data name="Search_AllLocations" xml:space="preserve">
+    <value>搜索全部已索引位置</value>
+  </data>
+  <data name="Search_AppEntryHint" xml:space="preserve">
+    <value>这是软件启动入口；文件操作请先打开所在位置。</value>
+  </data>
+  <data name="Search_AwaitingSetup" xml:space="preserve">
+    <value>等待首次功能设置</value>
+  </data>
+  <data name="Search_BackgroundCompactHint" xml:space="preserve">
+    <value>关闭文件窗口后，仍可随时呼出</value>
+  </data>
+  <data name="Search_BackgroundOff" xml:space="preserve">
+    <value>后台搜索已关闭</value>
+  </data>
+  <data name="Search_CheckIndex" xml:space="preserve">
+    <value>检查索引设置</value>
+  </data>
+  <data name="Search_Clear" xml:space="preserve">
+    <value>清空搜索</value>
+  </data>
+  <data name="Search_ClearQuery" xml:space="preserve">
+    <value>清空关键词</value>
+  </data>
+  <data name="Search_ComponentMissing" xml:space="preserve">
+    <value>缺少全局搜索组件，请重新安装完整版本。</value>
+  </data>
+  <data name="Search_ContinueWithout" xml:space="preserve">
+    <value> 可选择“暂不启用搜索”继续。</value>
+  </data>
+  <data name="Search_CopyAppHint" xml:space="preserve">
+    <value>应用入口可直接启动；复制文件请先打开所在位置。</value>
+  </data>
+  <data name="Search_Count" xml:space="preserve">
+    <value>找到 {0} 个匹配项目</value>
+  </data>
+  <data name="Search_Detecting" xml:space="preserve">
+    <value>正在检测后台搜索…</value>
+  </data>
+  <data name="Search_EnableFailed" xml:space="preserve">
+    <value>全局搜索暂时无法启用</value>
+  </data>
+  <data name="Search_EnableFailedHint" xml:space="preserve">
+    <value>请在上方更换搜索快捷键，或选择“暂不启用搜索”完成设置，以后可随时开启。</value>
+  </data>
+  <data name="Search_ExitWhenHidden" xml:space="preserve">
+    <value>已关闭后台驻留，收起搜索框后退出</value>
+  </data>
+  <data name="Search_GlobalShortcut" xml:space="preserve">
+    <value>全局搜索快捷键</value>
+  </data>
+  <data name="Search_HiddenHint" xml:space="preserve">
+    <value>隐藏仅影响搜索结果，不会删除文件或卸载应用。</value>
+  </data>
+  <data name="Search_HiddenResults" xml:space="preserve">
+    <value>已隐藏的搜索结果</value>
+  </data>
+  <data name="Search_Hide" xml:space="preserve">
+    <value>收起搜索</value>
+  </data>
+  <data name="Search_HideEscape" xml:space="preserve">
+    <value>收起 · Esc</value>
+  </data>
+  <data name="Search_HideFailed" xml:space="preserve">
+    <value>无法保存隐藏设置：</value>
+  </data>
+  <data name="Search_HideResult" xml:space="preserve">
+    <value>从搜索中隐藏</value>
+  </data>
+  <data name="Search_HotkeyRegistered" xml:space="preserve">
+    <value>后台运行中 · {0} 已注册</value>
+  </data>
+  <data name="Search_HotkeyUnregistered" xml:space="preserve">
+    <value>后台运行中 · {0} 未注册，可能被其他程序占用，请更换组合</value>
+  </data>
+  <data name="Search_IndexUnavailable" xml:space="preserve">
+    <value>索引暂时不可用，请检查索引设置。</value>
+  </data>
+  <data name="Search_LeadShortcut" xml:space="preserve">
+    <value>用一个快捷键随时搜索文件和应用，不必先打开文件管理窗口。</value>
+  </data>
+  <data name="Search_LoadingCount" xml:space="preserve">
+    <value>{0}+ 项 · 加载中</value>
+  </data>
+  <data name="Search_LoginCompactHint" xml:space="preserve">
+    <value>登录后后台待命；关闭后台搜索时暂停</value>
+  </data>
+  <data name="Search_Looking" xml:space="preserve">
+    <value>正在查找…</value>
+  </data>
+  <data name="Search_ManageHidden" xml:space="preserve">
+    <value>管理隐藏项</value>
+  </data>
+  <data name="Search_ManageIndex" xml:space="preserve">
+    <value>管理索引</value>
+  </data>
+  <data name="Search_ManageIndexHint" xml:space="preserve">
+    <value>打开文件管理器，在设置 → 搜索中管理索引</value>
+  </data>
+  <data name="Search_ManagedAppHint" xml:space="preserve">
+    <value>此应用由 Windows 管理，没有普通文件路径。</value>
+  </data>
+  <data name="Search_ManagerMissing" xml:space="preserve">
+    <value>未找到 FilesMate，请从安装位置重新启动全局搜索。</value>
+  </data>
+  <data name="Search_MoreCount" xml:space="preserve">
+    <value>{0}+ 项结果</value>
+  </data>
+  <data name="Search_NoCategoryResults" xml:space="preserve">
+    <value>此类型下没有匹配项，试试切换“全部”。</value>
+  </data>
+  <data name="Search_NoResultsHint" xml:space="preserve">
+    <value>没有找到匹配项。试试更短的关键词，或检查索引范围。</value>
+  </data>
+  <data name="Search_NoShortcut" xml:space="preserve">
+    <value>此应用没有独立快捷方式，可选择从搜索中隐藏。</value>
+  </data>
+  <data name="Search_NotResponding" xml:space="preserve">
+    <value>后台搜索未响应，请稍后重试。</value>
+  </data>
+  <data name="Search_NotRunningHint" xml:space="preserve">
+    <value>后台搜索未运行。点击“打开全局搜索”即可启动。</value>
+  </data>
+  <data name="Search_Open" xml:space="preserve">
+    <value>打开全局搜索</value>
+  </data>
+  <data name="Search_OpenSuffix" xml:space="preserve">
+    <value> 呼出搜索</value>
+  </data>
+  <data name="Search_Palette" xml:space="preserve">
+    <value>搜索框</value>
+  </data>
+  <data name="Search_Partial" xml:space="preserve">
+    <value>显示 {0} 项（部分结果），请细化关键词。</value>
+  </data>
+  <data name="Search_PreviewCompactHint" xml:space="preserve">
+    <value>选中后在右侧预览，鼠标悬停不加载</value>
+  </data>
+  <data name="Search_PreviewFiles" xml:space="preserve">
+    <value>在搜索框中预览文件</value>
+  </data>
+  <data name="Search_PreviewHint" xml:space="preserve">
+    <value>选中结果后加载预览，鼠标悬停不会加载。</value>
+  </data>
+  <data name="Search_QueryHint" xml:space="preserve">
+    <value>搜索文件、文件夹…</value>
+  </data>
+  <data name="Search_Residency" xml:space="preserve">
+    <value>后台驻留全局搜索</value>
+  </data>
+  <data name="Search_ResidencyHint" xml:space="preserve">
+    <value>关闭文件管理窗口后仍可用快捷键呼出搜索。后台只监听快捷键，收起搜索框后即停止查询。</value>
+  </data>
+  <data name="Search_ResidencyOffHint" xml:space="preserve">
+    <value>后台驻留已关闭。开启后可随时用快捷键呼出搜索。</value>
+  </data>
+  <data name="Search_ResidencyStopped" xml:space="preserve">
+    <value>已关闭后台驻留，后台搜索已退出</value>
+  </data>
+  <data name="Search_RestoreHiddenFailed" xml:space="preserve">
+    <value>无法恢复隐藏项：</value>
+  </data>
+  <data name="Search_ResultCount" xml:space="preserve">
+    <value>{0} 项结果</value>
+  </data>
+  <data name="Search_ResultsChanged" xml:space="preserve">
+    <value>搜索结果已更新，请重新选择文件。</value>
+  </data>
+  <data name="Search_Searching" xml:space="preserve">
+    <value>正在搜索…</value>
+  </data>
+  <data name="Search_Settings" xml:space="preserve">
+    <value>搜索设置</value>
+  </data>
+  <data name="Search_SlowHint" xml:space="preserve">
+    <value>搜索用时较长，请细化关键词；向下滚动可重试加载。</value>
+  </data>
+  <data name="Search_StaleFiles" xml:space="preserve">
+    <value>部分文件已移动或删除，请重新搜索。</value>
+  </data>
+  <data name="Search_StartAtLogin" xml:space="preserve">
+    <value>开机启动全局搜索</value>
+  </data>
+  <data name="Search_StartAtLoginHint" xml:space="preserve">
+    <value>登录 Windows 后即可使用搜索快捷键。</value>
+  </data>
+  <data name="Search_StartFailed" xml:space="preserve">
+    <value>无法启动全局搜索：</value>
+  </data>
+  <data name="Search_StartTimeout" xml:space="preserve">
+    <value>全局搜索启动超时，请稍后重试。</value>
+  </data>
+  <data name="Search_Starting" xml:space="preserve">
+    <value>正在启动全局搜索…</value>
+  </data>
+  <data name="Search_StartupDisabledByWindows" xml:space="preserve">
+    <value>已在 Windows“设置 › 应用 › 启动”中停用 FilesMate.GlobalSearch，登录后不会启动；请在那里重新开启。</value>
+  </data>
+  <data name="Search_StartupHint" xml:space="preserve">
+    <value>登录 Windows 后即可使用搜索快捷键；关闭后台驻留时，开机启动也会一并停用。</value>
+  </data>
+  <data name="Search_Timeout" xml:space="preserve">
+    <value>搜索范围较大，请输入更完整的文件名或进入更小的文件夹。</value>
+  </data>
+  <data name="Search_TrayAction" xml:space="preserve">
+    <value>托盘图标左键打开</value>
+  </data>
+  <data name="Search_TypeToStart" xml:space="preserve">
+    <value>默认搜索当前文件夹及子文件夹。</value>
+  </data>
+  <data name="Search_Unavailable" xml:space="preserve">
+    <value>搜索暂不可用，请到设置中的“搜索索引”检查状态。</value>
+  </data>
+  <data name="Search_WindowTitle" xml:space="preserve">
+    <value>FilesMate 全局搜索</value>
+  </data>
+  <data name="SelectSameType" xml:space="preserve">
+    <value>选择同类型项目</value>
+  </data>
+  <data name="Selection_Count" xml:space="preserve">
+    <value>已选择 {0} 个项目</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="SettingsAbout" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  <data name="SettingsAdvanced" xml:space="preserve">
+    <value>高级</value>
+  </data>
+  <data name="SettingsAppearance" xml:space="preserve">
+    <value>外观</value>
+  </data>
+  <data name="SettingsFilesAndFolders" xml:space="preserve">
+    <value>文件与文件夹</value>
+  </data>
+  <data name="SettingsGeneral" xml:space="preserve">
+    <value>常规</value>
+  </data>
+  <data name="SettingsKeyboard" xml:space="preserve">
+    <value>键盘</value>
+  </data>
+  <data name="SettingsSearch" xml:space="preserve">
+    <value>搜索</value>
+  </data>
+  <data name="SettingsTags" xml:space="preserve">
+    <value>标签</value>
+  </data>
+  <data name="Settings_SaveFailed" xml:space="preserve">
+    <value>设置未能保存</value>
+  </data>
+  <data name="Settings_SaveFailedDetail" xml:space="preserve">
+    <value>设置未能保存：</value>
+  </data>
+  <data name="Setup_Guide" xml:space="preserve">
+    <value>功能使用指引</value>
+  </data>
+  <data name="Setup_GuideHint" xml:space="preserve">
+    <value>选择索引、搜索、收藏栏、字母快速定位，以及外观和主题色。</value>
+  </data>
+  <data name="Setup_Index" xml:space="preserve">
+    <value>自动建立文件索引</value>
+  </data>
+  <data name="Setup_IndexDescription" xml:space="preserve">
+    <value>后台索引文件名以便快速搜索。新用户默认选择全部可用磁盘，扫描 6 层。</value>
+  </data>
+  <data name="Setup_Later" xml:space="preserve">
+    <value>稍后设置</value>
+  </data>
+  <data name="Setup_Lead" xml:space="preserve">
+    <value>按你的习惯选择，也可以随时在设置中调整。</value>
+  </data>
+  <data name="Setup_Reopen" xml:space="preserve">
+    <value>重新选择</value>
+  </data>
+  <data name="Setup_SearchDescription" xml:space="preserve">
+    <value>使用下方快捷键随时搜索文件和应用，关闭文件窗口后仍可使用。</value>
+  </data>
+  <data name="Setup_SkipSearch" xml:space="preserve">
+    <value>暂不启用搜索</value>
+  </data>
+  <data name="Setup_Start" xml:space="preserve">
+    <value>开始使用</value>
+  </data>
+  <data name="Setup_Title" xml:space="preserve">
+    <value>选择你需要的功能</value>
+  </data>
+  <data name="Share_NotReady" xml:space="preserve">
+    <value>分享功能尚未就绪。</value>
+  </data>
+  <data name="Shelf_Add" xml:space="preserve">
+    <value>添加到暂存架</value>
+  </data>
+  <data name="Shelf_Browse" xml:space="preserve">
+    <value>选择目标文件夹</value>
+  </data>
+  <data name="Shelf_Cancel" xml:space="preserve">
+    <value>完成当前项目后停止</value>
+  </data>
+  <data name="Shelf_Cancelled" xml:space="preserve">
+    <value>已停止：已传输 {0} 项</value>
+  </data>
+  <data name="Shelf_Capacity" xml:space="preserve">
+    <value>暂存架最多可容纳 {0} 个项目。</value>
+  </data>
+  <data name="Shelf_Clear" xml:space="preserve">
+    <value>清空暂存架</value>
+  </data>
+  <data name="Shelf_Completed" xml:space="preserve">
+    <value>已传输 {0} 项</value>
+  </data>
+  <data name="Shelf_Copy" xml:space="preserve">
+    <value>复制所选项目到目标文件夹</value>
+  </data>
+  <data name="Shelf_CopyTo" xml:space="preserve">
+    <value>复制所选项目到…</value>
+  </data>
+  <data name="Shelf_Count" xml:space="preserve">
+    <value>{0} 项</value>
+  </data>
+  <data name="Shelf_Destination" xml:space="preserve">
+    <value>目标文件夹</value>
+  </data>
+  <data name="Shelf_Empty" xml:space="preserve">
+    <value>暂存架为空</value>
+  </data>
+  <data name="Shelf_InvalidDestination" xml:space="preserve">
+    <value>请选择已存在的目标文件夹。</value>
+  </data>
+  <data name="Shelf_Move" xml:space="preserve">
+    <value>移动所选项目到目标文件夹</value>
+  </data>
+  <data name="Shelf_MoveTo" xml:space="preserve">
+    <value>移动所选项目到…</value>
+  </data>
+  <data name="Shelf_Progress" xml:space="preserve">
+    <value>正在传输：已完成 {0} 项</value>
+  </data>
+  <data name="Shelf_Remove" xml:space="preserve">
+    <value>移除所选引用</value>
+  </data>
+  <data name="Shelf_Title" xml:space="preserve">
+    <value>文件暂存架</value>
+  </data>
+  <data name="ShellLayered" xml:space="preserve">
+    <value>分层</value>
+  </data>
+  <data name="ShellStyle" xml:space="preserve">
+    <value>界面风格</value>
+  </data>
+  <data name="ShellStyleDescription" xml:space="preserve">
+    <value>一体化保留原来的连贯底色；分层用柔和色差区分区域。切换立即生效。</value>
+  </data>
+  <data name="ShellUnified" xml:space="preserve">
+    <value>一体化</value>
+  </data>
+  <data name="Shortcut_Change" xml:space="preserve">
+    <value>更换快捷键</value>
+  </data>
+  <data name="Shortcut_ChangeConflict" xml:space="preserve">
+    <value>这个快捷键已被占用，原来的快捷键已保留。请更换组合，或关闭占用它的程序后重试。</value>
+  </data>
+  <data name="Shortcut_CloseTab" xml:space="preserve">
+    <value>关闭标签页</value>
+  </data>
+  <data name="Shortcut_Conflict" xml:space="preserve">
+    <value>该组合键已用于“{0}”。</value>
+  </data>
+  <data name="Shortcut_DeleteHint" xml:space="preserve">
+    <value>
+
+这只删除列出的快捷方式，不会删除其指向的程序或卸载应用。</value>
+  </data>
+  <data name="Shortcut_DeleteMenu" xml:space="preserve">
+    <value>删除快捷方式…</value>
+  </data>
+  <data name="Shortcut_EditAddress" xml:space="preserve">
+    <value>编辑地址栏</value>
+  </data>
+  <data name="Shortcut_ExampleF" xml:space="preserve">
+    <value>例如 Ctrl+Alt+F</value>
+  </data>
+  <data name="Shortcut_ExampleK" xml:space="preserve">
+    <value>例如 Ctrl+Alt+K</value>
+  </data>
+  <data name="Shortcut_FilterFolder" xml:space="preserve">
+    <value>搜索文件</value>
+  </data>
+  <data name="Shortcut_InUse" xml:space="preserve">
+    <value>{0} 已被占用</value>
+  </data>
+  <data name="Shortcut_InUseHint" xml:space="preserve">
+    <value>快捷键已被其他程序占用。请关闭该程序，或从设置更换快捷键。</value>
+  </data>
+  <data name="Shortcut_Invalid" xml:space="preserve">
+    <value>快捷键格式不正确</value>
+  </data>
+  <data name="Shortcut_InvalidHint" xml:space="preserve">
+    <value>请输入 Alt、Ctrl 或 Shift 加空格、字母、数字或功能键（F12 除外），也可以点击“录入快捷键”直接按键。</value>
+  </data>
+  <data name="Shortcut_Lead" xml:space="preserve">
+    <value>左侧是功能，右侧是当前快捷键。点击快捷键后，直接按下新的组合键即可修改。</value>
+  </data>
+  <data name="Shortcut_PressCombination" xml:space="preserve">
+    <value>请按组合键…</value>
+  </data>
+  <data name="Shortcut_PressKeys" xml:space="preserve">
+    <value>请按下快捷键</value>
+  </data>
+  <data name="Shortcut_Preview" xml:space="preserve">
+    <value>显示或隐藏预览</value>
+  </data>
+  <data name="Shortcut_Record" xml:space="preserve">
+    <value>录入快捷键</value>
+  </data>
+  <data name="Shortcut_RecordHint" xml:space="preserve">
+    <value>点击后按下组合键</value>
+  </data>
+  <data name="Shortcut_Redo" xml:space="preserve">
+    <value>重做</value>
+  </data>
+  <data name="Shortcut_RegisterFailed" xml:space="preserve">
+    <value>无法注册快捷键（Windows 错误 {0}）。请更换组合后重试。</value>
+  </data>
+  <data name="Shortcut_RestoreDefaults" xml:space="preserve">
+    <value>恢复默认</value>
+  </data>
+  <data name="Shortcut_SaveFailed" xml:space="preserve">
+    <value>无法保存快捷键。</value>
+  </data>
+  <data name="Shortcut_TryAnother" xml:space="preserve">
+    <value>请换组合键…</value>
+  </data>
+  <data name="Shortcut_Undo" xml:space="preserve">
+    <value>撤销</value>
+  </data>
+  <data name="Shortcut_ValidKeys" xml:space="preserve">
+    <value>请使用 Alt、Ctrl 或 Shift 搭配空格、字母、数字或功能键（F12 除外）。</value>
+  </data>
+  <data name="Shortcut_WinUnsupported" xml:space="preserve">
+    <value>不支持 Win 键</value>
+  </data>
+  <data name="ShortcutsBody" xml:space="preserve">
+    <value>Enter 打开　　Backspace / Alt+↑ 上级　　Alt+← / Alt+→ 后退前进
+Ctrl+T 新标签　　Ctrl+W 关闭标签　　Ctrl+L 路径　　Ctrl+F 筛选　　F5 刷新　　Ctrl+Z 撤销　　Ctrl+Y 重做</value>
+  </data>
+  <data name="ShortcutsHeader" xml:space="preserve">
+    <value>键盘</value>
+  </data>
+  <data name="ShortcutsTitle" xml:space="preserve">
+    <value>常用快捷键</value>
+  </data>
+  <data name="ShowExtensionsDescription" xml:space="preserve">
+    <value>在文件名中保留类型后缀。</value>
+  </data>
+  <data name="ShowExtensionsTitle" xml:space="preserve">
+    <value>显示文件扩展名</value>
+  </data>
+  <data name="ShowFolderSizesDescription" xml:space="preserve">
+    <value>在大小列中显示文件夹占用。默认关闭，因为扫描大目录会比较慢。</value>
+  </data>
+  <data name="ShowFolderSizesTitle" xml:space="preserve">
+    <value>显示文件夹大小</value>
+  </data>
+  <data name="ShowHiddenFilesDescription" xml:space="preserve">
+    <value>浏览文件夹时包含隐藏项目和系统项目。</value>
+  </data>
+  <data name="ShowHiddenFilesTitle" xml:space="preserve">
+    <value>显示隐藏文件</value>
+  </data>
+  <data name="ShowNavigation" xml:space="preserve">
+    <value>显示导航</value>
+  </data>
+  <data name="SidebarDefaultsRestored" xml:space="preserve">
+    <value>已恢复默认侧栏位置。</value>
+  </data>
+  <data name="SidebarPinsDescription" xml:space="preserve">
+    <value>可以在侧栏中右键取消任意固定位置，也可以在这里恢复常用的默认位置。</value>
+  </data>
+  <data name="SidebarPinsTitle" xml:space="preserve">
+    <value>侧栏固定项目</value>
+  </data>
+  <data name="SidebarSection" xml:space="preserve">
+    <value>侧栏</value>
+  </data>
+  <data name="Sidebar_AddCloud" xml:space="preserve">
+    <value>添加云盘</value>
+  </data>
+  <data name="Sidebar_AddCloudFolder" xml:space="preserve">
+    <value>添加云盘文件夹</value>
+  </data>
+  <data name="Sidebar_CloudEntryHint" xml:space="preserve">
+    <value>只修改侧栏入口，不更改文件或云盘账号。移除后可通过“+”重新添加文件夹。</value>
+  </data>
+  <data name="Sidebar_CloudInvalid" xml:space="preserve">
+    <value>请填写名称和已存在的完整文件夹路径。</value>
+  </data>
+  <data name="Sidebar_CloudPath" xml:space="preserve">
+    <value>本地同步文件夹</value>
+  </data>
+  <data name="Sidebar_CloudSaveFailed" xml:space="preserve">
+    <value>无法保存此入口，请重试。</value>
+  </data>
+  <data name="Sidebar_Collapse" xml:space="preserve">
+    <value>收起导航栏</value>
+  </data>
+  <data name="Sidebar_DisconnectNetworkDrive" xml:space="preserve">
+    <value>断开网络驱动器</value>
+  </data>
+  <data name="Sidebar_EditCloud" xml:space="preserve">
+    <value>编辑云盘入口</value>
+  </data>
+  <data name="Sidebar_Eject" xml:space="preserve">
+    <value>弹出</value>
+  </data>
+  <data name="Sidebar_Expand" xml:space="preserve">
+    <value>展开导航栏</value>
+  </data>
+  <data name="Sidebar_MapNetworkDrive" xml:space="preserve">
+    <value>映射网络驱动器</value>
+  </data>
+  <data name="Sidebar_OneDriveSettings" xml:space="preserve">
+    <value>OneDrive 设置</value>
+  </data>
+  <data name="Sidebar_PinFolder" xml:space="preserve">
+    <value>固定文件夹</value>
+  </data>
+  <data name="Sidebar_RemoveCloud" xml:space="preserve">
+    <value>移除云盘入口</value>
+  </data>
+  <data name="Sort" xml:space="preserve">
+    <value>排序</value>
+  </data>
+  <data name="SortByModified" xml:space="preserve">
+    <value>按日期排序</value>
+  </data>
+  <data name="SortByName" xml:space="preserve">
+    <value>按名称排序</value>
+  </data>
+  <data name="SortBySize" xml:space="preserve">
+    <value>按大小排序</value>
+  </data>
+  <data name="SortByType" xml:space="preserve">
+    <value>按类型排序</value>
+  </data>
+  <data name="Sort_MixedPinyin" xml:space="preserve">
+    <value>中英文按拼音混合排序</value>
+  </data>
+  <data name="Sort_MixedPinyinHint" xml:space="preserve">
+    <value>按名称排序时，将中文拼音与英文字母排在一起，例如“阿”与 A。关闭时中文单独排列；多音字使用字典默认读音。</value>
+  </data>
+  <data name="Sort_Modified" xml:space="preserve">
+    <value>修改日期</value>
+  </data>
+  <data name="Sort_Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="Sort_Size" xml:space="preserve">
+    <value>大小</value>
+  </data>
+  <data name="Sort_Type" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="StartAtLogin" xml:space="preserve">
+    <value>开机自启</value>
+  </data>
+  <data name="StartupFolderDescription" xml:space="preserve">
+    <value>新窗口会先进入主页或桌面。</value>
+  </data>
+  <data name="StartupFolderTitle" xml:space="preserve">
+    <value>打开位置</value>
+  </data>
+  <data name="StartupSection" xml:space="preserve">
+    <value>启动</value>
+  </data>
+  <data name="Startup_SaveFailed" xml:space="preserve">
+    <value>开机自启未能设置：</value>
+  </data>
+  <data name="StatusBar" xml:space="preserve">
+    <value>状态栏</value>
+  </data>
+  <data name="StatusBarDescription" xml:space="preserve">
+    <value>在文件列表下方显示数量和选中摘要。</value>
+  </data>
+  <data name="Status_FolderCalculating" xml:space="preserve">
+    <value>正在计算文件夹大小…</value>
+  </data>
+  <data name="Status_FolderSize" xml:space="preserve">
+    <value>文件夹大小：{0}</value>
+  </data>
+  <data name="Status_FolderUnavailable" xml:space="preserve">
+    <value>无法计算文件夹大小</value>
+  </data>
+  <data name="Status_Free" xml:space="preserve">
+    <value>{0} 可用</value>
+  </data>
+  <data name="Status_FreeOfTotal" xml:space="preserve">
+    <value>{0} 可用，共 {1}</value>
+  </data>
+  <data name="Status_Items" xml:space="preserve">
+    <value>{0} 个项目</value>
+  </data>
+  <data name="Status_ItemsCancelled" xml:space="preserve">
+    <value>{0} 个项目 · 已取消</value>
+  </data>
+  <data name="Status_ItemsFailed" xml:space="preserve">
+    <value>{0} 个项目 · 加载失败</value>
+  </data>
+  <data name="Status_ItemsLoading" xml:space="preserve">
+    <value>{0} 个项目 · 正在加载</value>
+  </data>
+  <data name="Status_Selected" xml:space="preserve">
+    <value>已选择 {0} 个项目</value>
+  </data>
+  <data name="SystemLocation_Failed" xml:space="preserve">
+    <value>无法打开这个系统位置。请检查名称或路径。</value>
+  </data>
+  <data name="SystemSection" xml:space="preserve">
+    <value>系统</value>
+  </data>
+  <data name="System_ControlPanel" xml:space="preserve">
+    <value>控制面板</value>
+  </data>
+  <data name="System_Libraries" xml:space="preserve">
+    <value>库</value>
+  </data>
+  <data name="System_Network" xml:space="preserve">
+    <value>网络</value>
+  </data>
+  <data name="System_RecycleBin" xml:space="preserve">
+    <value>回收站</value>
+  </data>
+  <data name="TabStateDescription" xml:space="preserve">
+    <value>每个标签页分别保留位置、历史记录、排序和视图状态。</value>
+  </data>
+  <data name="TabStateTitle" xml:space="preserve">
+    <value>独立导航状态</value>
+  </data>
+  <data name="Tab_Close" xml:space="preserve">
+    <value>关闭标签页</value>
+  </data>
+  <data name="Tab_CloseOthers" xml:space="preserve">
+    <value>关闭其他标签页</value>
+  </data>
+  <data name="Tab_CloseToTheRight" xml:space="preserve">
+    <value>关闭右侧标签页</value>
+  </data>
+  <data name="Tab_Duplicate" xml:space="preserve">
+    <value>复制标签页</value>
+  </data>
+  <data name="Tab_KeepActive" xml:space="preserve">
+    <value>保持此标签页活跃</value>
+  </data>
+  <data name="Tab_MemoryAggressive" xml:space="preserve">
+    <value>积极 · 2 分钟</value>
+  </data>
+  <data name="Tab_MemoryBalanced" xml:space="preserve">
+    <value>均衡 · 10 分钟</value>
+  </data>
+  <data name="Tab_MemoryHint" xml:space="preserve">
+    <value>自动休眠闲置标签页，切回来时恢复浏览位置。右键标签页可选择保持活跃。</value>
+  </data>
+  <data name="Tab_MemoryMode" xml:space="preserve">
+    <value>省内存模式</value>
+  </data>
+  <data name="Tab_MemoryModerate" xml:space="preserve">
+    <value>适度 · 30 分钟</value>
+  </data>
+  <data name="Tab_MoveToNewWindow" xml:space="preserve">
+    <value>移至新窗口</value>
+  </data>
+  <data name="Tab_Reopen" xml:space="preserve">
+    <value>恢复关闭的标签页</value>
+  </data>
+  <data name="Tab_Suspend" xml:space="preserve">
+    <value>休眠此标签页</value>
+  </data>
+  <data name="Tab_SuspendedHint" xml:space="preserve">
+    <value>
+已休眠，点击恢复</value>
+  </data>
+  <data name="TabsDescription" xml:space="preserve">
+    <value>按 Ctrl+T 在新标签页打开主页。</value>
+  </data>
+  <data name="TabsSection" xml:space="preserve">
+    <value>标签页</value>
+  </data>
+  <data name="TabsTitle" xml:space="preserve">
+    <value>标签页</value>
+  </data>
+  <data name="TagColorsDescription" xml:space="preserve">
+    <value>使用简短名称和一致的颜色，更快扫读当前文件夹。</value>
+  </data>
+  <data name="TagColorsTitle" xml:space="preserve">
+    <value>标签颜色</value>
+  </data>
+  <data name="TagCreate" xml:space="preserve">
+    <value>创建标签</value>
+  </data>
+  <data name="TagNamePlaceholder" xml:space="preserve">
+    <value>新标签名称</value>
+  </data>
+  <data name="TagPickerActionHint" xml:space="preserve">
+    <value>点击标签添加 · 点击 × 移除</value>
+  </data>
+  <data name="TagPickerEmpty" xml:space="preserve">
+    <value>还没有标签，输入名称即可新建。</value>
+  </data>
+  <data name="TagPickerHint" xml:space="preserve">
+    <value>勾选要应用的标签，或输入名称后点完成。</value>
+  </data>
+  <data name="TagPickerPlaceholder" xml:space="preserve">
+    <value>搜索或新建标签</value>
+  </data>
+  <data name="TagPickerTitle" xml:space="preserve">
+    <value>标签</value>
+  </data>
+  <data name="Tag_Color" xml:space="preserve">
+    <value>颜色</value>
+  </data>
+  <data name="Tag_Create" xml:space="preserve">
+    <value>创建</value>
+  </data>
+  <data name="Tag_Delete" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Tag_DeleteBody" xml:space="preserve">
+    <value>确定删除标签“{0}”吗？文件不会被删除，只会移除这个标签。</value>
+  </data>
+  <data name="Tag_DeleteTitle" xml:space="preserve">
+    <value>删除标签？</value>
+  </data>
+  <data name="Tag_Done" xml:space="preserve">
+    <value>完成</value>
+  </data>
+  <data name="Tag_Edit" xml:space="preserve">
+    <value>编辑标签</value>
+  </data>
+  <data name="Tag_EditTitle" xml:space="preserve">
+    <value>编辑标签</value>
+  </data>
+  <data name="Tag_Empty" xml:space="preserve">
+    <value>还没有标签，点击右上角新建一个。</value>
+  </data>
+  <data name="Tag_Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="Tag_NameRequired" xml:space="preserve">
+    <value>请输入标签名称。</value>
+  </data>
+  <data name="Tag_New" xml:space="preserve">
+    <value>新建标签</value>
+  </data>
+  <data name="Tag_Remove" xml:space="preserve">
+    <value>移除</value>
+  </data>
+  <data name="TagsLead" xml:space="preserve">
+    <value>创建一组彩色标签，让它们跟随文件一起保留。</value>
+  </data>
+  <data name="TagsSection" xml:space="preserve">
+    <value>你的标签</value>
+  </data>
+  <data name="TagsTitle" xml:space="preserve">
+    <value>标签</value>
+  </data>
+  <data name="Tags_NotReady" xml:space="preserve">
+    <value>标签尚未就绪。</value>
+  </data>
+  <data name="ThemeDark" xml:space="preserve">
+    <value>深色</value>
+  </data>
+  <data name="ThemeDescription" xml:space="preserve">
+    <value>浅色、深色，或跟随 Windows。</value>
+  </data>
+  <data name="ThemeLight" xml:space="preserve">
+    <value>浅色</value>
+  </data>
+  <data name="ThemeSection" xml:space="preserve">
+    <value>应用主题</value>
+  </data>
+  <data name="ThemeSystem" xml:space="preserve">
+    <value>跟随系统</value>
+  </data>
+  <data name="Toolbar" xml:space="preserve">
+    <value>工具栏</value>
+  </data>
+  <data name="ToolbarDescription" xml:space="preserve">
+    <value>在地址栏右侧显示排序和视图按钮。</value>
+  </data>
+  <data name="Transfer_ApplyAll" xml:space="preserve">
+    <value>对本次操作后续同类冲突应用此选择</value>
+  </data>
+  <data name="Transfer_ApplyAllCompact" xml:space="preserve">
+    <value>本次操作的同类冲突都这样处理</value>
+  </data>
+  <data name="Transfer_Bytes" xml:space="preserve">
+    <value>{0} 字节</value>
+  </data>
+  <data name="Transfer_ConflictHint" xml:space="preserve">
+    <value>“{0}”已存在，请选择如何处理。</value>
+  </data>
+  <data name="Transfer_CreateCopy" xml:space="preserve">
+    <value>创建副本</value>
+  </data>
+  <data name="Transfer_Details" xml:space="preserve">
+    <value>查看失败项目</value>
+  </data>
+  <data name="Transfer_ExistingLabel" xml:space="preserve">
+    <value>已有项目</value>
+  </data>
+  <data name="Transfer_IncomingLabel" xml:space="preserve">
+    <value>来源项目</value>
+  </data>
+  <data name="Transfer_InvalidDestination" xml:space="preserve">
+    <value>目标是项目自身、当前所在文件夹或其子文件夹，请选择其他位置。</value>
+  </data>
+  <data name="Transfer_KeepBoth" xml:space="preserve">
+    <value>保留两者（自动添加括号编号）</value>
+  </data>
+  <data name="Transfer_KeepBothButton" xml:space="preserve">
+    <value>保留两者</value>
+  </data>
+  <data name="Transfer_LinkHint" xml:space="preserve">
+    <value>目标是链接，不直接替换链接。请选择保留两者或跳过。</value>
+  </data>
+  <data name="Transfer_Merge" xml:space="preserve">
+    <value>合并文件夹（内部文件同名时继续询问）</value>
+  </data>
+  <data name="Transfer_Newer" xml:space="preserve">
+    <value>修改时间较新</value>
+  </data>
+  <data name="Transfer_NumberedName" xml:space="preserve">
+    <value>保留两者时的新名称：{0}</value>
+  </data>
+  <data name="Transfer_Replace" xml:space="preserve">
+    <value>替换已有文件</value>
+  </data>
+  <data name="Transfer_ReplaceButton" xml:space="preserve">
+    <value>替换</value>
+  </data>
+  <data name="Transfer_ReplaceHint" xml:space="preserve">
+    <value>使用来源文件替换已有内容。当前会话的撤销记录保留期间，可撤销以恢复旧版本。</value>
+  </data>
+  <data name="Transfer_ResultCounts" xml:space="preserve">
+    <value>已传输 {0} 项 · 已跳过 {1} 项 · 失败 {2} 项</value>
+  </data>
+  <data name="Transfer_SameItemHint" xml:space="preserve">
+    <value>来源和目标指向同一个项目，不能替换自身。可以创建编号副本，或跳过。</value>
+  </data>
+  <data name="Transfer_SameItemTitle" xml:space="preserve">
+    <value>已是同一个项目</value>
+  </data>
+  <data name="Transfer_Skipped" xml:space="preserve">
+    <value>已跳过 {0} 项</value>
+  </data>
+  <data name="Transfer_Source" xml:space="preserve">
+    <value>来源：{0}</value>
+  </data>
+  <data name="Transfer_Target" xml:space="preserve">
+    <value>已有项目：{0}</value>
+  </data>
+  <data name="Transfer_TypeHint" xml:space="preserve">
+    <value>同名项目的类型不同，不能合并或直接替换。请选择保留两者或跳过。</value>
+  </data>
+  <data name="Transparency" xml:space="preserve">
+    <value>透明度</value>
+  </data>
+  <data name="TransparencyDescription" xml:space="preserve">
+    <value>调节磨砂玻璃的通透强度：0% 不透明，数值越大越通透，同时保留底色和分层对比，避免背景染色影响阅读。</value>
+  </data>
+  <data name="TransparencyDisabled" xml:space="preserve">
+    <value>选择非纯色背景并开启玻璃效果后，可调节透明度。</value>
+  </data>
+  <data name="Tray_LeftClick" xml:space="preserve">
+    <value>托盘左键打开</value>
+  </data>
+  <data name="Tray_OpenManager" xml:space="preserve">
+    <value>托盘左键打开文件管理器</value>
+  </data>
+  <data name="Tray_OpenSearch" xml:space="preserve">
+    <value>托盘左键打开搜索框</value>
+  </data>
+  <data name="Type_File" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="Type_FileSuffix" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="Type_Folder" xml:space="preserve">
+    <value>文件夹</value>
+  </data>
+  <data name="Undo" xml:space="preserve">
+    <value>撤销</value>
+  </data>
+  <data name="Update_Automatic" xml:space="preserve">
+    <value>每天首次打开时自动检查更新</value>
+  </data>
+  <data name="Update_Available" xml:space="preserve">
+    <value>FilesMate 有新版本</value>
+  </data>
+  <data name="Update_Busy" xml:space="preserve">
+    <value>正在更新，请稍候。</value>
+  </data>
+  <data name="Update_CancelDownload" xml:space="preserve">
+    <value>取消下载</value>
+  </data>
+  <data name="Update_Check" xml:space="preserve">
+    <value>检查更新</value>
+  </data>
+  <data name="Update_CheckFailed" xml:space="preserve">
+    <value>暂时无法检查更新，请检查网络后重试。</value>
+  </data>
+  <data name="Update_CheckStateFailed" xml:space="preserve">
+    <value>无法保存检查状态，请稍后重试。</value>
+  </data>
+  <data name="Update_Checking" xml:space="preserve">
+    <value>正在检查更新…</value>
+  </data>
+  <data name="Update_ChoiceHint" xml:space="preserve">
+    <value>发现新版后会提示，由你选择是否更新。</value>
+  </data>
+  <data name="Update_Connecting" xml:space="preserve">
+    <value>正在连接下载服务器…</value>
+  </data>
+  <data name="Update_Current" xml:space="preserve">
+    <value>当前已是最新版本。</value>
+  </data>
+  <data name="Update_Demo" xml:space="preserve">
+    <value>交互演示 · 不会安装</value>
+  </data>
+  <data name="Update_DemoFooter" xml:space="preserve">
+    <value>演示结束不会修改软件</value>
+  </data>
+  <data name="Update_DemoProgress" xml:space="preserve">
+    <value>交互演示：进度为模拟数据，不会下载安装。</value>
+  </data>
+  <data name="Update_Dismiss" xml:space="preserve">
+    <value>关闭更新提示</value>
+  </data>
+  <data name="Update_Downloading" xml:space="preserve">
+    <value>正在下载更新</value>
+  </data>
+  <data name="Update_Failed" xml:space="preserve">
+    <value>更新未完成，请检查网络或稍后重试。原版本可以继续使用。</value>
+  </data>
+  <data name="Update_FinishOperations" xml:space="preserve">
+    <value>请先完成文件操作或名称编辑，再更新。</value>
+  </data>
+  <data name="Update_FoundPrefix" xml:space="preserve">
+    <value>发现新版本 </value>
+  </data>
+  <data name="Update_Install" xml:space="preserve">
+    <value>立即更新</value>
+  </data>
+  <data name="Update_InstallHint" xml:space="preserve">
+    <value>完成后自动安装并重新打开</value>
+  </data>
+  <data name="Update_InstallerInvalid" xml:space="preserve">
+    <value>安装包校验失败，请重新下载。</value>
+  </data>
+  <data name="Update_KeepUsing" xml:space="preserve">
+    <value>当前版本可以继续使用</value>
+  </data>
+  <data name="Update_MetadataInvalid" xml:space="preserve">
+    <value>更新信息校验失败，请稍后重试。</value>
+  </data>
+  <data name="Update_PreserveHint" xml:space="preserve">
+    <value>更新完成后会重新打开，保留你的设置和标签页。</value>
+  </data>
+  <data name="Update_ReleaseNotes" xml:space="preserve">
+    <value>本次更新</value>
+  </data>
+  <data name="Update_SaveFailed" xml:space="preserve">
+    <value>未能保存更新设置，请重试。</value>
+  </data>
+  <data name="Update_Section" xml:space="preserve">
+    <value>软件更新</value>
+  </data>
+  <data name="Update_Timeout" xml:space="preserve">
+    <value>下载超时，请稍后重试。</value>
+  </data>
+  <data name="Update_Title" xml:space="preserve">
+    <value>更新 FilesMate</value>
+  </data>
+  <data name="Update_VerificationFailed" xml:space="preserve">
+    <value>更新文件校验失败，未运行安装程序。请稍后重试。</value>
+  </data>
+  <data name="Update_Verifying" xml:space="preserve">
+    <value>下载完成，正在校验并启动安装…</value>
+  </data>
+  <data name="Update_VersionNotNewer" xml:space="preserve">
+    <value>更新版本必须高于当前版本。</value>
+  </data>
+  <data name="UseBundledFileIcons" xml:space="preserve">
+    <value>使用 FilesMate 文件图标</value>
+  </data>
+  <data name="UseBundledFileIconsHint" xml:space="preserve">
+    <value>默认开启。关闭后使用 Windows 文件关联图标，显示默认打开软件对应的图标。立即生效，保留图片和视频缩略图。</value>
+  </data>
+  <data name="Videos" xml:space="preserve">
+    <value>视频</value>
+  </data>
+  <data name="View_PerFolder" xml:space="preserve">
+    <value>每个文件夹单独记忆</value>
+  </data>
+  <data name="View_Scope" xml:space="preserve">
+    <value>显示设置的应用范围</value>
+  </data>
+  <data name="View_ScopeHint" xml:space="preserve">
+    <value>管理列表/图标视图、图标大小和排序。切换范围会保留原来的文件夹设置。</value>
+  </data>
+  <data name="View_Shared" xml:space="preserve">
+    <value>所有文件夹共用</value>
+  </data>
+  <data name="View_SharedHint" xml:space="preserve">
+    <value>当前使用共用显示设置，可在任意文件夹的工具栏中调整视图、大小和排序。</value>
+  </data>
+  <data name="Window_SaveSizeFailed" xml:space="preserve">
+    <value>窗口大小暂时未能保存</value>
+  </data>
+  <data name="WindowsSection" xml:space="preserve">
+    <value>窗口与标签页</value>
+  </data>
+</root>

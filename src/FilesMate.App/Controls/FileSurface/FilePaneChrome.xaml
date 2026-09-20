@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="FilesMate.App.Controls.FileSurface.FilePaneChrome"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:info="using:FilesMate.App.Controls.InfoStates"
+    xmlns:status="using:FilesMate.App.Controls.Status">
+    <UserControl.Resources>
+        <StaticResource x:Key="FilePane.ActiveBrush" ResourceKey="FilesMate.FileArea.BackgroundBrush" />
+        <StaticResource x:Key="FilePane.InactiveBrush" ResourceKey="FilesMate.FileArea.InactiveBackgroundBrush" />
+    </UserControl.Resources>
+    <Grid x:Name="Root">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Border
+            x:Name="PaneCard"
+            Margin="8,0,8,8"
+            Background="{ThemeResource FilesMate.FileContent.BackgroundBrush}"
+            BorderBrush="{ThemeResource FilesMate.FileContent.BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource FilesMate.Corner.Card}">
+            <Grid>
+                <Border
+                    x:Name="InactiveOverlay"
+                    Background="{ThemeResource FilesMate.FileArea.InactiveBackgroundBrush}"
+                    CornerRadius="{StaticResource FilesMate.Corner.Card}"
+                    IsHitTestVisible="False"
+                    Opacity="0" />
+                <ContentPresenter
+                    x:Name="BodyPresenter"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    VerticalContentAlignment="Stretch" />
+                <info:LoadingPresenter x:Name="LoadingHost" VerticalAlignment="Top" />
+                <info:InfoStateView
+                    x:Name="Info"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    PrimaryClicked="Info_PrimaryClicked"
+                    SecondaryClicked="Info_SecondaryClicked"
+                    Visibility="Collapsed" />
+            </Grid>
+        </Border>
+        <status:FileStatusBar
+            x:Name="StatusBar"
+            Grid.Row="1"
+            Height="{StaticResource FilesMate.Control.Height.StatusBar}" />
+    </Grid>
+</UserControl>

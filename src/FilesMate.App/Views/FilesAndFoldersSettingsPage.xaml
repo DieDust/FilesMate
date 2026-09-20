@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="FilesMate.App.Views.FilesAndFoldersSettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:loc="using:FilesMate.App.Localization"
+    xmlns:glass="using:FilesMate.App.Controls.Glass"
+    xmlns:settings="using:FilesMate.App.Controls.Settings">
+    <StackPanel MaxWidth="720" HorizontalAlignment="Stretch" Spacing="0">
+        <TextBlock
+            x:Name="Heading"
+            Style="{StaticResource FilesMate.SettingsHeadingStyle}"
+            Text="Files &amp; folders" />
+        <TextBlock x:Name="Lead" Style="{StaticResource FilesMate.SettingsLeadStyle}" />
+        <TextBlock x:Name="FoldersHeader" Style="{StaticResource FilesMate.SectionHeaderStyle}" Text="File list" />
+        <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <StackPanel>
+                <settings:SettingCard Title="{loc:LocalizedText Key=Favorites_Bar}" Description="{loc:LocalizedText Key=Favorites_SettingsHint}" ShowDivider="True">
+                    <ToggleSwitch x:Name="FavoritesToggle" MinWidth="0" Toggled="FavoritesToggle_Toggled" />
+                </settings:SettingCard>
+                <settings:SettingCard Title="{loc:LocalizedText Key=Setup_Guide}" Description="{loc:LocalizedText Key=Setup_GuideHint}" ShowDivider="True">
+                    <Button Content="{loc:LocalizedText Key=Setup_Reopen}" Click="FeatureSetup_Click" />
+                </settings:SettingCard>
+                <settings:SettingCard Title="{loc:LocalizedText Key=View_Scope}" Description="{loc:LocalizedText Key=View_ScopeHint}" ShowDivider="True">
+                    <ComboBox x:Name="ViewScopeBox" MinWidth="190" MinHeight="34" CornerRadius="{StaticResource FilesMate.Corner.Small}" SelectionChanged="ViewScope_Changed">
+                        <ComboBoxItem Content="{loc:LocalizedText Key=View_PerFolder}"/>
+                        <ComboBoxItem Content="{loc:LocalizedText Key=View_Shared}"/>
+                    </ComboBox>
+                </settings:SettingCard>
+                <settings:SettingCard
+                    x:Name="StartupViewCard"
+                    Title="Default view"
+                    Description="New tabs use this layout. You can still switch details and icons from the toolbar."
+                    ShowDivider="True">
+                    <ComboBox
+                        x:Name="DefaultViewBox"
+                        MinWidth="160"
+                        MinHeight="34"
+                        CornerRadius="{StaticResource FilesMate.Corner.Small}"
+                        SelectionChanged="DefaultViewBox_SelectionChanged">
+                        <ComboBoxItem x:Name="ViewIconsItem" Content="Icons" Tag="Icons" />
+                        <ComboBoxItem x:Name="ViewDetailsItem" Content="Details" Tag="Details" />
+                    </ComboBox>
+                </settings:SettingCard>
+                <settings:SettingCard
+                    x:Name="ExtensionsCard"
+                    Title="Show file extensions"
+                    Description="Keep the type suffix visible in names, the way Explorer does when this option is on."
+                    ShowDivider="True">
+                    <ToggleSwitch x:Name="ExtensionsToggle" MinWidth="0" Toggled="ExtensionsToggle_Toggled" />
+                </settings:SettingCard>
+                <settings:SettingCard
+                    x:Name="HiddenFilesCard"
+                    Title="Show hidden files"
+                    Description="Include hidden and system items while browsing folders."
+                    ShowDivider="True">
+                    <ToggleSwitch x:Name="HiddenFilesToggle" MinWidth="0" Toggled="HiddenFilesToggle_Toggled" />
+                </settings:SettingCard>
+                <settings:SettingCard
+                    x:Name="FolderSizesCard"
+                    Title="Show folder sizes"
+                    Description="Walk folder contents to fill the Size column. Off by default because it can be slow on large trees."
+                    ShowDivider="True">
+                    <ToggleSwitch x:Name="FolderSizesToggle" MinWidth="0" Toggled="FolderSizesToggle_Toggled" />
+                </settings:SettingCard>
+                <settings:SettingCard Title="{loc:LocalizedText Key=Sort_MixedPinyin}" Description="{loc:LocalizedText Key=Sort_MixedPinyinHint}" ShowDivider="True">
+                    <ToggleSwitch x:Name="MixedNameSortToggle" MinWidth="0" Toggled="MixedNameSortToggle_Toggled" AutomationProperties.Name="{loc:LocalizedText Key=Sort_MixedPinyin}" />
+                </settings:SettingCard>
+                <settings:SettingCard
+                    x:Name="DateFormatCard"
+                    Title="Date format"
+                    Description="Use your Windows regional format, or a fixed year-month-day stamp.">
+                    <ComboBox
+                        x:Name="DateFormatBox"
+                        MinWidth="160"
+                        MinHeight="34"
+                        CornerRadius="{StaticResource FilesMate.Corner.Small}"
+                        SelectionChanged="DateFormatBox_SelectionChanged">
+                        <ComboBoxItem x:Name="DateSystemItem" Content="Windows" Tag="System" />
+                        <ComboBoxItem x:Name="DateIsoItem" Content="ISO" Tag="Iso" />
+                    </ComboBox>
+                </settings:SettingCard>
+            </StackPanel>
+        </glass:LiquidGlassSurface>
+        <TextBlock
+            x:Name="AlphabetHeader"
+            Style="{StaticResource FilesMate.SettingsSectionHeaderStyle}"
+            Text="Alphabet navigation" />
+        <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <StackPanel>
+                <settings:SettingCard
+                    x:Name="AlphabetCard"
+                    Title="Enable alphabet navigation"
+                    Description="Show the alphabet rail, letter bubble, and range indicator while sorting by name."
+                    ShowDivider="True">
+                    <ToggleSwitch
+                        x:Name="AlphabetToggle"
+                        MinWidth="0"
+                        Toggled="AlphabetToggle_Toggled"
+                        AutomationProperties.Name="Enable alphabet navigation" />
+                </settings:SettingCard>
+                <settings:SettingCard
+                    x:Name="AlphabetMinimumItemsCard"
+                    Title="Minimum item count"
+                    Description="Use the normal scroll bar when the folder is already small enough to scan at a glance."
+                    ShowDivider="True">
+                    <NumberBox
+                        x:Name="AlphabetMinimumItemsBox"
+                        Width="116"
+                        Minimum="0"
+                        Maximum="10000"
+                        SmallChange="1"
+                        LargeChange="10"
+                        SpinButtonPlacementMode="Hidden"
+                        ValueChanged="AlphabetMinimumItemsBox_ValueChanged"
+                        AutomationProperties.Name="Minimum item count" />
+                </settings:SettingCard>
+                <settings:SettingCard
+                    x:Name="AlphabetDualPaneCard"
+                    Title="Show in dual-pane mode"
+                    Description="Allow the alphabet rail in both panes even though each pane has less reading space.">
+                    <ToggleSwitch
+                        x:Name="AlphabetDualPaneToggle"
+                        MinWidth="0"
+                        Toggled="AlphabetDualPaneToggle_Toggled"
+                        AutomationProperties.Name="Show alphabet navigation in dual-pane mode" />
+                </settings:SettingCard>
+            </StackPanel>
+        </glass:LiquidGlassSurface>
+        <TextBlock
+            x:Name="SafetyHeader"
+            Style="{StaticResource FilesMate.SettingsSectionHeaderStyle}"
+            Text="Safety" />
+        <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <settings:SettingCard
+                x:Name="ConfirmDeleteCard"
+                Title="Confirm permanent delete"
+                Description="Ask before permanently deleting selected items.">
+                <ToggleSwitch x:Name="ConfirmDeleteToggle" MinWidth="0" Toggled="ConfirmDeleteToggle_Toggled" />
+            </settings:SettingCard>
+        </glass:LiquidGlassSurface>
+        <TextBlock Style="{StaticResource FilesMate.SettingsSectionHeaderStyle}" Text="{loc:LocalizedText Key=Backup_Title}" />
+        <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <settings:SettingCard Title="{loc:LocalizedText Key=Backup_Title}" Description="{loc:LocalizedText Key=Backup_Policy}">
+                <Button Content="{loc:LocalizedText Key=Backup_Manage}" Click="BackupManage_Click" />
+            </settings:SettingCard>
+        </glass:LiquidGlassSurface>
+        <TextBlock
+            x:Name="SidebarHeader"
+            Style="{StaticResource FilesMate.SettingsSectionHeaderStyle}"
+            Text="Sidebar" />
+        <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <settings:SettingCard
+                x:Name="SidebarPinsCard"
+                Title="Sidebar pinned items"
+                Description="Remove any pinned location from its context menu, or restore the familiar defaults here.">
+                <Button
+                    x:Name="RestoreSidebarButton"
+                    Padding="14,6"
+                    Click="RestoreSidebarButton_Click"
+                    Style="{StaticResource GlassButtonStyle}" />
+            </settings:SettingCard>
+        </glass:LiquidGlassSurface>
+        <TextBlock
+            x:Name="StatusText"
+            Margin="4,10,4,0"
+            Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+            FontSize="12"
+            TextWrapping="Wrap"
+            Visibility="Collapsed" />
+        <TextBlock
+            x:Name="ErrorText"
+            Margin="4,10,4,0"
+            Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+            FontSize="12"
+            TextWrapping="Wrap"
+            Visibility="Collapsed" />
+    </StackPanel>
+</UserControl>

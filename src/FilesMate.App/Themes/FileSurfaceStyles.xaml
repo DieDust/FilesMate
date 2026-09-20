@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:loc="using:FilesMate.App.Localization"
+    xmlns:glass="using:FilesMate.App.Controls.Glass">
+    <Style
+        x:Key="ColumnHeaderButtonStyle"
+        BasedOn="{StaticResource QuietButtonStyle}"
+        TargetType="Button">
+        <Setter Property="Height" Value="24" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Margin" Value="2,2" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+        <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Small}" />
+    </Style>
+    <Style
+        x:Key="FilesMate.GlassCardStyle"
+        BasedOn="{StaticResource FilesMate.LiquidGlassSurfaceStyle}"
+        TargetType="glass:LiquidGlassSurface">
+        <Setter Property="Padding" Value="16,12" />
+        <Setter Property="Background" Value="{ThemeResource FilesMate.SettingsCard.BackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.Card.BorderBrush}" />
+        <Setter Property="Shadow" Value="{x:Null}" />
+        <Setter Property="SurfaceKind" Value="Sidebar" />
+    </Style>
+    <Style x:Key="FilesMate.SectionHeaderStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+        <Setter Property="Margin" Value="4,0,0,8" />
+    </Style>
+    <Style
+        x:Key="FilesMate.SettingsSectionHeaderStyle"
+        BasedOn="{StaticResource FilesMate.SectionHeaderStyle}"
+        TargetType="TextBlock">
+        <Setter Property="Margin" Value="4,20,0,8" />
+    </Style>
+    <Style x:Key="FilesMate.SettingsHeadingStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="26" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+    </Style>
+    <Style x:Key="FilesMate.SettingsLeadStyle" TargetType="TextBlock">
+        <Setter Property="Margin" Value="0,4,0,20" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style TargetType="ComboBox" BasedOn="{StaticResource DefaultComboBoxStyle}">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+        <Setter Property="Background" Value="{ThemeResource FilesMate.ComboBox.BackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.ComboBox.BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Omnibar}" />
+        <Setter Property="Padding" Value="12,5,8,5" />
+        <Setter Property="MinHeight" Value="34" />
+    </Style>
+    <Style TargetType="ComboBoxItem" BasedOn="{StaticResource DefaultComboBoxItemStyle}">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+    </Style>
+    <Style TargetType="ToggleSwitch" BasedOn="{StaticResource DefaultToggleSwitchStyle}">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+        <Setter Property="OnContent" Value="{loc:LocalizedText Key=On}" />
+        <Setter Property="OffContent" Value="{loc:LocalizedText Key=Off}" />
+    </Style>
+    <Style
+        x:Key="FileTileNameStyle"
+        TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="LineStackingStrategy" Value="MaxHeight" />
+        <Setter Property="MaxLines" Value="2" />
+        <Setter Property="TextAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="TextWrapping" Value="WrapWholeWords" />
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+    </Style>
+</ResourceDictionary>

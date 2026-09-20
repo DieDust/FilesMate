@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup Condition="$(MSBuildProjectName.Contains('.Tests'))">
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'FilesMate.Benchmarks' or '$(MSBuildProjectName)' == 'FilesMate.TestDataGenerator'">
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+</Project>

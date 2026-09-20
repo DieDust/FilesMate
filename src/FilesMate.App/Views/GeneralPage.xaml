@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="FilesMate.App.Views.GeneralPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:loc="using:FilesMate.App.Localization"
+    xmlns:glass="using:FilesMate.App.Controls.Glass"
+    xmlns:settings="using:FilesMate.App.Controls.Settings">
+    <StackPanel MaxWidth="720" Spacing="0">
+        <TextBlock
+            x:Name="Heading"
+            Style="{StaticResource FilesMate.SettingsHeadingStyle}"
+            Text="General" />
+        <TextBlock
+            x:Name="Lead"
+            Style="{StaticResource FilesMate.SettingsLeadStyle}"
+            Text="Choose how FilesMate starts and how new folders open." />
+        <glass:LiquidGlassSurface Padding="0" Margin="0,0,0,12" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <settings:SettingCard Title="{loc:LocalizedText Key=Language_Title}"
+                                  Description="{loc:LocalizedText Key=Language_Description}">
+                <ComboBox x:Name="LanguageBox" MinWidth="170" MaxWidth="260"
+                          AutomationProperties.Name="{loc:LocalizedText Key=Language_Title}"
+                          SelectionChanged="LanguageBox_SelectionChanged">
+                    <ComboBoxItem Tag="System" Content="{loc:LocalizedText Key=Language_System}" />
+                    <ComboBoxItem Tag="zh-CN" Content="简体中文" />
+                    <ComboBoxItem Tag="en-US" Content="English" />
+                    <ComboBoxItem Tag="ja-JP" Content="日本語" />
+                </ComboBox>
+            </settings:SettingCard>
+        </glass:LiquidGlassSurface>
+        <TextBlock x:Name="LanguageStatus" TextWrapping="Wrap" Margin="4,0,4,12" Visibility="Collapsed"
+                   Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+        <Button x:Name="LanguageRetry" Content="{loc:LocalizedText Key=Language_Retry}" Visibility="Collapsed"
+                Click="LanguageRetry_Click" Margin="4,0,4,12" />
+        <TextBlock
+            x:Name="StartupHeader"
+            Style="{StaticResource FilesMate.SectionHeaderStyle}"
+            Text="Startup" />
+        <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <StackPanel>
+                <settings:SettingCard
+                    x:Name="StartupCard"
+                    Title="Open to"
+                    Description="Choose the folder a new window opens first."
+                    ShowDivider="True">
+                    <ComboBox
+                        x:Name="StartupBox"
+                        MinWidth="160"
+                        MinHeight="34"
+                        CornerRadius="{StaticResource FilesMate.Corner.Small}"
+                        SelectionChanged="StartupBox_SelectionChanged">
+                        <ComboBoxItem x:Name="StartupDesktopItem" Content="Desktop" Tag="Desktop" />
+                        <ComboBoxItem x:Name="StartupHomeItem" Content="Home" Tag="Home" />
+                    </ComboBox>
+                </settings:SettingCard>
+                <settings:SettingCard
+                    x:Name="RestoreSessionCard"
+                    Title="Restore previous tabs"
+                    Description="Reopen the tabs and folders from your last session when FilesMate starts.">
+                    <ToggleSwitch
+                        x:Name="RestoreSessionToggle"
+                        MinWidth="0"
+                        Toggled="RestoreSessionToggle_Toggled" />
+                </settings:SettingCard>
+            </StackPanel>
+        </glass:LiquidGlassSurface>
+        <TextBlock
+            x:Name="WindowsHeader"
+            Style="{StaticResource FilesMate.SettingsSectionHeaderStyle}"
+            Text="Windows &amp; tabs" />
+        <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <StackPanel>
+                <settings:SettingCard
+                    x:Name="OpenInExistingWindowCard"
+                    Title="Use one app window"
+                    Description="When another app opens a folder in FilesMate, reuse the window that is already running."
+                    ShowDivider="True">
+                    <ToggleSwitch
+                        x:Name="OpenInExistingWindowToggle"
+                        MinWidth="0"
+                        Toggled="OpenInExistingWindowToggle_Toggled" />
+                </settings:SettingCard>
+                <settings:SettingCard
+                    x:Name="OpenFoldersCard"
+                    Title="Open folders in a new tab"
+                    Description="Double-clicking a folder opens it in a separate tab instead of replacing this one.">
+                    <ToggleSwitch
+                        x:Name="OpenFoldersToggle"
+                        MinWidth="0"
+                        Toggled="OpenFoldersToggle_Toggled" />
+                </settings:SettingCard>
+            </StackPanel>
+        </glass:LiquidGlassSurface>
+        <TextBlock Text="{loc:LocalizedText Key=PerformanceSection}" Style="{StaticResource FilesMate.SettingsSectionHeaderStyle}" />
+        <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <settings:SettingCard Title="{loc:LocalizedText Key=Tab_MemoryMode}" Description="{loc:LocalizedText Key=Tab_MemoryHint}">
+                <ComboBox x:Name="TabMemoryBox" MinWidth="180" SelectionChanged="TabMemoryBox_SelectionChanged">
+                    <ComboBoxItem Content="{loc:LocalizedText Key=GlassEffectOff}" Tag="Off" />
+                    <ComboBoxItem Content="{loc:LocalizedText Key=Tab_MemoryModerate}" Tag="Moderate" />
+                    <ComboBoxItem Content="{loc:LocalizedText Key=Tab_MemoryBalanced}" Tag="Balanced" />
+                    <ComboBoxItem Content="{loc:LocalizedText Key=Tab_MemoryAggressive}" Tag="Aggressive" />
+                </ComboBox>
+            </settings:SettingCard>
+        </glass:LiquidGlassSurface>
+        <TextBlock
+            x:Name="SaveErrorText"
+            Margin="4,10,4,0"
+            Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+            FontSize="12"
+            TextWrapping="Wrap"
+            Visibility="Collapsed" />
+    </StackPanel>
+</UserControl>

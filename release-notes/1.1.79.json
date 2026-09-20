@@ -1,0 +1,5 @@
+{
+  "zh-CN": "重新设计撤销备份策略：历史最多保留5次操作，替换备份合计最多预留256 MiB、单文件最多64 MiB，并计入重做版本和备用数据流。超过限制时不会偷偷备份或覆盖，需要单独确认不可撤销的替换，批量规则不能绕过确认。设置新增备份占用、位置与清理入口；异常退出的已登记残留会提示并计入预算。替换前检查可用磁盘空间，保留中断操作的可恢复数据。",
+  "en-US": "Redesigned undo backups: retain up to five operations, with 256 MiB reserved in total and 64 MiB per replacement file, including redo versions and alternate data streams. Exceeding a limit requires explicit confirmation to replace without undo; bulk rules cannot bypass it. Settings now shows backup reservations, locations and history cleanup. Registered remnants from interrupted sessions remain visible and count toward the budget. Replacement checks available space and preserves recoverable data after failures.",
+  "ja-JP": "元に戻すためのバックアップを見直しました。履歴は最大5操作、置換バックアップの予約容量は合計256 MiB、1ファイル64 MiBまでとし、やり直し用のバージョンと代替データストリームも計算します。上限を超える場合、元に戻せない置換には個別の確認が必要で、一括設定では省略できません。設定に予約容量・保存場所・履歴の消去を追加しました。中断したセッションの登録済みバックアップを通知し、容量に算入します。置換前に空き容量を確認し、失敗時の復旧可能なデータを保持します。"
+}

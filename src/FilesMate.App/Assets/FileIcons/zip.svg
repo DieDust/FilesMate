@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="pack" x1="25" y1="19" x2="104" y2="111" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD978"/>
+      <stop offset="1" stop-color="#F4A525"/>
+    </linearGradient>
+  </defs>
+  <rect x="15" y="12" width="98" height="106" rx="25" fill="#B96E13" opacity=".14" transform="translate(0 4)"/>
+  <rect x="15" y="12" width="98" height="106" rx="25" fill="url(#pack)"/>
+  <g id="compact-mark">
+    <rect x="51" y="29" width="47" height="58" rx="11" fill="#FFF4D5" fill-opacity=".72"/>
+    <rect x="34" y="36" width="49" height="60" rx="12" fill="#FFF9E9"/>
+    <path d="M44 52h29M44 66h21M44 80h29" stroke="#E58F11" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <rect x="56" y="84" width="55" height="31" rx="10" fill="#C77712"/>
+  <g id="badge-label" fill="none" stroke="#FFFFFF" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(63.786 90) scale(1.429)"><path d="M1.3 1.8 H6.7 L1.3 12.4 H6.7"/></g><g transform="translate(77.786 90) scale(1.429)"><path d="M2.2 1.8 H5.8 M4 1.8 V12.4 M2.2 12.4 H5.8"/></g><g transform="translate(91.786 90) scale(1.429)"><path d="M1.4 12.4 V1.8 H5.1 C7 1.8 7.1 7 5.1 7 H1.4"/></g></g>
+</svg>

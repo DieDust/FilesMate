@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="FilesMate.App.Controls.Navigation.NavigationSidebar"
+    x:Name="Root"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:FilesMate.App.Controls.Navigation"
+    xmlns:nav="using:FilesMate.App.Navigation"
+    IsTabStop="True"
+    KeyDown="Root_KeyDown">
+    <UserControl.Resources>
+        <local:BoolToVisibilityConverter x:Key="TrueCollapsed" Invert="True" />
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+        <local:BoolToOpacityConverter x:Key="BoolToOpacity" />
+        <local:BoolToHorizontalAlignmentConverter x:Key="CompactAlign" />
+        <local:CompactThicknessConverter
+            x:Key="IconMargin"
+            CompactValue="0"
+            ExpandedValue="16,0,0,0" />
+        <local:CompactThicknessConverter
+            x:Key="RailPadding"
+            CompactValue="8,8,8,8"
+            ExpandedValue="12,8,12,8" />
+        <local:CompactThicknessConverter
+            x:Key="SettingsMargin"
+            CompactValue="4,0,4,0"
+            ExpandedValue="8,0,8,0" />
+    </UserControl.Resources>
+    <Grid
+        Background="Transparent"
+        PointerEntered="Sidebar_PointerEntered"
+        PointerExited="Sidebar_PointerExited">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <ScrollViewer
+            x:Name="PlacesScroll"
+            Padding="{Binding IsCompact, ElementName=Root, Converter={StaticResource RailPadding}}"
+            HorizontalScrollBarVisibility="Disabled"
+            HorizontalScrollMode="Disabled"
+            VerticalScrollBarVisibility="Hidden"
+            VerticalScrollMode="Auto"
+            ZoomMode="Disabled">
+            <ListView
+                x:Name="SectionRepeater"
+                AllowDrop="True"
+                CanDragItems="True"
+                CanReorderItems="True"
+                ContainerContentChanging="Section_ContainerContentChanging"
+                DragItemsCompleted="Section_DragItemsCompleted"
+                DragItemsStarting="Section_DragItemsStarting"
+                Style="{StaticResource SidebarSectionListStyle}">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="nav:NavigationSection">
+                        <StackPanel Spacing="0">
+                            <Border Height="1" Margin="12,8,12,3"
+                                Background="{ThemeResource FilesMate.Sidebar.SeparatorBrush}"
+                                Visibility="{x:Bind ShowTitle, Converter={StaticResource BoolToVisibility}}" />
+                            <Grid Visibility="{Binding IsCompact, ElementName=Root, Converter={StaticResource TrueCollapsed}}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Grid
+                                    x:Name="SectionHeader"
+                                    Padding="16,10,8,6"
+                                    HorizontalAlignment="Stretch"
+                                    Background="Transparent"
+                                    PointerPressed="SectionHeader_PointerPressed"
+                                    Tapped="SectionHeader_Tapped"
+                                    Tag="{x:Bind}"
+                                    Visibility="{x:Bind ShowTitle, Converter={StaticResource BoolToVisibility}}"
+                                    AutomationProperties.Name="{x:Bind Title}">
+                                    <Grid IsHitTestVisible="False">
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            FontWeight="SemiBold"
+                                            Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                                            Text="{x:Bind Title}" />
+                                        <FontIcon
+                                            Margin="0,0,4,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            FontFamily="Segoe Fluent Icons"
+                                            FontSize="11"
+                                            Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                                            Glyph="&#xE70D;"
+                                            Visibility="{x:Bind IsExpanded, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+                                        <FontIcon
+                                            Margin="0,0,4,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            FontFamily="Segoe Fluent Icons"
+                                            FontSize="11"
+                                            Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                                            Glyph="&#xE76C;"
+                                            Visibility="{x:Bind IsExpanded, Mode=OneWay, Converter={StaticResource TrueCollapsed}}" />
+                                    </Grid>
+                                </Grid>
+                                <Button
+                                    Grid.Column="1"
+                                    Width="28"
+                                    Height="28"
+                                    Margin="0,4,4,0"
+                                    Click="SectionAction_Click"
+                                    Style="{StaticResource QuietButtonStyle}"
+                                    Tag="{x:Bind}"
+                                    ToolTipService.ToolTip="{x:Bind ActionLabel}"
+                                    Visibility="{x:Bind HasActions, Converter={StaticResource BoolToVisibility}}"
+                                    AutomationProperties.Name="{x:Bind ActionLabel}">
+                                    <FontIcon
+                                        FontFamily="Segoe Fluent Icons"
+                                        FontSize="11"
+                                        Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                                        Glyph="&#xE710;" />
+                                </Button>
+                            </Grid>
+                            <ListView
+                                Tag="{x:Bind}"
+                                ItemsSource="{x:Bind Items}"
+                                CanDragItems="{x:Bind AllowReorder}"
+                                CanReorderItems="{x:Bind AllowReorder}"
+                                AllowDrop="{x:Bind AllowReorder}"
+                                ItemClick="Place_ItemClick"
+                                DragItemsStarting="Place_DragItemsStarting"
+                                DragItemsCompleted="Place_DragItemsCompleted"
+                                ContextRequested="Item_ContextRequested"
+                                Style="{StaticResource SidebarPlaceListStyle}"
+                                Visibility="{x:Bind IsExpanded, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="nav:NavigationItem">
+                                        <Grid
+                                            Height="{StaticResource FilesMate.Control.Height.SidebarItem}"
+                                            Background="Transparent"
+                                            ToolTipService.ToolTip="{x:Bind Label}"
+                                            AutomationProperties.Name="{x:Bind Label}">
+                                            <Border
+                                                x:Name="SelectionBackground"
+                                                Opacity="{x:Bind Selected, Mode=OneWay, Converter={StaticResource BoolToOpacity}}"
+                                                Background="{ThemeResource FilesMate.Item.SelectedBrush}"
+                                                CornerRadius="{StaticResource FilesMate.Corner.Small}"
+                                                IsHitTestVisible="False" />
+                                            <FontIcon
+                                                Width="16"
+                                                Height="16"
+                                                Margin="{Binding IsCompact, ElementName=Root, Converter={StaticResource IconMargin}}"
+                                                HorizontalAlignment="{Binding IsCompact, ElementName=Root, Converter={StaticResource CompactAlign}}"
+                                                VerticalAlignment="Center"
+                                                FontFamily="Segoe Fluent Icons"
+                                                FontSize="16"
+                                                Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
+                                                Glyph="{x:Bind IconGlyph}" />
+                                            <Grid
+                                                Margin="44,0,12,0"
+                                                ColumnSpacing="4"
+                                                Visibility="{Binding IsCompact, ElementName=Root, Converter={StaticResource TrueCollapsed}}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
+                                                    Text="{x:Bind Label}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                                    Text="{x:Bind Badge}" />
+                                            </Grid>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </ScrollViewer>
+        <Grid
+            x:Name="SettingsFooter"
+            Grid.Row="1"
+            Padding="0,9,0,9">
+            <Button
+                Height="{StaticResource FilesMate.Control.Height.StatusBar}"
+                Margin="{Binding IsCompact, ElementName=Root, Converter={StaticResource SettingsMargin}}"
+                HorizontalAlignment="Stretch"
+                Click="Settings_Click"
+                x:Name="SettingsButton"
+                Style="{StaticResource SidebarItemStyle}"
+                AutomationProperties.Name="Settings"
+                ToolTipService.ToolTip="Settings">
+                <Grid>
+                    <FontIcon
+                        Width="16"
+                        Height="16"
+                        Margin="{Binding IsCompact, ElementName=Root, Converter={StaticResource IconMargin}}"
+                        HorizontalAlignment="{Binding IsCompact, ElementName=Root, Converter={StaticResource CompactAlign}}"
+                        VerticalAlignment="Center"
+                        FontFamily="Segoe Fluent Icons"
+                        FontSize="16"
+                        Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
+                        Glyph="&#xE713;" />
+                    <TextBlock
+                        x:Name="SettingsLabel"
+                        Margin="40,0,12,0"
+                        VerticalAlignment="Center"
+                        Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
+                        Text="Settings"
+                        Visibility="{Binding IsCompact, ElementName=Root, Converter={StaticResource TrueCollapsed}}" />
+                </Grid>
+            </Button>
+        </Grid>
+    </Grid>
+</UserControl>

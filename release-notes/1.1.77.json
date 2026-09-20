@@ -1,0 +1,5 @@
+{
+  "zh-CN": "优化同名冲突弹窗：减少重复文件名、压缩对比区和选项间距，隐藏空说明区域，确认按钮与所选操作保持一致。在原位置粘贴同一个项目时，明确说明无法替换自身，提供创建编号副本或跳过；文件与文件夹类型不一致、目标为链接时也会解释原因。独立区分同一项目的批量处理规则。",
+  "en-US": "Refined the conflict dialog with fewer repeated names, compact comparisons and options, hidden empty descriptions, and an action-specific confirmation button. Pasting an item onto itself now explains why replacement is unavailable and offers a numbered copy or Skip. Type mismatches and link destinations also show a reason. Batch choices for the same item are kept separate from other conflicts.",
+  "ja-JP": "名前の競合ダイアログを整理し、名前の重複表示、比較欄と選択肢の余白を減らしました。空の説明欄を非表示にし、確認ボタンを選択した操作に合わせます。同じ項目への貼り付けでは自分自身を置き換えられない理由を示し、番号付きコピーの作成またはスキップを選べます。種類の不一致やリンクの場合も理由を表示し、同じ項目の一括処理ルールをほかの競合と分離しました。"
+}

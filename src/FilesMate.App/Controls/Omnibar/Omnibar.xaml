@@ -1,0 +1,331 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="FilesMate.App.Controls.Omnibar.Omnibar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:FilesMate.App.Controls"
+    xmlns:glass="using:FilesMate.App.Controls.Glass"
+    xmlns:local="using:FilesMate.App.Controls.Omnibar"
+    SizeChanged="Root_SizeChanged">
+    <Grid
+        x:Name="RootGrid"
+        Height="{StaticResource FilesMate.Control.Height.Omnibar}"
+        ColumnSpacing="{StaticResource FilesMate.Space.2}">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="Modes">
+                <VisualStateGroup.Transitions>
+                    <VisualTransition GeneratedDuration="{StaticResource FilesMate.Motion.Standard}" />
+                </VisualStateGroup.Transitions>
+                <VisualState x:Name="PathDisplay">
+                    <VisualState.Setters>
+                        <Setter Target="Crumbs.Opacity" Value="1" />
+                        <Setter Target="Crumbs.IsHitTestVisible" Value="True" />
+                        <Setter Target="PathBox.Opacity" Value="0" />
+                        <Setter Target="PathBox.Visibility" Value="Collapsed" />
+                        <Setter Target="PathBox.IsHitTestVisible" Value="False" />
+                        <Setter Target="PathBox.IsTabStop" Value="False" />
+                        <Setter Target="PathEditSurface.Visibility" Value="Visible" />
+                        <Setter Target="PathEditSurface.IsHitTestVisible" Value="True" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="PathEdit">
+                    <VisualState.Setters>
+                        <Setter Target="Crumbs.Opacity" Value="0" />
+                        <Setter Target="Crumbs.IsHitTestVisible" Value="False" />
+                        <Setter Target="PathBox.Opacity" Value="1" />
+                        <Setter Target="PathBox.Visibility" Value="Visible" />
+                        <Setter Target="PathBox.IsHitTestVisible" Value="True" />
+                        <Setter Target="PathBox.IsTabStop" Value="True" />
+                        <Setter Target="PathEditSurface.Visibility" Value="Collapsed" />
+                        <Setter Target="PathEditSurface.IsHitTestVisible" Value="False" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+            <VisualStateGroup x:Name="SearchStates">
+                <VisualState x:Name="SearchClosed">
+                    <VisualState.Setters>
+                        <Setter Target="SearchBox.IsHitTestVisible" Value="False" />
+                        <Setter Target="SearchBox.IsTabStop" Value="False" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="SearchOpen">
+                    <VisualState.Setters>
+                        <Setter Target="SearchBox.IsHitTestVisible" Value="True" />
+                        <Setter Target="SearchBox.IsTabStop" Value="True" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" MinWidth="160" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <controls:NavigationToolbar
+            x:Name="Toolbar"
+            VerticalAlignment="Center"
+            BackClicked="Toolbar_BackClicked"
+            ForwardClicked="Toolbar_ForwardClicked"
+            RefreshClicked="Toolbar_RefreshClicked"
+            UpClicked="Toolbar_UpClicked" />
+        <glass:LiquidGlassSurface
+            x:Name="PathHost"
+            Grid.Column="1"
+            Tapped="PathHost_Tapped"
+            MinHeight="38"
+            Padding="12,0"
+            VerticalAlignment="Center"
+            Background="{ThemeResource FilesMate.AddressBar.BackgroundBrush}"
+            BorderBrush="{ThemeResource FilesMate.AddressBar.BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="{StaticResource FilesMate.Corner.Omnibar}"
+            Shadow="{x:Null}"
+            SurfaceKind="Command"
+            Style="{StaticResource FilesMate.LiquidGlassSurfaceStyle}">
+            <Grid x:Name="PathViewport" ColumnSpacing="0" SizeChanged="PathViewport_SizeChanged">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel
+                    x:Name="Crumbs"
+                    Grid.ColumnSpan="2"
+                    Canvas.ZIndex="10"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center" />
+                <Border
+                    x:Name="PathEditSurface"
+                    Grid.ColumnSpan="2"
+                    MinWidth="24"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Background="Transparent"
+                    Canvas.ZIndex="5"
+                    IsHitTestVisible="True"
+                    PointerPressed="PathEditSurface_PointerPressed"
+                    Visibility="Visible" />
+                <TextBox
+                    x:Name="PathBox"
+                    Visibility="Collapsed"
+                    Grid.ColumnSpan="2"
+                    Canvas.ZIndex="20"
+                    VerticalAlignment="Center"
+                    Background="{ThemeResource FilesMate.TextControl.CaretHostBrush}"
+                    BorderThickness="0"
+                    IsTabStop="False"
+                    IsHitTestVisible="False"
+                    IsSpellCheckEnabled="False"
+                    IsTextPredictionEnabled="False"
+                    KeyDown="PathBox_KeyDown"
+                    LostFocus="PathBox_LostFocus"
+                    Padding="10,7,0,0"
+                    HorizontalContentAlignment="Left"
+                    VerticalContentAlignment="Center"
+                    Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
+                    Opacity="0">
+                    <TextBox.Resources>
+                        <SolidColorBrush x:Key="TextControlBackground" Color="Transparent" />
+                        <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="Transparent" />
+                        <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Transparent" />
+                        <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="Transparent" />
+                        <SolidColorBrush x:Key="TextControlBorderBrush" Color="Transparent" />
+                        <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="Transparent" />
+                        <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="Transparent" />
+                        <SolidColorBrush x:Key="TextControlBorderBrushDisabled" Color="Transparent" />
+                        <SolidColorBrush x:Key="TextControlButtonBackground" Color="Transparent" />
+                        <SolidColorBrush x:Key="TextControlButtonBackgroundPointerOver" Color="Transparent" />
+                        <SolidColorBrush x:Key="TextControlButtonBackgroundPressed" Color="Transparent" />
+                        <SolidColorBrush x:Key="TextControlButtonForeground" Color="Transparent" />
+                        <SolidColorBrush x:Key="TextControlButtonForegroundPointerOver" Color="Transparent" />
+                        <SolidColorBrush x:Key="TextControlButtonForegroundPressed" Color="Transparent" />
+                        <Thickness x:Key="TextControlBorderThemeThickness">0</Thickness>
+                        <Thickness x:Key="TextControlBorderThemeThicknessFocused">0</Thickness>
+                        <Thickness x:Key="TextControlBorderThemeThicknessPointerOver">0</Thickness>
+                    </TextBox.Resources>
+                </TextBox>
+            </Grid>
+        </glass:LiquidGlassSurface>
+        <Grid
+            x:Name="SearchCluster"
+            Grid.Column="2"
+            VerticalAlignment="Center">
+            <Grid
+                x:Name="SearchSizer"
+                Width="36"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                SizeChanged="SearchSizer_SizeChanged">
+            <glass:LiquidGlassSurface
+                x:Name="SearchHost"
+                MinHeight="38"
+                Padding="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
+                Shadow="{x:Null}"
+                SurfaceKind="Command"
+                Background="{ThemeResource FilesMate.AddressBar.BackgroundBrush}"
+                BorderBrush="{ThemeResource FilesMate.AddressBar.BorderBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource FilesMate.Corner.Omnibar}"
+                PointerEntered="SearchHost_PointerEntered"
+                PointerExited="SearchHost_PointerExited"
+                Style="{StaticResource FilesMate.LiquidGlassSurfaceStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid
+                        MinWidth="0"
+                        PointerPressed="SearchPane_PointerPressed">
+                        <TextBlock
+                            x:Name="SearchPlaceholderLabel"
+                            Margin="12,0,8,0"
+                            VerticalAlignment="Center"
+                            FontSize="14"
+                            Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                            IsHitTestVisible="False"
+                            Text="Search files"
+                            TextTrimming="CharacterEllipsis" />
+                        <TextBox
+                            x:Name="SearchBox"
+                            Padding="12,10,4,0"
+                            VerticalAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            HorizontalContentAlignment="Left"
+                            FontSize="14"
+                            MinWidth="0"
+                            Background="{ThemeResource FilesMate.TextControl.CaretHostBrush}"
+                            BorderThickness="0"
+                            IsTabStop="False"
+                            IsHitTestVisible="False"
+                            IsSpellCheckEnabled="False"
+                            IsTextPredictionEnabled="False"
+                            Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
+                            GotFocus="SearchBox_GotFocus"
+                            LostFocus="SearchBox_LostFocus"
+                            TextChanged="SearchBox_TextChanged"
+                            KeyDown="SearchBox_KeyDown">
+                            <TextBox.Resources>
+                                <SolidColorBrush x:Key="TextControlBackground" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="Transparent" />
+                                <StaticResource x:Key="TextControlBackgroundFocused" ResourceKey="FilesMate.TextControl.CaretHostBrush" />
+                                <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlBorderBrush" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlBorderBrushDisabled" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlButtonBackground" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlButtonBackgroundPointerOver" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlButtonBackgroundPressed" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlButtonForeground" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlButtonForegroundPointerOver" Color="Transparent" />
+                                <SolidColorBrush x:Key="TextControlButtonForegroundPressed" Color="Transparent" />
+                                <Thickness x:Key="TextControlBorderThemeThickness">0</Thickness>
+                                <Thickness x:Key="TextControlBorderThemeThicknessFocused">0</Thickness>
+                                <Thickness x:Key="TextControlBorderThemeThicknessPointerOver">0</Thickness>
+                            </TextBox.Resources>
+                        </TextBox>
+                    </Grid>
+                    <Button
+                        x:Name="ClearSearchButton"
+                        Grid.Column="1"
+                        Width="28"
+                        MinWidth="28"
+                        Padding="0"
+                        Visibility="Collapsed"
+                        Click="ClearSearchButton_Click"
+                        Style="{StaticResource ToolbarIconButtonStyle}">
+                        <FontIcon FontFamily="Segoe Fluent Icons" FontSize="10" Glyph="&#xE711;" />
+                    </Button>
+                    <Button
+                        x:Name="SearchButton"
+                        Grid.Column="2"
+                        Click="SearchButton_Click"
+                        Style="{StaticResource ToolbarIconButtonStyle}"
+                        VerticalAlignment="Center"
+                        AutomationProperties.Name="Search"
+                        ToolTipService.ToolTip="Search">
+                        <FontIcon FontFamily="Segoe Fluent Icons" FontSize="14" Glyph="&#xE721;" />
+                    </Button>
+                </Grid>
+            </glass:LiquidGlassSurface>
+            </Grid>
+        </Grid>
+        <Popup
+            x:Name="CrumbFolderPopup"
+            IsLightDismissEnabled="False"
+            ShouldConstrainToRootBounds="True">
+            <Border
+                x:Name="CrumbFolderHost"
+                MinWidth="220"
+                MaxHeight="360"
+                Padding="0,4"
+                Opacity="0"
+                Background="{ThemeResource FilesMate.Menu.BackgroundBrush}"
+                BorderBrush="{ThemeResource FilesMate.LiquidGlass.BorderBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource FilesMate.Corner.Card}">
+                <Border.RenderTransform>
+                    <TranslateTransform x:Name="CrumbFolderSlide" Y="-8" />
+                </Border.RenderTransform>
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="CrumbFolderItems" />
+                </ScrollViewer>
+            </Border>
+        </Popup>
+        <Popup
+            x:Name="SearchSuggestPopup"
+            DesiredPlacement="BottomEdgeAlignedRight"
+            ShouldConstrainToRootBounds="True">
+            <Border
+                x:Name="SearchPanel"
+                Width="{Binding ActualWidth, ElementName=SearchHost, Mode=OneWay}"
+                MaxHeight="280"
+                Padding="0,4"
+                Background="{ThemeResource FilesMate.SearchPanel.BackgroundBrush}"
+                BorderBrush="{ThemeResource FilesMate.AddressBar.BorderBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource FilesMate.Corner.Omnibar}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <CheckBox x:Name="SearchEverywhere" Margin="12,0" Click="SearchEverywhere_Click"
+                        HorizontalContentAlignment="Stretch"
+                        Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}">
+                        <TextBlock x:Name="SearchScopeLabel" TextWrapping="Wrap" />
+                    </CheckBox>
+                    <TextBlock x:Name="SearchStatus" Grid.Row="1" Margin="12,2,12,6" FontSize="12"
+                        TextWrapping="Wrap" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+                <ListView
+                    x:Name="SearchHits"
+                    Grid.Row="2"
+                    MaxHeight="192"
+                    ScrollViewer.HorizontalScrollMode="Disabled"
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                    IsItemClickEnabled="True"
+                    ItemClick="SearchHits_ItemClick"
+                    SelectionMode="Single">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="MinHeight" Value="0" />
+                            <Setter Property="Padding" Value="8,2" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <local:SearchHitItem />
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+                </Grid>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="FilesMate.App.Controls.Panes.WorkspaceSplitView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:FilesMate.App.Controls.Panes">
+    <Grid x:Name="Root">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition x:Name="LeftColumn" Width="*" />
+            <ColumnDefinition x:Name="SeparatorColumn" Width="0" />
+            <ColumnDefinition x:Name="RightColumn" Width="0" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition x:Name="TopRow" Height="*" />
+            <RowDefinition x:Name="HorizontalSeparatorRow" Height="0" />
+            <RowDefinition x:Name="BottomRow" Height="0" />
+        </Grid.RowDefinitions>
+        <ContentPresenter
+            x:Name="LeftPresenter"
+            HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            VerticalContentAlignment="Stretch" />
+        <local:SplitThumb
+            x:Name="Separator"
+            Grid.Column="1"
+            Width="6"
+            HorizontalAlignment="Center"
+            Background="Transparent"
+            DoubleTapped="Separator_DoubleTapped"
+            PointerCaptureLost="Separator_PointerCaptureLost"
+            PointerMoved="Separator_PointerMoved"
+            PointerPressed="Separator_PointerPressed"
+            PointerReleased="Separator_PointerReleased">
+            <Rectangle
+                x:Name="SeparatorLine"
+                Width="1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Stretch"
+                Fill="{ThemeResource FilesMate.Divider.Brush}" />
+        </local:SplitThumb>
+        <ContentPresenter
+            x:Name="RightPresenter"
+            Grid.Column="2"
+            HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            VerticalContentAlignment="Stretch" />
+    </Grid>
+</UserControl>

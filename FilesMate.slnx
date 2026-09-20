@@ -1,0 +1,31 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <BuildType Name="Profile" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/FilesMate.Benchmarks/FilesMate.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/FilesMate.App/FilesMate.App.csproj" />
+    <Project Path="src/FilesMate.Core/FilesMate.Core.csproj" />
+    <Project Path="src/FilesMate.FlowPlugin/FilesMate.FlowPlugin.csproj" />
+    <Project Path="src/FilesMate.Platform.Windows/FilesMate.Platform.Windows.csproj" />
+    <Project Path="src/FilesMate.ShellHost/FilesMate.ShellHost.csproj" />
+    <Project Path="src/FilesMate.Search/FilesMate.Search.csproj" />
+    <Project Path="src/FilesMate.SearchHost/FilesMate.SearchHost.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FilesMate.App.Tests/FilesMate.App.Tests.csproj" />
+    <Project Path="tests/FilesMate.Core.Tests/FilesMate.Core.Tests.csproj" />
+    <Project Path="tests/FilesMate.IntegrationTests/FilesMate.IntegrationTests.csproj" />
+    <Project Path="tests/FilesMate.PerformanceTests/FilesMate.PerformanceTests.csproj" />
+    <Project Path="tests/FilesMate.Platform.Windows.Tests/FilesMate.Platform.Windows.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/FilesMate.BrandAssets/FilesMate.BrandAssets.csproj" />
+    <Project Path="tools/FilesMate.TestDataGenerator/FilesMate.TestDataGenerator.csproj" />
+  </Folder>
+</Solution>

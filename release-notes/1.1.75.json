@@ -1,0 +1,5 @@
+{
+  "zh-CN": "统一粘贴、拖放、双栏和暂存架的同名冲突处理。操作前可选择跳过或添加括号编号保留两份，同名文件夹还可选择合并；合并内部的同名文件会继续询问。支持对本次操作后续同类冲突应用选择。改进部分完成和取消后的撤销记录，跳过的剪切项目保留在源位置，修复编号后重命名的选中位置，并保留复制文件的时间和附加数据流。",
+  "en-US": "Unified name-conflict handling for paste, drag and drop, dual-pane transfers, and the file shelf. Choose Skip or Keep both with numbered names; matching folders can also be merged, with another prompt for matching files inside. Choices can apply to remaining conflicts of the same kind in the current operation. Improved undo for partial and cancelled transfers, kept skipped cut items at their source, corrected selection after numbered renames, and preserved copied file timestamps and alternate data streams.",
+  "ja-JP": "貼り付け、ドラッグ＆ドロップ、2ペイン間の転送、一時保管の名前の競合処理を統一しました。スキップまたは括弧付き番号で両方を保持でき、同名フォルダーは統合も選択できます。内部の同名ファイルは改めて確認します。選択を今回の操作の同種の競合に適用できます。一部完了やキャンセル後の取り消しを改善し、スキップした切り取り項目は元の場所に保持します。番号付きの名前に変更した後の選択位置を修正し、コピー時の日時と代替データストリームも保持します。"
+}

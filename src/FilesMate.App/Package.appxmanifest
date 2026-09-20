@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap rescap">
+
+  <Identity
+    Name="0697EE0F-5096-4421-A9D1-768D99037231"
+    Publisher="CN=FilesMate"
+    Version="1.0.0.0" />
+
+  <mp:PhoneIdentity PhoneProductId="0697EE0F-5096-4421-A9D1-768D99037231" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+
+  <Properties>
+    <DisplayName>FilesMate</DisplayName>
+    <PublisherDisplayName>FilesMate</PublisherDisplayName>
+    <Logo>Assets\Branding\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.22621.0" MaxVersionTested="10.0.26226.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.22621.0" MaxVersionTested="10.0.26226.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="x-generate"/>
+  </Resources>
+
+  <Applications>
+    <Application Id="App"
+      Executable="$targetnametoken$.exe"
+      EntryPoint="$targetentrypoint$">
+      <uap:VisualElements
+        DisplayName="FilesMate"
+        Description="A Windows file manager for daily work."
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Branding\Square150x150Logo.png"
+        Square44x44Logo="Assets\Branding\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Branding\Wide310x150Logo.png" />
+        <uap:SplashScreen Image="Assets\Branding\SplashScreen.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="FilesMate.App.Controls.Home.HomeDashboard"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:home="using:FilesMate.App.Controls.Home"
+    xmlns:nav="using:FilesMate.App.Navigation"
+    xmlns:sidebar="using:FilesMate.App.Controls.Navigation">
+    <UserControl.Resources>
+        <sidebar:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+        <sidebar:BoolToVisibilityConverter x:Key="InverseBoolToVisibility" Invert="True" />
+        <sidebar:PercentToStarConverter x:Key="PercentToStar" />
+        <sidebar:PercentToStarConverter x:Key="InversePercentToStar" Invert="True" />
+        <DataTemplate x:Key="HomePlaceCard" x:DataType="nav:HomeFolderItem">
+            <Button
+                Click="Place_Click"
+                ContextRequested="Place_ContextRequested"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Padding="12,10"
+                CornerRadius="{StaticResource FilesMate.Corner.Card}"
+                Style="{StaticResource HomePlaceButtonStyle}"
+                Tag="{x:Bind Path}"
+                AutomationProperties.Name="{x:Bind Label}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <FontIcon
+                        FontFamily="Segoe Fluent Icons"
+                        FontSize="16"
+                        Glyph="{x:Bind Glyph}" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Text="{x:Bind Label}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Button>
+        </DataTemplate>
+        <DataTemplate x:Key="HomeTagChip" x:DataType="nav:HomeFolderItem">
+            <Button
+                Click="Place_Click"
+                ContextRequested="Place_ContextRequested"
+                HorizontalAlignment="Left"
+                HorizontalContentAlignment="Left"
+                MaxWidth="220"
+                MinHeight="36"
+                Padding="12,6"
+                CornerRadius="18"
+                Style="{StaticResource HomePlaceButtonStyle}"
+                Tag="{x:Bind Path}"
+                AutomationProperties.Name="{x:Bind Label}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon
+                        FontFamily="Segoe Fluent Icons"
+                        FontSize="14"
+                        Glyph="{x:Bind Glyph}" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="13"
+                        Text="{x:Bind Label}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Button>
+        </DataTemplate>
+    </UserControl.Resources>
+    <ScrollViewer
+        HorizontalScrollBarVisibility="Disabled"
+        HorizontalScrollMode="Disabled"
+        VerticalScrollBarVisibility="Auto"
+        ZoomMode="Disabled">
+        <StackPanel Padding="20,12,20,20" Spacing="12">
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    x:Name="TitleText"
+                    VerticalAlignment="Center"
+                    FontSize="24"
+                    FontWeight="SemiBold"
+                    Text="Home" />
+                <Button
+                    x:Name="RefreshButton"
+                    Grid.Column="1"
+                    Width="36"
+                    Height="36"
+                    Click="RefreshButton_Click"
+                    Style="{StaticResource ToolbarIconButtonStyle}">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="14" Glyph="&#xE72C;" />
+                </Button>
+                <Button
+                    x:Name="CustomizeButton"
+                    Grid.Column="2"
+                    Width="36"
+                    Height="36"
+                    Click="CustomizeButton_Click"
+                    Style="{StaticResource ToolbarIconButtonStyle}">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="14" Glyph="&#xE713;" />
+                </Button>
+            </Grid>
+            <StackPanel x:Name="SectionsHost" Spacing="12">
+                <StackPanel x:Name="UserFoldersSection" Spacing="8">
+                    <TextBlock
+                        x:Name="FoldersHeader"
+                        Style="{StaticResource FilesMate.SectionHeaderStyle}"
+                        Text="User folders" />
+                    <ItemsRepeater
+                        x:Name="FolderHost"
+                        ItemTemplate="{StaticResource HomePlaceCard}">
+                        <ItemsRepeater.Layout>
+                            <home:FillWrapLayout
+                                MinColumnSpacing="12"
+                                MinItemHeight="56"
+                                MinItemWidth="188"
+                                MinRowSpacing="12" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+                </StackPanel>
+                <StackPanel x:Name="DrivesSection" Spacing="8">
+                    <TextBlock
+                        x:Name="DrivesHeader"
+                        Style="{StaticResource FilesMate.SectionHeaderStyle}"
+                        Text="Drives" />
+                    <ItemsRepeater x:Name="DriveHost">
+                <ItemsRepeater.Layout>
+                    <home:FillWrapLayout
+                        MinColumnSpacing="12"
+                        MinItemHeight="88"
+                        MinItemWidth="220"
+                        MinRowSpacing="12" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="nav:HomeDriveItem">
+                        <Button
+                            Click="Place_Click"
+                            ContextRequested="Place_ContextRequested"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch"
+                            Padding="14,12"
+                            CornerRadius="{StaticResource FilesMate.Corner.Card}"
+                            Style="{StaticResource HomePlaceButtonStyle}"
+                            Tag="{x:Bind Path}"
+                            AutomationProperties.Name="{x:Bind Label}">
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border
+                                    Width="40"
+                                    Height="40"
+                                    VerticalAlignment="Top"
+                                    Background="{ThemeResource FilesMate.Item.HoverBrush}"
+                                    CornerRadius="10">
+                                    <FontIcon
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontFamily="Segoe Fluent Icons"
+                                        FontSize="18"
+                                        Glyph="{x:Bind Glyph}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="6">
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock
+                                            FontSize="14"
+                                            FontWeight="SemiBold"
+                                            Text="{x:Bind VolumeName}"
+                                            TextTrimming="CharacterEllipsis" />
+                                        <TextBlock
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                                            Text="{x:Bind Letter}" />
+                                    </Grid>
+                                    <Grid Height="5">
+                                        <Rectangle
+                                            RadiusX="2.5"
+                                            RadiusY="2.5"
+                                            Fill="{ThemeResource FilesMate.Divider.Brush}" />
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="{x:Bind UsedPercent, Converter={StaticResource PercentToStar}}" />
+                                                <ColumnDefinition Width="{x:Bind UsedPercent, Converter={StaticResource InversePercentToStar}}" />
+                                            </Grid.ColumnDefinitions>
+                                            <Rectangle
+                                                RadiusX="2.5"
+                                                RadiusY="2.5"
+                                                Fill="{ThemeResource FilesMate.Selection.AccentBrush}"
+                                                Visibility="{x:Bind IsLowSpace, Converter={StaticResource InverseBoolToVisibility}}" />
+                                            <Rectangle
+                                                RadiusX="2.5"
+                                                RadiusY="2.5"
+                                                Fill="{ThemeResource SystemFillColorCriticalBrush}"
+                                                Visibility="{x:Bind IsLowSpace, Converter={StaticResource BoolToVisibility}}" />
+                                        </Grid>
+                                    </Grid>
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                                        Text="{x:Bind CapacityLabel}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+                    </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+                </StackPanel>
+                <StackPanel x:Name="CloudSection" Spacing="8">
+                    <TextBlock
+                        x:Name="CloudHeader"
+                        Style="{StaticResource FilesMate.SectionHeaderStyle}"
+                        Text="Cloud" />
+                    <ItemsRepeater
+                        x:Name="CloudHost"
+                        ItemTemplate="{StaticResource HomePlaceCard}">
+                        <ItemsRepeater.Layout>
+                            <home:FillWrapLayout
+                                MinColumnSpacing="12"
+                                MinItemHeight="56"
+                                MinItemWidth="188"
+                                MinRowSpacing="12" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+                </StackPanel>
+                <StackPanel x:Name="TagsSection" Spacing="8">
+                    <TextBlock
+                        x:Name="TagsHeader"
+                        Style="{StaticResource FilesMate.SectionHeaderStyle}"
+                        Text="Tags" />
+                    <ItemsRepeater
+                        x:Name="TagHost"
+                        ItemTemplate="{StaticResource HomeTagChip}">
+                        <ItemsRepeater.Layout>
+                            <home:CompactWrapLayout
+                                ColumnSpacing="8"
+                                MaxItemWidth="220"
+                                MinItemHeight="36"
+                                RowSpacing="8" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+                </StackPanel>
+                <StackPanel x:Name="SystemSection" Spacing="8">
+                    <TextBlock x:Name="SystemHeader" Style="{StaticResource FilesMate.SectionHeaderStyle}" />
+                    <ItemsRepeater x:Name="SystemHost" ItemTemplate="{StaticResource HomePlaceCard}">
+                        <ItemsRepeater.Layout>
+                            <home:FillWrapLayout MinColumnSpacing="12" MinItemHeight="56" MinItemWidth="188" MinRowSpacing="12" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+                </StackPanel>
+            </StackPanel>
+            <StackPanel x:Name="SearchHost" Spacing="8" Visibility="Collapsed">
+                <TextBlock
+                    x:Name="SearchHeader"
+                    Style="{StaticResource FilesMate.SectionHeaderStyle}"
+                    Text="Search" />
+                <StackPanel x:Name="SearchResults" Spacing="4" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

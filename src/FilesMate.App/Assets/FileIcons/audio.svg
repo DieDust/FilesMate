@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
+  <defs><linearGradient id="audio" x1="24" y1="12" x2="106" y2="112" gradientUnits="userSpaceOnUse"><stop stop-color="#D6B5FF"/><stop offset="1" stop-color="#7D58D8"/></linearGradient></defs>
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#audio)"/>
+  <path d="M73 28v56.5A15.5 15.5 0 1 1 63 70V41l38-10v19L73 57V28Z" fill="#FFF" opacity=".94"/>
+  <path d="M23 86c8-8 8 16 16 8s8-25 16-15 8 25 16 16 8-18 16-9 8 13 16 5" stroke="#F0E8FF" stroke-width="4" stroke-linecap="round" opacity=".72"/>
+</svg>

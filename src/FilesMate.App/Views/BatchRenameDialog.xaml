@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl x:Class="FilesMate.App.Views.BatchRenameDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="RenameRowEvenBrush" Color="#FFFFFF"/>
+                    <SolidColorBrush x:Key="RenameRowOddBrush" Color="#F1F4F8"/>
+                    <SolidColorBrush x:Key="RenameRowDividerBrush" Color="#DFE3E8"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="RenameRowEvenBrush" Color="#282A2E"/>
+                    <SolidColorBrush x:Key="RenameRowOddBrush" Color="#32353A"/>
+                    <SolidColorBrush x:Key="RenameRowDividerBrush" Color="#45484D"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="HighContrast">
+                    <SolidColorBrush x:Key="RenameRowEvenBrush" Color="{ThemeResource SystemColorWindowColor}"/>
+                    <SolidColorBrush x:Key="RenameRowOddBrush" Color="{ThemeResource SystemColorWindowColor}"/>
+                    <SolidColorBrush x:Key="RenameRowDividerBrush" Color="{ThemeResource SystemColorWindowTextColor}"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+            <Style x:Key="RenameEvenRow" TargetType="Border"><Setter Property="Background" Value="{ThemeResource RenameRowEvenBrush}"/></Style>
+            <Style x:Key="RenameOddRow" TargetType="Border"><Setter Property="Background" Value="{ThemeResource RenameRowOddBrush}"/></Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid RowSpacing="12">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <TextBlock x:Name="SummaryText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap"/>
+            <TextBlock x:Name="FooterHint" Grid.Column="1" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+        </Grid>
+        <Grid x:Name="Workspace" Grid.Row="1" ColumnSpacing="20" RowSpacing="12">
+            <Grid.ColumnDefinitions><ColumnDefinition x:Name="RulesColumn" Width="252"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <Grid.RowDefinitions><RowDefinition x:Name="RulesRow" Height="*"/><RowDefinition x:Name="PreviewRow" Height="0"/></Grid.RowDefinitions>
+                <StackPanel x:Name="RulesPanel" Spacing="8" Padding="0,0,4,0" VerticalAlignment="Top">
+                    <ComboBox x:Name="ModeBox" HorizontalAlignment="Stretch" SelectionChanged="OptionChanged"/>
+                    <StackPanel x:Name="ReplaceOptions" Spacing="8">
+                        <TextBox x:Name="FindBox" TextChanging="RuleChanged"/>
+                        <TextBox x:Name="ReplaceBox" TextChanging="RuleChanged"/>
+                        <CheckBox x:Name="MatchCaseBox" Checked="OptionChanged" Unchecked="OptionChanged"/>
+                    </StackPanel>
+                    <TextBox x:Name="BaseNameBox" Visibility="Collapsed" TextChanging="RuleChanged"/>
+                    <StackPanel x:Name="AffixOptions" Spacing="8" Visibility="Collapsed">
+                        <TextBox x:Name="PrefixBox" TextChanging="RuleChanged"/>
+                        <TextBox x:Name="SuffixBox" TextChanging="RuleChanged"/>
+                    </StackPanel>
+                    <ComboBox x:Name="CaseBox" Visibility="Collapsed" HorizontalAlignment="Stretch" SelectionChanged="OptionChanged"/>
+                    <Grid x:Name="NumberOptions" ColumnSpacing="8" Visibility="Collapsed">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <NumberBox x:Name="StartBox" Value="1" Minimum="0" Maximum="1000000000" SmallChange="1" SpinButtonPlacementMode="Inline" ValueChanged="NumberChanged"/>
+                        <ComboBox x:Name="DigitsBox" Grid.Column="1" HorizontalAlignment="Stretch" SelectionChanged="OptionChanged"/>
+                    </Grid>
+                    <CheckBox x:Name="ExtensionBox" Checked="OptionChanged" Unchecked="OptionChanged"/>
+                    <Border Padding="0,4,0,0">
+                        <StackPanel Spacing="6">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock x:Name="HelpTitle" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>
+                                <Button x:Name="ResetRulesButton" Grid.Column="1" Padding="6,2" FontSize="11" Style="{StaticResource QuietButtonStyle}" Click="ResetRules_Click"/>
+                            </Grid>
+                            <TextBlock x:Name="ModeHint" FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            <Grid x:Name="PreviewPane" Grid.Column="1" RowSpacing="8">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <Grid ColumnSpacing="16" Margin="12,0,12,4">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBlock x:Name="OriginalHeader" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="NewHeader" Grid.Column="1" FontWeight="SemiBold"/>
+                </Grid>
+                <Border x:Name="PreviewTable" Grid.Row="1" CornerRadius="8" BorderBrush="{ThemeResource RenameRowDividerBrush}" BorderThickness="1" Background="{ThemeResource RenameRowEvenBrush}">
+                    <ListView x:Name="PreviewList" SelectionMode="None" IsItemClickEnabled="False" HorizontalContentAlignment="Stretch">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                <Setter Property="Padding" Value="0"/>
+                                <Setter Property="Margin" Value="0"/>
+                                <Setter Property="MinHeight" Value="34"/>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="12,6" Style="{Binding RowStyle}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource RenameRowDividerBrush}">
+                                <Grid ColumnSpacing="16" RowSpacing="4">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                    <TextBlock Text="{Binding Original}" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{Binding Source}" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                                    <Grid Grid.Column="1" ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding NewName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{Binding Target}" FontWeight="SemiBold"/>
+                                        <Border Grid.Column="1" Padding="6,2" Visibility="{Binding NormalVisibility}">
+                                            <TextBlock Text="{Binding Status}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="11"/>
+                                        </Border>
+                                    </Grid>
+                                    <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Status}" Visibility="{Binding ErrorVisibility}" Foreground="{ThemeResource SystemFillColorCriticalBrush}" FontSize="12" TextWrapping="Wrap"/>
+                                </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

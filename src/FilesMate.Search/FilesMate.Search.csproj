@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FilesMate.Core\FilesMate.Core.csproj" />
+    <Compile Include="..\FilesMate.App\Models\SearchHitKind.cs" Link="Ranking\SearchHitKind.cs" />
+    <Compile Include="..\FilesMate.App\Models\HomeSearchHit.cs" Link="Ranking\HomeSearchHit.cs" />
+    <Compile Include="..\FilesMate.App\Services\SearchHitRanking.cs" Link="Ranking\SearchHitRanking.cs" />
+    <Compile Include="..\FilesMate.App\Icons\FileTypeIconCatalog.cs" Link="Icons\FileTypeIconCatalog.cs" />
+    <InternalsVisibleTo Include="FilesMate.App" />
+    <InternalsVisibleTo Include="FilesMate.SearchHost" />
+    <InternalsVisibleTo Include="FilesMate.App.Tests" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
+  </ItemGroup>
+</Project>

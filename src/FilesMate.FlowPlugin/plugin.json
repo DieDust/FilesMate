@@ -1,0 +1,12 @@
+{
+  "$schema": "https://www.flowlauncher.com/schemas/plugin.schema.json",
+  "ID": "8e4c1a7b2d9f46e0a3c5b8d1e6f0924a",
+  "ActionKeyword": "fm",
+  "Name": "FilesMate",
+  "Description": "Search files and folders indexed by FilesMate",
+  "Author": "FilesMate",
+  "Version": "1.1.1",
+  "Language": "executable",
+  "IcoPath": "Images/app.png",
+  "ExecuteFileName": "FilesMate.FlowPlugin.exe"
+}

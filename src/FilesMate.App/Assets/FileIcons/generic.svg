@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="paper" x1="18" y1="8" x2="105" y2="123" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E5EAF1"/>
+    </linearGradient>
+  </defs>
+  <path d="M24 10h50l31 31v67c0 10-8 18-18 18H24c-10 0-18-8-18-18V28c0-10 8-18 18-18Z" fill="#64748B" opacity=".16"/>
+  <path d="M24 6h50l31 31v67c0 10-8 18-18 18H24c-10 0-18-8-18-18V24c0-10 8-18 18-18Z" fill="url(#paper)"/>
+  <path d="M74 6v31h31L74 6Z" fill="#D7DEE8"/>
+  <path d="M75 8v27h27" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity=".72"/>
+  <g transform="translate(5 0)"><rect x="28" y="52" width="45" height="34" rx="9" fill="#E1E7EF"/><rect x="36" y="60" width="10" height="10" rx="3" fill="#9CA8B7"/><rect x="54" y="60" width="10" height="10" rx="3" fill="#9CA8B7"/><rect x="36" y="76" width="28" height="5" rx="2.5" fill="#9CA8B7"/></g>
+  <rect x="49" y="83" width="62" height="34" rx="11" fill="#64748B"/>
+  <g id="badge-label" fill="none" stroke="#FFFFFF" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(54 90.267) scale(1.39)"><path d="M6.5 1.8 H1.5 V12.4 M1.5 7.1 H5.3"/></g><g transform="translate(67.626 90.267) scale(1.39)"><path d="M2.2 1.8 H5.8 M4 1.8 V12.4 M2.2 12.4 H5.8"/></g><g transform="translate(81.251 90.267) scale(1.39)"><path d="M1.6 1.8 V12.4 H6.6"/></g><g transform="translate(94.877 90.267) scale(1.39)"><path d="M6.5 1.8 H1.5 V12.4 H6.5 M1.5 7.1 H5.4"/></g></g>
+</svg>

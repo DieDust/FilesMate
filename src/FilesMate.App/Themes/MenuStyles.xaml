@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style x:Key="FilesMate.MenuShortcutStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+    </Style>
+    <Style x:Key="FilesMate.MenuChevronStyle" TargetType="FontIcon">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+    </Style>
+    <Style x:Key="FilesMate.MenuSeparatorStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Divider.Brush}" />
+    </Style>
+    <Style x:Key="FilesMate.MenuFlyoutPresenterStyle" TargetType="MenuFlyoutPresenter">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Menu.BackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.LiquidGlass.BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Card}" />
+        <Setter Property="Padding" Value="0,4" />
+        <Setter Property="MinWidth" Value="220" />
+    </Style>
+    <Style x:Key="FilesMate.SubmenuFlyoutPresenterStyle" TargetType="FlyoutPresenter">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Menu.BackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.LiquidGlass.BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Card}" />
+        <Setter Property="Padding" Value="0,4" />
+        <Setter Property="MinWidth" Value="220" />
+        <Setter Property="MaxWidth" Value="280" />
+    </Style>
+    <Style x:Key="FilesMate.MenuFlyoutItemStyle" TargetType="MenuFlyoutItem">
+        <Setter Property="MinHeight" Value="{StaticResource FilesMate.Control.Height.Row}" />
+        <Setter Property="Margin" Value="4,0" />
+        <Setter Property="Padding" Value="12,0,12,0" />
+        <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Small}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+    </Style>
+    <Style x:Key="FilesMate.SidebarFlyoutPresenterStyle" TargetType="MenuFlyoutPresenter">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Menu.BackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.LiquidGlass.BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Omnibar}" />
+        <Setter Property="Padding" Value="2,2" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MaxWidth" Value="180" />
+    </Style>
+    <Style x:Key="FilesMate.SidebarFlyoutItemStyle" TargetType="MenuFlyoutItem">
+        <Setter Property="MinHeight" Value="26" />
+        <Setter Property="Margin" Value="2,0" />
+        <Setter Property="Padding" Value="8,0,8,0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Omnibar}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+    </Style>
+    <Style x:Key="FilesMate.ContextFlyoutPresenterStyle" TargetType="FlyoutPresenter">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Menu.BackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.LiquidGlass.BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Card}" />
+        <Setter Property="Padding" Value="4,6" />
+        <Setter Property="MinWidth" Value="{StaticResource FilesMate.ContextMenu.MinWidth}" />
+        <Setter Property="MaxWidth" Value="{StaticResource FilesMate.ContextMenu.MaxWidth}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="FlyoutPresenter">
+                    <Border
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ContentPresenter Content="{TemplateBinding Content}" />
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style
+        x:Key="FilesMate.ContextMenuItemStyle"
+        BasedOn="{StaticResource QuietButtonStyle}"
+        TargetType="Button">
+        <Setter Property="MinHeight" Value="{StaticResource FilesMate.Control.Height.ContextItem}" />
+        <Setter Property="Margin" Value="2,0" />
+        <Setter Property="Padding" Value="10,0,10,0" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+    </Style>
+    <Style TargetType="ToolTip">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Menu.BackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.LiquidGlass.BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Small}" />
+        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="MaxWidth" Value="360" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border
+                        x:Name="Root"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}">
+                        <ContentPresenter
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            FontFamily="{TemplateBinding FontFamily}"
+                            FontSize="{TemplateBinding FontSize}"
+                            FontWeight="{TemplateBinding FontWeight}"
+                            Foreground="{TemplateBinding Foreground}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style
+        BasedOn="{StaticResource FilesMate.MenuFlyoutPresenterStyle}"
+        TargetType="MenuFlyoutPresenter" />
+    <Style
+        BasedOn="{StaticResource FilesMate.MenuFlyoutItemStyle}"
+        TargetType="MenuFlyoutItem" />
+</ResourceDictionary>

@@ -1,0 +1,5 @@
+{
+  "zh-CN": "加强文件安全：新建文件或文件夹时，若名称被其他操作占用，会安全停止，不会覆盖已有内容或误记撤销记录。搜索操作请求只能领取一次，后台通信增加服务端用户校验和消息长度限制。修复缩略图缓存并发清理时的内存计数问题，并修正更新失败后关闭按钮的多语言文案。",
+  "en-US": "Improved file safety: creating a file or folder now stops safely if another operation takes the name, without overwriting existing content or recording an incorrect undo action. Search action requests can only be consumed once. Background communication verifies the server's user and limits message sizes. Fixed thumbnail cache accounting during concurrent cleanup and corrected the localized Close button after an update fails.",
+  "ja-JP": "ファイル操作の安全性を改善しました。新しいファイルやフォルダーの名前が別の操作で使われた場合は、既存の内容を上書きしたり、誤った取り消し履歴を記録したりせず、安全に停止します。検索からの操作要求は一度だけ実行されます。バックグラウンド通信にはサーバーのユーザー確認とメッセージ長の制限を追加しました。サムネイルキャッシュを並行してクリアする際のメモリ使用量の集計を修正し、更新失敗時の「閉じる」ボタンの翻訳も修正しました。"
+}

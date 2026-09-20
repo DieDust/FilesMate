@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="back" x1="20" y1="20" x2="105" y2="105" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD86B"/>
+      <stop offset=".55" stop-color="#F8B435"/>
+      <stop offset="1" stop-color="#E88B18"/>
+    </linearGradient>
+    <linearGradient id="content" x1="34" y1="31" x2="91" y2="99" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE7A0"/>
+      <stop offset="1" stop-color="#F7BE50"/>
+    </linearGradient>
+    <linearGradient id="front" x1="25" y1="50" x2="101" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD464"/>
+      <stop offset=".52" stop-color="#FFB733"/>
+      <stop offset="1" stop-color="#F09A20"/>
+    </linearGradient>
+  </defs>
+  <path d="M15 38c0-9 7-16 16-16h21c4 0 8 2 11 5l8 9h28c9 0 16 7 16 16v45c0 9-7 16-16 16H31c-9 0-16-7-16-16V38Z" fill="url(#back)"/>
+  <path d="M33 42c1-7 6-11 13-11h47c7 0 12 6 11 13l-6 53H27l6-55Z" fill="url(#content)"/>
+  <path d="M13 66c0-9 7-16 16-16h76c9 0 15 8 13 17l-6 33c-1 9-7 14-16 14H32c-10 0-16-6-17-15l-2-33Z" fill="url(#front)"/>
+</svg>

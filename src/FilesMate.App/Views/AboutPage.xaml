@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="FilesMate.App.Views.AboutPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:loc="using:FilesMate.App.Localization"
+    xmlns:glass="using:FilesMate.App.Controls.Glass">
+    <StackPanel MaxWidth="720" Spacing="0">
+        <TextBlock
+            x:Name="Heading"
+            Style="{StaticResource FilesMate.SettingsHeadingStyle}"
+            Text="About" />
+        <TextBlock
+            x:Name="Lead"
+            Style="{StaticResource FilesMate.SettingsLeadStyle}"
+            Text="FilesMate" />
+        <glass:LiquidGlassSurface Style="{StaticResource FilesMate.GlassCardStyle}">
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Image
+                    x:Name="BrandMark"
+                    Width="44"
+                    Height="44"
+                    VerticalAlignment="Top"
+                    Stretch="Uniform"
+                    UseLayoutRounding="True">
+                    <Image.Source>
+                        <SvgImageSource
+                            UriSource="ms-appx:///Assets/Branding/FilesMate.svg"
+                            RasterizePixelWidth="44"
+                            RasterizePixelHeight="44" />
+                    </Image.Source>
+                </Image>
+                <StackPanel Grid.Column="1" Spacing="4">
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="FilesMate" />
+                    <TextBlock
+                        x:Name="VersionText"
+                        FontSize="13"
+                        Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                        Text="Version" />
+                    <TextBlock
+                        x:Name="AboutBody"
+                        Margin="0,8,0,0"
+                        FontSize="12"
+                        Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                        TextWrapping="Wrap"
+                        Text="A Windows file manager." />
+                </StackPanel>
+            </Grid>
+        </glass:LiquidGlassSurface>
+        <glass:LiquidGlassSurface Margin="0,12,0,0" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <StackPanel Spacing="12">
+                <TextBlock Text="{loc:LocalizedText Key=Update_Section}" FontSize="16" FontWeight="SemiBold" />
+                <ToggleSwitch x:Name="AutoUpdateCheck" Header="{loc:LocalizedText Key=Update_Automatic}" Toggled="AutoUpdateCheck_Toggled" />
+                <TextBlock x:Name="UpdateStatus" Text="{loc:LocalizedText Key=Update_ChoiceHint}" TextWrapping="Wrap" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button x:Name="CheckUpdateButton" Content="{loc:LocalizedText Key=Update_Check}" Click="CheckUpdateButton_Click" />
+                    <Button x:Name="InstallUpdateButton" Content="{loc:LocalizedText Key=Update_Install}" Click="InstallUpdateButton_Click" Visibility="Collapsed" />
+                </StackPanel>
+            </StackPanel>
+        </glass:LiquidGlassSurface>
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="FilesMate.App.Controls.NavigationToolbar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Orientation="Horizontal" Spacing="4">
+        <Button
+            x:Name="BackButton"
+            Width="36"
+            Height="32"
+            Click="BackButton_Click"
+            AutomationProperties.Name="Back"
+            Style="{StaticResource ToolbarIconButtonStyle}"
+            ToolTipService.ToolTip="Back">
+            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE72B;" />
+        </Button>
+        <Button
+            x:Name="ForwardButton"
+            Width="36"
+            Height="32"
+            Click="ForwardButton_Click"
+            AutomationProperties.Name="Forward"
+            Style="{StaticResource ToolbarIconButtonStyle}"
+            ToolTipService.ToolTip="Forward">
+            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE72A;" />
+        </Button>
+        <Button
+            x:Name="UpButton"
+            Width="36"
+            Height="32"
+            Click="UpButton_Click"
+            AutomationProperties.Name="Up"
+            Style="{StaticResource ToolbarIconButtonStyle}"
+            ToolTipService.ToolTip="Up">
+            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE74A;" />
+        </Button>
+        <Button
+            x:Name="RefreshButton"
+            Width="36"
+            Height="32"
+            Click="RefreshButton_Click"
+            AutomationProperties.Name="Refresh"
+            Style="{StaticResource ToolbarIconButtonStyle}"
+            ToolTipService.ToolTip="Refresh">
+            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE72C;" />
+        </Button>
+        <Button
+            x:Name="OverflowButton"
+            Width="36"
+            Height="32"
+            AutomationProperties.Name="More navigation"
+            Style="{StaticResource ToolbarIconButtonStyle}"
+            ToolTipService.ToolTip="More"
+            Visibility="Collapsed">
+            <Button.Flyout>
+                <MenuFlyout
+                    Placement="Bottom"
+                    MenuFlyoutPresenterStyle="{StaticResource FilesMate.MenuFlyoutPresenterStyle}">
+                    <MenuFlyoutItem
+                        x:Name="OverflowForward"
+                        Click="ForwardButton_Click"
+                        Text="Forward" />
+                    <MenuFlyoutItem
+                        x:Name="OverflowUp"
+                        Click="UpButton_Click"
+                        Text="Up" />
+                    <MenuFlyoutItem
+                        x:Name="OverflowRefresh"
+                        Click="RefreshButton_Click"
+                        Text="Refresh" />
+                </MenuFlyout>
+            </Button.Flyout>
+            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE712;" />
+        </Button>
+    </StackPanel>
+</UserControl>

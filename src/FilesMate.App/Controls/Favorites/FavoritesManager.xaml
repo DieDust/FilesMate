@@ -1,0 +1,112 @@
+<UserControl
+    x:Class="FilesMate.App.Controls.Favorites.FavoritesManager"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:loc="using:FilesMate.App.Localization"
+    KeyDown="Manager_KeyDown">
+    <UserControl.Resources>
+        <Style x:Key="ManagerCloseButtonStyle" TargetType="Button">
+            <Setter Property="UseSystemFocusVisuals" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid x:Name="CloseRoot" Background="Transparent" CornerRadius="{TemplateBinding CornerRadius}">
+                            <FontIcon x:Name="CloseGlyph" FontFamily="Segoe Fluent Icons" Glyph="&#xE8BB;" FontSize="14" Foreground="{TemplateBinding Foreground}"/>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal"/>
+                                    <VisualState x:Name="PointerOver">
+                                        <VisualState.Setters>
+                                            <Setter Target="CloseRoot.Background" Value="{ThemeResource FilesMate.Close.HoverBrush}"/>
+                                            <Setter Target="CloseGlyph.Foreground" Value="{ThemeResource FilesMate.Close.ForegroundBrush}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <VisualState.Setters>
+                                            <Setter Target="CloseRoot.Background" Value="{ThemeResource FilesMate.Close.PressedBrush}"/>
+                                            <Setter Target="CloseGlyph.Foreground" Value="{ThemeResource FilesMate.Close.ForegroundBrush}"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Disabled"><VisualState.Setters><Setter Target="CloseRoot.Opacity" Value="0.4"/></VisualState.Setters></VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <DataTemplate x:Key="GroupTemplate">
+            <Grid Padding="4,8" MinHeight="54" ColumnSpacing="10">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <Image Width="20" Height="20" Source="ms-appx:///Assets/FileIcons/bookmark-group.svg"/>
+                <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="2" Text="{Binding Count}" Opacity="0.6" FontSize="12" VerticalAlignment="Center"/>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="EntryTemplate">
+            <Grid Padding="6,8" MinHeight="54" ColumnSpacing="12">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="32"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <Image Source="{Binding Icon}" Width="28" Height="28" Loaded="EntryIcon_Loaded" DataContextChanged="EntryIcon_DataContextChanged"/>
+                <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Name}" FontSize="14" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding Detail}" FontSize="12" Opacity="0.65" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid x:Name="Layout" ColumnSpacing="20" RowSpacing="12">
+        <Grid.ColumnDefinitions><ColumnDefinition x:Name="GroupsColumn" Width="190"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="36"/><RowDefinition Height="36"/><RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="{loc:LocalizedText Key=Favorites_Manage}" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" Margin="12,0,0,0"/>
+        <Grid Grid.Column="1" ColumnSpacing="12">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="36"/></Grid.ColumnDefinitions>
+            <TextBox x:Name="Search" PlaceholderText="{loc:LocalizedText Key=Favorites_SearchHint}" TextChanged="Search_TextChanged"
+                VerticalAlignment="Center" AutomationProperties.Name="{loc:LocalizedText Key=Favorites_Search}"/>
+            <Button x:Name="ManagerCloseButton" Style="{StaticResource ManagerCloseButtonStyle}" Grid.Column="1" Width="32" Height="32" MinWidth="32" MinHeight="32"
+                Padding="0" Background="Transparent" BorderThickness="0" CornerRadius="8" VerticalAlignment="Center"
+                HorizontalAlignment="Right" Click="Close_Click" AutomationProperties.Name="{loc:LocalizedText Key=Favorites_CloseManager}" ToolTipService.ToolTip="{loc:LocalizedText Key=CloseEscape}"/>
+        </Grid>
+        <Grid Grid.Row="1" Padding="12,0,4,0" ColumnSpacing="8">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="32"/></Grid.ColumnDefinitions>
+            <TextBlock Text="{loc:LocalizedText Key=Favorites_Group}" FontSize="13" Opacity="0.7" VerticalAlignment="Center"/>
+            <Button x:Name="NewGroupButton" Grid.Column="1" Width="32" Height="32" MinWidth="32" MinHeight="32"
+                Padding="0" Background="Transparent" BorderThickness="0" CornerRadius="8" VerticalAlignment="Center"
+                Click="NewGroup_Click" AutomationProperties.Name="{loc:LocalizedText Key=NewGroup}" ToolTipService.ToolTip="{loc:LocalizedText Key=NewGroup}">
+                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE710;" FontSize="14"/>
+            </Button>
+        </Grid>
+        <Grid Grid.Row="1" Grid.Column="1" ColumnSpacing="6">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <TextBlock x:Name="SelectionCount" VerticalAlignment="Center" FontSize="12" Opacity="0.65"/>
+            <Button Grid.Column="1" Content="{loc:LocalizedText Key=Command_SelectAll}" Height="32" VerticalAlignment="Center" Click="SelectAll_Click"/>
+            <Button x:Name="MoveButton" Grid.Column="2" Content="{loc:LocalizedText Key=MoveToMenu}" Height="32" VerticalAlignment="Center" Click="Move_Click" IsEnabled="False"/>
+            <Button x:Name="RemoveButton" Grid.Column="3" Content="{loc:LocalizedText Key=Remove}" Height="32" VerticalAlignment="Center" Click="Remove_Click" IsEnabled="False"/>
+        </Grid>
+        <ListView x:Name="Groups" Grid.Row="2" ItemTemplate="{StaticResource GroupTemplate}" SelectionMode="Single"
+            ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollMode="Disabled"
+            SelectionChanged="Groups_SelectionChanged" ContainerContentChanging="Groups_ContainerContentChanging"
+            AutomationProperties.Name="{loc:LocalizedText Key=Favorites_Group}"/>
+        <Grid x:Name="EntriesArea" Grid.Row="2" Grid.Column="1" Background="Transparent">
+            <ListView x:Name="Entries" Margin="0,0,32,0" ItemTemplate="{StaticResource EntryTemplate}" SelectionMode="Extended"
+                ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollMode="Disabled"
+                IsMultiSelectCheckBoxEnabled="True" CanDragItems="True" CanReorderItems="True" AllowDrop="True"
+                DragItemsStarting="Entries_DragItemsStarting" DragItemsCompleted="Entries_DragItemsCompleted"
+                ContainerContentChanging="Entries_ContainerContentChanging" SelectionChanged="Entries_SelectionChanged"
+                DoubleTapped="Entries_DoubleTapped" KeyDown="Entries_KeyDown" AutomationProperties.Name="{loc:LocalizedText Key=Favorites_Contents}"/>
+            <TextBlock x:Name="Empty" Text="{loc:LocalizedText Key=Favorites_GroupEmpty}" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.6" IsHitTestVisible="False"/>
+            <Canvas IsHitTestVisible="False">
+                <Border x:Name="SelectionRectangle" Visibility="Collapsed" BorderThickness="1" BorderBrush="{ThemeResource SystemControlHighlightAccentBrush}" Background="{ThemeResource SystemControlHighlightListAccentLowBrush}"/>
+            </Canvas>
+        </Grid>
+        <Grid x:Name="Editor" Grid.Row="3" Grid.Column="1" ColumnSpacing="6" Visibility="Collapsed">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <TextBox x:Name="NameEditor" PlaceholderText="{loc:LocalizedText Key=Favorites_Name}" MaxLength="120" KeyDown="NameEditor_KeyDown" AutomationProperties.Name="{loc:LocalizedText Key=Favorites_Name}"/>
+            <Button Grid.Column="1" Content="{loc:LocalizedText Key=Confirm}" Click="SaveName_Click"/>
+            <Button Grid.Column="2" Content="{loc:LocalizedText Key=Cancel}" Click="CancelName_Click"/>
+        </Grid>
+        <TextBlock x:Name="Status" Grid.Row="4" Grid.Column="1" Text="{loc:LocalizedText Key=Favorites_SelectionHint}" TextWrapping="Wrap" FontSize="12" Opacity="0.65"/>
+    </Grid>
+</UserControl>

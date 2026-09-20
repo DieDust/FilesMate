@@ -1,0 +1,5 @@
+{
+  "zh-CN": "修正高透明度仍像实心面板的问题。设置、文件暂存架和右键浮层改用真正的桌面毛玻璃；重新调整多层底色叠加后的透明强度，保留分层边界。关闭浮层或透明效果时释放对应材质。更新说明支持中文、英语和日语，并跟随显示语言。",
+  "en-US": "Fixed high transparency still looking opaque. Settings, the file shelf and context flyouts now use desktop frosted glass. Rebalanced stacked surface tints so transparency is visible while layer boundaries remain clear. Backdrop resources are released when a panel closes or transparency is disabled. Release notes follow the display language in Chinese, English and Japanese.",
+  "ja-JP": "透明度を高くしても不透明に見える問題を修正しました。設定、ファイルシェルフ、右クリックメニューにデスクトップを透かすすりガラス効果を適用しました。背景色の重なりを調整し、階層の境界を保ちながら透明感を出します。パネルを閉じた場合や透明効果を無効にした場合は、対応する描画リソースを解放します。更新内容は表示言語に合わせて中国語、英語、日本語で表示されます。"
+}

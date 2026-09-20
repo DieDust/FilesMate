@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Application
+    x:Class="FilesMate.App.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <ResourceDictionary Source="ms-appx:///Themes/DesignTokens.xaml" />
+                <ResourceDictionary Source="ms-appx:///Themes/AppThemeResources.xaml" />
+                <ResourceDictionary Source="ms-appx:///Themes/LiquidGlassStyles.xaml" />
+                <ResourceDictionary Source="ms-appx:///Themes/ButtonStyles.xaml" />
+                <ResourceDictionary Source="ms-appx:///Themes/NavigationStyles.xaml" />
+                <ResourceDictionary Source="ms-appx:///Themes/TabStyles.xaml" />
+                <ResourceDictionary Source="ms-appx:///Themes/FileSurfaceStyles.xaml" />
+                <ResourceDictionary Source="ms-appx:///Themes/MenuStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <Style TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+            </Style>
+            <Style x:Key="FilesMate.SecondaryTextStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+            </Style>
+            <Style TargetType="FontIcon">
+                <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

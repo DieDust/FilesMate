@@ -1,0 +1,50 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisMode>Default</AnalysisMode>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Deterministic>true</Deterministic>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <Company>FilesMate</Company>
+    <Product>FilesMate</Product>
+    <Authors>FilesMate</Authors>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <Platform Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'">x64</Platform>
+    <AppendPlatformToOutputPath>false</AppendPlatformToOutputPath>
+  </PropertyGroup>
+
+  <!--
+    The product version lives here and nowhere else. Every build, including a plain
+    dotnet build into the development output that also serves as the installed copy,
+    reports it in About and in the update check instead of the SDK's 1.0.0 default.
+    scripts/package.ps1 reads it as its default installer version. Bump VersionPrefix
+    for each release; VersionSuffix marks the preview date. AssemblyVersion stays fixed
+    so the main process and SearchHost keep binding across upgrades.
+  -->
+  <PropertyGroup>
+    <VersionPrefix>1.1.81</VersionPrefix>
+    <VersionSuffix>preview.20260920</VersionSuffix>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>$(VersionPrefix).0</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <Optimize>true</Optimize>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Profile'">
+    <Optimize>true</Optimize>
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <DefineConstants>$(DefineConstants);PROFILE;TRACE</DefineConstants>
+  </PropertyGroup>
+</Project>

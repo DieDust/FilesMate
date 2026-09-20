@@ -1,0 +1,5 @@
+{
+  "zh-CN": "统一主窗口、设置、菜单、文件暂存架和搜索浮窗的中性色材质。优化磨砂透明强度，保留分层底色和文字可读性；关闭透明时停止不必要的背景模糊。更新说明现在根据显示语言展示，支持中文、英语和日语。",
+  "en-US": "Unified the neutral surface palette across the main window, Settings, menus, file shelf and search popup. Refined frosted-glass strength to preserve layer contrast and readability; unnecessary backdrop blur is disabled when transparency is off. Release notes now follow the display language, with Chinese, English and Japanese support.",
+  "ja-JP": "メインウィンドウ、設定、メニュー、ファイルシェルフ、検索ポップアップの背景色と質感を統一しました。すりガラス効果を調整し、背景の階層と文字の読みやすさを維持します。透明度が0の場合は不要な背景ぼかしを停止します。更新内容は表示言語に合わせて中国語、英語、日本語で表示されます。"
+}

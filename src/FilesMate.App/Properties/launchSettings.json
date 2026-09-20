@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "FilesMate.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "FilesMate.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "zh-CN": "修正删除结果与撤销提示：使用 Windows 逐项删除结果区分移到回收站、永久删除和取消。大文件无法回收时仍显示系统永久删除确认；选择否会保留文件。永久删除后明确提示无法撤销，不再误报已回收。批量操作只记录实际回收项目的撤销；撤销或重做期间确认永久删除后，也会清除失效历史。",
+  "en-US": "Corrected deletion results and undo feedback. Windows per-item results now distinguish recycling, permanent deletion and cancellation. Files too large for the Recycle Bin still require Windows confirmation; choosing No keeps the files. Permanent deletion is clearly marked as irreversible and no longer reported as recycling. Batch undo includes only items actually recycled. Accepting permanent deletion during undo or redo also clears invalid history.",
+  "ja-JP": "削除結果と元に戻す操作の表示を修正しました。Windows の項目ごとの結果に基づき、ごみ箱への移動、完全削除、キャンセルを区別します。大きすぎてごみ箱に入らないファイルには、引き続き Windows の確認を表示し、「いいえ」を選ぶとファイルを保持します。完全削除した項目は元に戻せないことを明示し、ごみ箱へ移動したと誤表示しません。一括操作では実際にごみ箱へ移動した項目だけを元に戻せます。取り消しややり直し中に完全削除を承認した場合も、無効な履歴を消去します。"
+}

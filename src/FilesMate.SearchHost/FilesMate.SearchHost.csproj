@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\FilesMate.App\Assets\Branding\FilesMate.ico</ApplicationIcon>
+    <StartupObject>FilesMate.SearchHost.Program</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(FilesMateUITest)' == 'true'">
+    <DefineConstants>$(DefineConstants);FILESMATE_UI_TEST</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="..\FilesMate.App\Assets\PdfPreview\**\*" Link="Assets\PdfPreview\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="..\FilesMate.App\Preview\PdfPreviewAssets.cs" Link="Preview\PdfPreviewAssets.cs" />
+    <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3719.77" />
+    <PackageReference Include="Markdig" Version="1.3.2" />
+    <PackageReference Include="DocSharp.Docx" Version="0.21.0" />
+    <PackageReference Include="DocSharp.Binary.Doc" Version="0.21.0" />
+    <PackageReference Include="DocSharp.Binary.Ppt" Version="0.21.0" />
+    <PackageReference Include="DocSharp.Binary.Xls" Version="0.21.0" />
+    <PackageReference Include="ExcelDataReader" Version="3.9.0" />
+    <PackageReference Include="NPOI" Version="2.7.6" />
+    <Compile Include="..\FilesMate.App\Preview\Providers\OfficePreviewProvider.cs" Link="Preview\OfficePreviewProvider.cs" />
+    <Compile Include="..\FilesMate.App\Preview\NativeOfficePreview.cs" Link="Preview\NativeOfficePreview.cs" />
+    <Compile Include="..\FilesMate.App\Preview\OfficePreviewHandlerPolicy.cs" Link="Preview\OfficePreviewHandlerPolicy.cs" />
+    <ProjectReference Include="..\FilesMate.Search\FilesMate.Search.csproj" />
+    <ProjectReference Include="..\FilesMate.Platform.Windows\FilesMate.Platform.Windows.csproj" />
+    <Compile Include="..\FilesMate.App\Models\AppearanceSettings.cs" Link="Models\AppearanceSettings.cs" />
+    <Compile Include="..\FilesMate.App\Animations\GlassMaterialPolicy.cs" Link="Models\GlassMaterialPolicy.cs" />
+    <Compile Include="..\FilesMate.App\Preview\IPreviewProvider.cs;..\FilesMate.App\Preview\PreviewRequest.cs;..\FilesMate.App\Preview\PreviewResult.cs;..\FilesMate.App\Preview\Providers\TextPreviewProvider.cs" Link="Preview\%(Filename)%(Extension)" />
+    <Compile Include="..\FilesMate.App\Preview\MarkdownPreview.cs;..\FilesMate.App\Preview\Providers\PdfPreviewProvider.cs" Link="Preview\%(Filename)%(Extension)" />
+    <Compile Include="..\FilesMate.App\Icons\ShellThumbnailService.cs;..\FilesMate.App\Services\VividThumbnailCache.cs" Link="Preview\%(Filename)%(Extension)" />
+    <Compile Include="..\FilesMate.App\Models\AccentPalette.cs" Link="Models\AccentPalette.cs" />
+    <Compile Include="..\FilesMate.App\Commands\AppCommand.cs;..\FilesMate.App\Commands\CommandContext.cs;..\FilesMate.App\Commands\CommandCatalog.cs" Link="Commands\%(Filename)%(Extension)" />
+    <Compile Include="..\FilesMate.App\Controls\Menus\FileContextMenuBuilder.cs" Link="Commands\FileContextMenuBuilder.cs" />
+    <Compile Include="..\FilesMate.App\Localization\StringTable.cs" Link="Commands\StringTable.cs" />
+    <Compile Include="..\FilesMate.App\Localization\StringTable.*.cs" Link="Commands\%(Filename)%(Extension)" />
+    <Compile Include="..\FilesMate.App\Localization\LanguageSettings.cs" Link="Commands\LanguageSettings.cs" />
+    <Compile Include="..\FilesMate.App\Navigation\HomeLocation.cs;..\FilesMate.App\Navigation\TagLocation.cs" Link="Commands\%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\FilesMate.App\Themes\AppThemeResources.xaml" LogicalName="FilesMate.ThemeColors" />
+    <Resource Include="Assets\FileIcons\*.png" />
+    <Resource Include="..\FilesMate.App\Assets\Branding\FilesMate-32.png" Link="Assets\FilesMate.png" />
+    <Using Include="System" />
+    <Using Include="System.Collections.Generic" />
+    <Using Include="System.Linq" />
+    <Using Include="System.IO" />
+    <Using Include="System.Threading" />
+    <Using Include="System.Threading.Tasks" />
+  </ItemGroup>
+</Project>

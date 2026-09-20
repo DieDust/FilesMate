@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="FilesMate.App.Controls.Preview.PreviewPane"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:loc="using:FilesMate.App.Localization"
+    xmlns:glass="using:FilesMate.App.Controls.Glass">
+    <glass:LiquidGlassSurface
+        x:Name="Surface"
+        Padding="16"
+        Style="{StaticResource FilesMate.LiquidGlassSurfaceStyle}"
+        SurfaceKind="Preview">
+        <Grid RowSpacing="12">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+            <StackPanel x:Name="PaneTabs" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+                <Button x:Name="ContentTab" Content="{loc:LocalizedText Key=PreviewContentTab}" Style="{StaticResource QuietButtonStyle}" Padding="12,6" CornerRadius="10" Click="ContentTab_Click"/>
+                <Button x:Name="InfoTab" Content="{loc:LocalizedText Key=PreviewInfoTab}" Style="{StaticResource QuietButtonStyle}" Padding="12,6" CornerRadius="10" Click="InfoTab_Click"/>
+                <Button x:Name="CompatiblePreviewButton" Content="{loc:LocalizedText Key=PreviewCompatible}" Visibility="Collapsed" Style="{StaticResource QuietButtonStyle}" Padding="12,6" CornerRadius="10" Click="CompatiblePreview_Click"/>
+            </StackPanel>
+                    <Grid x:Name="ContentHost" Grid.Row="1">
+                        <ProgressRing
+                            x:Name="LoadingRing"
+                            Width="32"
+                            Height="32"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            IsActive="False"
+                            Visibility="Collapsed" />
+                        <Grid x:Name="TextHost" Visibility="Collapsed">
+                            <!-- Virtualized lines keep long logs cheap; append more rows near the end. -->
+                            <ListView
+                                x:Name="TextContent"
+                                SelectionMode="None" IsItemClickEnabled="False" IsTabStop="False"
+                                Padding="8" Background="Transparent" BorderThickness="0"
+                                Loaded="TextContent_Loaded"
+                                ScrollViewer.HorizontalScrollMode="Enabled"
+                                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ListView.ItemsPanel><ItemsPanelTemplate><ItemsStackPanel Orientation="Vertical"/></ItemsPanelTemplate></ListView.ItemsPanel>
+                                <ListView.ItemContainerStyle><Style TargetType="ListViewItem">
+                                    <Setter Property="MinHeight" Value="0"/>
+                                    <Setter Property="Padding" Value="0"/>
+                                    <Setter Property="IsTabStop" Value="False"/>
+                                    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListViewItem"><ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"/></ControlTemplate></Setter.Value></Setter>
+                                </Style></ListView.ItemContainerStyle>
+                                <ListView.ItemTemplate><DataTemplate>
+                                    <TextBlock Text="{Binding}" FontFamily="Consolas" FontSize="13" MinHeight="20" LineHeight="20" TextWrapping="NoWrap" IsTextSelectionEnabled="True"/>
+                                </DataTemplate></ListView.ItemTemplate>
+                            </ListView>
+                        </Grid>
+                        <Image
+                            x:Name="ImageContent"
+                            ImageFailed="ImageContent_ImageFailed"
+                            Stretch="Uniform"
+                            Visibility="Collapsed" />
+                        <MediaPlayerElement
+                            x:Name="MediaContent"
+                            AreTransportControlsEnabled="True"
+                            AutoPlay="False"
+                            Visibility="Collapsed" />
+                        <Button x:Name="MediaPlayButton" Visibility="Collapsed"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Style="{StaticResource QuietButtonStyle}" Padding="20,12" CornerRadius="20"
+                            Click="MediaPlayButton_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE768;" FontSize="20"/>
+                                <TextBlock x:Name="MediaPlayLabel" Text="{loc:LocalizedText Key=PreviewPlay}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <TextBlock
+                            x:Name="DetailsText"
+                            Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                            TextWrapping="Wrap"
+                            Visibility="Collapsed" />
+                    </Grid>
+            <ScrollViewer
+                Grid.Row="1"
+                x:Name="PaneScroll"
+                HorizontalScrollBarVisibility="Disabled"
+                HorizontalScrollMode="Disabled"
+                VerticalScrollBarVisibility="Auto"
+                Visibility="Collapsed"
+                ZoomMode="Disabled">
+                <StackPanel Spacing="16">
+                    <Grid x:Name="ItemHeader" Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border
+                            x:Name="ItemIconHost"
+                            Width="56"
+                            Height="56"
+                            Margin="0,0,12,0"
+                            VerticalAlignment="Top">
+                            <Grid>
+                                <FontIcon
+                                    x:Name="ItemGlyph"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontFamily="Segoe Fluent Icons"
+                                    FontSize="28"
+                                    Glyph="&#xE8B7;" />
+                                <Image
+                                    x:Name="ItemIcon"
+                                    Stretch="Uniform"
+                                    Visibility="Collapsed" />
+                            </Grid>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                            <TextBlock
+                                x:Name="ItemName"
+                                FontSize="18"
+                                FontWeight="SemiBold"
+                                IsTextSelectionEnabled="True"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                x:Name="ItemType"
+                                Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                    <StackPanel x:Name="PropertyList" Spacing="10" Visibility="Collapsed">
+                        <Grid x:Name="LocationRow" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="88" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                x:Name="LocationLabel"
+                                Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                x:Name="LocationValue"
+                                Grid.Column="1"
+                                IsTextSelectionEnabled="True"
+                                TextWrapping="Wrap" />
+                        </Grid>
+                        <Grid x:Name="ModifiedRow" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="88" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                x:Name="ModifiedLabel"
+                                Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                x:Name="ModifiedValue"
+                                Grid.Column="1"
+                                Typography.NumeralAlignment="Tabular" />
+                        </Grid>
+                        <Grid x:Name="CreatedRow" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="88" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                x:Name="CreatedLabel"
+                                Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                x:Name="CreatedValue"
+                                Grid.Column="1"
+                                Typography.NumeralAlignment="Tabular" />
+                        </Grid>
+                        <Grid x:Name="SizeRow" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="88" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                x:Name="SizeLabel"
+                                Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                                TextWrapping="Wrap" />
+                            <TextBlock x:Name="SizeValue" Grid.Column="1" />
+                        </Grid>
+                        <Grid x:Name="ItemsRow" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="88" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                x:Name="ItemsLabel"
+                                Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                                TextWrapping="Wrap" />
+                            <TextBlock x:Name="ItemsValue" Grid.Column="1" />
+                        </Grid>
+                        <Grid x:Name="AttributesRow" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="88" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                x:Name="AttributesLabel"
+                                Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                                TextWrapping="Wrap" />
+                            <TextBlock x:Name="AttributesValue" Grid.Column="1" TextWrapping="Wrap" />
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+            <TextBlock
+                x:Name="EmptyText" Grid.Row="1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                Text="Select an item to preview."
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+        </Grid>
+    </glass:LiquidGlassSurface>
+</UserControl>

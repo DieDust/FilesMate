@@ -1,0 +1,5 @@
+{
+  "zh-CN": "加强文件操作安全与结果反馈：修复无选中项时删除命令可能指向当前文件夹、多文件撤销失败后回滚不完整的问题。取消回收操作不再被当作成功，部分完成的回收操作保留撤销记录。传输结果明确显示完成、跳过、失败和取消，失败列表可展开复制，提示不会被列表刷新清除。限制回收站元数据读取大小并验证路径。修复压缩工具路径参数转义，优化大量文件选择后的传输准备速度。",
+  "en-US": "Improved file-operation safety and feedback. Delete no longer targets the open folder when nothing is selected, and failed multi-file undo now rolls back cyclic renames correctly. Cancelled recycling is no longer treated as success; completed deletions retain their undo record. Transfer notices show completed, skipped, failed and cancelled results, with expandable, selectable failure details that survive list refreshes. Recycle Bin metadata reads are bounded and paths validated. Fixed archive-tool path quoting and reduced preparation work for large selections.",
+  "ja-JP": "ファイル操作の安全性と結果表示を改善しました。未選択時の削除が表示中のフォルダーを対象にする問題と、複数ファイルの名前変更を元に戻す途中で失敗した場合の復旧を修正しました。ごみ箱への移動のキャンセルを成功として扱わず、完了した分の履歴を保持します。転送結果に完了・スキップ・失敗・キャンセルを表示し、失敗の詳細を展開してコピーできます。通知は一覧の更新後も残ります。ごみ箱のメタデータ読み取り量とパスを検証し、圧縮ツールへのパス引数と大量選択時の転送準備を改善しました。"
+}

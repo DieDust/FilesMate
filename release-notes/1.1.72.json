@@ -1,0 +1,5 @@
+{
+  "zh-CN": "优化高透明度下的分层质感：减少背景颜色对界面的影响，保留侧栏、工具栏和文件区的明暗差，同时保留磨砂玻璃的通透感。统一设置、暂存架和菜单的透明度规则；浅色与深色主题均已检查。",
+  "en-US": "Improved layered surfaces at high transparency: reduced background color influence while preserving contrast between the sidebar, toolbar and file area, with a visible frosted-glass effect. Settings, the file shelf and menus now share consistent transparency rules. Checked in both light and dark themes.",
+  "ja-JP": "透明度を高くしても各領域の階層感が保たれるよう改善しました。背景色の影響を抑えながら、サイドバー、ツールバー、ファイル領域の明暗差と、すりガラスのような透け感を両立しています。設定、ファイルシェルフ、メニューの透明度のルールも統一し、ライト・ダーク両テーマで確認しました。"
+}

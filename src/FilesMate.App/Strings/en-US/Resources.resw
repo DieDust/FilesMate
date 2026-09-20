@@ -1,0 +1,2953 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated from Localization/StringTable*.cs. Run scripts/sync-localization-resources.ps1; do not edit here. -->
+<root>
+  <data name="AboutBody" xml:space="preserve">
+    <value>A Windows file manager with glass chrome over Mica.</value>
+  </data>
+  <data name="AboutLead" xml:space="preserve">
+    <value>FilesMate</value>
+  </data>
+  <data name="AboutTitle" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="AboutVersion" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="AccentColor" xml:space="preserve">
+    <value>Accent</value>
+  </data>
+  <data name="AccentDescription" xml:space="preserve">
+    <value>Named colors for selection, glass highlights, and drop targets.</value>
+  </data>
+  <data name="Accent_Blue" xml:space="preserve">
+    <value>Blue</value>
+  </data>
+  <data name="Accent_BlueGray" xml:space="preserve">
+    <value>Blue gray</value>
+  </data>
+  <data name="Accent_BrickRed" xml:space="preserve">
+    <value>Brick red</value>
+  </data>
+  <data name="Accent_CoolBlue" xml:space="preserve">
+    <value>Cool blue</value>
+  </data>
+  <data name="Accent_Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="Accent_Gold" xml:space="preserve">
+    <value>Gold</value>
+  </data>
+  <data name="Accent_Gray" xml:space="preserve">
+    <value>Gray</value>
+  </data>
+  <data name="Accent_Green" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="Accent_Iris" xml:space="preserve">
+    <value>Iris</value>
+  </data>
+  <data name="Accent_Mint" xml:space="preserve">
+    <value>Mint</value>
+  </data>
+  <data name="Accent_Orange" xml:space="preserve">
+    <value>Orange</value>
+  </data>
+  <data name="Accent_Overcast" xml:space="preserve">
+    <value>Overcast</value>
+  </data>
+  <data name="Accent_Red" xml:space="preserve">
+    <value>Red</value>
+  </data>
+  <data name="Accent_Rose" xml:space="preserve">
+    <value>Rose</value>
+  </data>
+  <data name="Accent_Seafoam" xml:space="preserve">
+    <value>Seafoam</value>
+  </data>
+  <data name="Accent_Storm" xml:space="preserve">
+    <value>Storm</value>
+  </data>
+  <data name="Accent_Violet" xml:space="preserve">
+    <value>Violet</value>
+  </data>
+  <data name="AccessDenied_Body" xml:space="preserve">
+    <value>Ask for permission, or open a different folder.</value>
+  </data>
+  <data name="AccessDenied_Title" xml:space="preserve">
+    <value>You don't have access</value>
+  </data>
+  <data name="Action_CloseDualPane" xml:space="preserve">
+    <value>Turn off dual pane</value>
+  </data>
+  <data name="Action_ClosePreviewPane" xml:space="preserve">
+    <value>Close preview pane</value>
+  </data>
+  <data name="Action_CloseQuickPreview" xml:space="preserve">
+    <value>Close quick preview</value>
+  </data>
+  <data name="Action_CopyFolderPath" xml:space="preserve">
+    <value>Copy current folder path</value>
+  </data>
+  <data name="Action_CopySelectedPaths" xml:space="preserve">
+    <value>Copy selected paths</value>
+  </data>
+  <data name="Action_FailedPrefix" xml:space="preserve">
+    <value>Could not perform the action: </value>
+  </data>
+  <data name="Action_IconView" xml:space="preserve">
+    <value>Icon view</value>
+  </data>
+  <data name="Action_NoMatch" xml:space="preserve">
+    <value>No matching commands</value>
+  </data>
+  <data name="Action_OpenDualPane" xml:space="preserve">
+    <value>Turn on dual pane</value>
+  </data>
+  <data name="Action_OpenPreviewPane" xml:space="preserve">
+    <value>Open preview pane</value>
+  </data>
+  <data name="Action_OpenSettings" xml:space="preserve">
+    <value>Open settings</value>
+  </data>
+  <data name="Action_QuickPreview" xml:space="preserve">
+    <value>Quick preview</value>
+  </data>
+  <data name="Action_RedoFile" xml:space="preserve">
+    <value>Redo file operation</value>
+  </data>
+  <data name="Action_RefreshFolder" xml:space="preserve">
+    <value>Refresh folder</value>
+  </data>
+  <data name="Action_ReopenTab" xml:space="preserve">
+    <value>Reopen closed tab</value>
+  </data>
+  <data name="Action_SearchHint" xml:space="preserve">
+    <value>Search commands, such as terminal, rename, or sort</value>
+  </data>
+  <data name="Action_SortColumn" xml:space="preserve">
+    <value>Sort by {0}</value>
+  </data>
+  <data name="Action_SortPrefix" xml:space="preserve">
+    <value>Sort by </value>
+  </data>
+  <data name="Action_ToggleFolderSizes" xml:space="preserve">
+    <value>Show or hide folder sizes</value>
+  </data>
+  <data name="Action_ToggleHidden" xml:space="preserve">
+    <value>Show or hide hidden files</value>
+  </data>
+  <data name="Action_UndoFile" xml:space="preserve">
+    <value>Undo last file operation</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Address" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="Address_HiddenAncestors" xml:space="preserve">
+    <value>Show parent folders</value>
+  </data>
+  <data name="AdvancedLead" xml:space="preserve">
+    <value>Clear cached icons, open the data folder, or register FilesMate as this user's default folder handler.</value>
+  </data>
+  <data name="AdvancedTitle" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="AlphabetDualPaneDescription" xml:space="preserve">
+    <value>Allow the alphabet rail in both panes even though each pane has less reading space.</value>
+  </data>
+  <data name="AlphabetDualPaneTitle" xml:space="preserve">
+    <value>Show in dual-pane mode</value>
+  </data>
+  <data name="AlphabetMinimumItemsDescription" xml:space="preserve">
+    <value>Use the normal scroll bar when the folder is already small enough to scan at a glance. Set 0 to remove this limit.</value>
+  </data>
+  <data name="AlphabetMinimumItemsTitle" xml:space="preserve">
+    <value>Minimum item count</value>
+  </data>
+  <data name="AlphabetNavigationDescription" xml:space="preserve">
+    <value>Show the alphabet rail, letter bubble, and range indicator while sorting by name.</value>
+  </data>
+  <data name="AlphabetNavigationSection" xml:space="preserve">
+    <value>Alphabet navigation</value>
+  </data>
+  <data name="AlphabetNavigationTitle" xml:space="preserve">
+    <value>Enable alphabet navigation</value>
+  </data>
+  <data name="Alphabet_AccessibleName" xml:space="preserve">
+    <value>Jump by first letter</value>
+  </data>
+  <data name="Alphabet_QuickNavigation" xml:space="preserve">
+    <value>Alphabet navigation</value>
+  </data>
+  <data name="Alphabet_SetupHint" xml:space="preserve">
+    <value>Show the alphabet rail, letter bubble, and range indicator. When off, use the standard scroll bar.</value>
+  </data>
+  <data name="AppName" xml:space="preserve">
+    <value>FilesMate</value>
+  </data>
+  <data name="App_EntryUnavailable" xml:space="preserve">
+    <value>This app was uninstalled or its launch entry is invalid. Try searching again later.</value>
+  </data>
+  <data name="App_TrayDescription" xml:space="preserve">
+    <value>File management and global search</value>
+  </data>
+  <data name="AppearanceTitle" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="Application" xml:space="preserve">
+    <value>App</value>
+  </data>
+  <data name="Applying" xml:space="preserve">
+    <value>Applying…</value>
+  </data>
+  <data name="Attribute_Archive" xml:space="preserve">
+    <value>Archive</value>
+  </data>
+  <data name="Attribute_Compressed" xml:space="preserve">
+    <value>Compressed</value>
+  </data>
+  <data name="Attribute_Encrypted" xml:space="preserve">
+    <value>Encrypted</value>
+  </data>
+  <data name="Attribute_Link" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="Attribute_Offline" xml:space="preserve">
+    <value>Offline</value>
+  </data>
+  <data name="Audio" xml:space="preserve">
+    <value>Audio</value>
+  </data>
+  <data name="BackToSearch" xml:space="preserve">
+    <value>Back to search</value>
+  </data>
+  <data name="BackToSearchSettings" xml:space="preserve">
+    <value>Back to search settings</value>
+  </data>
+  <data name="BackToSettings" xml:space="preserve">
+    <value>Back to settings</value>
+  </data>
+  <data name="Backdrop" xml:space="preserve">
+    <value>Backdrop</value>
+  </data>
+  <data name="BackdropAcrylic" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="BackdropDescription" xml:space="preserve">
+    <value>Acrylic or Mica tint the window with the desktop. Solid uses the window fill.</value>
+  </data>
+  <data name="BackdropMica" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="BackdropMicaAlt" xml:space="preserve">
+    <value>Mica Alt</value>
+  </data>
+  <data name="BackdropSolid" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="BackgroundSearch" xml:space="preserve">
+    <value>Background search</value>
+  </data>
+  <data name="Backup_Clear" xml:space="preserve">
+    <value>Clear current undo history</value>
+  </data>
+  <data name="Backup_ClearHint" xml:space="preserve">
+    <value>Clearing history permanently removes its backup versions and disables Undo/Redo. Recovery copies from interrupted sessions or changed backups are kept: open a location below to inspect and recover them before deleting them yourself. Older unregistered folders are not deleted by name.</value>
+  </data>
+  <data name="Backup_Cleared" xml:space="preserve">
+    <value>Current history cleared. Any remaining locations need inspection; their files were not deleted.</value>
+  </data>
+  <data name="Backup_DestructiveHint" xml:space="preserve">
+    <value>The existing contents will be permanently replaced without retaining an old version. This entire batch cannot be undone, and previous undo/redo history will be cleared after a replacement succeeds. This choice applies only to this file.</value>
+  </data>
+  <data name="Backup_LimitHint" xml:space="preserve">
+    <value>Undo would reserve {0} MiB (currently {1} / 256 MiB). The backup limit has been reached, or backups are unavailable. Skip, keep both, cancel and manage backups, or explicitly replace without undo.</value>
+  </data>
+  <data name="Backup_LocationUnavailable" xml:space="preserve">
+    <value>This backup location is no longer available. Refresh the backup list or reconnect its drive.</value>
+  </data>
+  <data name="Backup_Manage" xml:space="preserve">
+    <value>Manage backups</value>
+  </data>
+  <data name="Backup_Policy" xml:space="preserve">
+    <value>Keep up to 5 operations in this session. Replacement backups reserve at most 256 MiB in total and 64 MiB per file (up to 256 files). Space is reserved for the larger of the old and new versions. Backups are cleared when the last window closes normally.</value>
+  </data>
+  <data name="Backup_Remnants" xml:space="preserve">
+    <value>Undo backups from an earlier session are still on disk</value>
+  </data>
+  <data name="Backup_ReplaceWithoutUndo" xml:space="preserve">
+    <value>Replace without undo</value>
+  </data>
+  <data name="Backup_ReservationHint" xml:space="preserve">
+    <value>Undo reserves {0} MiB on the destination drive (currently {1} / 256 MiB). Up to 5 operations are retained. Manage or clear backups in Settings → Files &amp; folders.</value>
+  </data>
+  <data name="Backup_Title" xml:space="preserve">
+    <value>Undo backups</value>
+  </data>
+  <data name="Backup_UnprotectedCount" xml:space="preserve">
+    <value>{0} replaced without backup; this batch cannot be undone</value>
+  </data>
+  <data name="Backup_Usage" xml:space="preserve">
+    <value>Reserved for undo/redo: {0} / 256 MiB · {1} backup locations</value>
+  </data>
+  <data name="CacheCleared" xml:space="preserve">
+    <value>Icon and thumbnail cache cleared.</value>
+  </data>
+  <data name="CacheSection" xml:space="preserve">
+    <value>Maintenance</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CannotRenameMultiple" xml:space="preserve">
+    <value>Cannot rename multiple items</value>
+  </data>
+  <data name="Category_AddCustom" xml:space="preserve">
+    <value>Add custom category</value>
+  </data>
+  <data name="Category_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Category_Buttons" xml:space="preserve">
+    <value>Category buttons</value>
+  </data>
+  <data name="Category_Duplicate" xml:space="preserve">
+    <value>Category names must be unique.</value>
+  </data>
+  <data name="Category_EditHint" xml:space="preserve">
+    <value>Toggle visibility and use arrows to reorder. Changes save automatically.</value>
+  </data>
+  <data name="Category_ExtensionsExample" xml:space="preserve">
+    <value>Extensions, e.g. jpg, png</value>
+  </data>
+  <data name="Category_ExtensionsExampleLong" xml:space="preserve">
+    <value>Extensions, e.g. jpg, png, psd</value>
+  </data>
+  <data name="Category_ExtensionsHint" xml:space="preserve">
+    <value>Example extensions: jpg, png, psd</value>
+  </data>
+  <data name="Category_InvalidExtensions" xml:space="preserve">
+    <value>Enter 1–64 extensions such as jpg, png. Do not include paths or wildcards.</value>
+  </data>
+  <data name="Category_Limit" xml:space="preserve">
+    <value>You can add up to 32 categories.</value>
+  </data>
+  <data name="Category_Manage" xml:space="preserve">
+    <value>Manage categories</value>
+  </data>
+  <data name="Category_Media" xml:space="preserve">
+    <value>Media</value>
+  </data>
+  <data name="Category_Name" xml:space="preserve">
+    <value>Category name</value>
+  </data>
+  <data name="Category_NameExample" xml:space="preserve">
+    <value>Category name, e.g. Design images</value>
+  </data>
+  <data name="Category_NameRequired" xml:space="preserve">
+    <value>Enter a category name.</value>
+  </data>
+  <data name="Category_Show" xml:space="preserve">
+    <value>Show this category</value>
+  </data>
+  <data name="Category_Title" xml:space="preserve">
+    <value>Search categories</value>
+  </data>
+  <data name="Category_VisibleRequired" xml:space="preserve">
+    <value>Keep at least one category visible.</value>
+  </data>
+  <data name="ClassicExplorerDescription" xml:space="preserve">
+    <value>Opens a real Windows Explorer window.</value>
+  </data>
+  <data name="ClassicExplorerFailed" xml:space="preserve">
+    <value>Couldn't open File Explorer.</value>
+  </data>
+  <data name="ClassicExplorerOpen" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="ClassicExplorerTitle" xml:space="preserve">
+    <value>Original File Explorer</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="ClearCache" xml:space="preserve">
+    <value>Clear cache</value>
+  </data>
+  <data name="Clipboard_Busy" xml:space="preserve">
+    <value>The clipboard is busy. Please try again.</value>
+  </data>
+  <data name="Clipboard_BusyShort" xml:space="preserve">
+    <value>Clipboard is busy. Try again.</value>
+  </data>
+  <data name="Clipboard_CopyCount" xml:space="preserve">
+    <value>Copied {0} items</value>
+  </data>
+  <data name="Clipboard_CutCount" xml:space="preserve">
+    <value>Cut {0} items</value>
+  </data>
+  <data name="Clipboard_DimensionsTooLarge" xml:space="preserve">
+    <value>The image dimensions are too large. Save it from an image app.</value>
+  </data>
+  <data name="Clipboard_ImageName" xml:space="preserve">
+    <value>Screenshot </value>
+  </data>
+  <data name="Clipboard_ImageTooLarge" xml:space="preserve">
+    <value>The image is too large. Save it from an image app.</value>
+  </data>
+  <data name="Clipboard_SaveImage" xml:space="preserve">
+    <value>Save clipboard image</value>
+  </data>
+  <data name="Clipboard_SaveText" xml:space="preserve">
+    <value>Save clipboard text</value>
+  </data>
+  <data name="Clipboard_TextName" xml:space="preserve">
+    <value>Text </value>
+  </data>
+  <data name="Clipboard_TextTooLong" xml:space="preserve">
+    <value>The clipboard text is too long. Save it in smaller parts.</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="CloseEscape" xml:space="preserve">
+    <value>Close (Esc)</value>
+  </data>
+  <data name="ClosePreview" xml:space="preserve">
+    <value>Close preview</value>
+  </data>
+  <data name="Column_Modified" xml:space="preserve">
+    <value>Date modified</value>
+  </data>
+  <data name="Column_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Column_Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Column_Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Columns_Reset" xml:space="preserve">
+    <value>Restore default columns</value>
+  </data>
+  <data name="CommandPalette" xml:space="preserve">
+    <value>Search commands</value>
+  </data>
+  <data name="Command_AddTags" xml:space="preserve">
+    <value>Add tags</value>
+  </data>
+  <data name="Command_BatchRename" xml:space="preserve">
+    <value>Batch rename</value>
+  </data>
+  <data name="Command_ChangeLayout" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="Command_Compress" xml:space="preserve">
+    <value>Compress</value>
+  </data>
+  <data name="Command_Compress7z" xml:space="preserve">
+    <value>Compress to 7z</value>
+  </data>
+  <data name="Command_CompressNew" xml:space="preserve">
+    <value>New archive…</value>
+  </data>
+  <data name="Command_CompressZip" xml:space="preserve">
+    <value>Compress to ZIP</value>
+  </data>
+  <data name="Command_Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Command_CopyPath" xml:space="preserve">
+    <value>Copy path</value>
+  </data>
+  <data name="Command_CopyPathQuoted" xml:space="preserve">
+    <value>Copy path as quote</value>
+  </data>
+  <data name="Command_CreateShortcut" xml:space="preserve">
+    <value>Create shortcut</value>
+  </data>
+  <data name="Command_Cut" xml:space="preserve">
+    <value>Cut</value>
+  </data>
+  <data name="Command_Extract" xml:space="preserve">
+    <value>Extract</value>
+  </data>
+  <data name="Command_ExtractHere" xml:space="preserve">
+    <value>Extract here</value>
+  </data>
+  <data name="Command_ExtractToFolder" xml:space="preserve">
+    <value>Extract to folder</value>
+  </data>
+  <data name="Command_ExtractToOther" xml:space="preserve">
+    <value>Extract to…</value>
+  </data>
+  <data name="Command_ManageTags" xml:space="preserve">
+    <value>Manage tags</value>
+  </data>
+  <data name="Command_New" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="Command_NewFile" xml:space="preserve">
+    <value>New file</value>
+  </data>
+  <data name="Command_NewFolder" xml:space="preserve">
+    <value>New folder</value>
+  </data>
+  <data name="Command_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Command_OpenInCompactMate" xml:space="preserve">
+    <value>Open in CompactMate</value>
+  </data>
+  <data name="Command_OpenInNewTab" xml:space="preserve">
+    <value>Open in new tab</value>
+  </data>
+  <data name="Command_OpenInNewWindow" xml:space="preserve">
+    <value>Open in new window</value>
+  </data>
+  <data name="Command_OpenInTerminal" xml:space="preserve">
+    <value>Open in Windows Terminal</value>
+  </data>
+  <data name="Command_OpenWith" xml:space="preserve">
+    <value>Open with</value>
+  </data>
+  <data name="Command_Paste" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="Command_PermanentDelete" xml:space="preserve">
+    <value>Delete permanently</value>
+  </data>
+  <data name="Command_PinToSidebar" xml:space="preserve">
+    <value>Pin to sidebar</value>
+  </data>
+  <data name="Command_Properties" xml:space="preserve">
+    <value>Properties</value>
+  </data>
+  <data name="Command_Recycle" xml:space="preserve">
+    <value>Move to Recycle Bin</value>
+  </data>
+  <data name="Command_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Command_Rename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="Command_SelectAll" xml:space="preserve">
+    <value>Select all</value>
+  </data>
+  <data name="Command_Share" xml:space="preserve">
+    <value>Share</value>
+  </data>
+  <data name="Command_ShowMoreOptions" xml:space="preserve">
+    <value>Show more options</value>
+  </data>
+  <data name="Command_SmartExtract" xml:space="preserve">
+    <value>Smart extract</value>
+  </data>
+  <data name="Command_UnpinFromSidebar" xml:space="preserve">
+    <value>Unpin from sidebar</value>
+  </data>
+  <data name="Command_WhoLocks" xml:space="preserve">
+    <value>What's using this?</value>
+  </data>
+  <data name="Confirm" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="ConfirmDeleteBody" xml:space="preserve">
+    <value>This cannot be undone.</value>
+  </data>
+  <data name="ConfirmDeleteSettingDescription" xml:space="preserve">
+    <value>Ask before permanently deleting selected items.</value>
+  </data>
+  <data name="ConfirmDeleteSettingTitle" xml:space="preserve">
+    <value>Confirm permanent delete</value>
+  </data>
+  <data name="ConfirmDeleteTitle" xml:space="preserve">
+    <value>Delete permanently?</value>
+  </data>
+  <data name="ConfirmRemove" xml:space="preserve">
+    <value>Confirm removal</value>
+  </data>
+  <data name="CopyDiagnostics" xml:space="preserve">
+    <value>Copy diagnostics</value>
+  </data>
+  <data name="CopyFullPath" xml:space="preserve">
+    <value>Copy full path</value>
+  </data>
+  <data name="CopyFullPathShortcut" xml:space="preserve">
+    <value>Copy full path · Ctrl+Shift+C</value>
+  </data>
+  <data name="CopyToOtherPane" xml:space="preserve">
+    <value>Copy to other pane…</value>
+  </data>
+  <data name="Cover_Choose" xml:space="preserve">
+    <value>Choose folder cover</value>
+  </data>
+  <data name="Cover_DirectChild" xml:space="preserve">
+    <value>Choose an image or video directly inside this folder.</value>
+  </data>
+  <data name="Cover_Reset" xml:space="preserve">
+    <value>Use automatic folder cover</value>
+  </data>
+  <data name="DataFolderDescription" xml:space="preserve">
+    <value>Shortcuts, appearance, and explorer preferences are stored in this folder.</value>
+  </data>
+  <data name="DataFolderTitle" xml:space="preserve">
+    <value>Application data</value>
+  </data>
+  <data name="DateAccessed" xml:space="preserve">
+    <value>Date accessed</value>
+  </data>
+  <data name="DateFormatDescription" xml:space="preserve">
+    <value>Use your Windows regional format, or a fixed year-month-day stamp.</value>
+  </data>
+  <data name="DateFormatIso" xml:space="preserve">
+    <value>ISO</value>
+  </data>
+  <data name="DateFormatSystem" xml:space="preserve">
+    <value>Windows</value>
+  </data>
+  <data name="DateFormatTitle" xml:space="preserve">
+    <value>Date format</value>
+  </data>
+  <data name="DefaultAppDescription" xml:space="preserve">
+    <value>When on, programs that ask Windows to open a folder use FilesMate. The taskbar File Explorer icon and Win+E stay Windows Explorer.</value>
+  </data>
+  <data name="DefaultAppFailed" xml:space="preserve">
+    <value>Couldn't update the default folder handler.</value>
+  </data>
+  <data name="DefaultAppTitle" xml:space="preserve">
+    <value>Set as default file manager</value>
+  </data>
+  <data name="DefaultAppUpdated" xml:space="preserve">
+    <value>Default folder handler updated.</value>
+  </data>
+  <data name="DefaultViewDescription" xml:space="preserve">
+    <value>New tabs use this layout. You can still switch details and icons from the toolbar.</value>
+  </data>
+  <data name="DefaultViewTitle" xml:space="preserve">
+    <value>Default view</value>
+  </data>
+  <data name="Delete_FailedPrefix" xml:space="preserve">
+    <value>Could not delete: </value>
+  </data>
+  <data name="Desktop" xml:space="preserve">
+    <value>Desktop</value>
+  </data>
+  <data name="DetailsPane" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="DetailsView" xml:space="preserve">
+    <value>Details view</value>
+  </data>
+  <data name="DiagnosticsCopied" xml:space="preserve">
+    <value>Diagnostics copied</value>
+  </data>
+  <data name="Display" xml:space="preserve">
+    <value>Display</value>
+  </data>
+  <data name="Documents" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Downloads" xml:space="preserve">
+    <value>Downloads</value>
+  </data>
+  <data name="Drag_CopyTo" xml:space="preserve">
+    <value>Copy to this folder</value>
+  </data>
+  <data name="Drag_FailedPrefix" xml:space="preserve">
+    <value>Could not drag files: </value>
+  </data>
+  <data name="Drag_MoveTo" xml:space="preserve">
+    <value>Move to this folder</value>
+  </data>
+  <data name="DualPane" xml:space="preserve">
+    <value>Dual pane</value>
+  </data>
+  <data name="Empty_Body" xml:space="preserve">
+    <value>Nothing to show here yet.</value>
+  </data>
+  <data name="Empty_FilteredBody" xml:space="preserve">
+    <value>Try a different filter.</value>
+  </data>
+  <data name="Empty_FilteredTitle" xml:space="preserve">
+    <value>No matching items</value>
+  </data>
+  <data name="Empty_Title" xml:space="preserve">
+    <value>This folder is empty</value>
+  </data>
+  <data name="EnumerationDescription" xml:space="preserve">
+    <value>Folder contents load progressively without blocking the window.</value>
+  </data>
+  <data name="EnumerationTitle" xml:space="preserve">
+    <value>Asynchronous enumeration</value>
+  </data>
+  <data name="Error_CompactMateMissing" xml:space="preserve">
+    <value>CompactMate isn't installed, so FilesMate can't compress or extract.</value>
+  </data>
+  <data name="Error_InvalidName" xml:space="preserve">
+    <value>That name is not valid.</value>
+  </data>
+  <data name="Error_NoFolder" xml:space="preserve">
+    <value>No folder is open.</value>
+  </data>
+  <data name="Error_SaveAppearance" xml:space="preserve">
+    <value>Couldn't save appearance settings.</value>
+  </data>
+  <data name="Error_ShareUnavailable" xml:space="preserve">
+    <value>Windows sharing is unavailable for these items.</value>
+  </data>
+  <data name="ExitBackgroundSearch" xml:space="preserve">
+    <value>Exit background search</value>
+  </data>
+  <data name="Extension" xml:space="preserve">
+    <value>Extension</value>
+  </data>
+  <data name="Favorites_Add" xml:space="preserve">
+    <value>Add to favorites bar</value>
+  </data>
+  <data name="Favorites_AddAction" xml:space="preserve">
+    <value>Add favorite</value>
+  </data>
+  <data name="Favorites_AddFolder" xml:space="preserve">
+    <value>Favorite this folder</value>
+  </data>
+  <data name="Favorites_AddTo" xml:space="preserve">
+    <value>Add favorite to</value>
+  </data>
+  <data name="Favorites_Added" xml:space="preserve">
+    <value>Added to favorites</value>
+  </data>
+  <data name="Favorites_AlreadyInGroup" xml:space="preserve">
+    <value>This file is already in the group.</value>
+  </data>
+  <data name="Favorites_Bar" xml:space="preserve">
+    <value>Favorites bar</value>
+  </data>
+  <data name="Favorites_Capacity" xml:space="preserve">
+    <value>At most {0} favorites are allowed. Organize the bar first.</value>
+  </data>
+  <data name="Favorites_Changed" xml:space="preserve">
+    <value>The favorites list changed. Please reorder it again.</value>
+  </data>
+  <data name="Favorites_CloseManager" xml:space="preserve">
+    <value>Close favorites organizer</value>
+  </data>
+  <data name="Favorites_Contents" xml:space="preserve">
+    <value>Favorites</value>
+  </data>
+  <data name="Favorites_Count" xml:space="preserve">
+    <value>{0} favorites</value>
+  </data>
+  <data name="Favorites_DataTooLarge" xml:space="preserve">
+    <value>Favorites data is too large. Back it up before organizing it.</value>
+  </data>
+  <data name="Favorites_DropHint" xml:space="preserve">
+    <value>Drop files or folders here for quick access</value>
+  </data>
+  <data name="Favorites_DuplicateTarget" xml:space="preserve">
+    <value>The target group already contains this file. No favorites were moved.</value>
+  </data>
+  <data name="Favorites_Group" xml:space="preserve">
+    <value>Favorites group</value>
+  </data>
+  <data name="Favorites_GroupAtRoot" xml:space="preserve">
+    <value>Groups can only be placed on the favorites bar.</value>
+  </data>
+  <data name="Favorites_GroupDrop" xml:space="preserve">
+    <value>Drop files to add them to this group</value>
+  </data>
+  <data name="Favorites_GroupEmpty" xml:space="preserve">
+    <value>This group has no favorites</value>
+  </data>
+  <data name="Favorites_GroupTooltip" xml:space="preserve">
+    <value>{0} · Favorites group</value>
+  </data>
+  <data name="Favorites_Hide" xml:space="preserve">
+    <value>Hide favorites bar</value>
+  </data>
+  <data name="Favorites_InvalidId" xml:space="preserve">
+    <value>Invalid favorite ID.</value>
+  </data>
+  <data name="Favorites_InvalidNesting" xml:space="preserve">
+    <value>Invalid favorites group nesting.</value>
+  </data>
+  <data name="Favorites_InvalidPath" xml:space="preserve">
+    <value>Invalid favorite path.</value>
+  </data>
+  <data name="Favorites_LocalOnly" xml:space="preserve">
+    <value>Choose a local file or folder.</value>
+  </data>
+  <data name="Favorites_Manage" xml:space="preserve">
+    <value>Organize favorites</value>
+  </data>
+  <data name="Favorites_ManageMenu" xml:space="preserve">
+    <value>Organize favorites…</value>
+  </data>
+  <data name="Favorites_MissingGroup" xml:space="preserve">
+    <value>This favorites group no longer exists.</value>
+  </data>
+  <data name="Favorites_MissingItem" xml:space="preserve">
+    <value>This favorite no longer exists.</value>
+  </data>
+  <data name="Favorites_MissingItems" xml:space="preserve">
+    <value>Some favorites no longer exist. Refresh and try again.</value>
+  </data>
+  <data name="Favorites_More" xml:space="preserve">
+    <value>More favorites</value>
+  </data>
+  <data name="Favorites_MoreMenu" xml:space="preserve">
+    <value>More favorites…</value>
+  </data>
+  <data name="Favorites_Move" xml:space="preserve">
+    <value>Move favorite</value>
+  </data>
+  <data name="Favorites_MoveIntoGroup" xml:space="preserve">
+    <value>Move to this favorites group</value>
+  </data>
+  <data name="Favorites_Name" xml:space="preserve">
+    <value>Favorite name</value>
+  </data>
+  <data name="Favorites_NameHint" xml:space="preserve">
+    <value>Group or favorite name</value>
+  </data>
+  <data name="Favorites_NameLength" xml:space="preserve">
+    <value>Names must contain 1–120 characters.</value>
+  </data>
+  <data name="Favorites_NewGroup" xml:space="preserve">
+    <value>New favorites group</value>
+  </data>
+  <data name="Favorites_NewGroupMenu" xml:space="preserve">
+    <value>New favorites group…</value>
+  </data>
+  <data name="Favorites_NoMatch" xml:space="preserve">
+    <value>No matching favorites</value>
+  </data>
+  <data name="Favorites_ReadFailed" xml:space="preserve">
+    <value>Could not read favorites. The original file was preserved: </value>
+  </data>
+  <data name="Favorites_ReferenceHint" xml:space="preserve">
+    <value>Saves the location only. Original files are not copied or moved.</value>
+  </data>
+  <data name="Favorites_Remove" xml:space="preserve">
+    <value>Remove favorite</value>
+  </data>
+  <data name="Favorites_RemoveGroup" xml:space="preserve">
+    <value>Remove favorites group</value>
+  </data>
+  <data name="Favorites_RemoveGroupConfirm" xml:space="preserve">
+    <value>Remove “{0}” and its favorites? Original files will not be deleted.</value>
+  </data>
+  <data name="Favorites_RemoveHint" xml:space="preserve">
+    <value>Favorites in selected groups will also be removed. Original files remain. Select “Confirm removal” again to continue.</value>
+  </data>
+  <data name="Favorites_Rename" xml:space="preserve">
+    <value>Rename favorite</value>
+  </data>
+  <data name="Favorites_ResizeBottom" xml:space="preserve">
+    <value>Drag the bottom edge to resize favorites</value>
+  </data>
+  <data name="Favorites_ResizeTop" xml:space="preserve">
+    <value>Drag the top edge to resize favorites</value>
+  </data>
+  <data name="Favorites_Search" xml:space="preserve">
+    <value>Search favorites</value>
+  </data>
+  <data name="Favorites_SearchHint" xml:space="preserve">
+    <value>Search names or paths</value>
+  </data>
+  <data name="Favorites_SelectionHint" xml:space="preserve">
+    <value>Drag to select · Ctrl-click to add · Shift-click for a range. Drag favorites to reorder or move into groups.</value>
+  </data>
+  <data name="Favorites_SettingsHint" xml:space="preserve">
+    <value>Show favorite files, folders, and groups below the address bar. Hiding the bar does not delete favorites.</value>
+  </data>
+  <data name="Favorites_SetupHint" xml:space="preserve">
+    <value>Keep favorite files, folders, and expandable groups below the address bar.</value>
+  </data>
+  <data name="Favorites_Show" xml:space="preserve">
+    <value>Show favorites bar</value>
+  </data>
+  <data name="FileExtensions" xml:space="preserve">
+    <value>File extensions</value>
+  </data>
+  <data name="FileListSection" xml:space="preserve">
+    <value>File list</value>
+  </data>
+  <data name="FileManager" xml:space="preserve">
+    <value>File manager</value>
+  </data>
+  <data name="FileName" xml:space="preserve">
+    <value>File name</value>
+  </data>
+  <data name="FileOperationsDescription" xml:space="preserve">
+    <value>Create, cut, copy, paste, rename, and move items to the Recycle Bin. Ctrl+Z undoes the last change; Ctrl+Y redoes it.</value>
+  </data>
+  <data name="FileOperationsTitle" xml:space="preserve">
+    <value>File operations</value>
+  </data>
+  <data name="FilePreview" xml:space="preserve">
+    <value>File preview</value>
+  </data>
+  <data name="FilesBody" xml:space="preserve">
+    <value>Open, open in a new tab, copy path, refresh, sort, and details or large icons.</value>
+  </data>
+  <data name="FilesFoldersLead" xml:space="preserve">
+    <value>Choose how names, dates, and everyday file actions appear while you browse.</value>
+  </data>
+  <data name="FilesFoldersTitle" xml:space="preserve">
+    <value>Files &amp; folders</value>
+  </data>
+  <data name="FilesHeader" xml:space="preserve">
+    <value>Files</value>
+  </data>
+  <data name="FilesTitle" xml:space="preserve">
+    <value>What works now</value>
+  </data>
+  <data name="Files_ActionFailed" xml:space="preserve">
+    <value>Could not perform the file operation</value>
+  </data>
+  <data name="Files_Busy" xml:space="preserve">
+    <value>A file operation is already in progress. Please wait.</value>
+  </data>
+  <data name="Files_ClosingAfterOperation" xml:space="preserve">
+    <value>FilesMate — closing when file operations finish</value>
+  </data>
+  <data name="Files_CopyOtherPane" xml:space="preserve">
+    <value>Copy to other pane</value>
+  </data>
+  <data name="Files_CreatedCopiedCount" xml:space="preserve">
+    <value>Created or copied {0} items</value>
+  </data>
+  <data name="Files_DestinationSummary" xml:space="preserve">
+    <value>{0} items
+
+Destination folder:
+{1}</value>
+  </data>
+  <data name="Files_FolderConflict" xml:space="preserve">
+    <value>A folder with this name already exists</value>
+  </data>
+  <data name="Files_FolderConflictHint" xml:space="preserve">
+    <value>Merge into “{0}”? Files with matching names will stay in the original folder without overwriting anything. Skip to keep both folders unchanged.</value>
+  </data>
+  <data name="Files_GroupSelection" xml:space="preserve">
+    <value>Move {0} items into a new folder</value>
+  </data>
+  <data name="Files_GroupedCount" xml:space="preserve">
+    <value>Moved {0} items into a new folder</value>
+  </data>
+  <data name="Files_InvalidDestination" xml:space="preserve">
+    <value>The destination cannot be the source, a selected folder, or its subfolder.</value>
+  </data>
+  <data name="Files_KeepExtension" xml:space="preserve">
+    <value>Keep the {0} extension.</value>
+  </data>
+  <data name="Files_Merge" xml:space="preserve">
+    <value>Merge</value>
+  </data>
+  <data name="Files_MergePartial" xml:space="preserve">
+    <value>Skipped {0} conflicting or linked items; {1} items could not be processed. Unmoved items remain in the original folder. Completed moves can be undone.</value>
+  </data>
+  <data name="Files_Merged" xml:space="preserve">
+    <value>Folders merged</value>
+  </data>
+  <data name="Files_MoveOtherPane" xml:space="preserve">
+    <value>Move to other pane</value>
+  </data>
+  <data name="Files_NameConflict" xml:space="preserve">
+    <value>This name is already in use</value>
+  </data>
+  <data name="Files_NameConflictHint" xml:space="preserve">
+    <value>“{0}” already exists. Nothing has been overwritten. Skip this change, then choose another name.</value>
+  </data>
+  <data name="Files_NameExists" xml:space="preserve">
+    <value>This name is already in use. Choose another name.</value>
+  </data>
+  <data name="Files_NotReady" xml:space="preserve">
+    <value>The file manager is not ready. Please try the operation again.</value>
+  </data>
+  <data name="Files_OperationCancelled" xml:space="preserve">
+    <value>Operation cancelled</value>
+  </data>
+  <data name="Files_ParentUnknown" xml:space="preserve">
+    <value>Could not determine the parent folder.</value>
+  </data>
+  <data name="Files_PermanentlyDeletedCount" xml:space="preserve">
+    <value>Permanently deleted {0} items. These items cannot be undone.</value>
+  </data>
+  <data name="Files_RecycledCount" xml:space="preserve">
+    <value>Moved {0} items to the Recycle Bin</value>
+  </data>
+  <data name="Files_RecycledUndoOnly" xml:space="preserve">
+    <value>Another {0} items were moved to the Recycle Bin. Undo restores only those items.</value>
+  </data>
+  <data name="Files_RenamedMovedCount" xml:space="preserve">
+    <value>Moved or renamed {0} items</value>
+  </data>
+  <data name="Files_Skip" xml:space="preserve">
+    <value>Skip</value>
+  </data>
+  <data name="Files_TargetExists" xml:space="preserve">
+    <value>The target name already exists. Please try again.</value>
+  </data>
+  <data name="Files_UndoRecycledOnly" xml:space="preserve">
+    <value>Restore recycled items</value>
+  </data>
+  <data name="FilterFolder" xml:space="preserve">
+    <value>Search files</value>
+  </data>
+  <data name="FolderView_Reset" xml:space="preserve">
+    <value>Reset this folder's view</value>
+  </data>
+  <data name="FoldersSection" xml:space="preserve">
+    <value>Folders</value>
+  </data>
+  <data name="FullPath" xml:space="preserve">
+    <value>Full path</value>
+  </data>
+  <data name="GeneralLead" xml:space="preserve">
+    <value>Choose where FilesMate starts and how new folders open.</value>
+  </data>
+  <data name="GeneralTitle" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="GlassEffectBalanced" xml:space="preserve">
+    <value>Balanced</value>
+  </data>
+  <data name="GlassEffectImmersive" xml:space="preserve">
+    <value>Immersive</value>
+  </data>
+  <data name="GlassEffectOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="GlassEffects" xml:space="preserve">
+    <value>Glass effects</value>
+  </data>
+  <data name="GlassEffectsDescription" xml:space="preserve">
+    <value>Choose how transparent and layered the static glass surfaces appear.</value>
+  </data>
+  <data name="GlassSection" xml:space="preserve">
+    <value>Glass</value>
+  </data>
+  <data name="GlobalSearch" xml:space="preserve">
+    <value>Global search</value>
+  </data>
+  <data name="GlobalShortcut" xml:space="preserve">
+    <value>Global shortcut</value>
+  </data>
+  <data name="GoUp" xml:space="preserve">
+    <value>Go up</value>
+  </data>
+  <data name="GroupSelection" xml:space="preserve">
+    <value>Move selection into a new folder</value>
+  </data>
+  <data name="HideSettings" xml:space="preserve">
+    <value>Hide settings</value>
+  </data>
+  <data name="Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="Home_Customize" xml:space="preserve">
+    <value>Customize Home</value>
+  </data>
+  <data name="Home_Drives" xml:space="preserve">
+    <value>Drives</value>
+  </data>
+  <data name="Home_MoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="Home_MoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="Home_ResetLayout" xml:space="preserve">
+    <value>Reset Home layout</value>
+  </data>
+  <data name="Home_ShowSection" xml:space="preserve">
+    <value>Show this section</value>
+  </data>
+  <data name="Home_SystemLocations" xml:space="preserve">
+    <value>System locations (opens in Windows)</value>
+  </data>
+  <data name="Home_UserDirectories" xml:space="preserve">
+    <value>User folders</value>
+  </data>
+  <data name="Home_UserFolder" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="IconCacheDescription" xml:space="preserve">
+    <value>Clear cached artwork if an icon or thumbnail looks stale.</value>
+  </data>
+  <data name="IconCacheTitle" xml:space="preserve">
+    <value>Icon and thumbnail cache</value>
+  </data>
+  <data name="InvertSelection" xml:space="preserve">
+    <value>Invert selection</value>
+  </data>
+  <data name="KnownFoldersDescription" xml:space="preserve">
+    <value>Desktop, Documents, Downloads, Pictures, Music, and Videos appear in the sidebar.</value>
+  </data>
+  <data name="KnownFoldersTitle" xml:space="preserve">
+    <value>Known folders</value>
+  </data>
+  <data name="Language_Description" xml:space="preserve">
+    <value>Changing the language automatically restarts FilesMate and running background search. Open tabs are restored; file transfers finish first.</value>
+  </data>
+  <data name="Language_RestartFailed" xml:space="preserve">
+    <value>The language was saved, but restart could not finish. Try again.</value>
+  </data>
+  <data name="Language_Retry" xml:space="preserve">
+    <value>Retry restart</value>
+  </data>
+  <data name="Language_SaveFailed" xml:space="preserve">
+    <value>Could not save the language. Your previous choice is unchanged.</value>
+  </data>
+  <data name="Language_Saved" xml:space="preserve">
+    <value>Saved. Restarting automatically after any file transfers finish…</value>
+  </data>
+  <data name="Language_System" xml:space="preserve">
+    <value>Follow Windows language</value>
+  </data>
+  <data name="Language_Title" xml:space="preserve">
+    <value>Display language</value>
+  </data>
+  <data name="Later" xml:space="preserve">
+    <value>Later</value>
+  </data>
+  <data name="LaunchApplication" xml:space="preserve">
+    <value>Launch app</value>
+  </data>
+  <data name="Layout_Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Layout_ExtraLargeIcons" xml:space="preserve">
+    <value>Extra large icons</value>
+  </data>
+  <data name="Layout_HugeIcons" xml:space="preserve">
+    <value>Huge icons (128)</value>
+  </data>
+  <data name="Layout_Icons" xml:space="preserve">
+    <value>Icons</value>
+  </data>
+  <data name="Layout_JumboIcons" xml:space="preserve">
+    <value>Jumbo icons (192)</value>
+  </data>
+  <data name="Layout_LargeIcons" xml:space="preserve">
+    <value>Large icons</value>
+  </data>
+  <data name="Layout_MaximumIcons" xml:space="preserve">
+    <value>Maximum icons (256)</value>
+  </data>
+  <data name="Layout_MediumIcons" xml:space="preserve">
+    <value>Medium icons</value>
+  </data>
+  <data name="Layout_SmallIcons" xml:space="preserve">
+    <value>Small icons</value>
+  </data>
+  <data name="LocalDisk" xml:space="preserve">
+    <value>Local Disk</value>
+  </data>
+  <data name="Lock_Browse" xml:space="preserve">
+    <value>Browse</value>
+  </data>
+  <data name="Lock_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Lock_DeleteFailed" xml:space="preserve">
+    <value>Couldn't delete this item. {0}</value>
+  </data>
+  <data name="Lock_Empty" xml:space="preserve">
+    <value>Nothing is using this item.</value>
+  </data>
+  <data name="Lock_EndFailed" xml:space="preserve">
+    <value>Couldn't end that process.</value>
+  </data>
+  <data name="Lock_EndTask" xml:space="preserve">
+    <value>End task</value>
+  </data>
+  <data name="Lock_HandleCount" xml:space="preserve">
+    <value>{0} items</value>
+  </data>
+  <data name="Lock_Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="Lock_Pid" xml:space="preserve">
+    <value>PID {0}</value>
+  </data>
+  <data name="Lock_Processes" xml:space="preserve">
+    <value>Locking processes</value>
+  </data>
+  <data name="Lock_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Lock_ScanFailed" xml:space="preserve">
+    <value>Couldn't look up which programs are using this item.</value>
+  </data>
+  <data name="Lock_Service" xml:space="preserve">
+    <value>Service: {0}</value>
+  </data>
+  <data name="Lock_Unlock" xml:space="preserve">
+    <value>Unlock</value>
+  </data>
+  <data name="MemoryDescription" xml:space="preserve">
+    <value>Rows and tiles are virtualized instead of creating a view model for every item.</value>
+  </data>
+  <data name="MemoryTitle" xml:space="preserve">
+    <value>Bounded UI state</value>
+  </data>
+  <data name="Menu_FolderAppearance" xml:space="preserve">
+    <value>Folder appearance</value>
+  </data>
+  <data name="Menu_New" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="Menu_Selection" xml:space="preserve">
+    <value>Select items</value>
+  </data>
+  <data name="Menu_SystemFailed" xml:space="preserve">
+    <value>Could not load the system context menu.</value>
+  </data>
+  <data name="Move" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="MoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="MoveEarlier" xml:space="preserve">
+    <value>Move earlier</value>
+  </data>
+  <data name="MoveLater" xml:space="preserve">
+    <value>Move later</value>
+  </data>
+  <data name="MoveTo" xml:space="preserve">
+    <value>Move to</value>
+  </data>
+  <data name="MoveToMenu" xml:space="preserve">
+    <value>Move to…</value>
+  </data>
+  <data name="MoveToOtherPane" xml:space="preserve">
+    <value>Move to other pane…</value>
+  </data>
+  <data name="MoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="MultitaskingLead" xml:space="preserve">
+    <value>Work across locations without losing the state of the current folder.</value>
+  </data>
+  <data name="MultitaskingTitle" xml:space="preserve">
+    <value>Multitasking</value>
+  </data>
+  <data name="Music" xml:space="preserve">
+    <value>Music</value>
+  </data>
+  <data name="Nav_Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Nav_Cloud" xml:space="preserve">
+    <value>Cloud</value>
+  </data>
+  <data name="Nav_Drives" xml:space="preserve">
+    <value>Drives</value>
+  </data>
+  <data name="Nav_Forward" xml:space="preserve">
+    <value>Forward</value>
+  </data>
+  <data name="Nav_More" xml:space="preserve">
+    <value>More</value>
+  </data>
+  <data name="Nav_Network" xml:space="preserve">
+    <value>Network</value>
+  </data>
+  <data name="Nav_Pinned" xml:space="preserve">
+    <value>Pinned</value>
+  </data>
+  <data name="Nav_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Nav_Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Nav_Up" xml:space="preserve">
+    <value>Up</value>
+  </data>
+  <data name="Nav_Wsl" xml:space="preserve">
+    <value>WSL</value>
+  </data>
+  <data name="NetworkDrive" xml:space="preserve">
+    <value>Network drive</value>
+  </data>
+  <data name="NewFileName" xml:space="preserve">
+    <value>New file.txt</value>
+  </data>
+  <data name="NewGroup" xml:space="preserve">
+    <value>New group</value>
+  </data>
+  <data name="NewGroupName" xml:space="preserve">
+    <value>New group name</value>
+  </data>
+  <data name="NewTab" xml:space="preserve">
+    <value>New tab</value>
+  </data>
+  <data name="NewTabTooltip" xml:space="preserve">
+    <value>New tab (Ctrl+T)</value>
+  </data>
+  <data name="NextFile" xml:space="preserve">
+    <value>Next file</value>
+  </data>
+  <data name="NotFound_Body" xml:space="preserve">
+    <value>It may have been moved or deleted.</value>
+  </data>
+  <data name="NotFound_Title" xml:space="preserve">
+    <value>This folder can't be found</value>
+  </data>
+  <data name="Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Offline_Body" xml:space="preserve">
+    <value>Check the connection, then try again.</value>
+  </data>
+  <data name="Offline_Title" xml:space="preserve">
+    <value>This location is offline</value>
+  </data>
+  <data name="On" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="OpenDataFolder" xml:space="preserve">
+    <value>Open folder</value>
+  </data>
+  <data name="OpenFailed_Body" xml:space="preserve">
+    <value>Something went wrong. Try again.</value>
+  </data>
+  <data name="OpenFailed_Title" xml:space="preserve">
+    <value>Couldn't open this folder</value>
+  </data>
+  <data name="OpenFilesMate" xml:space="preserve">
+    <value>Open FilesMate</value>
+  </data>
+  <data name="OpenFolderFirst" xml:space="preserve">
+    <value>Open a folder first.</value>
+  </data>
+  <data name="OpenFoldersNewTabDescription" xml:space="preserve">
+    <value>Double-clicking a folder opens it in a separate tab instead of replacing this one.</value>
+  </data>
+  <data name="OpenFoldersNewTabTitle" xml:space="preserve">
+    <value>Open folders in a new tab</value>
+  </data>
+  <data name="OpenGroup" xml:space="preserve">
+    <value>Open group</value>
+  </data>
+  <data name="OpenInExistingWindowDescription" xml:space="preserve">
+    <value>When another app opens a folder in FilesMate, reuse the window that is already running and open it in a new tab instead of launching another copy.</value>
+  </data>
+  <data name="OpenInExistingWindowTitle" xml:space="preserve">
+    <value>Use one app window</value>
+  </data>
+  <data name="Open_FailedPrefix" xml:space="preserve">
+    <value>Could not open: </value>
+  </data>
+  <data name="Opening" xml:space="preserve">
+    <value>Opening…</value>
+  </data>
+  <data name="Order_SaveFailed" xml:space="preserve">
+    <value>Could not save. Previous order restored: </value>
+  </data>
+  <data name="PageLoadError_Body" xml:space="preserve">
+    <value>FilesMate kept the window open. Copy the diagnostics if you want to report this problem.</value>
+  </data>
+  <data name="PageLoadError_Title" xml:space="preserve">
+    <value>This page couldn't open</value>
+  </data>
+  <data name="ParentFolder" xml:space="preserve">
+    <value>Parent folder</value>
+  </data>
+  <data name="Path_Copied" xml:space="preserve">
+    <value>Path copied</value>
+  </data>
+  <data name="PerformanceSection" xml:space="preserve">
+    <value>Performance</value>
+  </data>
+  <data name="Pictures" xml:space="preserve">
+    <value>Pictures</value>
+  </data>
+  <data name="PreviewCompatible" xml:space="preserve">
+    <value>Compatible preview</value>
+  </data>
+  <data name="PreviewContentTab" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="PreviewEmpty" xml:space="preserve">
+    <value>Select an item to preview.</value>
+  </data>
+  <data name="PreviewFolderProperties" xml:space="preserve">
+    <value>Folder
+Modified: {0}
+Items: {1}</value>
+  </data>
+  <data name="PreviewInfoTab" xml:space="preserve">
+    <value>Information</value>
+  </data>
+  <data name="PreviewMediaError" xml:space="preserve">
+    <value>Cannot play this format here. Open the file in your media player.</value>
+  </data>
+  <data name="PreviewNative" xml:space="preserve">
+    <value>Native preview</value>
+  </data>
+  <data name="PreviewNextPage" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="PreviewPaneTitle" xml:space="preserve">
+    <value>Preview (Alt+P)</value>
+  </data>
+  <data name="PreviewPdfHint" xml:space="preserve">
+    <value>Unable to preview this PDF. Open the file to view it.</value>
+  </data>
+  <data name="PreviewPlay" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="PreviewPreviousPage" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="PreviewProperties" xml:space="preserve">
+    <value>Size: {0}
+Modified: {1}</value>
+  </data>
+  <data name="PreviewTruncated" xml:space="preserve">
+    <value>Preview truncated at 1 MiB.</value>
+  </data>
+  <data name="Preview_AttributeSeparator" xml:space="preserve">
+    <value>, </value>
+  </data>
+  <data name="Preview_Attributes" xml:space="preserve">
+    <value>Attributes</value>
+  </data>
+  <data name="Preview_Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="Preview_Chart" xml:space="preserve">
+    <value>Chart preview</value>
+  </data>
+  <data name="Preview_ChartData" xml:space="preserve">
+    <value>Data</value>
+  </data>
+  <data name="Preview_ChartEmpty" xml:space="preserve">
+    <value>No saved data is available for this chart.</value>
+  </data>
+  <data name="Preview_ChartLimits" xml:space="preserve">
+    <value>Saved chart data (up to 8 series, 32 values per series)</value>
+  </data>
+  <data name="Preview_Collapse" xml:space="preserve">
+    <value>Hide preview</value>
+  </data>
+  <data name="Preview_ContentTooLarge" xml:space="preserve">
+    <value>The document content is too large. Open the file to view it.</value>
+  </data>
+  <data name="Preview_Created" xml:space="preserve">
+    <value>Date created</value>
+  </data>
+  <data name="Preview_DocumentFailed" xml:space="preserve">
+    <value>Cannot preview this document</value>
+  </data>
+  <data name="Preview_DocumentTooLarge" xml:space="preserve">
+    <value>This document exceeds 64 MB. Open the file to view the full content.</value>
+  </data>
+  <data name="Preview_DocumentUnavailable" xml:space="preserve">
+    <value>This document cannot be previewed. Open the file to view it.</value>
+  </data>
+  <data name="Preview_EmbeddedImage" xml:space="preserve">
+    <value>Embedded document image</value>
+  </data>
+  <data name="Preview_EmptyText" xml:space="preserve">
+    <value>Empty text document</value>
+  </data>
+  <data name="Preview_Hidden" xml:space="preserve">
+    <value>Hidden</value>
+  </data>
+  <data name="Preview_ImageUnsupported" xml:space="preserve">
+    <value>This image format or size cannot be previewed. Open the original file.</value>
+  </data>
+  <data name="Preview_Interrupted" xml:space="preserve">
+    <value>Preview was interrupted. Select the file again.</value>
+  </data>
+  <data name="Preview_InvalidDocument" xml:space="preserve">
+    <value>Cannot preview this document. It may be encrypted, damaged, or unsupported. Open the file to view it.</value>
+  </data>
+  <data name="Preview_Items" xml:space="preserve">
+    <value>Items</value>
+  </data>
+  <data name="Preview_LegacyCharts" xml:space="preserve">
+    <value>Images or charts in this legacy workbook could not be converted. Cell content can still be previewed.</value>
+  </data>
+  <data name="Preview_LegacyImages" xml:space="preserve">
+    <value>Some images in this legacy workbook could not be read. Open the original file.</value>
+  </data>
+  <data name="Preview_LinkFailed" xml:space="preserve">
+    <value>Could not open this link</value>
+  </data>
+  <data name="Preview_Loading" xml:space="preserve">
+    <value>Loading preview…</value>
+  </data>
+  <data name="Preview_LoadingCompatible" xml:space="preserve">
+    <value>Loading compatible preview…</value>
+  </data>
+  <data name="Preview_LoadingNative" xml:space="preserve">
+    <value>Loading native preview…</value>
+  </data>
+  <data name="Preview_Location" xml:space="preserve">
+    <value>Location</value>
+  </data>
+  <data name="Preview_MemoryLimit" xml:space="preserve">
+    <value>Preview was stopped to limit memory use. Open this complex document in its app.</value>
+  </data>
+  <data name="Preview_None" xml:space="preserve">
+    <value>No preview available. Open the file to view it.</value>
+  </data>
+  <data name="Preview_PdfTooLarge" xml:space="preserve">
+    <value>This PDF exceeds 2 GB. Open the file to view it.</value>
+  </data>
+  <data name="Preview_PieChart" xml:space="preserve">
+    <value>Pie chart preview</value>
+  </data>
+  <data name="Preview_ReadFailed" xml:space="preserve">
+    <value>Could not read this file right now</value>
+  </data>
+  <data name="Preview_ReadOnly" xml:space="preserve">
+    <value>Read-only</value>
+  </data>
+  <data name="Preview_ResizeBottom" xml:space="preserve">
+    <value>Resize preview from bottom</value>
+  </data>
+  <data name="Preview_ResizeBottomLeft" xml:space="preserve">
+    <value>Resize preview from bottom left</value>
+  </data>
+  <data name="Preview_ResizeBottomRight" xml:space="preserve">
+    <value>Resize preview from bottom right</value>
+  </data>
+  <data name="Preview_ResizeLeft" xml:space="preserve">
+    <value>Resize preview from left</value>
+  </data>
+  <data name="Preview_ResizeRight" xml:space="preserve">
+    <value>Resize preview from right</value>
+  </data>
+  <data name="Preview_ResizeTop" xml:space="preserve">
+    <value>Resize preview from top</value>
+  </data>
+  <data name="Preview_ResizeTopLeft" xml:space="preserve">
+    <value>Resize preview from top left</value>
+  </data>
+  <data name="Preview_ResizeTopRight" xml:space="preserve">
+    <value>Resize preview from top right</value>
+  </data>
+  <data name="Preview_SheetImages" xml:space="preserve">
+    <value>Some images or charts in this worksheet cannot be previewed. Open the original file.</value>
+  </data>
+  <data name="Preview_SheetLimits" xml:space="preserve">
+    <value>Up to 20 sheets, 500 rows and 64 columns per sheet. Saved values are shown without recalculating formulas. Images and common charts appear below the table; open the original file for complex drawings.</value>
+  </data>
+  <data name="Preview_SheetTruncated" xml:space="preserve">
+    <value>Only part of the cells are shown. Open the file for the full spreadsheet.</value>
+  </data>
+  <data name="Preview_Simplified" xml:space="preserve">
+    <value>Simplified preview · Some formatting cannot be reproduced. Open the file for the full layout.</value>
+  </data>
+  <data name="Preview_SlideHint" xml:space="preserve">
+    <value>Slide preview · Images, text, tables, and common charts. Open the original file for complex masters, animations, and effects.</value>
+  </data>
+  <data name="Preview_SlideLimits" xml:space="preserve">
+    <value>Up to 100 slides. Embedded images are limited to 8 MB in total.</value>
+  </data>
+  <data name="Preview_SlideNumber" xml:space="preserve">
+    <value>Slide {0}</value>
+  </data>
+  <data name="Preview_SpreadsheetValues" xml:space="preserve">
+    <value>Spreadsheet preview · Showing saved cell values</value>
+  </data>
+  <data name="Preview_StartFailed" xml:space="preserve">
+    <value>Could not start document preview.</value>
+  </data>
+  <data name="Preview_System" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="Preview_TextLimit" xml:space="preserve">
+    <value>First 256 KB shown · Open the file for full content</value>
+  </data>
+  <data name="Preview_TextUnsupported" xml:space="preserve">
+    <value>Text preview is not supported for this file</value>
+  </data>
+  <data name="Preview_Timeout" xml:space="preserve">
+    <value>Preview timed out for this complex document. Open the file to view it.</value>
+  </data>
+  <data name="Preview_UnavailableShort" xml:space="preserve">
+    <value>Cannot preview this document. Open the file to view it.</value>
+  </data>
+  <data name="Preview_WebViewFailed" xml:space="preserve">
+    <value>Could not initialize preview. Reopen it or check WebView2.</value>
+  </data>
+  <data name="PreviousFile" xml:space="preserve">
+    <value>Previous file</value>
+  </data>
+  <data name="ProgramFile" xml:space="preserve">
+    <value>Program file</value>
+  </data>
+  <data name="Recycle_ConfirmPrefix" xml:space="preserve">
+    <value>Move the following items to the Recycle Bin?
+
+</value>
+  </data>
+  <data name="ReduceMotion" xml:space="preserve">
+    <value>Reduce motion</value>
+  </data>
+  <data name="ReduceMotionDescription" xml:space="preserve">
+    <value>On reduces animation. FilesMate cannot turn motion back on when Windows has it off.</value>
+  </data>
+  <data name="ReduceMotionOn" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="ReduceMotionSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="RemovableDrive" xml:space="preserve">
+    <value>Removable drive</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="RemoveGroup" xml:space="preserve">
+    <value>Remove group</value>
+  </data>
+  <data name="RenameApplyCount" xml:space="preserve">
+    <value>Rename {0} items</value>
+  </data>
+  <data name="RenameBaseExample" xml:space="preserve">
+    <value>e.g. Holiday photos</value>
+  </data>
+  <data name="RenameBaseName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="RenameChanged" xml:space="preserve">
+    <value>Will rename</value>
+  </data>
+  <data name="RenameDigits" xml:space="preserve">
+    <value>Number format</value>
+  </data>
+  <data name="RenameDuplicate" xml:space="preserve">
+    <value>Duplicate new name</value>
+  </data>
+  <data name="RenameExists" xml:space="preserve">
+    <value>A file or folder with this name exists</value>
+  </data>
+  <data name="RenameExtensionHint" xml:space="preserve">
+    <value>File extensions stay unchanged by default. Folder names are processed in full.</value>
+  </data>
+  <data name="RenameFind" xml:space="preserve">
+    <value>Find</value>
+  </data>
+  <data name="RenameFooter" xml:space="preserve">
+    <value>Review the names before applying. Undo is available with Ctrl+Z after renaming.</value>
+  </data>
+  <data name="RenameGroupMenu" xml:space="preserve">
+    <value>Rename group…</value>
+  </data>
+  <data name="RenameHelpAffix" xml:space="preserve">
+    <value>Keep the original name and add text before or after it.</value>
+  </data>
+  <data name="RenameHelpCase" xml:space="preserve">
+    <value>Convert letters to upper or lower case. Other characters stay unchanged.</value>
+  </data>
+  <data name="RenameHelpNumber" xml:space="preserve">
+    <value>Use one base name with sequential numbers. The preview order determines the numbering order.</value>
+  </data>
+  <data name="RenameHelpReplace" xml:space="preserve">
+    <value>Replace matching text in names. Leave the replacement empty to remove it.</value>
+  </data>
+  <data name="RenameHelpTitle" xml:space="preserve">
+    <value>How this rule works</value>
+  </data>
+  <data name="RenameIncludeExtension" xml:space="preserve">
+    <value>Also change file extensions</value>
+  </data>
+  <data name="RenameLower" xml:space="preserve">
+    <value>lowercase</value>
+  </data>
+  <data name="RenameMatchCase" xml:space="preserve">
+    <value>Match case</value>
+  </data>
+  <data name="RenameMenu" xml:space="preserve">
+    <value>Rename…</value>
+  </data>
+  <data name="RenameModeAffix" xml:space="preserve">
+    <value>Add prefix or suffix</value>
+  </data>
+  <data name="RenameModeCase" xml:space="preserve">
+    <value>Change letter case</value>
+  </data>
+  <data name="RenameModeNumber" xml:space="preserve">
+    <value>Name and number</value>
+  </data>
+  <data name="RenameModeReplace" xml:space="preserve">
+    <value>Find and replace</value>
+  </data>
+  <data name="RenameNew" xml:space="preserve">
+    <value>New name</value>
+  </data>
+  <data name="RenameNumberHint" xml:space="preserve">
+    <value>Numbers follow the order shown in this list. File extensions are preserved unless selected below.</value>
+  </data>
+  <data name="RenameNumberRequired" xml:space="preserve">
+    <value>Enter a name and a whole start number.</value>
+  </data>
+  <data name="RenameOperation" xml:space="preserve">
+    <value>Operation</value>
+  </data>
+  <data name="RenameOriginal" xml:space="preserve">
+    <value>Original name</value>
+  </data>
+  <data name="RenamePrefix" xml:space="preserve">
+    <value>Add before name</value>
+  </data>
+  <data name="RenameRemoveHint" xml:space="preserve">
+    <value>Leave empty to remove matches</value>
+  </data>
+  <data name="RenameReplace" xml:space="preserve">
+    <value>Replace with</value>
+  </data>
+  <data name="RenameResetRules" xml:space="preserve">
+    <value>Reset rules</value>
+  </data>
+  <data name="RenameStart" xml:space="preserve">
+    <value>Start number</value>
+  </data>
+  <data name="RenameSuffix" xml:space="preserve">
+    <value>Add after name</value>
+  </data>
+  <data name="RenameSummary" xml:space="preserve">
+    <value>{0} selected · {1} changes · {2} issues</value>
+  </data>
+  <data name="RenameUnchanged" xml:space="preserve">
+    <value>Unchanged</value>
+  </data>
+  <data name="RenameUndoHint" xml:space="preserve">
+    <value>Undo with Ctrl+Z after renaming</value>
+  </data>
+  <data name="RenameUpper" xml:space="preserve">
+    <value>UPPERCASE</value>
+  </data>
+  <data name="ResizePreview" xml:space="preserve">
+    <value>Drag to resize preview</value>
+  </data>
+  <data name="ResizeVertical" xml:space="preserve">
+    <value>Drag up or down to resize</value>
+  </data>
+  <data name="Restore" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="RestoreAll" xml:space="preserve">
+    <value>Restore all</value>
+  </data>
+  <data name="RestoreLastSessionDescription" xml:space="preserve">
+    <value>Reopen the tabs and folders from your last session when FilesMate starts.</value>
+  </data>
+  <data name="RestoreLastSessionTitle" xml:space="preserve">
+    <value>Restore previous tabs</value>
+  </data>
+  <data name="RestoreSidebarDefaults" xml:space="preserve">
+    <value>Restore defaults</value>
+  </data>
+  <data name="ResultOrder" xml:space="preserve">
+    <value>Result order</value>
+  </data>
+  <data name="ResultOrder_Edit" xml:space="preserve">
+    <value>Reorder</value>
+  </data>
+  <data name="ResultOrder_Hint" xml:space="preserve">
+    <value>Types at the top appear first. Changes sync with the file manager.</value>
+  </data>
+  <data name="ResultOrder_SharedHint" xml:space="preserve">
+    <value>Shared with the file manager</value>
+  </data>
+  <data name="Retry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="RevealFile" xml:space="preserve">
+    <value>Open file location</value>
+  </data>
+  <data name="RevealFileShortcut" xml:space="preserve">
+    <value>Open file location · Ctrl+Enter</value>
+  </data>
+  <data name="SafetySection" xml:space="preserve">
+    <value>Safety</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="SaveTo" xml:space="preserve">
+    <value>Save to</value>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>Saved</value>
+  </data>
+  <data name="SavedAutomatically" xml:space="preserve">
+    <value>Saved automatically</value>
+  </data>
+  <data name="SavedPrefix" xml:space="preserve">
+    <value>Saved · </value>
+  </data>
+  <data name="SearchAutoRefresh" xml:space="preserve">
+    <value>Keep the index up to date</value>
+  </data>
+  <data name="SearchAutoRefreshDescription" xml:space="preserve">
+    <value>After you have indexed once, rebuild in the background if the index is older than a day while FilesMate is open.</value>
+  </data>
+  <data name="SearchCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="SearchChangeLocation" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="SearchDepth" xml:space="preserve">
+    <value>Maximum folder depth</value>
+  </data>
+  <data name="SearchDepthDescription" xml:space="preserve">
+    <value>Default is 6 folders down from each selected drive. Unlimited walks the whole drive.</value>
+  </data>
+  <data name="SearchDepthUnlimited" xml:space="preserve">
+    <value>Unlimited</value>
+  </data>
+  <data name="SearchDone" xml:space="preserve">
+    <value>Indexing finished.</value>
+  </data>
+  <data name="SearchDrives" xml:space="preserve">
+    <value>Drives</value>
+  </data>
+  <data name="SearchExclusions" xml:space="preserve">
+    <value>Excluded paths</value>
+  </data>
+  <data name="SearchExclusionsDescription" xml:space="preserve">
+    <value>One path or folder name per line, such as C:\Windows or node_modules.</value>
+  </data>
+  <data name="SearchIdle" xml:space="preserve">
+    <value>The name index stays off until you start indexing.</value>
+  </data>
+  <data name="SearchIndex" xml:space="preserve">
+    <value>Index</value>
+  </data>
+  <data name="SearchIndexDescription" xml:space="preserve">
+    <value>Scan selected drives. Excluded folders are skipped. A full disk can take a long time.</value>
+  </data>
+  <data name="SearchIndexSection" xml:space="preserve">
+    <value>Index</value>
+  </data>
+  <data name="SearchIndexTitle" xml:space="preserve">
+    <value>Name index</value>
+  </data>
+  <data name="SearchLead" xml:space="preserve">
+    <value>Index file names, then search from the box beside the address bar. After the first index, FilesMate refreshes it in the background when it is older than a day.</value>
+  </data>
+  <data name="SearchLocation" xml:space="preserve">
+    <value>Index file</value>
+  </data>
+  <data name="SearchParallel" xml:space="preserve">
+    <value>Scan drives together</value>
+  </data>
+  <data name="SearchParallelDescription" xml:space="preserve">
+    <value>Queue more than one selected drive. Indexing still runs in the background.</value>
+  </data>
+  <data name="SearchPlaceholder" xml:space="preserve">
+    <value>Search files</value>
+  </data>
+  <data name="SearchPlaceholderFolder" xml:space="preserve">
+    <value>Search this folder</value>
+  </data>
+  <data name="SearchPlaceholderHome" xml:space="preserve">
+    <value>Search everywhere</value>
+  </data>
+  <data name="SearchProgress" xml:space="preserve">
+    <value>Progress</value>
+  </data>
+  <data name="SearchRankArchive" xml:space="preserve">
+    <value>Archives</value>
+  </data>
+  <data name="SearchRankAudio" xml:space="preserve">
+    <value>Music</value>
+  </data>
+  <data name="SearchRankCode" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="SearchRankDescription" xml:space="preserve">
+    <value>Drag to choose which kinds appear first. Names of the same kind sort A to Z.</value>
+  </data>
+  <data name="SearchRankDocument" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="SearchRankFolder" xml:space="preserve">
+    <value>Folders</value>
+  </data>
+  <data name="SearchRankImage" xml:space="preserve">
+    <value>Pictures</value>
+  </data>
+  <data name="SearchRankOther" xml:space="preserve">
+    <value>Other files</value>
+  </data>
+  <data name="SearchRankProgram" xml:space="preserve">
+    <value>Programs</value>
+  </data>
+  <data name="SearchRankSection" xml:space="preserve">
+    <value>Result order</value>
+  </data>
+  <data name="SearchRankShortcut" xml:space="preserve">
+    <value>Shortcuts</value>
+  </data>
+  <data name="SearchRankVideo" xml:space="preserve">
+    <value>Videos</value>
+  </data>
+  <data name="SearchShortcut" xml:space="preserve">
+    <value>Search shortcut</value>
+  </data>
+  <data name="SearchStatErrors" xml:space="preserve">
+    <value>Skipped</value>
+  </data>
+  <data name="SearchStatFiles" xml:space="preserve">
+    <value>Files</value>
+  </data>
+  <data name="SearchStatFolders" xml:space="preserve">
+    <value>Folders</value>
+  </data>
+  <data name="SearchStatIndexed" xml:space="preserve">
+    <value>Indexed</value>
+  </data>
+  <data name="SearchTitle" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Search_AllIndexed" xml:space="preserve">
+    <value>Search all indexed files</value>
+  </data>
+  <data name="Search_AllLocations" xml:space="preserve">
+    <value>Search all indexed locations</value>
+  </data>
+  <data name="Search_AppEntryHint" xml:space="preserve">
+    <value>This is an app launch entry. Open its location to perform file operations.</value>
+  </data>
+  <data name="Search_AwaitingSetup" xml:space="preserve">
+    <value>Waiting for initial setup</value>
+  </data>
+  <data name="Search_BackgroundCompactHint" xml:space="preserve">
+    <value>Available even after closing file windows</value>
+  </data>
+  <data name="Search_BackgroundOff" xml:space="preserve">
+    <value>Background search is off</value>
+  </data>
+  <data name="Search_CheckIndex" xml:space="preserve">
+    <value>Check index settings</value>
+  </data>
+  <data name="Search_Clear" xml:space="preserve">
+    <value>Clear search</value>
+  </data>
+  <data name="Search_ClearQuery" xml:space="preserve">
+    <value>Clear query</value>
+  </data>
+  <data name="Search_ComponentMissing" xml:space="preserve">
+    <value>The global search component is missing. Reinstall the full application.</value>
+  </data>
+  <data name="Search_ContinueWithout" xml:space="preserve">
+    <value> You can continue with search disabled.</value>
+  </data>
+  <data name="Search_CopyAppHint" xml:space="preserve">
+    <value>App entries can be launched directly. To copy files, open their location first.</value>
+  </data>
+  <data name="Search_Count" xml:space="preserve">
+    <value>{0} matching items</value>
+  </data>
+  <data name="Search_Detecting" xml:space="preserve">
+    <value>Checking background search…</value>
+  </data>
+  <data name="Search_EnableFailed" xml:space="preserve">
+    <value>Global search could not be enabled</value>
+  </data>
+  <data name="Search_EnableFailedHint" xml:space="preserve">
+    <value>Change the shortcut above or leave search off to finish setup. You can enable it later.</value>
+  </data>
+  <data name="Search_ExitWhenHidden" xml:space="preserve">
+    <value>Background search is off. It will exit when the search window is hidden.</value>
+  </data>
+  <data name="Search_GlobalShortcut" xml:space="preserve">
+    <value>Global search shortcut</value>
+  </data>
+  <data name="Search_HiddenHint" xml:space="preserve">
+    <value>Hiding only affects search results. Files and apps are not deleted.</value>
+  </data>
+  <data name="Search_HiddenResults" xml:space="preserve">
+    <value>Hidden search results</value>
+  </data>
+  <data name="Search_Hide" xml:space="preserve">
+    <value>Hide search</value>
+  </data>
+  <data name="Search_HideEscape" xml:space="preserve">
+    <value>Hide · Esc</value>
+  </data>
+  <data name="Search_HideFailed" xml:space="preserve">
+    <value>Could not save hidden items: </value>
+  </data>
+  <data name="Search_HideResult" xml:space="preserve">
+    <value>Hide from search</value>
+  </data>
+  <data name="Search_HotkeyRegistered" xml:space="preserve">
+    <value>Running in background · {0} registered</value>
+  </data>
+  <data name="Search_HotkeyUnregistered" xml:space="preserve">
+    <value>Running in background · {0} unavailable; another app may be using it. Choose a different shortcut.</value>
+  </data>
+  <data name="Search_IndexUnavailable" xml:space="preserve">
+    <value>The index is unavailable. Check index settings.</value>
+  </data>
+  <data name="Search_LeadShortcut" xml:space="preserve">
+    <value>Search files and apps with one shortcut, without opening the file manager first.</value>
+  </data>
+  <data name="Search_LoadingCount" xml:space="preserve">
+    <value>{0}+ items · loading</value>
+  </data>
+  <data name="Search_LoginCompactHint" xml:space="preserve">
+    <value>Ready after sign-in; paused when background search is off</value>
+  </data>
+  <data name="Search_Looking" xml:space="preserve">
+    <value>Searching…</value>
+  </data>
+  <data name="Search_ManageHidden" xml:space="preserve">
+    <value>Manage hidden items</value>
+  </data>
+  <data name="Search_ManageIndex" xml:space="preserve">
+    <value>Manage index</value>
+  </data>
+  <data name="Search_ManageIndexHint" xml:space="preserve">
+    <value>Open the file manager, then Settings → Search</value>
+  </data>
+  <data name="Search_ManagedAppHint" xml:space="preserve">
+    <value>This app is managed by Windows and has no regular file path.</value>
+  </data>
+  <data name="Search_ManagerMissing" xml:space="preserve">
+    <value>FilesMate was not found. Restart global search from the installation folder.</value>
+  </data>
+  <data name="Search_MoreCount" xml:space="preserve">
+    <value>{0}+ results</value>
+  </data>
+  <data name="Search_NoCategoryResults" xml:space="preserve">
+    <value>No matches in this category. Try “All”.</value>
+  </data>
+  <data name="Search_NoResultsHint" xml:space="preserve">
+    <value>No matching items. Try shorter keywords or check the indexed locations.</value>
+  </data>
+  <data name="Search_NoShortcut" xml:space="preserve">
+    <value>This app has no separate shortcut. You can hide it from search instead.</value>
+  </data>
+  <data name="Search_NotResponding" xml:space="preserve">
+    <value>Background search is not responding. Try again later.</value>
+  </data>
+  <data name="Search_NotRunningHint" xml:space="preserve">
+    <value>Background search is not running. Select “Open global search” to start it.</value>
+  </data>
+  <data name="Search_Open" xml:space="preserve">
+    <value>Open global search</value>
+  </data>
+  <data name="Search_OpenSuffix" xml:space="preserve">
+    <value> opens search</value>
+  </data>
+  <data name="Search_Palette" xml:space="preserve">
+    <value>Search window</value>
+  </data>
+  <data name="Search_Partial" xml:space="preserve">
+    <value>Showing {0} matches (partial). Refine your search.</value>
+  </data>
+  <data name="Search_PreviewCompactHint" xml:space="preserve">
+    <value>Preview selected files on the right, not on hover</value>
+  </data>
+  <data name="Search_PreviewFiles" xml:space="preserve">
+    <value>Preview files in search</value>
+  </data>
+  <data name="Search_PreviewHint" xml:space="preserve">
+    <value>Load a preview when a result is selected, not when hovered.</value>
+  </data>
+  <data name="Search_QueryHint" xml:space="preserve">
+    <value>Search files and folders…</value>
+  </data>
+  <data name="Search_Residency" xml:space="preserve">
+    <value>Keep global search running</value>
+  </data>
+  <data name="Search_ResidencyHint" xml:space="preserve">
+    <value>Open search with its shortcut after closing file windows. When hidden, it only listens for the shortcut and stops querying.</value>
+  </data>
+  <data name="Search_ResidencyOffHint" xml:space="preserve">
+    <value>Background search is off. Turn it on to use the shortcut at any time.</value>
+  </data>
+  <data name="Search_ResidencyStopped" xml:space="preserve">
+    <value>Background search was turned off and has exited</value>
+  </data>
+  <data name="Search_RestoreHiddenFailed" xml:space="preserve">
+    <value>Could not restore hidden items: </value>
+  </data>
+  <data name="Search_ResultCount" xml:space="preserve">
+    <value>{0} results</value>
+  </data>
+  <data name="Search_ResultsChanged" xml:space="preserve">
+    <value>Search results changed. Select the file again.</value>
+  </data>
+  <data name="Search_Searching" xml:space="preserve">
+    <value>Searching…</value>
+  </data>
+  <data name="Search_Settings" xml:space="preserve">
+    <value>Search settings</value>
+  </data>
+  <data name="Search_SlowHint" xml:space="preserve">
+    <value>Search is taking longer than expected. Refine your query or scroll down to retry loading.</value>
+  </data>
+  <data name="Search_StaleFiles" xml:space="preserve">
+    <value>Some files were moved or deleted. Search again.</value>
+  </data>
+  <data name="Search_StartAtLogin" xml:space="preserve">
+    <value>Start global search at sign-in</value>
+  </data>
+  <data name="Search_StartAtLoginHint" xml:space="preserve">
+    <value>Use the search shortcut as soon as you sign in to Windows.</value>
+  </data>
+  <data name="Search_StartFailed" xml:space="preserve">
+    <value>Could not start global search: </value>
+  </data>
+  <data name="Search_StartTimeout" xml:space="preserve">
+    <value>Global search took too long to start. Try again later.</value>
+  </data>
+  <data name="Search_Starting" xml:space="preserve">
+    <value>Starting global search…</value>
+  </data>
+  <data name="Search_StartupDisabledByWindows" xml:space="preserve">
+    <value>FilesMate.GlobalSearch is disabled in Windows Settings › Apps › Startup. Enable it there to start at sign-in.</value>
+  </data>
+  <data name="Search_StartupHint" xml:space="preserve">
+    <value>Use the shortcut after signing in to Windows. Turning off background search also suspends startup.</value>
+  </data>
+  <data name="Search_Timeout" xml:space="preserve">
+    <value>Search took too long. Try a longer filename or a smaller folder.</value>
+  </data>
+  <data name="Search_TrayAction" xml:space="preserve">
+    <value>Left-clicking the tray icon opens</value>
+  </data>
+  <data name="Search_TypeToStart" xml:space="preserve">
+    <value>Search includes subfolders by default.</value>
+  </data>
+  <data name="Search_Unavailable" xml:space="preserve">
+    <value>Search failed. Check the index in the Search page in Settings.</value>
+  </data>
+  <data name="Search_WindowTitle" xml:space="preserve">
+    <value>FilesMate Global Search</value>
+  </data>
+  <data name="SelectSameType" xml:space="preserve">
+    <value>Select same type</value>
+  </data>
+  <data name="Selection_Count" xml:space="preserve">
+    <value>{0} items selected</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsAbout" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="SettingsAdvanced" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="SettingsAppearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="SettingsFilesAndFolders" xml:space="preserve">
+    <value>Files &amp; folders</value>
+  </data>
+  <data name="SettingsGeneral" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="SettingsKeyboard" xml:space="preserve">
+    <value>Keyboard</value>
+  </data>
+  <data name="SettingsSearch" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="SettingsTags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Settings_SaveFailed" xml:space="preserve">
+    <value>Could not save settings</value>
+  </data>
+  <data name="Settings_SaveFailedDetail" xml:space="preserve">
+    <value>Could not save settings: </value>
+  </data>
+  <data name="Setup_Guide" xml:space="preserve">
+    <value>Feature setup</value>
+  </data>
+  <data name="Setup_GuideHint" xml:space="preserve">
+    <value>Choose indexing, search, favorites, alphabet navigation, appearance, and accent color.</value>
+  </data>
+  <data name="Setup_Index" xml:space="preserve">
+    <value>Build a file index automatically</value>
+  </data>
+  <data name="Setup_IndexDescription" xml:space="preserve">
+    <value>Index file names for fast search. New installations include all available drives, up to 6 folder levels.</value>
+  </data>
+  <data name="Setup_Later" xml:space="preserve">
+    <value>Set up later</value>
+  </data>
+  <data name="Setup_Lead" xml:space="preserve">
+    <value>Choose what works for you. You can change these settings later.</value>
+  </data>
+  <data name="Setup_Reopen" xml:space="preserve">
+    <value>Choose again</value>
+  </data>
+  <data name="Setup_SearchDescription" xml:space="preserve">
+    <value>Search files and apps with the shortcut below, even after closing the file manager.</value>
+  </data>
+  <data name="Setup_SkipSearch" xml:space="preserve">
+    <value>Leave search off for now</value>
+  </data>
+  <data name="Setup_Start" xml:space="preserve">
+    <value>Get started</value>
+  </data>
+  <data name="Setup_Title" xml:space="preserve">
+    <value>Choose your features</value>
+  </data>
+  <data name="Share_NotReady" xml:space="preserve">
+    <value>Sharing is not ready yet.</value>
+  </data>
+  <data name="Shelf_Add" xml:space="preserve">
+    <value>Add to file shelf</value>
+  </data>
+  <data name="Shelf_Browse" xml:space="preserve">
+    <value>Choose destination folder</value>
+  </data>
+  <data name="Shelf_Cancel" xml:space="preserve">
+    <value>Stop after current item</value>
+  </data>
+  <data name="Shelf_Cancelled" xml:space="preserve">
+    <value>Stopped: {0} items transferred</value>
+  </data>
+  <data name="Shelf_Capacity" xml:space="preserve">
+    <value>The shelf can hold at most {0} items.</value>
+  </data>
+  <data name="Shelf_Clear" xml:space="preserve">
+    <value>Clear shelf</value>
+  </data>
+  <data name="Shelf_Completed" xml:space="preserve">
+    <value>{0} items transferred</value>
+  </data>
+  <data name="Shelf_Copy" xml:space="preserve">
+    <value>Copy selected to destination</value>
+  </data>
+  <data name="Shelf_CopyTo" xml:space="preserve">
+    <value>Copy selected to...</value>
+  </data>
+  <data name="Shelf_Count" xml:space="preserve">
+    <value>{0} items</value>
+  </data>
+  <data name="Shelf_Destination" xml:space="preserve">
+    <value>Destination folder</value>
+  </data>
+  <data name="Shelf_Empty" xml:space="preserve">
+    <value>Shelf is empty</value>
+  </data>
+  <data name="Shelf_InvalidDestination" xml:space="preserve">
+    <value>Choose an existing destination folder.</value>
+  </data>
+  <data name="Shelf_Move" xml:space="preserve">
+    <value>Move selected to destination</value>
+  </data>
+  <data name="Shelf_MoveTo" xml:space="preserve">
+    <value>Move selected to...</value>
+  </data>
+  <data name="Shelf_Progress" xml:space="preserve">
+    <value>Transferring: {0} completed</value>
+  </data>
+  <data name="Shelf_Remove" xml:space="preserve">
+    <value>Remove selected references</value>
+  </data>
+  <data name="Shelf_Title" xml:space="preserve">
+    <value>File shelf</value>
+  </data>
+  <data name="ShellLayered" xml:space="preserve">
+    <value>Layered</value>
+  </data>
+  <data name="ShellStyle" xml:space="preserve">
+    <value>Interface style</value>
+  </data>
+  <data name="ShellStyleDescription" xml:space="preserve">
+    <value>Unified keeps the original continuous surface; Layered separates regions with subtle tones. Changes apply immediately.</value>
+  </data>
+  <data name="ShellUnified" xml:space="preserve">
+    <value>Unified</value>
+  </data>
+  <data name="Shortcut_Change" xml:space="preserve">
+    <value>Change shortcut</value>
+  </data>
+  <data name="Shortcut_ChangeConflict" xml:space="preserve">
+    <value>This shortcut is in use. Your previous shortcut was kept. Choose another combination or close the app using it.</value>
+  </data>
+  <data name="Shortcut_CloseTab" xml:space="preserve">
+    <value>Close tab</value>
+  </data>
+  <data name="Shortcut_Conflict" xml:space="preserve">
+    <value>Already used by {0}.</value>
+  </data>
+  <data name="Shortcut_DeleteHint" xml:space="preserve">
+    <value>
+
+Only the listed shortcuts are deleted. Their target programs are not deleted or uninstalled.</value>
+  </data>
+  <data name="Shortcut_DeleteMenu" xml:space="preserve">
+    <value>Delete shortcut…</value>
+  </data>
+  <data name="Shortcut_EditAddress" xml:space="preserve">
+    <value>Edit address</value>
+  </data>
+  <data name="Shortcut_ExampleF" xml:space="preserve">
+    <value>e.g. Ctrl+Alt+F</value>
+  </data>
+  <data name="Shortcut_ExampleK" xml:space="preserve">
+    <value>e.g. Ctrl+Alt+K</value>
+  </data>
+  <data name="Shortcut_FilterFolder" xml:space="preserve">
+    <value>Search files</value>
+  </data>
+  <data name="Shortcut_InUse" xml:space="preserve">
+    <value>{0} is already in use</value>
+  </data>
+  <data name="Shortcut_InUseHint" xml:space="preserve">
+    <value>Another app is using this shortcut. Close that app or change the shortcut in settings.</value>
+  </data>
+  <data name="Shortcut_Invalid" xml:space="preserve">
+    <value>Invalid shortcut</value>
+  </data>
+  <data name="Shortcut_InvalidHint" xml:space="preserve">
+    <value>Use Alt, Ctrl, or Shift with Space, a letter, a number, or a function key other than F12. You can also record the shortcut directly.</value>
+  </data>
+  <data name="Shortcut_Lead" xml:space="preserve">
+    <value>Click a shortcut, then press the new key combination.</value>
+  </data>
+  <data name="Shortcut_PressCombination" xml:space="preserve">
+    <value>Press a key combination…</value>
+  </data>
+  <data name="Shortcut_PressKeys" xml:space="preserve">
+    <value>Press shortcut</value>
+  </data>
+  <data name="Shortcut_Preview" xml:space="preserve">
+    <value>Toggle preview</value>
+  </data>
+  <data name="Shortcut_Record" xml:space="preserve">
+    <value>Record shortcut</value>
+  </data>
+  <data name="Shortcut_RecordHint" xml:space="preserve">
+    <value>Click, then press a key combination</value>
+  </data>
+  <data name="Shortcut_Redo" xml:space="preserve">
+    <value>Redo</value>
+  </data>
+  <data name="Shortcut_RegisterFailed" xml:space="preserve">
+    <value>Could not register the shortcut (Windows error {0}). Try another combination.</value>
+  </data>
+  <data name="Shortcut_RestoreDefaults" xml:space="preserve">
+    <value>Restore defaults</value>
+  </data>
+  <data name="Shortcut_SaveFailed" xml:space="preserve">
+    <value>Couldn't save the shortcut.</value>
+  </data>
+  <data name="Shortcut_TryAnother" xml:space="preserve">
+    <value>Try another combination…</value>
+  </data>
+  <data name="Shortcut_Undo" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="Shortcut_ValidKeys" xml:space="preserve">
+    <value>Use Alt, Ctrl, or Shift with Space, a letter, a number, or a function key other than F12.</value>
+  </data>
+  <data name="Shortcut_WinUnsupported" xml:space="preserve">
+    <value>The Windows key is not supported</value>
+  </data>
+  <data name="ShortcutsBody" xml:space="preserve">
+    <value>Enter opens. Backspace or Alt+Up goes up. Alt+Left / Alt+Right history.
+Ctrl+T new tab. Ctrl+W closes a tab. Ctrl+L path. Ctrl+F filter. F5 refresh. Ctrl+Z undo. Ctrl+Y redo.</value>
+  </data>
+  <data name="ShortcutsHeader" xml:space="preserve">
+    <value>Keyboard</value>
+  </data>
+  <data name="ShortcutsTitle" xml:space="preserve">
+    <value>Keyboard shortcuts</value>
+  </data>
+  <data name="ShowExtensionsDescription" xml:space="preserve">
+    <value>Keep the type suffix visible in names.</value>
+  </data>
+  <data name="ShowExtensionsTitle" xml:space="preserve">
+    <value>Show file extensions</value>
+  </data>
+  <data name="ShowFolderSizesDescription" xml:space="preserve">
+    <value>Fill the Size column for folders. Off by default because walking large trees can be slow.</value>
+  </data>
+  <data name="ShowFolderSizesTitle" xml:space="preserve">
+    <value>Show folder sizes</value>
+  </data>
+  <data name="ShowHiddenFilesDescription" xml:space="preserve">
+    <value>Include hidden and system items while browsing folders.</value>
+  </data>
+  <data name="ShowHiddenFilesTitle" xml:space="preserve">
+    <value>Show hidden files</value>
+  </data>
+  <data name="ShowNavigation" xml:space="preserve">
+    <value>Show navigation</value>
+  </data>
+  <data name="SidebarDefaultsRestored" xml:space="preserve">
+    <value>Default sidebar locations restored.</value>
+  </data>
+  <data name="SidebarPinsDescription" xml:space="preserve">
+    <value>Remove any pinned location from its context menu, or restore the familiar defaults here.</value>
+  </data>
+  <data name="SidebarPinsTitle" xml:space="preserve">
+    <value>Sidebar pinned items</value>
+  </data>
+  <data name="SidebarSection" xml:space="preserve">
+    <value>Sidebar</value>
+  </data>
+  <data name="Sidebar_AddCloud" xml:space="preserve">
+    <value>Add cloud storage</value>
+  </data>
+  <data name="Sidebar_AddCloudFolder" xml:space="preserve">
+    <value>Add cloud folder</value>
+  </data>
+  <data name="Sidebar_CloudEntryHint" xml:space="preserve">
+    <value>Changes only this sidebar entry, not files or your cloud account. Use + to add a removed folder again.</value>
+  </data>
+  <data name="Sidebar_CloudInvalid" xml:space="preserve">
+    <value>Enter a name and an existing absolute folder path.</value>
+  </data>
+  <data name="Sidebar_CloudPath" xml:space="preserve">
+    <value>Local sync folder</value>
+  </data>
+  <data name="Sidebar_CloudSaveFailed" xml:space="preserve">
+    <value>Could not save this entry. Please try again.</value>
+  </data>
+  <data name="Sidebar_Collapse" xml:space="preserve">
+    <value>Collapse navigation</value>
+  </data>
+  <data name="Sidebar_DisconnectNetworkDrive" xml:space="preserve">
+    <value>Disconnect network drive</value>
+  </data>
+  <data name="Sidebar_EditCloud" xml:space="preserve">
+    <value>Edit cloud entry</value>
+  </data>
+  <data name="Sidebar_Eject" xml:space="preserve">
+    <value>Eject</value>
+  </data>
+  <data name="Sidebar_Expand" xml:space="preserve">
+    <value>Expand navigation</value>
+  </data>
+  <data name="Sidebar_MapNetworkDrive" xml:space="preserve">
+    <value>Map network drive</value>
+  </data>
+  <data name="Sidebar_OneDriveSettings" xml:space="preserve">
+    <value>OneDrive settings</value>
+  </data>
+  <data name="Sidebar_PinFolder" xml:space="preserve">
+    <value>Pin folder</value>
+  </data>
+  <data name="Sidebar_RemoveCloud" xml:space="preserve">
+    <value>Remove cloud entry</value>
+  </data>
+  <data name="Sort" xml:space="preserve">
+    <value>Sort</value>
+  </data>
+  <data name="SortByModified" xml:space="preserve">
+    <value>Sort by date</value>
+  </data>
+  <data name="SortByName" xml:space="preserve">
+    <value>Sort by name</value>
+  </data>
+  <data name="SortBySize" xml:space="preserve">
+    <value>Sort by size</value>
+  </data>
+  <data name="SortByType" xml:space="preserve">
+    <value>Sort by type</value>
+  </data>
+  <data name="Sort_MixedPinyin" xml:space="preserve">
+    <value>Sort Chinese and Latin names together by pinyin</value>
+  </data>
+  <data name="Sort_MixedPinyinHint" xml:space="preserve">
+    <value>When sorting by name, place Chinese pinyin alongside Latin letters, such as 阿 with A. Otherwise, Chinese names form a separate group. Multiple readings use the dictionary default.</value>
+  </data>
+  <data name="Sort_Modified" xml:space="preserve">
+    <value>Date modified</value>
+  </data>
+  <data name="Sort_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Sort_Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="Sort_Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="StartAtLogin" xml:space="preserve">
+    <value>Start at sign-in</value>
+  </data>
+  <data name="StartupFolderDescription" xml:space="preserve">
+    <value>New windows start on the Home dashboard or Desktop.</value>
+  </data>
+  <data name="StartupFolderTitle" xml:space="preserve">
+    <value>Open to</value>
+  </data>
+  <data name="StartupSection" xml:space="preserve">
+    <value>Startup</value>
+  </data>
+  <data name="Startup_SaveFailed" xml:space="preserve">
+    <value>Could not configure startup: </value>
+  </data>
+  <data name="StatusBar" xml:space="preserve">
+    <value>Status bar</value>
+  </data>
+  <data name="StatusBarDescription" xml:space="preserve">
+    <value>Show item count and selection under the file list.</value>
+  </data>
+  <data name="Status_FolderCalculating" xml:space="preserve">
+    <value>Calculating folder size…</value>
+  </data>
+  <data name="Status_FolderSize" xml:space="preserve">
+    <value>Folder size: {0}</value>
+  </data>
+  <data name="Status_FolderUnavailable" xml:space="preserve">
+    <value>Folder size unavailable</value>
+  </data>
+  <data name="Status_Free" xml:space="preserve">
+    <value>{0} free</value>
+  </data>
+  <data name="Status_FreeOfTotal" xml:space="preserve">
+    <value>{0} free, {1} total</value>
+  </data>
+  <data name="Status_Items" xml:space="preserve">
+    <value>{0} items</value>
+  </data>
+  <data name="Status_ItemsCancelled" xml:space="preserve">
+    <value>{0} items · cancelled</value>
+  </data>
+  <data name="Status_ItemsFailed" xml:space="preserve">
+    <value>{0} items · failed</value>
+  </data>
+  <data name="Status_ItemsLoading" xml:space="preserve">
+    <value>{0} items · loading</value>
+  </data>
+  <data name="Status_Selected" xml:space="preserve">
+    <value>{0} selected</value>
+  </data>
+  <data name="SystemLocation_Failed" xml:space="preserve">
+    <value>Could not open this system location. Check the name or path.</value>
+  </data>
+  <data name="SystemSection" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="System_ControlPanel" xml:space="preserve">
+    <value>Control Panel</value>
+  </data>
+  <data name="System_Libraries" xml:space="preserve">
+    <value>Libraries</value>
+  </data>
+  <data name="System_Network" xml:space="preserve">
+    <value>Network</value>
+  </data>
+  <data name="System_RecycleBin" xml:space="preserve">
+    <value>Recycle Bin</value>
+  </data>
+  <data name="TabStateDescription" xml:space="preserve">
+    <value>Each tab keeps its own location, history, sort, and view state.</value>
+  </data>
+  <data name="TabStateTitle" xml:space="preserve">
+    <value>Independent navigation</value>
+  </data>
+  <data name="Tab_Close" xml:space="preserve">
+    <value>Close tab</value>
+  </data>
+  <data name="Tab_CloseOthers" xml:space="preserve">
+    <value>Close other tabs</value>
+  </data>
+  <data name="Tab_CloseToTheRight" xml:space="preserve">
+    <value>Close tabs to the right</value>
+  </data>
+  <data name="Tab_Duplicate" xml:space="preserve">
+    <value>Duplicate tab</value>
+  </data>
+  <data name="Tab_KeepActive" xml:space="preserve">
+    <value>Keep this tab active</value>
+  </data>
+  <data name="Tab_MemoryAggressive" xml:space="preserve">
+    <value>Aggressive · 2 minutes</value>
+  </data>
+  <data name="Tab_MemoryBalanced" xml:space="preserve">
+    <value>Balanced · 10 minutes</value>
+  </data>
+  <data name="Tab_MemoryHint" xml:space="preserve">
+    <value>Put idle tabs to sleep and restore their location when selected. Use the tab menu to keep a tab active.</value>
+  </data>
+  <data name="Tab_MemoryMode" xml:space="preserve">
+    <value>Memory saver</value>
+  </data>
+  <data name="Tab_MemoryModerate" xml:space="preserve">
+    <value>Moderate · 30 minutes</value>
+  </data>
+  <data name="Tab_MoveToNewWindow" xml:space="preserve">
+    <value>Move to new window</value>
+  </data>
+  <data name="Tab_Reopen" xml:space="preserve">
+    <value>Reopen closed tab</value>
+  </data>
+  <data name="Tab_Suspend" xml:space="preserve">
+    <value>Put this tab to sleep</value>
+  </data>
+  <data name="Tab_SuspendedHint" xml:space="preserve">
+    <value>
+Sleeping — select to restore</value>
+  </data>
+  <data name="TabsDescription" xml:space="preserve">
+    <value>Use Ctrl+T to open Home in a new tab.</value>
+  </data>
+  <data name="TabsSection" xml:space="preserve">
+    <value>Tabs</value>
+  </data>
+  <data name="TabsTitle" xml:space="preserve">
+    <value>Tabs</value>
+  </data>
+  <data name="TagColorsDescription" xml:space="preserve">
+    <value>Use short labels and consistent colors to scan a folder quickly.</value>
+  </data>
+  <data name="TagColorsTitle" xml:space="preserve">
+    <value>Tag colors</value>
+  </data>
+  <data name="TagCreate" xml:space="preserve">
+    <value>Create tag</value>
+  </data>
+  <data name="TagNamePlaceholder" xml:space="preserve">
+    <value>New tag name</value>
+  </data>
+  <data name="TagPickerActionHint" xml:space="preserve">
+    <value>Select to apply · × to remove</value>
+  </data>
+  <data name="TagPickerEmpty" xml:space="preserve">
+    <value>No tags yet. Type a name to create one.</value>
+  </data>
+  <data name="TagPickerHint" xml:space="preserve">
+    <value>Check tags to apply, or type a name and choose Done.</value>
+  </data>
+  <data name="TagPickerPlaceholder" xml:space="preserve">
+    <value>Filter or create a tag</value>
+  </data>
+  <data name="TagPickerTitle" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Tag_Color" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="Tag_Create" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="Tag_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Tag_DeleteBody" xml:space="preserve">
+    <value>Delete the tag “{0}”? Files using it will keep their files, but the label will be removed.</value>
+  </data>
+  <data name="Tag_DeleteTitle" xml:space="preserve">
+    <value>Delete tag?</value>
+  </data>
+  <data name="Tag_Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Tag_Edit" xml:space="preserve">
+    <value>Edit tag</value>
+  </data>
+  <data name="Tag_EditTitle" xml:space="preserve">
+    <value>Edit tag</value>
+  </data>
+  <data name="Tag_Empty" xml:space="preserve">
+    <value>No tags yet. Create one to get started.</value>
+  </data>
+  <data name="Tag_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Tag_NameRequired" xml:space="preserve">
+    <value>Enter a tag name.</value>
+  </data>
+  <data name="Tag_New" xml:space="preserve">
+    <value>New tag</value>
+  </data>
+  <data name="Tag_Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="TagsLead" xml:space="preserve">
+    <value>Create a small set of colored labels that stay with your files.</value>
+  </data>
+  <data name="TagsSection" xml:space="preserve">
+    <value>Your tags</value>
+  </data>
+  <data name="TagsTitle" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Tags_NotReady" xml:space="preserve">
+    <value>Tags are not ready yet.</value>
+  </data>
+  <data name="ThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="ThemeDescription" xml:space="preserve">
+    <value>Light, Dark, or match Windows.</value>
+  </data>
+  <data name="ThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="ThemeSection" xml:space="preserve">
+    <value>App theme</value>
+  </data>
+  <data name="ThemeSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="Toolbar" xml:space="preserve">
+    <value>Toolbar</value>
+  </data>
+  <data name="ToolbarDescription" xml:space="preserve">
+    <value>Show sort and view buttons next to the address bar.</value>
+  </data>
+  <data name="Transfer_ApplyAll" xml:space="preserve">
+    <value>Apply to remaining conflicts of this kind</value>
+  </data>
+  <data name="Transfer_ApplyAllCompact" xml:space="preserve">
+    <value>Use this choice for remaining conflicts of this kind</value>
+  </data>
+  <data name="Transfer_Bytes" xml:space="preserve">
+    <value>{0} bytes</value>
+  </data>
+  <data name="Transfer_ConflictHint" xml:space="preserve">
+    <value>“{0}” already exists. Choose how to handle this item.</value>
+  </data>
+  <data name="Transfer_CreateCopy" xml:space="preserve">
+    <value>Create a copy</value>
+  </data>
+  <data name="Transfer_Details" xml:space="preserve">
+    <value>Show failed items</value>
+  </data>
+  <data name="Transfer_ExistingLabel" xml:space="preserve">
+    <value>Already here</value>
+  </data>
+  <data name="Transfer_IncomingLabel" xml:space="preserve">
+    <value>Incoming item</value>
+  </data>
+  <data name="Transfer_InvalidDestination" xml:space="preserve">
+    <value>The destination is this item, its current parent, or a subfolder of it. Choose another destination.</value>
+  </data>
+  <data name="Transfer_KeepBoth" xml:space="preserve">
+    <value>Keep both — add a number to the incoming name</value>
+  </data>
+  <data name="Transfer_KeepBothButton" xml:space="preserve">
+    <value>Keep both</value>
+  </data>
+  <data name="Transfer_LinkHint" xml:space="preserve">
+    <value>The destination is a link. It will not be replaced; keep both or skip this item.</value>
+  </data>
+  <data name="Transfer_Merge" xml:space="preserve">
+    <value>Merge folders — ask again for matching files inside</value>
+  </data>
+  <data name="Transfer_Newer" xml:space="preserve">
+    <value>Newer modification</value>
+  </data>
+  <data name="Transfer_NumberedName" xml:space="preserve">
+    <value>Name when keeping both: {0}</value>
+  </data>
+  <data name="Transfer_Replace" xml:space="preserve">
+    <value>Replace the existing file</value>
+  </data>
+  <data name="Transfer_ReplaceButton" xml:space="preserve">
+    <value>Replace</value>
+  </data>
+  <data name="Transfer_ReplaceHint" xml:space="preserve">
+    <value>Use the incoming file. The previous version can be restored with Undo while it remains in this session's history.</value>
+  </data>
+  <data name="Transfer_ResultCounts" xml:space="preserve">
+    <value>Transferred {0} · Skipped {1} · Failed {2}</value>
+  </data>
+  <data name="Transfer_SameItemHint" xml:space="preserve">
+    <value>The source and destination refer to the same item, so it cannot replace itself. Create a numbered copy or skip it.</value>
+  </data>
+  <data name="Transfer_SameItemTitle" xml:space="preserve">
+    <value>This is the same item</value>
+  </data>
+  <data name="Transfer_Skipped" xml:space="preserve">
+    <value>{0} skipped</value>
+  </data>
+  <data name="Transfer_Source" xml:space="preserve">
+    <value>From: {0}</value>
+  </data>
+  <data name="Transfer_Target" xml:space="preserve">
+    <value>Existing item: {0}</value>
+  </data>
+  <data name="Transfer_TypeHint" xml:space="preserve">
+    <value>A file and a folder share this name. They cannot be merged or directly replaced; keep both or skip.</value>
+  </data>
+  <data name="Transparency" xml:space="preserve">
+    <value>Transparency</value>
+  </data>
+  <data name="TransparencyDescription" xml:space="preserve">
+    <value>Adjust frosted-glass strength. 0% is opaque; higher values softly reveal the background while keeping layer colors and text readable.</value>
+  </data>
+  <data name="TransparencyDisabled" xml:space="preserve">
+    <value>Choose a translucent backdrop and enable glass effects to adjust transparency.</value>
+  </data>
+  <data name="Tray_LeftClick" xml:space="preserve">
+    <value>Tray left-click opens</value>
+  </data>
+  <data name="Tray_OpenManager" xml:space="preserve">
+    <value>Open file manager on tray left-click</value>
+  </data>
+  <data name="Tray_OpenSearch" xml:space="preserve">
+    <value>Open search on tray left-click</value>
+  </data>
+  <data name="Type_File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Type_FileSuffix" xml:space="preserve">
+    <value>file</value>
+  </data>
+  <data name="Type_Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="Undo" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="Update_Automatic" xml:space="preserve">
+    <value>Check for updates on the first launch each day</value>
+  </data>
+  <data name="Update_Available" xml:space="preserve">
+    <value>A new FilesMate version is available</value>
+  </data>
+  <data name="Update_Busy" xml:space="preserve">
+    <value>An update is in progress. Please wait.</value>
+  </data>
+  <data name="Update_CancelDownload" xml:space="preserve">
+    <value>Cancel download</value>
+  </data>
+  <data name="Update_Check" xml:space="preserve">
+    <value>Check for updates</value>
+  </data>
+  <data name="Update_CheckFailed" xml:space="preserve">
+    <value>Could not check for updates. Check your connection and try again.</value>
+  </data>
+  <data name="Update_CheckStateFailed" xml:space="preserve">
+    <value>Could not save the update check status. Try again later.</value>
+  </data>
+  <data name="Update_Checking" xml:space="preserve">
+    <value>Checking for updates…</value>
+  </data>
+  <data name="Update_ChoiceHint" xml:space="preserve">
+    <value>You will be notified when an update is available and can choose whether to install it.</value>
+  </data>
+  <data name="Update_Connecting" xml:space="preserve">
+    <value>Connecting to the download server…</value>
+  </data>
+  <data name="Update_Current" xml:space="preserve">
+    <value>You are up to date.</value>
+  </data>
+  <data name="Update_Demo" xml:space="preserve">
+    <value>Demo · no installation</value>
+  </data>
+  <data name="Update_DemoFooter" xml:space="preserve">
+    <value>This demo will not change the installation</value>
+  </data>
+  <data name="Update_DemoProgress" xml:space="preserve">
+    <value>Demo progress only. No download or installation will take place.</value>
+  </data>
+  <data name="Update_Dismiss" xml:space="preserve">
+    <value>Dismiss update notification</value>
+  </data>
+  <data name="Update_Downloading" xml:space="preserve">
+    <value>Downloading update</value>
+  </data>
+  <data name="Update_Failed" xml:space="preserve">
+    <value>The update did not finish. Check your connection or try again later. You can keep using this version.</value>
+  </data>
+  <data name="Update_FinishOperations" xml:space="preserve">
+    <value>Finish file operations or name editing before updating.</value>
+  </data>
+  <data name="Update_FoundPrefix" xml:space="preserve">
+    <value>New version available: </value>
+  </data>
+  <data name="Update_Install" xml:space="preserve">
+    <value>Update now</value>
+  </data>
+  <data name="Update_InstallHint" xml:space="preserve">
+    <value>Installs and reopens automatically when ready</value>
+  </data>
+  <data name="Update_InstallerInvalid" xml:space="preserve">
+    <value>Installer verification failed. Download it again.</value>
+  </data>
+  <data name="Update_KeepUsing" xml:space="preserve">
+    <value>You can keep using the current version</value>
+  </data>
+  <data name="Update_MetadataInvalid" xml:space="preserve">
+    <value>Update information failed verification. Try again later.</value>
+  </data>
+  <data name="Update_PreserveHint" xml:space="preserve">
+    <value>FilesMate will reopen after updating, with your settings and tabs preserved.</value>
+  </data>
+  <data name="Update_ReleaseNotes" xml:space="preserve">
+    <value>What's new</value>
+  </data>
+  <data name="Update_SaveFailed" xml:space="preserve">
+    <value>Could not save update settings. Please try again.</value>
+  </data>
+  <data name="Update_Section" xml:space="preserve">
+    <value>Software updates</value>
+  </data>
+  <data name="Update_Timeout" xml:space="preserve">
+    <value>The download timed out. Please try again later.</value>
+  </data>
+  <data name="Update_Title" xml:space="preserve">
+    <value>Update FilesMate</value>
+  </data>
+  <data name="Update_VerificationFailed" xml:space="preserve">
+    <value>The update failed verification. The installer was not run. Please try again later.</value>
+  </data>
+  <data name="Update_Verifying" xml:space="preserve">
+    <value>Download complete. Verifying and starting the installer…</value>
+  </data>
+  <data name="Update_VersionNotNewer" xml:space="preserve">
+    <value>The update must be newer than the installed version.</value>
+  </data>
+  <data name="UseBundledFileIcons" xml:space="preserve">
+    <value>Use FilesMate file icons</value>
+  </data>
+  <data name="UseBundledFileIconsHint" xml:space="preserve">
+    <value>On by default. Turn off to use Windows icons for the associated apps. Applies immediately; image and video thumbnails are preserved.</value>
+  </data>
+  <data name="Videos" xml:space="preserve">
+    <value>Videos</value>
+  </data>
+  <data name="View_PerFolder" xml:space="preserve">
+    <value>Remember for each folder</value>
+  </data>
+  <data name="View_Scope" xml:space="preserve">
+    <value>View settings scope</value>
+  </data>
+  <data name="View_ScopeHint" xml:space="preserve">
+    <value>Manage list/icon layout, icon size, and sorting. Changing scope preserves existing folder settings.</value>
+  </data>
+  <data name="View_Shared" xml:space="preserve">
+    <value>Use for all folders</value>
+  </data>
+  <data name="View_SharedHint" xml:space="preserve">
+    <value>Shared view settings are active. Change layout, icon size, and sorting from any folder toolbar.</value>
+  </data>
+  <data name="Window_SaveSizeFailed" xml:space="preserve">
+    <value>Could not save the window size</value>
+  </data>
+  <data name="WindowsSection" xml:space="preserve">
+    <value>Windows &amp; tabs</value>
+  </data>
+</root>

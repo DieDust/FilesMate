@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="FilesMate.App.Controls.FileSurface.FileDetailsSurface"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:FilesMate.App.Controls.FileSurface"
+    IsTabStop="True"
+    UseSystemFocusVisuals="False"
+    AllowDrop="True"
+    KeyDown="OnKeyDown"
+    CharacterReceived="OnCharacterReceived"
+    PointerPressed="OnPointerPressed"
+    PointerMoved="OnPointerMoved"
+    PointerReleased="OnPointerReleased"
+    PointerCaptureLost="OnPointerCaptureLost"
+    DragStarting="OnDragStarting"
+    DropCompleted="OnDropCompleted"
+    DragOver="OnDragOver"
+    DragLeave="OnDragLeave"
+    Drop="OnDrop"
+    RightTapped="OnRightTapped">
+    <UserControl.Resources>
+        <Style x:Key="AlphabetButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal" />
+                                    <VisualState x:Name="PointerOver"><VisualState.Setters>
+                                        <Setter Target="HoverFill.Opacity" Value="0.14" />
+                                    </VisualState.Setters></VisualState>
+                                    <VisualState x:Name="Pressed"><VisualState.Setters>
+                                        <Setter Target="HoverFill.Opacity" Value="0.25" />
+                                    </VisualState.Setters></VisualState>
+                                    <VisualState x:Name="Disabled"><VisualState.Setters>
+                                        <Setter Target="Label.Opacity" Value="0.3" />
+                                    </VisualState.Setters></VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <Border Background="{TemplateBinding Background}" CornerRadius="7" />
+                            <Border x:Name="HoverFill" Background="{ThemeResource FilesMate.Text.PrimaryBrush}" CornerRadius="7" Opacity="0" />
+                            <ContentPresenter x:Name="Label" Content="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"
+                                              FontSize="{TemplateBinding FontSize}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <DataTemplate x:Key="RowTemplate">
+            <local:FileRow />
+        </DataTemplate>
+        <DataTemplate x:Key="TileTemplate">
+            <local:FileTile />
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition x:Name="HeaderRow" Height="0" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <ScrollViewer
+            x:Name="HeaderScroller"
+            HorizontalScrollBarVisibility="Hidden"
+            HorizontalScrollMode="Disabled"
+            VerticalScrollBarVisibility="Disabled"
+            VerticalScrollMode="Disabled"
+            ZoomMode="Disabled"
+            IsTabStop="False">
+        <Grid x:Name="DetailsHeader" Background="Transparent" Padding="12,0,16,0" Visibility="Collapsed">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="{StaticResource FilesMate.Column.Accent}" />
+                <ColumnDefinition Width="{StaticResource FilesMate.Column.Glyph}" />
+                <ColumnDefinition x:Name="NameHeaderColumn" Width="{StaticResource FilesMate.Column.Name}" />
+                <ColumnDefinition x:Name="ModifiedHeaderColumn" Width="{StaticResource FilesMate.Column.Modified}" />
+                <ColumnDefinition x:Name="TypeHeaderColumn" Width="{StaticResource FilesMate.Column.Type}" />
+                <ColumnDefinition x:Name="SizeHeaderColumn" Width="{StaticResource FilesMate.Column.Size}" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button
+                x:Name="NameHeader"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Padding="31,0,8,0"
+                Click="NameHeader_Click"
+                Style="{StaticResource ColumnHeaderButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock x:Name="NameHeaderText" Text="Name" />
+                    <FontIcon
+                        x:Name="NameSortGlyph"
+                        FontSize="10"
+                        Glyph="&#xE70E;"
+                        RenderTransformOrigin="0.5,0.5">
+                        <FontIcon.RenderTransform>
+                            <RotateTransform />
+                        </FontIcon.RenderTransform>
+                    </FontIcon>
+                </StackPanel>
+            </Button>
+            <Button
+                x:Name="ModifiedHeader"
+                Grid.Column="3"
+                Click="ModifiedHeader_Click"
+                Style="{StaticResource ColumnHeaderButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock x:Name="ModifiedHeaderText" Text="Date modified" />
+                    <FontIcon
+                        x:Name="ModifiedSortGlyph"
+                        FontSize="10"
+                        Glyph="&#xE70E;"
+                        Visibility="Collapsed"
+                        RenderTransformOrigin="0.5,0.5">
+                        <FontIcon.RenderTransform>
+                            <RotateTransform />
+                        </FontIcon.RenderTransform>
+                    </FontIcon>
+                </StackPanel>
+            </Button>
+            <Button
+                x:Name="TypeHeader"
+                Grid.Column="4"
+                Click="TypeHeader_Click"
+                Style="{StaticResource ColumnHeaderButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock x:Name="TypeHeaderText" Text="Type" />
+                    <FontIcon
+                        x:Name="TypeSortGlyph"
+                        FontSize="10"
+                        Glyph="&#xE70E;"
+                        Visibility="Collapsed"
+                        RenderTransformOrigin="0.5,0.5">
+                        <FontIcon.RenderTransform>
+                            <RotateTransform />
+                        </FontIcon.RenderTransform>
+                    </FontIcon>
+                </StackPanel>
+            </Button>
+            <Button
+                x:Name="SizeHeader"
+                Grid.Column="5"
+                HorizontalContentAlignment="Right"
+                Click="SizeHeader_Click"
+                Style="{StaticResource ColumnHeaderButtonStyle}">
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="6">
+                    <TextBlock x:Name="SizeHeaderText" Text="Size" />
+                    <FontIcon
+                        x:Name="SizeSortGlyph"
+                        FontSize="10"
+                        Glyph="&#xE70E;"
+                        Visibility="Collapsed"
+                        RenderTransformOrigin="0.5,0.5">
+                        <FontIcon.RenderTransform>
+                            <RotateTransform />
+                        </FontIcon.RenderTransform>
+                    </FontIcon>
+                </StackPanel>
+            </Button>
+            <Border
+                x:Name="NameResize"
+                Grid.Column="2"
+                Width="12"
+                Margin="0,0,-6,0"
+                HorizontalAlignment="Right"
+                Background="Transparent"
+                ManipulationMode="None"
+                PointerEntered="ColumnResize_PointerEntered"
+                PointerExited="ColumnResize_PointerExited"
+                PointerPressed="ColumnResize_PointerPressed"
+                PointerMoved="ColumnResize_PointerMoved"
+                PointerReleased="ColumnResize_PointerReleased"
+                PointerCaptureLost="ColumnResize_PointerCaptureLost">
+                <Border Width="1" HorizontalAlignment="Center" Background="{ThemeResource FilesMate.Divider.Brush}" />
+            </Border>
+            <Border
+                x:Name="ModifiedResize"
+                Grid.Column="3"
+                Width="12"
+                Margin="0,0,-6,0"
+                HorizontalAlignment="Right"
+                Background="Transparent"
+                ManipulationMode="None"
+                PointerEntered="ColumnResize_PointerEntered"
+                PointerExited="ColumnResize_PointerExited"
+                PointerPressed="ColumnResize_PointerPressed"
+                PointerMoved="ColumnResize_PointerMoved"
+                PointerReleased="ColumnResize_PointerReleased"
+                PointerCaptureLost="ColumnResize_PointerCaptureLost">
+                <Border Width="1" HorizontalAlignment="Center" Background="{ThemeResource FilesMate.Divider.Brush}" />
+            </Border>
+            <Border
+                x:Name="TypeResize"
+                Grid.Column="4"
+                Width="12"
+                Margin="0,0,-6,0"
+                HorizontalAlignment="Right"
+                Background="Transparent"
+                ManipulationMode="None"
+                PointerEntered="ColumnResize_PointerEntered"
+                PointerExited="ColumnResize_PointerExited"
+                PointerPressed="ColumnResize_PointerPressed"
+                PointerMoved="ColumnResize_PointerMoved"
+                PointerReleased="ColumnResize_PointerReleased"
+                PointerCaptureLost="ColumnResize_PointerCaptureLost">
+                <Border Width="1" HorizontalAlignment="Center" Background="{ThemeResource FilesMate.Divider.Brush}" />
+            </Border>
+            <Border
+                x:Name="SizeResize"
+                Grid.Column="5"
+                Width="12"
+                Margin="0,0,-6,0"
+                HorizontalAlignment="Right"
+                Background="Transparent"
+                ManipulationMode="None"
+                PointerEntered="ColumnResize_PointerEntered"
+                PointerExited="ColumnResize_PointerExited"
+                PointerPressed="ColumnResize_PointerPressed"
+                PointerMoved="ColumnResize_PointerMoved"
+                PointerReleased="ColumnResize_PointerReleased"
+                PointerCaptureLost="ColumnResize_PointerCaptureLost">
+                <Border Width="1" HorizontalAlignment="Center" Background="{ThemeResource FilesMate.Divider.Brush}" />
+            </Border>
+            <Border
+                Grid.ColumnSpan="7"
+                Height="1"
+                VerticalAlignment="Bottom"
+                IsHitTestVisible="False"
+                Background="{ThemeResource FilesMate.Divider.Brush}" />
+        </Grid>
+        </ScrollViewer>
+        <ScrollViewer
+            x:Name="Scroller"
+            Grid.Row="1"
+            Background="Transparent"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto"
+            ViewChanged="Scroller_ViewChanged">
+            <ItemsRepeater
+                x:Name="Repeater"
+                HorizontalCacheLength="0"
+                ItemTemplate="{StaticResource TileTemplate}"
+                VerticalCacheLength="1"
+                ElementPrepared="Repeater_ElementPrepared"
+                ElementClearing="Repeater_ElementClearing">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout
+                        x:Name="FileGridLayout"
+                        MinItemWidth="80"
+                        MinItemHeight="88"
+                        MinColumnSpacing="2"
+                        MinRowSpacing="2"
+                        ItemsStretch="None"
+                        ItemsJustification="Start" />
+                </ItemsRepeater.Layout>
+            </ItemsRepeater>
+        </ScrollViewer>
+        <Border
+            x:Name="Marquee"
+            Grid.Row="1"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            BorderBrush="{ThemeResource FilesMate.Selection.AccentBrush}"
+            BorderThickness="1"
+            Background="{ThemeResource FilesMate.Selection.AccentBrush}"
+            Opacity="0.12"
+            IsHitTestVisible="False"
+            Visibility="Collapsed" />
+        <Grid x:Name="AlphabetOverlay" Grid.Row="1" Width="96" Background="Transparent" IsTabStop="True" HorizontalAlignment="Right" Visibility="Collapsed">
+            <Border x:Name="AlphabetTrack" Width="24" HorizontalAlignment="Right" Background="Transparent" CornerRadius="8">
+                <Grid Margin="0,8">
+                    <Border x:Name="AlphabetRange" Width="12" VerticalAlignment="Top" CornerRadius="6"
+                            Background="{ThemeResource FilesMate.Selection.AccentBrush}" Opacity="0.25" IsHitTestVisible="False" Visibility="Collapsed" />
+                    <Border x:Name="AlphabetThumb" Width="4" Height="24" VerticalAlignment="Top" CornerRadius="2"
+                            Background="{ThemeResource FilesMate.Text.SecondaryBrush}" IsHitTestVisible="False" />
+                </Grid>
+            </Border>
+            <Border x:Name="AlphabetLetters" Width="34" Margin="0,4,28,4" HorizontalAlignment="Right" CornerRadius="10"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource FilesMate.Divider.Brush}" BorderThickness="1" Visibility="Collapsed">
+                <Grid x:Name="AlphabetList" Margin="2" />
+            </Border>
+            <Border x:Name="AlphabetBubble" MinWidth="48" Height="44" Padding="10,0" Margin="-52,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                    CornerRadius="12" Background="{ThemeResource FilesMate.Selection.AccentBrush}" IsHitTestVisible="False" Visibility="Collapsed">
+                <TextBlock x:Name="AlphabetBubbleText" FontSize="20" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+        </Grid>
+        <!-- A connected, offscreen visual is rendered only when a drag starts. -->
+        <Canvas x:Name="DragPreviewHost" Grid.Row="1" Width="0" Height="0"
+                HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" />
+    </Grid>
+</UserControl>

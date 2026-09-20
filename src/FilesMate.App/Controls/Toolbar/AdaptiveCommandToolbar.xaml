@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="FilesMate.App.Controls.Toolbar.AdaptiveCommandToolbar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    SizeChanged="Root_SizeChanged">
+    <Grid Height="{StaticResource FilesMate.Control.Height.Toolbar}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <StackPanel
+            x:Name="LeadingGroups"
+            Orientation="Horizontal">
+            <StackPanel
+                x:Name="CreateGroup"
+                Orientation="Horizontal"
+                Visibility="Collapsed">
+                <Button
+                    x:Name="NewButton"
+                    Style="{StaticResource CommandBarButtonStyle}"
+                    Visibility="Collapsed">
+                    <Button.Flyout>
+                        <MenuFlyout
+                            Placement="Bottom"
+                            MenuFlyoutPresenterStyle="{StaticResource FilesMate.MenuFlyoutPresenterStyle}">
+                            <MenuFlyoutItem x:Name="NewFolderItem" Click="NewFolderItem_Click" Text="New folder" />
+                            <MenuFlyoutItem x:Name="NewFileItem" Click="NewFileItem_Click" Text="New file" />
+                        </MenuFlyout>
+                    </Button.Flyout>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE8F4;" />
+                        <TextBlock
+                            x:Name="NewLabel"
+                            VerticalAlignment="Center"
+                            FontSize="13"
+                            Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
+                            Visibility="Collapsed" />
+                        <FontIcon FontFamily="Segoe Fluent Icons" FontSize="8" Glyph="&#xE70D;" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+            <Border
+                x:Name="CreateSeparator"
+                Width="1"
+                Height="16"
+                Margin="4,0"
+                Background="{ThemeResource FilesMate.Divider.Brush}"
+                Visibility="Collapsed" />
+            <StackPanel
+                x:Name="ClipboardGroup"
+                Orientation="Horizontal"
+                Visibility="Collapsed">
+                <Button
+                    x:Name="CutButton"
+                    Click="CutButton_Click"
+                    Style="{StaticResource CommandBarButtonStyle}"
+                    Visibility="Collapsed">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE8C6;" />
+                </Button>
+                <Button
+                    x:Name="CopyButton"
+                    Click="CopyButton_Click"
+                    Style="{StaticResource CommandBarButtonStyle}"
+                    Visibility="Collapsed">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE8C8;" />
+                </Button>
+                <Button
+                    x:Name="PasteButton"
+                    Click="PasteButton_Click"
+                    Style="{StaticResource CommandBarButtonStyle}"
+                    Visibility="Collapsed">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE77F;" />
+                </Button>
+            </StackPanel>
+            <Border
+                x:Name="ClipboardSeparator"
+                Width="1"
+                Height="16"
+                Margin="4,0"
+                Background="{ThemeResource FilesMate.Divider.Brush}"
+                Visibility="Collapsed" />
+            <StackPanel
+                x:Name="OrganizeGroup"
+                Orientation="Horizontal"
+                Visibility="Collapsed">
+                <Button
+                    x:Name="RenameButton"
+                    Click="RenameButton_Click"
+                    Style="{StaticResource CommandBarButtonStyle}"
+                    Visibility="Collapsed">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE8AC;" />
+                </Button>
+                <Button
+                    x:Name="ShareButton"
+                    Click="ShareButton_Click"
+                    Style="{StaticResource CommandBarButtonStyle}"
+                    Visibility="Collapsed">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE72D;" />
+                </Button>
+                <Button
+                    x:Name="DeleteButton"
+                    Click="DeleteButton_Click"
+                    Style="{StaticResource CommandBarButtonStyle}"
+                    Visibility="Collapsed">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE74D;" />
+                </Button>
+                <Button
+                    x:Name="CopyPathButton"
+                    Click="CopyPathItem_Click"
+                    AutomationProperties.Name="Copy path"
+                    Style="{StaticResource CommandBarButtonStyle}"
+                    ToolTipService.ToolTip="Copy path"
+                    Visibility="Collapsed">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE71B;" />
+                </Button>
+            </StackPanel>
+        </StackPanel>
+        <StackPanel
+            x:Name="ViewGroup"
+            Grid.Column="1"
+            Orientation="Horizontal">
+            <Button
+                x:Name="ShelfButton"
+                AllowDrop="True" DragEnter="ShelfButton_DragOver" DragOver="ShelfButton_DragOver"
+                DragLeave="ShelfButton_DragLeave" Drop="ShelfButton_Drop"
+                Click="ShelfButton_Click"
+                Style="{StaticResource CommandBarButtonStyle}">
+                <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE7B8;" />
+            </Button>
+            <Button
+                x:Name="SortButton"
+                AutomationProperties.Name="Sort"
+                Style="{StaticResource CommandBarButtonStyle}"
+                ToolTipService.ToolTip="Sort">
+                <Button.Flyout>
+                    <MenuFlyout
+                        Placement="Bottom"
+                        MenuFlyoutPresenterStyle="{StaticResource FilesMate.MenuFlyoutPresenterStyle}">
+                        <MenuFlyoutItem x:Name="SortNameItem" Click="SortName_Click" Text="Name" />
+                        <MenuFlyoutItem x:Name="SortModifiedItem" Click="SortModified_Click" Text="Date modified" />
+                        <MenuFlyoutItem x:Name="SortTypeItem" Click="SortType_Click" Text="Type" />
+                        <MenuFlyoutItem x:Name="SortSizeItem" Click="SortSize_Click" Text="Size" />
+                    </MenuFlyout>
+                </Button.Flyout>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE8CB;" />
+                    <TextBlock
+                        x:Name="SortLabel"
+                        VerticalAlignment="Center"
+                        FontSize="13"
+                        Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
+                        Visibility="Collapsed" />
+                </StackPanel>
+            </Button>
+            <Button
+                x:Name="FolderSizesButton"
+                Click="FolderSizesButton_Click"
+                AutomationProperties.Name="Show folder sizes"
+                Style="{StaticResource CommandBarButtonStyle}"
+                ToolTipService.ToolTip="Show folder sizes">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE838;" />
+                    <TextBlock
+                        x:Name="FolderSizesLabel"
+                        VerticalAlignment="Center"
+                        FontSize="13"
+                        Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
+                        Visibility="Collapsed" />
+                </StackPanel>
+            </Button>
+            <Border
+                x:Name="ViewSeparator"
+                Width="1"
+                Height="16"
+                Margin="4,0"
+                Background="{ThemeResource FilesMate.Divider.Brush}" />
+            <Button
+                x:Name="DetailsViewButton"
+                Click="DetailsViewButton_Click"
+                AutomationProperties.Name="Details view"
+                Style="{StaticResource CommandBarButtonStyle}"
+                ToolTipService.ToolTip="Details">
+                <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xF0E3;" />
+            </Button>
+            <Button
+                x:Name="GridViewButton"
+                Click="GridViewButton_Click"
+                AutomationProperties.Name="Grid view"
+                Style="{StaticResource CommandBarButtonStyle}"
+                ToolTipService.ToolTip="Large icons">
+                <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xF0E2;" />
+            </Button>
+            <Button
+                x:Name="MoreButton"
+                AutomationProperties.Name="More"
+                Style="{StaticResource CommandBarButtonStyle}"
+                ToolTipService.ToolTip="More">
+                <Button.Flyout>
+                    <MenuFlyout
+                        Placement="Bottom"
+                        MenuFlyoutPresenterStyle="{StaticResource FilesMate.MenuFlyoutPresenterStyle}">
+                        <MenuFlyoutItem
+                            x:Name="OverflowSortName"
+                            Click="SortName_Click"
+                            Text="Sort by name"
+                            Visibility="Collapsed" />
+                        <MenuFlyoutItem
+                            x:Name="OverflowSortModified"
+                            Click="SortModified_Click"
+                            Text="Sort by date"
+                            Visibility="Collapsed" />
+                        <MenuFlyoutItem
+                            x:Name="OverflowSortType"
+                            Click="SortType_Click"
+                            Text="Sort by type"
+                            Visibility="Collapsed" />
+                        <MenuFlyoutItem
+                            x:Name="OverflowSortSize"
+                            Click="SortSize_Click"
+                            Text="Sort by size"
+                            Visibility="Collapsed" />
+                        <MenuFlyoutSeparator x:Name="OverflowSeparator" Visibility="Collapsed" />
+                        <MenuFlyoutItem
+                            x:Name="OverflowDetails"
+                            Click="DetailsViewButton_Click"
+                            Text="Details view"
+                            Visibility="Collapsed" />
+                        <MenuFlyoutItem
+                            x:Name="OverflowGrid"
+                            Click="GridViewButton_Click"
+                            Text="Large icons"
+                            Visibility="Collapsed" />
+                    </MenuFlyout>
+                </Button.Flyout>
+                <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE712;" />
+            </Button>
+            <Button
+                x:Name="DualPaneButton"
+                Click="DualPaneButton_Click"
+                AutomationProperties.Name="Dual pane"
+                Style="{StaticResource CommandBarButtonStyle}"
+                ToolTipService.ToolTip="Dual pane">
+                <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE89F;" />
+            </Button>
+            <Button
+                x:Name="PreviewButton"
+                Click="PreviewButton_Click"
+                AutomationProperties.Name="Details"
+                Style="{StaticResource CommandBarButtonStyle}"
+                ToolTipService.ToolTip="Details">
+                <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE946;" />
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>

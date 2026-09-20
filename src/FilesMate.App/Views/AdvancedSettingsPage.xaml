@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="FilesMate.App.Views.AdvancedSettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:glass="using:FilesMate.App.Controls.Glass"
+    xmlns:settings="using:FilesMate.App.Controls.Settings">
+    <StackPanel MaxWidth="720" HorizontalAlignment="Stretch" Spacing="0">
+        <TextBlock
+            x:Name="Heading"
+            Style="{StaticResource FilesMate.SettingsHeadingStyle}"
+            Text="Advanced" />
+        <TextBlock x:Name="Lead" Style="{StaticResource FilesMate.SettingsLeadStyle}" />
+        <TextBlock x:Name="PerformanceHeader" Style="{StaticResource FilesMate.SectionHeaderStyle}" Text="Maintenance" />
+        <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <StackPanel>
+                <settings:SettingCard
+                    x:Name="IconCacheCard"
+                    Title="Icon and thumbnail cache"
+                    Description="Clear cached artwork if an icon or thumbnail looks stale."
+                    ShowDivider="True">
+                    <Button x:Name="ClearCacheButton" Padding="14,6" Click="ClearCacheButton_Click" Style="{StaticResource GlassButtonStyle}" />
+                </settings:SettingCard>
+                <settings:SettingCard
+                    x:Name="DataFolderCard"
+                    Title="Application data"
+                    Description="Shortcuts, appearance, and explorer preferences are stored in this folder.">
+                    <Button x:Name="OpenDataFolderButton" Padding="14,6" Click="OpenDataFolderButton_Click" Style="{StaticResource GlassButtonStyle}" />
+                </settings:SettingCard>
+            </StackPanel>
+        </glass:LiquidGlassSurface>
+        <TextBlock
+            x:Name="SystemHeader"
+            Style="{StaticResource FilesMate.SettingsSectionHeaderStyle}"
+            Text="System" />
+        <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <StackPanel>
+                <settings:SettingCard
+                    x:Name="DefaultAppCard"
+                    Title="Default file manager"
+                    ShowDivider="True">
+                    <ToggleSwitch x:Name="DefaultAppToggle" MinWidth="0" Toggled="DefaultAppToggle_Toggled" />
+                </settings:SettingCard>
+                <settings:SettingCard
+                    x:Name="ClassicExplorerCard"
+                    Title="Original File Explorer">
+                    <Button
+                        x:Name="ClassicExplorerButton"
+                        Padding="14,6"
+                        Click="ClassicExplorerButton_Click"
+                        Style="{StaticResource GlassButtonStyle}" />
+                </settings:SettingCard>
+            </StackPanel>
+        </glass:LiquidGlassSurface>
+        <TextBlock
+            x:Name="StatusText"
+            Margin="4,10,4,0"
+            Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+            FontSize="12"
+            TextWrapping="Wrap"
+            Visibility="Collapsed" />
+    </StackPanel>
+</UserControl>

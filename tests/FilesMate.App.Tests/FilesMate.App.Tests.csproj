@@ -1,0 +1,70 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
+    <PackageReference Include="Markdig" Version="1.3.2" />
+    <PackageReference Include="ExcelDataReader" Version="3.9.0" />
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\FilesMate.Core\FilesMate.Core.csproj" />
+    <ProjectReference Include="..\..\src\FilesMate.FlowPlugin\FilesMate.FlowPlugin.csproj" />
+    <ProjectReference Include="..\..\src\FilesMate.Platform.Windows\FilesMate.Platform.Windows.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\FilesMate.App\Localization\StringTable.cs" Link="LinkedApp\Localization\StringTable.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Localization\StringTable.*.cs" Link="LinkedApp\Localization\%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\FilesMate.App\Localization\LanguageSettings.cs" Link="LinkedApp\Localization\LanguageSettings.cs" />
+    <Compile Include="..\..\src\FilesMate.SearchHost\SpreadsheetTable.cs" Link="LinkedApp\Preview\SpreadsheetTable.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Navigation\**\*.cs" Link="LinkedApp\Navigation\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\FilesMate.App\Diagnostics\**\*.cs" Link="LinkedApp\Diagnostics\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\FilesMate.App\Animations\IAnimationSettings.cs" Link="LinkedApp\Animations\IAnimationSettings.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Animations\GlassSceneState.cs" Link="LinkedApp\Animations\GlassSceneState.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Animations\GlassMaterialPolicy.cs" Link="LinkedApp\Animations\GlassMaterialPolicy.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Animations\IAnimatableVisual.cs" Link="LinkedApp\Animations\IAnimatableVisual.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Animations\IMotionService.cs" Link="LinkedApp\Animations\IMotionService.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Animations\MotionDurations.cs" Link="LinkedApp\Animations\MotionDurations.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Animations\MotionService.cs" Link="LinkedApp\Animations\MotionService.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Animations\RecyclableVisualState.cs" Link="LinkedApp\Animations\RecyclableVisualState.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Animations\ReduceMotionGate.cs" Link="LinkedApp\Animations\ReduceMotionGate.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Models\**\*.cs" Link="LinkedApp\Models\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\FilesMate.App\Services\**\*.cs" Link="LinkedApp\Services\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Remove="..\..\src\FilesMate.App\Services\JumpListService.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Shortcuts\**\*.cs" Link="LinkedApp\Shortcuts\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\FilesMate.App\ViewModels\**\*.cs" Link="LinkedApp\ViewModels\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\FilesMate.App\Controls\FileSurface\EntryItemsSource.cs" Link="LinkedApp\FileSurface\EntryItemsSource.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Controls\FileSurface\SelectionModel.cs" Link="LinkedApp\FileSurface\SelectionModel.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Controls\FileSurface\VisibleRangeTracker.cs" Link="LinkedApp\FileSurface\VisibleRangeTracker.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Controls\FileSurface\FileRowFormatter.cs" Link="LinkedApp\FileSurface\FileRowFormatter.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Controls\FileSurface\GridSizePreset.cs" Link="LinkedApp\FileSurface\GridSizePreset.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Controls\FileSurface\DragPreviewSelection.cs" Link="LinkedApp\FileSurface\DragPreviewSelection.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Controls\Tags\TagPresentation.cs" Link="LinkedApp\Tags\TagPresentation.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Controls\Tags\TagPickerLogic.cs" Link="LinkedApp\Tags\TagPickerLogic.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Workspace\**\*.cs" Link="LinkedApp\Workspace\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\FilesMate.App\Preview\**\*.cs" Link="LinkedApp\Preview\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\FilesMate.App\Controls\Toolbar\ToolbarOverflowController.cs" Link="LinkedApp\Toolbar\ToolbarOverflowController.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Commands\**\*.cs" Link="LinkedApp\Commands\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\src\FilesMate.App\Controls\Menus\FileContextMenuBuilder.cs" Link="LinkedApp\Menus\FileContextMenuBuilder.cs" />
+    <Compile Remove="..\..\src\FilesMate.App\Models\SearchHitKind.cs;..\..\src\FilesMate.App\Models\HomeSearchHit.cs;..\..\src\FilesMate.App\Services\SearchHitRanking.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Icons\FolderPreviewService.cs" Link="LinkedApp\Icons\FolderPreviewService.cs" />
+  </ItemGroup>
+
+  <ItemGroup><Compile Remove="..\..\src\FilesMate.App\Navigation\ShellCompatibilityWindow.cs" /></ItemGroup>
+</Project>

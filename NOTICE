@@ -1,0 +1,11 @@
+FilesMate
+Copyright 2026 FilesMate contributors
+
+Licensed under the Apache License, Version 2.0. See LICENSE.
+
+FilesMate includes adapted Files Community UI source, Copyright (c)
+2018-present Files Community, under the MIT License. The adapted files and
+changes are recorded in docs/upstream/files-community-ui.json.
+
+Third-party libraries and runtime components retain their own licenses.
+See THIRD-PARTY-NOTICES.md and the ThirdPartyNotices directory in installers.

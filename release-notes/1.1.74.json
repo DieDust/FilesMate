@@ -1,0 +1,5 @@
+{
+  "zh-CN": "修复新建文件夹后重命名为已有名称时，文件列表误显示为无法打开的问题。同名文件夹现在会提示合并或跳过；合并不会覆盖同名文件，未移动的内容保留在原处，支持撤销与重做。普通文件同名也会正常提示。修正撤销遇到名称冲突时的回滚行为，避免触碰已有内容。",
+  "en-US": "Fixed the folder view incorrectly showing an open error after renaming a new folder to an existing name. Folder name conflicts now offer Merge or Skip. Merging never overwrites matching files; unmoved items stay in the original folder, with undo and redo support. File name conflicts also show a normal prompt. Fixed undo rollback on a name conflict so existing content is left untouched.",
+  "ja-JP": "新しいフォルダーを既存の名前に変更すると、一覧に開けない旨のエラーが表示される問題を修正しました。同名フォルダーには統合またはスキップを選択できます。統合時に同名ファイルは上書きせず、移動しない項目は元の場所に残します。元に戻す・やり直しにも対応しました。ファイルの名前が重複した場合も確認を表示します。取り消し時の名前の競合で既存の内容に影響しないよう修正しました。"
+}

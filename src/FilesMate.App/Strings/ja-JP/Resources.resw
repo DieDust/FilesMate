@@ -1,0 +1,2953 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generated from Localization/StringTable*.cs. Run scripts/sync-localization-resources.ps1; do not edit here. -->
+<root>
+  <data name="AboutBody" xml:space="preserve">
+    <value>ガラス効果と Mica を備えた Windows 向けファイルマネージャー。</value>
+  </data>
+  <data name="AboutLead" xml:space="preserve">
+    <value>FilesMate</value>
+  </data>
+  <data name="AboutTitle" xml:space="preserve">
+    <value>このアプリについて</value>
+  </data>
+  <data name="AboutVersion" xml:space="preserve">
+    <value>バージョン {0}</value>
+  </data>
+  <data name="AccentColor" xml:space="preserve">
+    <value>アクセントカラー</value>
+  </data>
+  <data name="AccentDescription" xml:space="preserve">
+    <value>選択項目、ガラス効果のハイライト、ドロップ先に使用する色です。</value>
+  </data>
+  <data name="Accent_Blue" xml:space="preserve">
+    <value>ブルー</value>
+  </data>
+  <data name="Accent_BlueGray" xml:space="preserve">
+    <value>ブルーグレー</value>
+  </data>
+  <data name="Accent_BrickRed" xml:space="preserve">
+    <value>れんが色</value>
+  </data>
+  <data name="Accent_CoolBlue" xml:space="preserve">
+    <value>クールブルー</value>
+  </data>
+  <data name="Accent_Default" xml:space="preserve">
+    <value>既定</value>
+  </data>
+  <data name="Accent_Gold" xml:space="preserve">
+    <value>ゴールド</value>
+  </data>
+  <data name="Accent_Gray" xml:space="preserve">
+    <value>グレー</value>
+  </data>
+  <data name="Accent_Green" xml:space="preserve">
+    <value>グリーン</value>
+  </data>
+  <data name="Accent_Iris" xml:space="preserve">
+    <value>アイリス</value>
+  </data>
+  <data name="Accent_Mint" xml:space="preserve">
+    <value>ミント</value>
+  </data>
+  <data name="Accent_Orange" xml:space="preserve">
+    <value>オレンジ</value>
+  </data>
+  <data name="Accent_Overcast" xml:space="preserve">
+    <value>クラウドグレー</value>
+  </data>
+  <data name="Accent_Red" xml:space="preserve">
+    <value>レッド</value>
+  </data>
+  <data name="Accent_Rose" xml:space="preserve">
+    <value>ローズ</value>
+  </data>
+  <data name="Accent_Seafoam" xml:space="preserve">
+    <value>シーフォーム</value>
+  </data>
+  <data name="Accent_Storm" xml:space="preserve">
+    <value>ストームグレー</value>
+  </data>
+  <data name="Accent_Violet" xml:space="preserve">
+    <value>バイオレット</value>
+  </data>
+  <data name="AccessDenied_Body" xml:space="preserve">
+    <value>アクセス許可を取得するか、別のフォルダーを開いてください。</value>
+  </data>
+  <data name="AccessDenied_Title" xml:space="preserve">
+    <value>アクセスできません</value>
+  </data>
+  <data name="Action_CloseDualPane" xml:space="preserve">
+    <value>2 ペイン表示をオフ</value>
+  </data>
+  <data name="Action_ClosePreviewPane" xml:space="preserve">
+    <value>プレビューペインを閉じる</value>
+  </data>
+  <data name="Action_CloseQuickPreview" xml:space="preserve">
+    <value>クイックプレビューを閉じる</value>
+  </data>
+  <data name="Action_CopyFolderPath" xml:space="preserve">
+    <value>現在のフォルダーのパスをコピー</value>
+  </data>
+  <data name="Action_CopySelectedPaths" xml:space="preserve">
+    <value>選択項目のパスをコピー</value>
+  </data>
+  <data name="Action_FailedPrefix" xml:space="preserve">
+    <value>操作を実行できませんでした：</value>
+  </data>
+  <data name="Action_IconView" xml:space="preserve">
+    <value>アイコン表示</value>
+  </data>
+  <data name="Action_NoMatch" xml:space="preserve">
+    <value>一致するコマンドはありません</value>
+  </data>
+  <data name="Action_OpenDualPane" xml:space="preserve">
+    <value>2 ペイン表示をオン</value>
+  </data>
+  <data name="Action_OpenPreviewPane" xml:space="preserve">
+    <value>プレビューペインを開く</value>
+  </data>
+  <data name="Action_OpenSettings" xml:space="preserve">
+    <value>設定を開く</value>
+  </data>
+  <data name="Action_QuickPreview" xml:space="preserve">
+    <value>クイックプレビュー</value>
+  </data>
+  <data name="Action_RedoFile" xml:space="preserve">
+    <value>ファイル操作をやり直す</value>
+  </data>
+  <data name="Action_RefreshFolder" xml:space="preserve">
+    <value>フォルダーを更新</value>
+  </data>
+  <data name="Action_ReopenTab" xml:space="preserve">
+    <value>閉じたタブを開き直す</value>
+  </data>
+  <data name="Action_SearchHint" xml:space="preserve">
+    <value>コマンドを検索（ターミナル、名前の変更、並べ替えなど）</value>
+  </data>
+  <data name="Action_SortColumn" xml:space="preserve">
+    <value>{0}で並べ替え</value>
+  </data>
+  <data name="Action_SortPrefix" xml:space="preserve">
+    <value>並べ替え：</value>
+  </data>
+  <data name="Action_ToggleFolderSizes" xml:space="preserve">
+    <value>フォルダーサイズの表示を切り替え</value>
+  </data>
+  <data name="Action_ToggleHidden" xml:space="preserve">
+    <value>隠しファイルの表示を切り替え</value>
+  </data>
+  <data name="Action_UndoFile" xml:space="preserve">
+    <value>直前のファイル操作を元に戻す</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>追加</value>
+  </data>
+  <data name="Address" xml:space="preserve">
+    <value>アドレス</value>
+  </data>
+  <data name="Address_HiddenAncestors" xml:space="preserve">
+    <value>親フォルダーを表示</value>
+  </data>
+  <data name="AdvancedLead" xml:space="preserve">
+    <value>アイコンのキャッシュ、データフォルダー、既定のファイルマネージャーを管理します。</value>
+  </data>
+  <data name="AdvancedTitle" xml:space="preserve">
+    <value>詳細設定</value>
+  </data>
+  <data name="AlphabetDualPaneDescription" xml:space="preserve">
+    <value>各ペインの表示領域が狭くなりますが、両方にアルファベット一覧を表示します。</value>
+  </data>
+  <data name="AlphabetDualPaneTitle" xml:space="preserve">
+    <value>2 ペイン表示でも使用</value>
+  </data>
+  <data name="AlphabetMinimumItemsDescription" xml:space="preserve">
+    <value>項目が少ないフォルダーでは通常のスクロールバーを使います。0 にすると項目数を制限しません。</value>
+  </data>
+  <data name="AlphabetMinimumItemsTitle" xml:space="preserve">
+    <value>表示に必要な最小項目数</value>
+  </data>
+  <data name="AlphabetNavigationDescription" xml:space="preserve">
+    <value>名前順で表示しているときに、アルファベット一覧、文字の吹き出し、範囲の目印を表示します。</value>
+  </data>
+  <data name="AlphabetNavigationSection" xml:space="preserve">
+    <value>アルファベットナビゲーション</value>
+  </data>
+  <data name="AlphabetNavigationTitle" xml:space="preserve">
+    <value>アルファベットナビゲーションを有効にする</value>
+  </data>
+  <data name="Alphabet_AccessibleName" xml:space="preserve">
+    <value>先頭文字で移動</value>
+  </data>
+  <data name="Alphabet_QuickNavigation" xml:space="preserve">
+    <value>アルファベットナビゲーション</value>
+  </data>
+  <data name="Alphabet_SetupHint" xml:space="preserve">
+    <value>アルファベット一覧、文字の吹き出し、範囲を表示します。オフでは通常のスクロールバーを使用します。</value>
+  </data>
+  <data name="AppName" xml:space="preserve">
+    <value>FilesMate</value>
+  </data>
+  <data name="App_EntryUnavailable" xml:space="preserve">
+    <value>アプリが削除されたか、起動情報が無効です。後で再度検索してください。</value>
+  </data>
+  <data name="App_TrayDescription" xml:space="preserve">
+    <value>ファイル管理とグローバル検索</value>
+  </data>
+  <data name="AppearanceTitle" xml:space="preserve">
+    <value>外観</value>
+  </data>
+  <data name="Application" xml:space="preserve">
+    <value>アプリ</value>
+  </data>
+  <data name="Applying" xml:space="preserve">
+    <value>適用中…</value>
+  </data>
+  <data name="Attribute_Archive" xml:space="preserve">
+    <value>アーカイブ</value>
+  </data>
+  <data name="Attribute_Compressed" xml:space="preserve">
+    <value>圧縮</value>
+  </data>
+  <data name="Attribute_Encrypted" xml:space="preserve">
+    <value>暗号化</value>
+  </data>
+  <data name="Attribute_Link" xml:space="preserve">
+    <value>リンク</value>
+  </data>
+  <data name="Attribute_Offline" xml:space="preserve">
+    <value>オフライン</value>
+  </data>
+  <data name="Audio" xml:space="preserve">
+    <value>音声</value>
+  </data>
+  <data name="BackToSearch" xml:space="preserve">
+    <value>検索に戻る</value>
+  </data>
+  <data name="BackToSearchSettings" xml:space="preserve">
+    <value>検索設定に戻る</value>
+  </data>
+  <data name="BackToSettings" xml:space="preserve">
+    <value>設定に戻る</value>
+  </data>
+  <data name="Backdrop" xml:space="preserve">
+    <value>背景</value>
+  </data>
+  <data name="BackdropAcrylic" xml:space="preserve">
+    <value>アクリル</value>
+  </data>
+  <data name="BackdropDescription" xml:space="preserve">
+    <value>アクリルと Mica はデスクトップの色を背景に反映します。単色は不透明な背景です。</value>
+  </data>
+  <data name="BackdropMica" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="BackdropMicaAlt" xml:space="preserve">
+    <value>Mica Alt</value>
+  </data>
+  <data name="BackdropSolid" xml:space="preserve">
+    <value>単色</value>
+  </data>
+  <data name="BackgroundSearch" xml:space="preserve">
+    <value>バックグラウンド検索</value>
+  </data>
+  <data name="Backup_Clear" xml:space="preserve">
+    <value>現在の履歴を消去</value>
+  </data>
+  <data name="Backup_ClearHint" xml:space="preserve">
+    <value>履歴を消去すると、そのバックアップは完全に削除され、元に戻す/やり直しはできなくなります。異常終了時や変更されたバックアップは保持します。下の場所を開き、必要なファイルを復元してから手動で削除してください。旧版の未登録フォルダーは名前だけで自動削除しません。</value>
+  </data>
+  <data name="Backup_Cleared" xml:space="preserve">
+    <value>現在の履歴を消去しました。残っている場所は確認が必要で、ファイルは削除していません。</value>
+  </data>
+  <data name="Backup_DestructiveHint" xml:space="preserve">
+    <value>旧バージョンを残さず、既存の内容を完全に置き換えます。今回の一括操作全体は元に戻せず、置換に成功すると以前の元に戻す/やり直し履歴も消去されます。この選択は現在のファイルだけに適用されます。</value>
+  </data>
+  <data name="Backup_LimitHint" xml:space="preserve">
+    <value>{0} MiBの予約が必要です（現在{1} / 256 MiB）。上限に達したか、バックアップを利用できません。スキップ、両方を保持、キャンセルして管理、または元に戻せない置換を選択してください。</value>
+  </data>
+  <data name="Backup_LocationUnavailable" xml:space="preserve">
+    <value>このバックアップの場所は利用できません。一覧を更新するか、ドライブを再接続してください。</value>
+  </data>
+  <data name="Backup_Manage" xml:space="preserve">
+    <value>バックアップを管理</value>
+  </data>
+  <data name="Backup_Policy" xml:space="preserve">
+    <value>このセッションで最大5操作を保持します。置換バックアップの予約容量は合計256 MiB、1ファイル64 MiB（最大256ファイル）です。新旧の大きい方のサイズを予約し、最後のウィンドウを正常に閉じると削除します。</value>
+  </data>
+  <data name="Backup_Remnants" xml:space="preserve">
+    <value>以前のセッションのバックアップが残っています</value>
+  </data>
+  <data name="Backup_ReplaceWithoutUndo" xml:space="preserve">
+    <value>元に戻せない置換</value>
+  </data>
+  <data name="Backup_ReservationHint" xml:space="preserve">
+    <value>転送先ドライブに{0} MiBを予約します（現在{1} / 256 MiB）。最大5操作を保持します。設定 → ファイルとフォルダーで管理・削除できます。</value>
+  </data>
+  <data name="Backup_Title" xml:space="preserve">
+    <value>元に戻すためのバックアップ</value>
+  </data>
+  <data name="Backup_UnprotectedCount" xml:space="preserve">
+    <value>{0}件をバックアップなしで置換。今回の操作は元に戻せません</value>
+  </data>
+  <data name="Backup_Usage" xml:space="preserve">
+    <value>元に戻す/やり直し用の予約：{0} / 256 MiB · {1}か所</value>
+  </data>
+  <data name="CacheCleared" xml:space="preserve">
+    <value>アイコンとサムネイルのキャッシュを消去しました。</value>
+  </data>
+  <data name="CacheSection" xml:space="preserve">
+    <value>メンテナンス</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="CannotRenameMultiple" xml:space="preserve">
+    <value>複数の項目の名前を変更できません</value>
+  </data>
+  <data name="Category_AddCustom" xml:space="preserve">
+    <value>独自の分類を追加</value>
+  </data>
+  <data name="Category_All" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="Category_Buttons" xml:space="preserve">
+    <value>分類ボタン</value>
+  </data>
+  <data name="Category_Duplicate" xml:space="preserve">
+    <value>分類名は重複できません。</value>
+  </data>
+  <data name="Category_EditHint" xml:space="preserve">
+    <value>表示の切り替えと矢印で並べ替えができます。変更は自動保存されます。</value>
+  </data>
+  <data name="Category_ExtensionsExample" xml:space="preserve">
+    <value>拡張子（例：jpg, png）</value>
+  </data>
+  <data name="Category_ExtensionsExampleLong" xml:space="preserve">
+    <value>拡張子（例：jpg, png, psd）</value>
+  </data>
+  <data name="Category_ExtensionsHint" xml:space="preserve">
+    <value>拡張子の例：jpg, png, psd</value>
+  </data>
+  <data name="Category_InvalidExtensions" xml:space="preserve">
+    <value>jpg, png などの拡張子を 1～64 個入力してください。パスやワイルドカードは使用できません。</value>
+  </data>
+  <data name="Category_Limit" xml:space="preserve">
+    <value>分類は最大 32 件です。</value>
+  </data>
+  <data name="Category_Manage" xml:space="preserve">
+    <value>分類を管理</value>
+  </data>
+  <data name="Category_Media" xml:space="preserve">
+    <value>メディア</value>
+  </data>
+  <data name="Category_Name" xml:space="preserve">
+    <value>分類名</value>
+  </data>
+  <data name="Category_NameExample" xml:space="preserve">
+    <value>分類名（例：デザイン画像）</value>
+  </data>
+  <data name="Category_NameRequired" xml:space="preserve">
+    <value>分類名を入力してください。</value>
+  </data>
+  <data name="Category_Show" xml:space="preserve">
+    <value>この分類を表示</value>
+  </data>
+  <data name="Category_Title" xml:space="preserve">
+    <value>検索の分類</value>
+  </data>
+  <data name="Category_VisibleRequired" xml:space="preserve">
+    <value>少なくとも 1 つの分類を表示してください。</value>
+  </data>
+  <data name="ClassicExplorerDescription" xml:space="preserve">
+    <value>Windows のエクスプローラーを開きます。</value>
+  </data>
+  <data name="ClassicExplorerFailed" xml:space="preserve">
+    <value>エクスプローラーを開けませんでした。</value>
+  </data>
+  <data name="ClassicExplorerOpen" xml:space="preserve">
+    <value>開く</value>
+  </data>
+  <data name="ClassicExplorerTitle" xml:space="preserve">
+    <value>Windows エクスプローラー</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>クリア</value>
+  </data>
+  <data name="ClearCache" xml:space="preserve">
+    <value>キャッシュを消去</value>
+  </data>
+  <data name="Clipboard_Busy" xml:space="preserve">
+    <value>クリップボードが使用中です。再試行してください。</value>
+  </data>
+  <data name="Clipboard_BusyShort" xml:space="preserve">
+    <value>クリップボードが使用中です。再試行してください。</value>
+  </data>
+  <data name="Clipboard_CopyCount" xml:space="preserve">
+    <value>{0} 項目をコピーしました</value>
+  </data>
+  <data name="Clipboard_CutCount" xml:space="preserve">
+    <value>{0} 項目を切り取りました</value>
+  </data>
+  <data name="Clipboard_DimensionsTooLarge" xml:space="preserve">
+    <value>画像の寸法が大きすぎます。画像アプリから保存してください。</value>
+  </data>
+  <data name="Clipboard_ImageName" xml:space="preserve">
+    <value>スクリーンショット </value>
+  </data>
+  <data name="Clipboard_ImageTooLarge" xml:space="preserve">
+    <value>画像が大きすぎます。画像アプリから保存してください。</value>
+  </data>
+  <data name="Clipboard_SaveImage" xml:space="preserve">
+    <value>クリップボードの画像を保存</value>
+  </data>
+  <data name="Clipboard_SaveText" xml:space="preserve">
+    <value>クリップボードのテキストを保存</value>
+  </data>
+  <data name="Clipboard_TextName" xml:space="preserve">
+    <value>テキスト </value>
+  </data>
+  <data name="Clipboard_TextTooLong" xml:space="preserve">
+    <value>クリップボードのテキストが長すぎます。分割して保存してください。</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="CloseEscape" xml:space="preserve">
+    <value>閉じる（Esc）</value>
+  </data>
+  <data name="ClosePreview" xml:space="preserve">
+    <value>プレビューを閉じる</value>
+  </data>
+  <data name="Column_Modified" xml:space="preserve">
+    <value>更新日時</value>
+  </data>
+  <data name="Column_Name" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="Column_Size" xml:space="preserve">
+    <value>サイズ</value>
+  </data>
+  <data name="Column_Type" xml:space="preserve">
+    <value>種類</value>
+  </data>
+  <data name="Columns_Reset" xml:space="preserve">
+    <value>列を既定に戻す</value>
+  </data>
+  <data name="CommandPalette" xml:space="preserve">
+    <value>コマンドを検索</value>
+  </data>
+  <data name="Command_AddTags" xml:space="preserve">
+    <value>タグを追加</value>
+  </data>
+  <data name="Command_BatchRename" xml:space="preserve">
+    <value>一括名前変更</value>
+  </data>
+  <data name="Command_ChangeLayout" xml:space="preserve">
+    <value>表示</value>
+  </data>
+  <data name="Command_Compress" xml:space="preserve">
+    <value>圧縮</value>
+  </data>
+  <data name="Command_Compress7z" xml:space="preserve">
+    <value>7z に圧縮</value>
+  </data>
+  <data name="Command_CompressNew" xml:space="preserve">
+    <value>圧縮ファイルを作成…</value>
+  </data>
+  <data name="Command_CompressZip" xml:space="preserve">
+    <value>ZIP に圧縮</value>
+  </data>
+  <data name="Command_Copy" xml:space="preserve">
+    <value>コピー</value>
+  </data>
+  <data name="Command_CopyPath" xml:space="preserve">
+    <value>パスをコピー</value>
+  </data>
+  <data name="Command_CopyPathQuoted" xml:space="preserve">
+    <value>引用符付きのパスをコピー</value>
+  </data>
+  <data name="Command_CreateShortcut" xml:space="preserve">
+    <value>ショートカットを作成</value>
+  </data>
+  <data name="Command_Cut" xml:space="preserve">
+    <value>切り取り</value>
+  </data>
+  <data name="Command_Extract" xml:space="preserve">
+    <value>展開</value>
+  </data>
+  <data name="Command_ExtractHere" xml:space="preserve">
+    <value>ここに展開</value>
+  </data>
+  <data name="Command_ExtractToFolder" xml:space="preserve">
+    <value>フォルダーに展開</value>
+  </data>
+  <data name="Command_ExtractToOther" xml:space="preserve">
+    <value>展開先を指定…</value>
+  </data>
+  <data name="Command_ManageTags" xml:space="preserve">
+    <value>タグを管理</value>
+  </data>
+  <data name="Command_New" xml:space="preserve">
+    <value>新規作成</value>
+  </data>
+  <data name="Command_NewFile" xml:space="preserve">
+    <value>新しいファイル</value>
+  </data>
+  <data name="Command_NewFolder" xml:space="preserve">
+    <value>新しいフォルダー</value>
+  </data>
+  <data name="Command_Open" xml:space="preserve">
+    <value>開く</value>
+  </data>
+  <data name="Command_OpenInCompactMate" xml:space="preserve">
+    <value>CompactMate で開く</value>
+  </data>
+  <data name="Command_OpenInNewTab" xml:space="preserve">
+    <value>新しいタブで開く</value>
+  </data>
+  <data name="Command_OpenInNewWindow" xml:space="preserve">
+    <value>新しいウィンドウで開く</value>
+  </data>
+  <data name="Command_OpenInTerminal" xml:space="preserve">
+    <value>Windows ターミナルで開く</value>
+  </data>
+  <data name="Command_OpenWith" xml:space="preserve">
+    <value>プログラムから開く</value>
+  </data>
+  <data name="Command_Paste" xml:space="preserve">
+    <value>貼り付け</value>
+  </data>
+  <data name="Command_PermanentDelete" xml:space="preserve">
+    <value>完全に削除</value>
+  </data>
+  <data name="Command_PinToSidebar" xml:space="preserve">
+    <value>サイドバーにピン留め</value>
+  </data>
+  <data name="Command_Properties" xml:space="preserve">
+    <value>プロパティ</value>
+  </data>
+  <data name="Command_Recycle" xml:space="preserve">
+    <value>ごみ箱に移動</value>
+  </data>
+  <data name="Command_Refresh" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="Command_Rename" xml:space="preserve">
+    <value>名前の変更</value>
+  </data>
+  <data name="Command_SelectAll" xml:space="preserve">
+    <value>すべて選択</value>
+  </data>
+  <data name="Command_Share" xml:space="preserve">
+    <value>共有</value>
+  </data>
+  <data name="Command_ShowMoreOptions" xml:space="preserve">
+    <value>その他のオプションを表示</value>
+  </data>
+  <data name="Command_SmartExtract" xml:space="preserve">
+    <value>自動で展開先を選択</value>
+  </data>
+  <data name="Command_UnpinFromSidebar" xml:space="preserve">
+    <value>サイドバーのピン留めを外す</value>
+  </data>
+  <data name="Command_WhoLocks" xml:space="preserve">
+    <value>使用中のアプリを確認</value>
+  </data>
+  <data name="Confirm" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="ConfirmDeleteBody" xml:space="preserve">
+    <value>この操作は元に戻せません。</value>
+  </data>
+  <data name="ConfirmDeleteSettingDescription" xml:space="preserve">
+    <value>選択した項目を完全に削除する前に確認します。</value>
+  </data>
+  <data name="ConfirmDeleteSettingTitle" xml:space="preserve">
+    <value>完全に削除する前に確認</value>
+  </data>
+  <data name="ConfirmDeleteTitle" xml:space="preserve">
+    <value>完全に削除しますか？</value>
+  </data>
+  <data name="ConfirmRemove" xml:space="preserve">
+    <value>削除を確認</value>
+  </data>
+  <data name="CopyDiagnostics" xml:space="preserve">
+    <value>診断情報をコピー</value>
+  </data>
+  <data name="CopyFullPath" xml:space="preserve">
+    <value>完全なパスをコピー</value>
+  </data>
+  <data name="CopyFullPathShortcut" xml:space="preserve">
+    <value>完全なパスをコピー · Ctrl+Shift+C</value>
+  </data>
+  <data name="CopyToOtherPane" xml:space="preserve">
+    <value>もう一方のペインにコピー…</value>
+  </data>
+  <data name="Cover_Choose" xml:space="preserve">
+    <value>フォルダーのカバー画像を選択</value>
+  </data>
+  <data name="Cover_DirectChild" xml:space="preserve">
+    <value>このフォルダー直下の画像または動画を選択してください。</value>
+  </data>
+  <data name="Cover_Reset" xml:space="preserve">
+    <value>カバー画像を自動選択に戻す</value>
+  </data>
+  <data name="DataFolderDescription" xml:space="preserve">
+    <value>キーボードショートカット、外観、ファイル操作の設定を保存するフォルダーです。</value>
+  </data>
+  <data name="DataFolderTitle" xml:space="preserve">
+    <value>アプリのデータ</value>
+  </data>
+  <data name="DateAccessed" xml:space="preserve">
+    <value>アクセス日時</value>
+  </data>
+  <data name="DateFormatDescription" xml:space="preserve">
+    <value>Windows の地域設定、または年・月・日を固定した形式を使用します。</value>
+  </data>
+  <data name="DateFormatIso" xml:space="preserve">
+    <value>ISO</value>
+  </data>
+  <data name="DateFormatSystem" xml:space="preserve">
+    <value>Windows の設定</value>
+  </data>
+  <data name="DateFormatTitle" xml:space="preserve">
+    <value>日付の形式</value>
+  </data>
+  <data name="DefaultAppDescription" xml:space="preserve">
+    <value>他のアプリからフォルダーを開く際に FilesMate を使用します。タスクバーのエクスプローラーと Win+E の動作は変わりません。</value>
+  </data>
+  <data name="DefaultAppFailed" xml:space="preserve">
+    <value>既定のファイルマネージャーを更新できませんでした。</value>
+  </data>
+  <data name="DefaultAppTitle" xml:space="preserve">
+    <value>既定のファイルマネージャーに設定</value>
+  </data>
+  <data name="DefaultAppUpdated" xml:space="preserve">
+    <value>既定のファイルマネージャーを更新しました。</value>
+  </data>
+  <data name="DefaultViewDescription" xml:space="preserve">
+    <value>新しいタブの表示方法です。ツールバーから詳細表示とアイコン表示を切り替えられます。</value>
+  </data>
+  <data name="DefaultViewTitle" xml:space="preserve">
+    <value>既定の表示方法</value>
+  </data>
+  <data name="Delete_FailedPrefix" xml:space="preserve">
+    <value>削除できませんでした：</value>
+  </data>
+  <data name="Desktop" xml:space="preserve">
+    <value>デスクトップ</value>
+  </data>
+  <data name="DetailsPane" xml:space="preserve">
+    <value>詳細</value>
+  </data>
+  <data name="DetailsView" xml:space="preserve">
+    <value>詳細表示</value>
+  </data>
+  <data name="DiagnosticsCopied" xml:space="preserve">
+    <value>診断情報をコピーしました</value>
+  </data>
+  <data name="Display" xml:space="preserve">
+    <value>表示</value>
+  </data>
+  <data name="Documents" xml:space="preserve">
+    <value>ドキュメント</value>
+  </data>
+  <data name="Done" xml:space="preserve">
+    <value>完了</value>
+  </data>
+  <data name="Downloads" xml:space="preserve">
+    <value>ダウンロード</value>
+  </data>
+  <data name="Drag_CopyTo" xml:space="preserve">
+    <value>このフォルダーにコピー</value>
+  </data>
+  <data name="Drag_FailedPrefix" xml:space="preserve">
+    <value>ファイルをドラッグできませんでした：</value>
+  </data>
+  <data name="Drag_MoveTo" xml:space="preserve">
+    <value>このフォルダーに移動</value>
+  </data>
+  <data name="DualPane" xml:space="preserve">
+    <value>2 ペイン表示</value>
+  </data>
+  <data name="Empty_Body" xml:space="preserve">
+    <value>表示できる項目はありません。</value>
+  </data>
+  <data name="Empty_FilteredBody" xml:space="preserve">
+    <value>別の条件で検索してください。</value>
+  </data>
+  <data name="Empty_FilteredTitle" xml:space="preserve">
+    <value>一致する項目はありません</value>
+  </data>
+  <data name="Empty_Title" xml:space="preserve">
+    <value>このフォルダーは空です</value>
+  </data>
+  <data name="EnumerationDescription" xml:space="preserve">
+    <value>ウィンドウの操作を妨げずにフォルダーの内容を順次読み込みます。</value>
+  </data>
+  <data name="EnumerationTitle" xml:space="preserve">
+    <value>非同期での読み込み</value>
+  </data>
+  <data name="Error_CompactMateMissing" xml:space="preserve">
+    <value>CompactMate がインストールされていないため、圧縮や展開を実行できません。</value>
+  </data>
+  <data name="Error_InvalidName" xml:space="preserve">
+    <value>この名前は使用できません。</value>
+  </data>
+  <data name="Error_NoFolder" xml:space="preserve">
+    <value>フォルダーが開かれていません。</value>
+  </data>
+  <data name="Error_SaveAppearance" xml:space="preserve">
+    <value>外観の設定を保存できませんでした。</value>
+  </data>
+  <data name="Error_ShareUnavailable" xml:space="preserve">
+    <value>これらの項目では Windows の共有を利用できません。</value>
+  </data>
+  <data name="ExitBackgroundSearch" xml:space="preserve">
+    <value>バックグラウンド検索を終了</value>
+  </data>
+  <data name="Extension" xml:space="preserve">
+    <value>拡張子</value>
+  </data>
+  <data name="Favorites_Add" xml:space="preserve">
+    <value>お気に入りバーに追加</value>
+  </data>
+  <data name="Favorites_AddAction" xml:space="preserve">
+    <value>お気に入りに追加</value>
+  </data>
+  <data name="Favorites_AddFolder" xml:space="preserve">
+    <value>このフォルダーをお気に入りに追加</value>
+  </data>
+  <data name="Favorites_AddTo" xml:space="preserve">
+    <value>お気に入りの追加先</value>
+  </data>
+  <data name="Favorites_Added" xml:space="preserve">
+    <value>お気に入りに追加済み</value>
+  </data>
+  <data name="Favorites_AlreadyInGroup" xml:space="preserve">
+    <value>このファイルは既にグループ内にあります。</value>
+  </data>
+  <data name="Favorites_Bar" xml:space="preserve">
+    <value>お気に入りバー</value>
+  </data>
+  <data name="Favorites_Capacity" xml:space="preserve">
+    <value>お気に入りは最大 {0} 件です。先にバーを整理してください。</value>
+  </data>
+  <data name="Favorites_Changed" xml:space="preserve">
+    <value>お気に入りの一覧が変更されました。もう一度並べ替えてください。</value>
+  </data>
+  <data name="Favorites_CloseManager" xml:space="preserve">
+    <value>お気に入りの整理を閉じる</value>
+  </data>
+  <data name="Favorites_Contents" xml:space="preserve">
+    <value>お気に入りの内容</value>
+  </data>
+  <data name="Favorites_Count" xml:space="preserve">
+    <value>{0} 件のお気に入り</value>
+  </data>
+  <data name="Favorites_DataTooLarge" xml:space="preserve">
+    <value>お気に入りのデータが大きすぎます。バックアップしてから整理してください。</value>
+  </data>
+  <data name="Favorites_DropHint" xml:space="preserve">
+    <value>ファイルやフォルダーをドロップしてすぐに開く</value>
+  </data>
+  <data name="Favorites_DuplicateTarget" xml:space="preserve">
+    <value>移動先のグループに同じファイルが存在します。お気に入りは移動していません。</value>
+  </data>
+  <data name="Favorites_Group" xml:space="preserve">
+    <value>お気に入りグループ</value>
+  </data>
+  <data name="Favorites_GroupAtRoot" xml:space="preserve">
+    <value>グループはお気に入りバーの直下にのみ配置できます。</value>
+  </data>
+  <data name="Favorites_GroupDrop" xml:space="preserve">
+    <value>ファイルをドロップしてこのグループに追加</value>
+  </data>
+  <data name="Favorites_GroupEmpty" xml:space="preserve">
+    <value>このグループは空です</value>
+  </data>
+  <data name="Favorites_GroupTooltip" xml:space="preserve">
+    <value>{0} · お気に入りグループ</value>
+  </data>
+  <data name="Favorites_Hide" xml:space="preserve">
+    <value>お気に入りバーを非表示</value>
+  </data>
+  <data name="Favorites_InvalidId" xml:space="preserve">
+    <value>お気に入りの識別子が無効です。</value>
+  </data>
+  <data name="Favorites_InvalidNesting" xml:space="preserve">
+    <value>お気に入りグループの階層が無効です。</value>
+  </data>
+  <data name="Favorites_InvalidPath" xml:space="preserve">
+    <value>お気に入りのパスが無効です。</value>
+  </data>
+  <data name="Favorites_LocalOnly" xml:space="preserve">
+    <value>ローカルのファイルまたはフォルダーを選択してください。</value>
+  </data>
+  <data name="Favorites_Manage" xml:space="preserve">
+    <value>お気に入りを整理</value>
+  </data>
+  <data name="Favorites_ManageMenu" xml:space="preserve">
+    <value>お気に入りを整理…</value>
+  </data>
+  <data name="Favorites_MissingGroup" xml:space="preserve">
+    <value>このお気に入りグループは存在しません。</value>
+  </data>
+  <data name="Favorites_MissingItem" xml:space="preserve">
+    <value>このお気に入りは存在しません。</value>
+  </data>
+  <data name="Favorites_MissingItems" xml:space="preserve">
+    <value>一部のお気に入りが見つかりません。更新して再試行してください。</value>
+  </data>
+  <data name="Favorites_More" xml:space="preserve">
+    <value>その他のお気に入り</value>
+  </data>
+  <data name="Favorites_MoreMenu" xml:space="preserve">
+    <value>その他のお気に入り…</value>
+  </data>
+  <data name="Favorites_Move" xml:space="preserve">
+    <value>お気に入りを移動</value>
+  </data>
+  <data name="Favorites_MoveIntoGroup" xml:space="preserve">
+    <value>このお気に入りグループに移動</value>
+  </data>
+  <data name="Favorites_Name" xml:space="preserve">
+    <value>お気に入りの名前</value>
+  </data>
+  <data name="Favorites_NameHint" xml:space="preserve">
+    <value>グループまたはお気に入りの名前</value>
+  </data>
+  <data name="Favorites_NameLength" xml:space="preserve">
+    <value>名前は 1～120 文字で入力してください。</value>
+  </data>
+  <data name="Favorites_NewGroup" xml:space="preserve">
+    <value>お気に入りグループを作成</value>
+  </data>
+  <data name="Favorites_NewGroupMenu" xml:space="preserve">
+    <value>お気に入りグループを作成…</value>
+  </data>
+  <data name="Favorites_NoMatch" xml:space="preserve">
+    <value>一致するお気に入りはありません</value>
+  </data>
+  <data name="Favorites_ReadFailed" xml:space="preserve">
+    <value>お気に入りを読み込めませんでした。元のファイルは保持されています：</value>
+  </data>
+  <data name="Favorites_ReferenceHint" xml:space="preserve">
+    <value>場所のみを保存します。元のファイルはコピーも移動もされません。</value>
+  </data>
+  <data name="Favorites_Remove" xml:space="preserve">
+    <value>お気に入りから削除</value>
+  </data>
+  <data name="Favorites_RemoveGroup" xml:space="preserve">
+    <value>お気に入りグループを削除</value>
+  </data>
+  <data name="Favorites_RemoveGroupConfirm" xml:space="preserve">
+    <value>「{0}」とグループ内のお気に入りを削除しますか？元のファイルは削除されません。</value>
+  </data>
+  <data name="Favorites_RemoveHint" xml:space="preserve">
+    <value>選択したグループ内のお気に入りも削除します。元のファイルは残ります。続行するにはもう一度「削除を確認」を選択してください。</value>
+  </data>
+  <data name="Favorites_Rename" xml:space="preserve">
+    <value>お気に入りの名前を変更</value>
+  </data>
+  <data name="Favorites_ResizeBottom" xml:space="preserve">
+    <value>下端をドラッグしてお気に入りの高さを変更</value>
+  </data>
+  <data name="Favorites_ResizeTop" xml:space="preserve">
+    <value>上端をドラッグしてお気に入りの高さを変更</value>
+  </data>
+  <data name="Favorites_Search" xml:space="preserve">
+    <value>お気に入りを検索</value>
+  </data>
+  <data name="Favorites_SearchHint" xml:space="preserve">
+    <value>名前またはパスを検索</value>
+  </data>
+  <data name="Favorites_SelectionHint" xml:space="preserve">
+    <value>ドラッグで範囲選択 · Ctrl+クリックで追加 · Shift+クリックで連続選択。お気に入りをドラッグして並べ替えやグループへの移動ができます。</value>
+  </data>
+  <data name="Favorites_SettingsHint" xml:space="preserve">
+    <value>アドレスバーの下にお気に入りを表示します。バーを非表示にしてもお気に入りは削除されません。</value>
+  </data>
+  <data name="Favorites_SetupHint" xml:space="preserve">
+    <value>アドレスバーの下にファイル、フォルダー、展開できるグループを登録します。</value>
+  </data>
+  <data name="Favorites_Show" xml:space="preserve">
+    <value>お気に入りバーを表示</value>
+  </data>
+  <data name="FileExtensions" xml:space="preserve">
+    <value>ファイルの拡張子</value>
+  </data>
+  <data name="FileListSection" xml:space="preserve">
+    <value>ファイル一覧</value>
+  </data>
+  <data name="FileManager" xml:space="preserve">
+    <value>ファイルマネージャー</value>
+  </data>
+  <data name="FileName" xml:space="preserve">
+    <value>ファイル名</value>
+  </data>
+  <data name="FileOperationsDescription" xml:space="preserve">
+    <value>作成、切り取り、コピー、貼り付け、名前の変更、ごみ箱への移動ができます。Ctrl+Z で元に戻し、Ctrl+Y でやり直せます。</value>
+  </data>
+  <data name="FileOperationsTitle" xml:space="preserve">
+    <value>ファイル操作</value>
+  </data>
+  <data name="FilePreview" xml:space="preserve">
+    <value>ファイルのプレビュー</value>
+  </data>
+  <data name="FilesBody" xml:space="preserve">
+    <value>開く、新しいタブで開く、パスのコピー、更新、並べ替え、詳細表示、大きいアイコン表示。</value>
+  </data>
+  <data name="FilesFoldersLead" xml:space="preserve">
+    <value>名前や日付の表示方法、ファイル操作の動作を設定します。</value>
+  </data>
+  <data name="FilesFoldersTitle" xml:space="preserve">
+    <value>ファイルとフォルダー</value>
+  </data>
+  <data name="FilesHeader" xml:space="preserve">
+    <value>ファイル</value>
+  </data>
+  <data name="FilesTitle" xml:space="preserve">
+    <value>利用できる操作</value>
+  </data>
+  <data name="Files_ActionFailed" xml:space="preserve">
+    <value>ファイル操作を実行できませんでした</value>
+  </data>
+  <data name="Files_Busy" xml:space="preserve">
+    <value>ファイル操作が実行中です。しばらくお待ちください。</value>
+  </data>
+  <data name="Files_ClosingAfterOperation" xml:space="preserve">
+    <value>FilesMate — ファイル操作の完了後に閉じます</value>
+  </data>
+  <data name="Files_CopyOtherPane" xml:space="preserve">
+    <value>もう一方のペインにコピー</value>
+  </data>
+  <data name="Files_CreatedCopiedCount" xml:space="preserve">
+    <value>{0} 項目を作成またはコピーしました</value>
+  </data>
+  <data name="Files_DestinationSummary" xml:space="preserve">
+    <value>{0} 項目
+
+転送先フォルダー：
+{1}</value>
+  </data>
+  <data name="Files_FolderConflict" xml:space="preserve">
+    <value>同じ名前のフォルダーが既に存在します</value>
+  </data>
+  <data name="Files_FolderConflictHint" xml:space="preserve">
+    <value>「{0}」に統合しますか？同名のファイルは上書きせず、元のフォルダーに残します。スキップすると両方のフォルダーを変更しません。</value>
+  </data>
+  <data name="Files_GroupSelection" xml:space="preserve">
+    <value>{0} 項目を新しいフォルダーに移動</value>
+  </data>
+  <data name="Files_GroupedCount" xml:space="preserve">
+    <value>{0} 項目を新しいフォルダーに移動しました</value>
+  </data>
+  <data name="Files_InvalidDestination" xml:space="preserve">
+    <value>移動元、選択したフォルダー自身、またはそのサブフォルダーは指定できません。</value>
+  </data>
+  <data name="Files_KeepExtension" xml:space="preserve">
+    <value>拡張子 {0} を保持してください。</value>
+  </data>
+  <data name="Files_Merge" xml:space="preserve">
+    <value>統合</value>
+  </data>
+  <data name="Files_MergePartial" xml:space="preserve">
+    <value>同名またはリンクの {0} 項目をスキップし、{1} 項目を処理できませんでした。移動していない項目は元のフォルダーに残っています。完了した移動は元に戻せます。</value>
+  </data>
+  <data name="Files_Merged" xml:space="preserve">
+    <value>フォルダーを統合しました</value>
+  </data>
+  <data name="Files_MoveOtherPane" xml:space="preserve">
+    <value>もう一方のペインに移動</value>
+  </data>
+  <data name="Files_NameConflict" xml:space="preserve">
+    <value>同じ名前の項目が既に存在します</value>
+  </data>
+  <data name="Files_NameConflictHint" xml:space="preserve">
+    <value>「{0}」は既に存在します。内容は上書きされていません。今回の変更をスキップして、別の名前を指定してください。</value>
+  </data>
+  <data name="Files_NameExists" xml:space="preserve">
+    <value>この名前は使用されています。別の名前を入力してください。</value>
+  </data>
+  <data name="Files_NotReady" xml:space="preserve">
+    <value>ファイルマネージャーの準備ができていません。もう一度操作してください。</value>
+  </data>
+  <data name="Files_OperationCancelled" xml:space="preserve">
+    <value>操作をキャンセルしました</value>
+  </data>
+  <data name="Files_ParentUnknown" xml:space="preserve">
+    <value>親フォルダーを特定できませんでした。</value>
+  </data>
+  <data name="Files_PermanentlyDeletedCount" xml:space="preserve">
+    <value>{0} 項目を完全に削除しました。これらの項目は元に戻せません。</value>
+  </data>
+  <data name="Files_RecycledCount" xml:space="preserve">
+    <value>{0} 項目をごみ箱に移動しました</value>
+  </data>
+  <data name="Files_RecycledUndoOnly" xml:space="preserve">
+    <value>ほかの {0} 項目はごみ箱に移動しました。元に戻せるのはこれらの項目のみです。</value>
+  </data>
+  <data name="Files_RenamedMovedCount" xml:space="preserve">
+    <value>{0} 項目の移動または名前の変更が完了しました</value>
+  </data>
+  <data name="Files_Skip" xml:space="preserve">
+    <value>スキップ</value>
+  </data>
+  <data name="Files_TargetExists" xml:space="preserve">
+    <value>指定した名前は既に存在します。もう一度お試しください。</value>
+  </data>
+  <data name="Files_UndoRecycledOnly" xml:space="preserve">
+    <value>ごみ箱の項目を戻す</value>
+  </data>
+  <data name="FilterFolder" xml:space="preserve">
+    <value>ファイルを検索</value>
+  </data>
+  <data name="FolderView_Reset" xml:space="preserve">
+    <value>このフォルダーの表示をリセット</value>
+  </data>
+  <data name="FoldersSection" xml:space="preserve">
+    <value>フォルダー</value>
+  </data>
+  <data name="FullPath" xml:space="preserve">
+    <value>完全なパス</value>
+  </data>
+  <data name="GeneralLead" xml:space="preserve">
+    <value>起動時に表示する場所やフォルダーの開き方を設定します。</value>
+  </data>
+  <data name="GeneralTitle" xml:space="preserve">
+    <value>全般</value>
+  </data>
+  <data name="GlassEffectBalanced" xml:space="preserve">
+    <value>標準</value>
+  </data>
+  <data name="GlassEffectImmersive" xml:space="preserve">
+    <value>強め</value>
+  </data>
+  <data name="GlassEffectOff" xml:space="preserve">
+    <value>オフ</value>
+  </data>
+  <data name="GlassEffects" xml:space="preserve">
+    <value>ガラス効果</value>
+  </data>
+  <data name="GlassEffectsDescription" xml:space="preserve">
+    <value>背景の透明感と奥行きを調整します。</value>
+  </data>
+  <data name="GlassSection" xml:space="preserve">
+    <value>ガラス効果</value>
+  </data>
+  <data name="GlobalSearch" xml:space="preserve">
+    <value>グローバル検索</value>
+  </data>
+  <data name="GlobalShortcut" xml:space="preserve">
+    <value>グローバルショートカット</value>
+  </data>
+  <data name="GoUp" xml:space="preserve">
+    <value>親フォルダーへ</value>
+  </data>
+  <data name="GroupSelection" xml:space="preserve">
+    <value>選択項目を新しいフォルダーに移動</value>
+  </data>
+  <data name="HideSettings" xml:space="preserve">
+    <value>設定を閉じる</value>
+  </data>
+  <data name="Home" xml:space="preserve">
+    <value>ホーム</value>
+  </data>
+  <data name="Home_Customize" xml:space="preserve">
+    <value>ホームをカスタマイズ</value>
+  </data>
+  <data name="Home_Drives" xml:space="preserve">
+    <value>ドライブ</value>
+  </data>
+  <data name="Home_MoveDown" xml:space="preserve">
+    <value>下へ移動</value>
+  </data>
+  <data name="Home_MoveUp" xml:space="preserve">
+    <value>上へ移動</value>
+  </data>
+  <data name="Home_ResetLayout" xml:space="preserve">
+    <value>ホームの配置をリセット</value>
+  </data>
+  <data name="Home_ShowSection" xml:space="preserve">
+    <value>このセクションを表示</value>
+  </data>
+  <data name="Home_SystemLocations" xml:space="preserve">
+    <value>システムの場所（Windows で開きます）</value>
+  </data>
+  <data name="Home_UserDirectories" xml:space="preserve">
+    <value>ユーザーフォルダー</value>
+  </data>
+  <data name="Home_UserFolder" xml:space="preserve">
+    <value>ユーザー</value>
+  </data>
+  <data name="IconCacheDescription" xml:space="preserve">
+    <value>アイコンやサムネイルが更新されない場合は、キャッシュを消去してください。</value>
+  </data>
+  <data name="IconCacheTitle" xml:space="preserve">
+    <value>アイコンとサムネイルのキャッシュ</value>
+  </data>
+  <data name="InvertSelection" xml:space="preserve">
+    <value>選択を反転</value>
+  </data>
+  <data name="KnownFoldersDescription" xml:space="preserve">
+    <value>デスクトップ、ドキュメント、ダウンロード、ピクチャ、ミュージック、ビデオをサイドバーに表示します。</value>
+  </data>
+  <data name="KnownFoldersTitle" xml:space="preserve">
+    <value>標準フォルダー</value>
+  </data>
+  <data name="Language_Description" xml:space="preserve">
+    <value>変更すると FilesMate と起動中のバックグラウンド検索が自動的に再起動し、タブが復元されます。ファイル転送中は完了を待ちます。</value>
+  </data>
+  <data name="Language_RestartFailed" xml:space="preserve">
+    <value>言語を保存しましたが、再起動を完了できませんでした。もう一度お試しください。</value>
+  </data>
+  <data name="Language_Retry" xml:space="preserve">
+    <value>再起動を再試行</value>
+  </data>
+  <data name="Language_SaveFailed" xml:space="preserve">
+    <value>言語を保存できませんでした。元の設定を保持しています。</value>
+  </data>
+  <data name="Language_Saved" xml:space="preserve">
+    <value>保存しました。ファイル転送の完了後、自動的に再起動します…</value>
+  </data>
+  <data name="Language_System" xml:space="preserve">
+    <value>Windows の言語に合わせる</value>
+  </data>
+  <data name="Language_Title" xml:space="preserve">
+    <value>表示言語</value>
+  </data>
+  <data name="Later" xml:space="preserve">
+    <value>後で</value>
+  </data>
+  <data name="LaunchApplication" xml:space="preserve">
+    <value>アプリを起動</value>
+  </data>
+  <data name="Layout_Details" xml:space="preserve">
+    <value>詳細</value>
+  </data>
+  <data name="Layout_ExtraLargeIcons" xml:space="preserve">
+    <value>特大アイコン</value>
+  </data>
+  <data name="Layout_HugeIcons" xml:space="preserve">
+    <value>アイコン（128）</value>
+  </data>
+  <data name="Layout_Icons" xml:space="preserve">
+    <value>アイコン</value>
+  </data>
+  <data name="Layout_JumboIcons" xml:space="preserve">
+    <value>アイコン（192）</value>
+  </data>
+  <data name="Layout_LargeIcons" xml:space="preserve">
+    <value>大アイコン</value>
+  </data>
+  <data name="Layout_MaximumIcons" xml:space="preserve">
+    <value>アイコン（256）</value>
+  </data>
+  <data name="Layout_MediumIcons" xml:space="preserve">
+    <value>中アイコン</value>
+  </data>
+  <data name="Layout_SmallIcons" xml:space="preserve">
+    <value>小アイコン</value>
+  </data>
+  <data name="LocalDisk" xml:space="preserve">
+    <value>ローカルディスク</value>
+  </data>
+  <data name="Lock_Browse" xml:space="preserve">
+    <value>参照</value>
+  </data>
+  <data name="Lock_Delete" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="Lock_DeleteFailed" xml:space="preserve">
+    <value>この項目を削除できませんでした。{0}</value>
+  </data>
+  <data name="Lock_Empty" xml:space="preserve">
+    <value>この項目を使用しているアプリはありません。</value>
+  </data>
+  <data name="Lock_EndFailed" xml:space="preserve">
+    <value>プロセスを終了できませんでした。</value>
+  </data>
+  <data name="Lock_EndTask" xml:space="preserve">
+    <value>タスクの終了</value>
+  </data>
+  <data name="Lock_HandleCount" xml:space="preserve">
+    <value>{0} 項目</value>
+  </data>
+  <data name="Lock_Other" xml:space="preserve">
+    <value>その他</value>
+  </data>
+  <data name="Lock_Pid" xml:space="preserve">
+    <value>PID {0}</value>
+  </data>
+  <data name="Lock_Processes" xml:space="preserve">
+    <value>使用中のプロセス</value>
+  </data>
+  <data name="Lock_Refresh" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="Lock_ScanFailed" xml:space="preserve">
+    <value>この項目を使用しているアプリを確認できませんでした。</value>
+  </data>
+  <data name="Lock_Service" xml:space="preserve">
+    <value>サービス：{0}</value>
+  </data>
+  <data name="Lock_Unlock" xml:space="preserve">
+    <value>ロックを解除</value>
+  </data>
+  <data name="MemoryDescription" xml:space="preserve">
+    <value>すべての項目を同時に描画せず、必要な行とタイルのみを表示します。</value>
+  </data>
+  <data name="MemoryTitle" xml:space="preserve">
+    <value>表示データのメモリ管理</value>
+  </data>
+  <data name="Menu_FolderAppearance" xml:space="preserve">
+    <value>フォルダーの外観</value>
+  </data>
+  <data name="Menu_New" xml:space="preserve">
+    <value>新規作成</value>
+  </data>
+  <data name="Menu_Selection" xml:space="preserve">
+    <value>項目の選択</value>
+  </data>
+  <data name="Menu_SystemFailed" xml:space="preserve">
+    <value>システムのコンテキストメニューを読み込めませんでした。</value>
+  </data>
+  <data name="Move" xml:space="preserve">
+    <value>移動</value>
+  </data>
+  <data name="MoveDown" xml:space="preserve">
+    <value>下へ移動</value>
+  </data>
+  <data name="MoveEarlier" xml:space="preserve">
+    <value>前へ移動</value>
+  </data>
+  <data name="MoveLater" xml:space="preserve">
+    <value>後ろへ移動</value>
+  </data>
+  <data name="MoveTo" xml:space="preserve">
+    <value>移動先</value>
+  </data>
+  <data name="MoveToMenu" xml:space="preserve">
+    <value>移動先を指定…</value>
+  </data>
+  <data name="MoveToOtherPane" xml:space="preserve">
+    <value>もう一方のペインに移動…</value>
+  </data>
+  <data name="MoveUp" xml:space="preserve">
+    <value>上へ移動</value>
+  </data>
+  <data name="MultitaskingLead" xml:space="preserve">
+    <value>現在のフォルダーの状態を保ちながら、複数の場所で作業できます。</value>
+  </data>
+  <data name="MultitaskingTitle" xml:space="preserve">
+    <value>マルチタスク</value>
+  </data>
+  <data name="Music" xml:space="preserve">
+    <value>ミュージック</value>
+  </data>
+  <data name="Nav_Back" xml:space="preserve">
+    <value>戻る</value>
+  </data>
+  <data name="Nav_Cloud" xml:space="preserve">
+    <value>クラウド</value>
+  </data>
+  <data name="Nav_Drives" xml:space="preserve">
+    <value>ドライブ</value>
+  </data>
+  <data name="Nav_Forward" xml:space="preserve">
+    <value>進む</value>
+  </data>
+  <data name="Nav_More" xml:space="preserve">
+    <value>その他</value>
+  </data>
+  <data name="Nav_Network" xml:space="preserve">
+    <value>ネットワーク</value>
+  </data>
+  <data name="Nav_Pinned" xml:space="preserve">
+    <value>ピン留め済み</value>
+  </data>
+  <data name="Nav_Refresh" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="Nav_Tags" xml:space="preserve">
+    <value>タグ</value>
+  </data>
+  <data name="Nav_Up" xml:space="preserve">
+    <value>上へ</value>
+  </data>
+  <data name="Nav_Wsl" xml:space="preserve">
+    <value>WSL</value>
+  </data>
+  <data name="NetworkDrive" xml:space="preserve">
+    <value>ネットワークドライブ</value>
+  </data>
+  <data name="NewFileName" xml:space="preserve">
+    <value>新しいファイル.txt</value>
+  </data>
+  <data name="NewGroup" xml:space="preserve">
+    <value>新しいグループ</value>
+  </data>
+  <data name="NewGroupName" xml:space="preserve">
+    <value>新しいグループの名前</value>
+  </data>
+  <data name="NewTab" xml:space="preserve">
+    <value>新しいタブ</value>
+  </data>
+  <data name="NewTabTooltip" xml:space="preserve">
+    <value>新しいタブ（Ctrl+T）</value>
+  </data>
+  <data name="NextFile" xml:space="preserve">
+    <value>次のファイル</value>
+  </data>
+  <data name="NotFound_Body" xml:space="preserve">
+    <value>移動または削除された可能性があります。</value>
+  </data>
+  <data name="NotFound_Title" xml:space="preserve">
+    <value>フォルダーが見つかりません</value>
+  </data>
+  <data name="Off" xml:space="preserve">
+    <value>オフ</value>
+  </data>
+  <data name="Offline_Body" xml:space="preserve">
+    <value>接続を確認して、もう一度お試しください。</value>
+  </data>
+  <data name="Offline_Title" xml:space="preserve">
+    <value>この場所はオフラインです</value>
+  </data>
+  <data name="On" xml:space="preserve">
+    <value>オン</value>
+  </data>
+  <data name="OpenDataFolder" xml:space="preserve">
+    <value>フォルダーを開く</value>
+  </data>
+  <data name="OpenFailed_Body" xml:space="preserve">
+    <value>問題が発生しました。もう一度お試しください。</value>
+  </data>
+  <data name="OpenFailed_Title" xml:space="preserve">
+    <value>フォルダーを開けませんでした</value>
+  </data>
+  <data name="OpenFilesMate" xml:space="preserve">
+    <value>FilesMate を開く</value>
+  </data>
+  <data name="OpenFolderFirst" xml:space="preserve">
+    <value>先にフォルダーを開いてください。</value>
+  </data>
+  <data name="OpenFoldersNewTabDescription" xml:space="preserve">
+    <value>フォルダーをダブルクリックすると、現在のタブを置き換えずに新しいタブで開きます。</value>
+  </data>
+  <data name="OpenFoldersNewTabTitle" xml:space="preserve">
+    <value>フォルダーを新しいタブで開く</value>
+  </data>
+  <data name="OpenGroup" xml:space="preserve">
+    <value>グループを開く</value>
+  </data>
+  <data name="OpenInExistingWindowDescription" xml:space="preserve">
+    <value>別のアプリからフォルダーを開くときは、起動済みの FilesMate の新しいタブで開きます。</value>
+  </data>
+  <data name="OpenInExistingWindowTitle" xml:space="preserve">
+    <value>既存のウィンドウを使用</value>
+  </data>
+  <data name="Open_FailedPrefix" xml:space="preserve">
+    <value>開けませんでした：</value>
+  </data>
+  <data name="Opening" xml:space="preserve">
+    <value>開いています…</value>
+  </data>
+  <data name="Order_SaveFailed" xml:space="preserve">
+    <value>保存できませんでした。元の順序に戻しました：</value>
+  </data>
+  <data name="PageLoadError_Body" xml:space="preserve">
+    <value>ウィンドウは引き続き使用できます。問題を報告する場合は診断情報をコピーしてください。</value>
+  </data>
+  <data name="PageLoadError_Title" xml:space="preserve">
+    <value>ページを開けませんでした</value>
+  </data>
+  <data name="ParentFolder" xml:space="preserve">
+    <value>親フォルダー</value>
+  </data>
+  <data name="Path_Copied" xml:space="preserve">
+    <value>パスをコピーしました</value>
+  </data>
+  <data name="PerformanceSection" xml:space="preserve">
+    <value>パフォーマンス</value>
+  </data>
+  <data name="Pictures" xml:space="preserve">
+    <value>ピクチャ</value>
+  </data>
+  <data name="PreviewCompatible" xml:space="preserve">
+    <value>互換プレビュー</value>
+  </data>
+  <data name="PreviewContentTab" xml:space="preserve">
+    <value>プレビュー</value>
+  </data>
+  <data name="PreviewEmpty" xml:space="preserve">
+    <value>プレビューする項目を選択してください。</value>
+  </data>
+  <data name="PreviewFolderProperties" xml:space="preserve">
+    <value>フォルダー
+更新日時：{0}
+項目数：{1}</value>
+  </data>
+  <data name="PreviewInfoTab" xml:space="preserve">
+    <value>情報</value>
+  </data>
+  <data name="PreviewMediaError" xml:space="preserve">
+    <value>この形式は再生できません。メディアプレーヤーで開いてください。</value>
+  </data>
+  <data name="PreviewNative" xml:space="preserve">
+    <value>標準プレビュー</value>
+  </data>
+  <data name="PreviewNextPage" xml:space="preserve">
+    <value>次へ</value>
+  </data>
+  <data name="PreviewPaneTitle" xml:space="preserve">
+    <value>プレビュー（Alt+P）</value>
+  </data>
+  <data name="PreviewPdfHint" xml:space="preserve">
+    <value>この PDF をプレビューできません。ファイルを開いて確認してください。</value>
+  </data>
+  <data name="PreviewPlay" xml:space="preserve">
+    <value>再生</value>
+  </data>
+  <data name="PreviewPreviousPage" xml:space="preserve">
+    <value>前へ</value>
+  </data>
+  <data name="PreviewProperties" xml:space="preserve">
+    <value>サイズ：{0}
+更新日時：{1}</value>
+  </data>
+  <data name="PreviewTruncated" xml:space="preserve">
+    <value>プレビューは 1 MiB まで表示します。</value>
+  </data>
+  <data name="Preview_AttributeSeparator" xml:space="preserve">
+    <value>、</value>
+  </data>
+  <data name="Preview_Attributes" xml:space="preserve">
+    <value>属性</value>
+  </data>
+  <data name="Preview_Category" xml:space="preserve">
+    <value>分類</value>
+  </data>
+  <data name="Preview_Chart" xml:space="preserve">
+    <value>グラフのプレビュー</value>
+  </data>
+  <data name="Preview_ChartData" xml:space="preserve">
+    <value>データ</value>
+  </data>
+  <data name="Preview_ChartEmpty" xml:space="preserve">
+    <value>このグラフには利用可能な保存済みデータがありません。</value>
+  </data>
+  <data name="Preview_ChartLimits" xml:space="preserve">
+    <value>保存済みのグラフデータ（最大 8 系列、各系列 32 項目）</value>
+  </data>
+  <data name="Preview_Collapse" xml:space="preserve">
+    <value>プレビューを閉じる</value>
+  </data>
+  <data name="Preview_ContentTooLarge" xml:space="preserve">
+    <value>文書の内容が大きすぎます。ファイルを開いて確認してください。</value>
+  </data>
+  <data name="Preview_Created" xml:space="preserve">
+    <value>作成日時</value>
+  </data>
+  <data name="Preview_DocumentFailed" xml:space="preserve">
+    <value>この文書はプレビューできません</value>
+  </data>
+  <data name="Preview_DocumentTooLarge" xml:space="preserve">
+    <value>文書が 64 MB を超えています。全体を見るにはファイルを開いてください。</value>
+  </data>
+  <data name="Preview_DocumentUnavailable" xml:space="preserve">
+    <value>この文書はプレビューできません。ファイルを開いて確認してください。</value>
+  </data>
+  <data name="Preview_EmbeddedImage" xml:space="preserve">
+    <value>文書内の画像</value>
+  </data>
+  <data name="Preview_EmptyText" xml:space="preserve">
+    <value>空のテキスト文書</value>
+  </data>
+  <data name="Preview_Hidden" xml:space="preserve">
+    <value>隠しファイル</value>
+  </data>
+  <data name="Preview_ImageUnsupported" xml:space="preserve">
+    <value>この画像の形式またはサイズはプレビューできません。元のファイルを開いてください。</value>
+  </data>
+  <data name="Preview_Interrupted" xml:space="preserve">
+    <value>プレビューが中断されました。ファイルを選択し直してください。</value>
+  </data>
+  <data name="Preview_InvalidDocument" xml:space="preserve">
+    <value>文書をプレビューできません。暗号化、破損、または未対応の形式の可能性があります。ファイルを開いて確認してください。</value>
+  </data>
+  <data name="Preview_Items" xml:space="preserve">
+    <value>項目数</value>
+  </data>
+  <data name="Preview_LegacyCharts" xml:space="preserve">
+    <value>旧形式のブック内の画像やグラフを変換できませんでした。セルの内容はプレビューできます。</value>
+  </data>
+  <data name="Preview_LegacyImages" xml:space="preserve">
+    <value>旧形式のブック内の一部の画像を読み込めません。元のファイルを開いてください。</value>
+  </data>
+  <data name="Preview_LinkFailed" xml:space="preserve">
+    <value>このリンクを開けませんでした</value>
+  </data>
+  <data name="Preview_Loading" xml:space="preserve">
+    <value>プレビューを読み込み中…</value>
+  </data>
+  <data name="Preview_LoadingCompatible" xml:space="preserve">
+    <value>互換プレビューを読み込み中…</value>
+  </data>
+  <data name="Preview_LoadingNative" xml:space="preserve">
+    <value>標準プレビューを読み込み中…</value>
+  </data>
+  <data name="Preview_Location" xml:space="preserve">
+    <value>場所</value>
+  </data>
+  <data name="Preview_MemoryLimit" xml:space="preserve">
+    <value>メモリ使用量を抑えるためプレビューを停止しました。元のアプリで文書を開いてください。</value>
+  </data>
+  <data name="Preview_None" xml:space="preserve">
+    <value>プレビューはありません。ファイルを開いて確認してください。</value>
+  </data>
+  <data name="Preview_PdfTooLarge" xml:space="preserve">
+    <value>PDF が 2 GB を超えています。ファイルを開いて確認してください。</value>
+  </data>
+  <data name="Preview_PieChart" xml:space="preserve">
+    <value>円グラフのプレビュー</value>
+  </data>
+  <data name="Preview_ReadFailed" xml:space="preserve">
+    <value>現在このファイルを読み取れません</value>
+  </data>
+  <data name="Preview_ReadOnly" xml:space="preserve">
+    <value>読み取り専用</value>
+  </data>
+  <data name="Preview_ResizeBottom" xml:space="preserve">
+    <value>プレビューの下端を調整</value>
+  </data>
+  <data name="Preview_ResizeBottomLeft" xml:space="preserve">
+    <value>プレビューの左下を調整</value>
+  </data>
+  <data name="Preview_ResizeBottomRight" xml:space="preserve">
+    <value>プレビューの右下を調整</value>
+  </data>
+  <data name="Preview_ResizeLeft" xml:space="preserve">
+    <value>プレビューの左端を調整</value>
+  </data>
+  <data name="Preview_ResizeRight" xml:space="preserve">
+    <value>プレビューの右端を調整</value>
+  </data>
+  <data name="Preview_ResizeTop" xml:space="preserve">
+    <value>プレビューの上端を調整</value>
+  </data>
+  <data name="Preview_ResizeTopLeft" xml:space="preserve">
+    <value>プレビューの左上を調整</value>
+  </data>
+  <data name="Preview_ResizeTopRight" xml:space="preserve">
+    <value>プレビューの右上を調整</value>
+  </data>
+  <data name="Preview_SheetImages" xml:space="preserve">
+    <value>このシート内の一部の画像やグラフはプレビューできません。元のファイルを開いてください。</value>
+  </data>
+  <data name="Preview_SheetLimits" xml:space="preserve">
+    <value>最大 20 シート、各シート 500 行・64 列を表示します。数式は再計算せず保存済みの値を表示します。画像や一般的なグラフは表の下に表示します。複雑な図形は元のファイルで確認してください。</value>
+  </data>
+  <data name="Preview_SheetTruncated" xml:space="preserve">
+    <value>一部のセルのみを表示しています。表全体を見るにはファイルを開いてください。</value>
+  </data>
+  <data name="Preview_Simplified" xml:space="preserve">
+    <value>簡易プレビュー · 一部の書式は再現できません。完全なレイアウトは元のファイルで確認してください。</value>
+  </data>
+  <data name="Preview_SlideHint" xml:space="preserve">
+    <value>スライドのプレビュー · 画像、テキスト、表、一般的なグラフを表示します。複雑なマスター、アニメーション、特殊効果は元のファイルで確認してください。</value>
+  </data>
+  <data name="Preview_SlideLimits" xml:space="preserve">
+    <value>最大 100 枚のスライドを表示します。埋め込み画像の合計は 8 MB までです。</value>
+  </data>
+  <data name="Preview_SlideNumber" xml:space="preserve">
+    <value>スライド {0}</value>
+  </data>
+  <data name="Preview_SpreadsheetValues" xml:space="preserve">
+    <value>表のプレビュー · 保存済みのセルの値を表示</value>
+  </data>
+  <data name="Preview_StartFailed" xml:space="preserve">
+    <value>文書のプレビューを開始できませんでした。</value>
+  </data>
+  <data name="Preview_System" xml:space="preserve">
+    <value>システム</value>
+  </data>
+  <data name="Preview_TextLimit" xml:space="preserve">
+    <value>先頭 256 KB を表示 · 全体を見るにはファイルを開いてください</value>
+  </data>
+  <data name="Preview_TextUnsupported" xml:space="preserve">
+    <value>このファイルはテキストプレビューに対応していません</value>
+  </data>
+  <data name="Preview_Timeout" xml:space="preserve">
+    <value>文書が複雑なためプレビューがタイムアウトしました。ファイルを開いて確認してください。</value>
+  </data>
+  <data name="Preview_UnavailableShort" xml:space="preserve">
+    <value>この文書はプレビューできません。ファイルを開いてください。</value>
+  </data>
+  <data name="Preview_WebViewFailed" xml:space="preserve">
+    <value>プレビューを初期化できませんでした。開き直すか WebView2 を確認してください。</value>
+  </data>
+  <data name="PreviousFile" xml:space="preserve">
+    <value>前のファイル</value>
+  </data>
+  <data name="ProgramFile" xml:space="preserve">
+    <value>プログラムファイル</value>
+  </data>
+  <data name="Recycle_ConfirmPrefix" xml:space="preserve">
+    <value>次の項目をごみ箱に移動しますか？
+
+</value>
+  </data>
+  <data name="ReduceMotion" xml:space="preserve">
+    <value>視覚効果を減らす</value>
+  </data>
+  <data name="ReduceMotionDescription" xml:space="preserve">
+    <value>オンにするとアニメーションを減らします。Windows 側で無効の場合は有効にできません。</value>
+  </data>
+  <data name="ReduceMotionOn" xml:space="preserve">
+    <value>オン</value>
+  </data>
+  <data name="ReduceMotionSystem" xml:space="preserve">
+    <value>システムに合わせる</value>
+  </data>
+  <data name="RemovableDrive" xml:space="preserve">
+    <value>リムーバブルドライブ</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="RemoveGroup" xml:space="preserve">
+    <value>グループを削除</value>
+  </data>
+  <data name="RenameApplyCount" xml:space="preserve">
+    <value>{0} 項目の名前を変更</value>
+  </data>
+  <data name="RenameBaseExample" xml:space="preserve">
+    <value>例：旅行の写真</value>
+  </data>
+  <data name="RenameBaseName" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="RenameChanged" xml:space="preserve">
+    <value>変更予定</value>
+  </data>
+  <data name="RenameDigits" xml:space="preserve">
+    <value>番号の形式</value>
+  </data>
+  <data name="RenameDuplicate" xml:space="preserve">
+    <value>変更後の名前が重複しています</value>
+  </data>
+  <data name="RenameExists" xml:space="preserve">
+    <value>同じ名前のファイルまたはフォルダーが存在します</value>
+  </data>
+  <data name="RenameExtensionHint" xml:space="preserve">
+    <value>既定ではファイルの拡張子を保持します。フォルダーは名前全体を処理します。</value>
+  </data>
+  <data name="RenameFind" xml:space="preserve">
+    <value>検索する文字列</value>
+  </data>
+  <data name="RenameFooter" xml:space="preserve">
+    <value>適用前に名前を確認してください。変更後は Ctrl+Z で元に戻せます。</value>
+  </data>
+  <data name="RenameGroupMenu" xml:space="preserve">
+    <value>グループの名前を変更…</value>
+  </data>
+  <data name="RenameHelpAffix" xml:space="preserve">
+    <value>元の名前を保持し、先頭または末尾に文字列を追加します。</value>
+  </data>
+  <data name="RenameHelpCase" xml:space="preserve">
+    <value>英字を大文字または小文字に変換します。その他の文字は変更しません。</value>
+  </data>
+  <data name="RenameHelpNumber" xml:space="preserve">
+    <value>共通の名前に連番を付けます。番号はプレビューの表示順に割り当てます。</value>
+  </data>
+  <data name="RenameHelpReplace" xml:space="preserve">
+    <value>名前に含まれる文字列を置き換えます。置換後の文字列を空欄にすると削除します。</value>
+  </data>
+  <data name="RenameHelpTitle" xml:space="preserve">
+    <value>この変更方法について</value>
+  </data>
+  <data name="RenameIncludeExtension" xml:space="preserve">
+    <value>拡張子も変更する</value>
+  </data>
+  <data name="RenameLower" xml:space="preserve">
+    <value>小文字</value>
+  </data>
+  <data name="RenameMatchCase" xml:space="preserve">
+    <value>大文字と小文字を区別</value>
+  </data>
+  <data name="RenameMenu" xml:space="preserve">
+    <value>名前の変更…</value>
+  </data>
+  <data name="RenameModeAffix" xml:space="preserve">
+    <value>先頭・末尾に追加</value>
+  </data>
+  <data name="RenameModeCase" xml:space="preserve">
+    <value>大文字・小文字の変換</value>
+  </data>
+  <data name="RenameModeNumber" xml:space="preserve">
+    <value>名前と連番</value>
+  </data>
+  <data name="RenameModeReplace" xml:space="preserve">
+    <value>検索と置換</value>
+  </data>
+  <data name="RenameNew" xml:space="preserve">
+    <value>新しい名前</value>
+  </data>
+  <data name="RenameNumberHint" xml:space="preserve">
+    <value>一覧の順に番号を付けます。下の設定で選択しない限り、拡張子は変更しません。</value>
+  </data>
+  <data name="RenameNumberRequired" xml:space="preserve">
+    <value>名前と整数の開始番号を入力してください。</value>
+  </data>
+  <data name="RenameOperation" xml:space="preserve">
+    <value>変更方法</value>
+  </data>
+  <data name="RenameOriginal" xml:space="preserve">
+    <value>現在の名前</value>
+  </data>
+  <data name="RenamePrefix" xml:space="preserve">
+    <value>名前の前に追加</value>
+  </data>
+  <data name="RenameRemoveHint" xml:space="preserve">
+    <value>空欄にすると一致した文字列を削除します</value>
+  </data>
+  <data name="RenameReplace" xml:space="preserve">
+    <value>置換後の文字列</value>
+  </data>
+  <data name="RenameResetRules" xml:space="preserve">
+    <value>条件をリセット</value>
+  </data>
+  <data name="RenameStart" xml:space="preserve">
+    <value>開始番号</value>
+  </data>
+  <data name="RenameSuffix" xml:space="preserve">
+    <value>名前の後に追加</value>
+  </data>
+  <data name="RenameSummary" xml:space="preserve">
+    <value>{0} 項目選択 · {1} 項目変更 · {2} 件の問題</value>
+  </data>
+  <data name="RenameUnchanged" xml:space="preserve">
+    <value>変更なし</value>
+  </data>
+  <data name="RenameUndoHint" xml:space="preserve">
+    <value>名前の変更後は Ctrl+Z で元に戻せます</value>
+  </data>
+  <data name="RenameUpper" xml:space="preserve">
+    <value>大文字</value>
+  </data>
+  <data name="ResizePreview" xml:space="preserve">
+    <value>ドラッグしてプレビューのサイズを変更</value>
+  </data>
+  <data name="ResizeVertical" xml:space="preserve">
+    <value>上下にドラッグして高さを変更</value>
+  </data>
+  <data name="Restore" xml:space="preserve">
+    <value>復元</value>
+  </data>
+  <data name="RestoreAll" xml:space="preserve">
+    <value>すべて復元</value>
+  </data>
+  <data name="RestoreLastSessionDescription" xml:space="preserve">
+    <value>FilesMate の起動時に、前回開いていたタブとフォルダーを復元します。</value>
+  </data>
+  <data name="RestoreLastSessionTitle" xml:space="preserve">
+    <value>前回のタブを復元</value>
+  </data>
+  <data name="RestoreSidebarDefaults" xml:space="preserve">
+    <value>既定に戻す</value>
+  </data>
+  <data name="ResultOrder" xml:space="preserve">
+    <value>結果の優先順位</value>
+  </data>
+  <data name="ResultOrder_Edit" xml:space="preserve">
+    <value>順序を変更</value>
+  </data>
+  <data name="ResultOrder_Hint" xml:space="preserve">
+    <value>上にある種類を優先して表示します。変更はファイルマネージャーと共有されます。</value>
+  </data>
+  <data name="ResultOrder_SharedHint" xml:space="preserve">
+    <value>ファイルマネージャーと共通の設定です</value>
+  </data>
+  <data name="Retry" xml:space="preserve">
+    <value>再試行</value>
+  </data>
+  <data name="RevealFile" xml:space="preserve">
+    <value>ファイルの場所を開く</value>
+  </data>
+  <data name="RevealFileShortcut" xml:space="preserve">
+    <value>ファイルの場所を開く · Ctrl+Enter</value>
+  </data>
+  <data name="SafetySection" xml:space="preserve">
+    <value>安全性</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="SaveTo" xml:space="preserve">
+    <value>保存先</value>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>保存しました</value>
+  </data>
+  <data name="SavedAutomatically" xml:space="preserve">
+    <value>自動保存しました</value>
+  </data>
+  <data name="SavedPrefix" xml:space="preserve">
+    <value>保存済み · </value>
+  </data>
+  <data name="SearchAutoRefresh" xml:space="preserve">
+    <value>インデックスを自動更新</value>
+  </data>
+  <data name="SearchAutoRefreshDescription" xml:space="preserve">
+    <value>初回登録後、FilesMate の起動中にインデックスが 1 日以上古くなるとバックグラウンドで再作成します。</value>
+  </data>
+  <data name="SearchCancel" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="SearchChangeLocation" xml:space="preserve">
+    <value>変更</value>
+  </data>
+  <data name="SearchDepth" xml:space="preserve">
+    <value>フォルダーの最大階層</value>
+  </data>
+  <data name="SearchDepthDescription" xml:space="preserve">
+    <value>既定では選択したドライブから 6 階層まで登録します。「制限なし」ではドライブ全体を検索します。</value>
+  </data>
+  <data name="SearchDepthUnlimited" xml:space="preserve">
+    <value>制限なし</value>
+  </data>
+  <data name="SearchDone" xml:space="preserve">
+    <value>インデックスへの登録が完了しました。</value>
+  </data>
+  <data name="SearchDrives" xml:space="preserve">
+    <value>ドライブ</value>
+  </data>
+  <data name="SearchExclusions" xml:space="preserve">
+    <value>除外するパス</value>
+  </data>
+  <data name="SearchExclusionsDescription" xml:space="preserve">
+    <value>C:\Windows や node_modules など、パスまたはフォルダー名を 1 行に 1 つ入力します。</value>
+  </data>
+  <data name="SearchIdle" xml:space="preserve">
+    <value>登録を開始するまでファイル名インデックスは作成されません。</value>
+  </data>
+  <data name="SearchIndex" xml:space="preserve">
+    <value>登録を開始</value>
+  </data>
+  <data name="SearchIndexDescription" xml:space="preserve">
+    <value>選択したドライブをスキャンします。除外フォルダーはスキップします。ドライブ全体の処理には時間がかかる場合があります。</value>
+  </data>
+  <data name="SearchIndexSection" xml:space="preserve">
+    <value>インデックス</value>
+  </data>
+  <data name="SearchIndexTitle" xml:space="preserve">
+    <value>ファイル名インデックス</value>
+  </data>
+  <data name="SearchLead" xml:space="preserve">
+    <value>ファイル名をインデックスに登録すると、アドレスバー横の検索欄から検索できます。初回登録後は、1 日以上経過したインデックスをバックグラウンドで更新します。</value>
+  </data>
+  <data name="SearchLocation" xml:space="preserve">
+    <value>インデックスファイル</value>
+  </data>
+  <data name="SearchParallel" xml:space="preserve">
+    <value>複数のドライブをスキャン</value>
+  </data>
+  <data name="SearchParallelDescription" xml:space="preserve">
+    <value>選択した複数のドライブを処理対象にします。登録はバックグラウンドで行われます。</value>
+  </data>
+  <data name="SearchPlaceholder" xml:space="preserve">
+    <value>ファイルを検索</value>
+  </data>
+  <data name="SearchPlaceholderFolder" xml:space="preserve">
+    <value>このフォルダーを検索</value>
+  </data>
+  <data name="SearchPlaceholderHome" xml:space="preserve">
+    <value>すべての場所を検索</value>
+  </data>
+  <data name="SearchProgress" xml:space="preserve">
+    <value>進行状況</value>
+  </data>
+  <data name="SearchRankArchive" xml:space="preserve">
+    <value>圧縮ファイル</value>
+  </data>
+  <data name="SearchRankAudio" xml:space="preserve">
+    <value>音楽</value>
+  </data>
+  <data name="SearchRankCode" xml:space="preserve">
+    <value>コード</value>
+  </data>
+  <data name="SearchRankDescription" xml:space="preserve">
+    <value>ドラッグして種類ごとの表示順を変更できます。同じ種類の項目は名前順に並びます。</value>
+  </data>
+  <data name="SearchRankDocument" xml:space="preserve">
+    <value>文書</value>
+  </data>
+  <data name="SearchRankFolder" xml:space="preserve">
+    <value>フォルダー</value>
+  </data>
+  <data name="SearchRankImage" xml:space="preserve">
+    <value>画像</value>
+  </data>
+  <data name="SearchRankOther" xml:space="preserve">
+    <value>その他のファイル</value>
+  </data>
+  <data name="SearchRankProgram" xml:space="preserve">
+    <value>アプリ</value>
+  </data>
+  <data name="SearchRankSection" xml:space="preserve">
+    <value>検索結果の優先順位</value>
+  </data>
+  <data name="SearchRankShortcut" xml:space="preserve">
+    <value>ショートカット</value>
+  </data>
+  <data name="SearchRankVideo" xml:space="preserve">
+    <value>動画</value>
+  </data>
+  <data name="SearchShortcut" xml:space="preserve">
+    <value>検索ショートカット</value>
+  </data>
+  <data name="SearchStatErrors" xml:space="preserve">
+    <value>スキップ</value>
+  </data>
+  <data name="SearchStatFiles" xml:space="preserve">
+    <value>ファイル</value>
+  </data>
+  <data name="SearchStatFolders" xml:space="preserve">
+    <value>フォルダー</value>
+  </data>
+  <data name="SearchStatIndexed" xml:space="preserve">
+    <value>登録済み</value>
+  </data>
+  <data name="SearchTitle" xml:space="preserve">
+    <value>検索</value>
+  </data>
+  <data name="Search_AllIndexed" xml:space="preserve">
+    <value>登録済みのファイルをすべて検索</value>
+  </data>
+  <data name="Search_AllLocations" xml:space="preserve">
+    <value>インデックス登録済みの場所をすべて検索</value>
+  </data>
+  <data name="Search_AppEntryHint" xml:space="preserve">
+    <value>これはアプリの起動項目です。ファイル操作を行うには保存場所を開いてください。</value>
+  </data>
+  <data name="Search_AwaitingSetup" xml:space="preserve">
+    <value>初回設定を待っています</value>
+  </data>
+  <data name="Search_BackgroundCompactHint" xml:space="preserve">
+    <value>ファイルウィンドウを閉じても使用できます</value>
+  </data>
+  <data name="Search_BackgroundOff" xml:space="preserve">
+    <value>バックグラウンド検索はオフです</value>
+  </data>
+  <data name="Search_CheckIndex" xml:space="preserve">
+    <value>インデックス設定を確認</value>
+  </data>
+  <data name="Search_Clear" xml:space="preserve">
+    <value>検索をクリア</value>
+  </data>
+  <data name="Search_ClearQuery" xml:space="preserve">
+    <value>検索語をクリア</value>
+  </data>
+  <data name="Search_ComponentMissing" xml:space="preserve">
+    <value>グローバル検索のコンポーネントがありません。アプリ全体を再インストールしてください。</value>
+  </data>
+  <data name="Search_ContinueWithout" xml:space="preserve">
+    <value> 検索を無効にして続行できます。</value>
+  </data>
+  <data name="Search_CopyAppHint" xml:space="preserve">
+    <value>アプリ項目は直接起動できます。ファイルをコピーするには先に保存場所を開いてください。</value>
+  </data>
+  <data name="Search_Count" xml:space="preserve">
+    <value>{0} 件が見つかりました</value>
+  </data>
+  <data name="Search_Detecting" xml:space="preserve">
+    <value>バックグラウンド検索を確認中…</value>
+  </data>
+  <data name="Search_EnableFailed" xml:space="preserve">
+    <value>グローバル検索を有効にできませんでした</value>
+  </data>
+  <data name="Search_EnableFailedHint" xml:space="preserve">
+    <value>上のショートカットを変更するか、検索を有効にせず設定を完了してください。後から有効にできます。</value>
+  </data>
+  <data name="Search_ExitWhenHidden" xml:space="preserve">
+    <value>常駐検索はオフです。検索ウィンドウを閉じると終了します。</value>
+  </data>
+  <data name="Search_GlobalShortcut" xml:space="preserve">
+    <value>グローバル検索のショートカット</value>
+  </data>
+  <data name="Search_HiddenHint" xml:space="preserve">
+    <value>非表示は検索結果のみに適用されます。ファイルの削除やアプリのアンインストールは行いません。</value>
+  </data>
+  <data name="Search_HiddenResults" xml:space="preserve">
+    <value>非表示の検索結果</value>
+  </data>
+  <data name="Search_Hide" xml:space="preserve">
+    <value>検索を閉じる</value>
+  </data>
+  <data name="Search_HideEscape" xml:space="preserve">
+    <value>閉じる · Esc</value>
+  </data>
+  <data name="Search_HideFailed" xml:space="preserve">
+    <value>非表示の設定を保存できませんでした：</value>
+  </data>
+  <data name="Search_HideResult" xml:space="preserve">
+    <value>検索から非表示</value>
+  </data>
+  <data name="Search_HotkeyRegistered" xml:space="preserve">
+    <value>バックグラウンドで実行中 · {0} 登録済み</value>
+  </data>
+  <data name="Search_HotkeyUnregistered" xml:space="preserve">
+    <value>バックグラウンドで実行中 · {0} を登録できません。他のアプリが使用している可能性があります。別の組み合わせを選択してください。</value>
+  </data>
+  <data name="Search_IndexUnavailable" xml:space="preserve">
+    <value>インデックスを利用できません。設定を確認してください。</value>
+  </data>
+  <data name="Search_LeadShortcut" xml:space="preserve">
+    <value>ファイルマネージャーを開かずに、ショートカットでファイルやアプリを検索できます。</value>
+  </data>
+  <data name="Search_LoadingCount" xml:space="preserve">
+    <value>{0} 件以上 · 読み込み中</value>
+  </data>
+  <data name="Search_LoginCompactHint" xml:space="preserve">
+    <value>サインイン後に待機します。常駐検索がオフの場合は起動しません</value>
+  </data>
+  <data name="Search_Looking" xml:space="preserve">
+    <value>検索中…</value>
+  </data>
+  <data name="Search_ManageHidden" xml:space="preserve">
+    <value>非表示の項目を管理</value>
+  </data>
+  <data name="Search_ManageIndex" xml:space="preserve">
+    <value>インデックスを管理</value>
+  </data>
+  <data name="Search_ManageIndexHint" xml:space="preserve">
+    <value>ファイルマネージャーの「設定 → 検索」で管理します</value>
+  </data>
+  <data name="Search_ManagedAppHint" xml:space="preserve">
+    <value>このアプリは Windows が管理しており、通常のファイルパスはありません。</value>
+  </data>
+  <data name="Search_ManagerMissing" xml:space="preserve">
+    <value>FilesMate が見つかりません。インストール先からグローバル検索を起動し直してください。</value>
+  </data>
+  <data name="Search_MoreCount" xml:space="preserve">
+    <value>{0} 件以上の結果</value>
+  </data>
+  <data name="Search_NoCategoryResults" xml:space="preserve">
+    <value>この分類に一致する項目はありません。「すべて」をお試しください。</value>
+  </data>
+  <data name="Search_NoResultsHint" xml:space="preserve">
+    <value>一致する項目はありません。短い検索語を試すか、登録対象の場所を確認してください。</value>
+  </data>
+  <data name="Search_NoShortcut" xml:space="preserve">
+    <value>このアプリには独立したショートカットがありません。検索結果から非表示にできます。</value>
+  </data>
+  <data name="Search_NotResponding" xml:space="preserve">
+    <value>バックグラウンド検索が応答していません。後でもう一度お試しください。</value>
+  </data>
+  <data name="Search_NotRunningHint" xml:space="preserve">
+    <value>バックグラウンド検索は実行されていません。「グローバル検索を開く」で起動できます。</value>
+  </data>
+  <data name="Search_Open" xml:space="preserve">
+    <value>グローバル検索を開く</value>
+  </data>
+  <data name="Search_OpenSuffix" xml:space="preserve">
+    <value> で検索を開く</value>
+  </data>
+  <data name="Search_Palette" xml:space="preserve">
+    <value>検索ウィンドウ</value>
+  </data>
+  <data name="Search_Partial" xml:space="preserve">
+    <value>{0} 件を表示中（一部）。検索条件を絞ってください。</value>
+  </data>
+  <data name="Search_PreviewCompactHint" xml:space="preserve">
+    <value>選択したファイルを右側に表示します。マウスを重ねるだけでは読み込みません</value>
+  </data>
+  <data name="Search_PreviewFiles" xml:space="preserve">
+    <value>検索でファイルをプレビュー</value>
+  </data>
+  <data name="Search_PreviewHint" xml:space="preserve">
+    <value>結果を選択したときにプレビューを読み込みます。マウスを重ねるだけでは読み込みません。</value>
+  </data>
+  <data name="Search_QueryHint" xml:space="preserve">
+    <value>ファイルやフォルダーを検索…</value>
+  </data>
+  <data name="Search_Residency" xml:space="preserve">
+    <value>グローバル検索を常駐させる</value>
+  </data>
+  <data name="Search_ResidencyHint" xml:space="preserve">
+    <value>ファイルウィンドウを閉じてもショートカットで検索を開けます。非表示中はショートカットのみを待機し、検索処理は停止します。</value>
+  </data>
+  <data name="Search_ResidencyOffHint" xml:space="preserve">
+    <value>常駐検索はオフです。有効にするといつでもショートカットを使用できます。</value>
+  </data>
+  <data name="Search_ResidencyStopped" xml:space="preserve">
+    <value>常駐検索をオフにしたため、終了しました</value>
+  </data>
+  <data name="Search_RestoreHiddenFailed" xml:space="preserve">
+    <value>非表示の項目を復元できませんでした：</value>
+  </data>
+  <data name="Search_ResultCount" xml:space="preserve">
+    <value>{0} 件の結果</value>
+  </data>
+  <data name="Search_ResultsChanged" xml:space="preserve">
+    <value>検索結果が更新されました。ファイルを選択し直してください。</value>
+  </data>
+  <data name="Search_Searching" xml:space="preserve">
+    <value>検索中…</value>
+  </data>
+  <data name="Search_Settings" xml:space="preserve">
+    <value>検索設定</value>
+  </data>
+  <data name="Search_SlowHint" xml:space="preserve">
+    <value>検索に時間がかかっています。検索語を絞るか、下にスクロールして再試行してください。</value>
+  </data>
+  <data name="Search_StaleFiles" xml:space="preserve">
+    <value>一部のファイルは移動または削除されています。再度検索してください。</value>
+  </data>
+  <data name="Search_StartAtLogin" xml:space="preserve">
+    <value>サインイン時にグローバル検索を起動</value>
+  </data>
+  <data name="Search_StartAtLoginHint" xml:space="preserve">
+    <value>Windows へのサインイン後すぐに検索ショートカットを使用できます。</value>
+  </data>
+  <data name="Search_StartFailed" xml:space="preserve">
+    <value>グローバル検索を起動できませんでした：</value>
+  </data>
+  <data name="Search_StartTimeout" xml:space="preserve">
+    <value>グローバル検索の起動がタイムアウトしました。後でもう一度お試しください。</value>
+  </data>
+  <data name="Search_Starting" xml:space="preserve">
+    <value>グローバル検索を起動中…</value>
+  </data>
+  <data name="Search_StartupDisabledByWindows" xml:space="preserve">
+    <value>Windows の「設定 › アプリ › スタートアップ」で FilesMate.GlobalSearch が無効です。サインイン時に起動するにはそこで有効にしてください。</value>
+  </data>
+  <data name="Search_StartupHint" xml:space="preserve">
+    <value>Windows へのサインイン後にショートカットを使用できます。常駐をオフにすると自動起動も停止します。</value>
+  </data>
+  <data name="Search_Timeout" xml:space="preserve">
+    <value>検索がタイムアウトしました。ファイル名を詳しく入力するか、検索範囲を絞ってください。</value>
+  </data>
+  <data name="Search_TrayAction" xml:space="preserve">
+    <value>トレイアイコンの左クリックで開く画面</value>
+  </data>
+  <data name="Search_TypeToStart" xml:space="preserve">
+    <value>サブフォルダーも検索対象に含まれます。</value>
+  </data>
+  <data name="Search_Unavailable" xml:space="preserve">
+    <value>検索できませんでした。設定の「検索」でインデックスを確認してください。</value>
+  </data>
+  <data name="Search_WindowTitle" xml:space="preserve">
+    <value>FilesMate グローバル検索</value>
+  </data>
+  <data name="SelectSameType" xml:space="preserve">
+    <value>同じ種類を選択</value>
+  </data>
+  <data name="Selection_Count" xml:space="preserve">
+    <value>{0} 項目を選択</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="SettingsAbout" xml:space="preserve">
+    <value>このアプリについて</value>
+  </data>
+  <data name="SettingsAdvanced" xml:space="preserve">
+    <value>詳細設定</value>
+  </data>
+  <data name="SettingsAppearance" xml:space="preserve">
+    <value>外観</value>
+  </data>
+  <data name="SettingsFilesAndFolders" xml:space="preserve">
+    <value>ファイルとフォルダー</value>
+  </data>
+  <data name="SettingsGeneral" xml:space="preserve">
+    <value>全般</value>
+  </data>
+  <data name="SettingsKeyboard" xml:space="preserve">
+    <value>キーボード</value>
+  </data>
+  <data name="SettingsSearch" xml:space="preserve">
+    <value>検索</value>
+  </data>
+  <data name="SettingsTags" xml:space="preserve">
+    <value>タグ</value>
+  </data>
+  <data name="Settings_SaveFailed" xml:space="preserve">
+    <value>設定を保存できませんでした</value>
+  </data>
+  <data name="Settings_SaveFailedDetail" xml:space="preserve">
+    <value>設定を保存できませんでした：</value>
+  </data>
+  <data name="Setup_Guide" xml:space="preserve">
+    <value>機能の初期設定</value>
+  </data>
+  <data name="Setup_GuideHint" xml:space="preserve">
+    <value>インデックス、検索、お気に入り、アルファベットナビゲーション、外観、アクセントカラーを選択します。</value>
+  </data>
+  <data name="Setup_Index" xml:space="preserve">
+    <value>ファイルのインデックスを自動作成</value>
+  </data>
+  <data name="Setup_IndexDescription" xml:space="preserve">
+    <value>ファイル名を登録して高速に検索します。新規設定では利用可能な全ドライブを 6 階層まで登録します。</value>
+  </data>
+  <data name="Setup_Later" xml:space="preserve">
+    <value>後で設定</value>
+  </data>
+  <data name="Setup_Lead" xml:space="preserve">
+    <value>使い方に合わせて選択してください。後から設定で変更できます。</value>
+  </data>
+  <data name="Setup_Reopen" xml:space="preserve">
+    <value>選択し直す</value>
+  </data>
+  <data name="Setup_SearchDescription" xml:space="preserve">
+    <value>ファイルマネージャーを閉じても、下のショートカットでファイルやアプリを検索できます。</value>
+  </data>
+  <data name="Setup_SkipSearch" xml:space="preserve">
+    <value>検索を有効にせず続行</value>
+  </data>
+  <data name="Setup_Start" xml:space="preserve">
+    <value>使い始める</value>
+  </data>
+  <data name="Setup_Title" xml:space="preserve">
+    <value>使用する機能を選択</value>
+  </data>
+  <data name="Share_NotReady" xml:space="preserve">
+    <value>共有の準備ができていません。</value>
+  </data>
+  <data name="Shelf_Add" xml:space="preserve">
+    <value>ファイルシェルフに追加</value>
+  </data>
+  <data name="Shelf_Browse" xml:space="preserve">
+    <value>転送先フォルダーを選択</value>
+  </data>
+  <data name="Shelf_Cancel" xml:space="preserve">
+    <value>現在の項目が完了したら停止</value>
+  </data>
+  <data name="Shelf_Cancelled" xml:space="preserve">
+    <value>停止しました：{0} 項目を転送済み</value>
+  </data>
+  <data name="Shelf_Capacity" xml:space="preserve">
+    <value>シェルフには最大 {0} 項目を追加できます。</value>
+  </data>
+  <data name="Shelf_Clear" xml:space="preserve">
+    <value>シェルフを空にする</value>
+  </data>
+  <data name="Shelf_Completed" xml:space="preserve">
+    <value>{0} 項目を転送しました</value>
+  </data>
+  <data name="Shelf_Copy" xml:space="preserve">
+    <value>選択した項目を転送先にコピー</value>
+  </data>
+  <data name="Shelf_CopyTo" xml:space="preserve">
+    <value>選択した項目をコピー…</value>
+  </data>
+  <data name="Shelf_Count" xml:space="preserve">
+    <value>{0} 項目</value>
+  </data>
+  <data name="Shelf_Destination" xml:space="preserve">
+    <value>転送先フォルダー</value>
+  </data>
+  <data name="Shelf_Empty" xml:space="preserve">
+    <value>シェルフは空です</value>
+  </data>
+  <data name="Shelf_InvalidDestination" xml:space="preserve">
+    <value>存在するフォルダーを転送先に選択してください。</value>
+  </data>
+  <data name="Shelf_Move" xml:space="preserve">
+    <value>選択した項目を転送先に移動</value>
+  </data>
+  <data name="Shelf_MoveTo" xml:space="preserve">
+    <value>選択した項目を移動…</value>
+  </data>
+  <data name="Shelf_Progress" xml:space="preserve">
+    <value>転送中：{0} 項目完了</value>
+  </data>
+  <data name="Shelf_Remove" xml:space="preserve">
+    <value>選択した項目をシェルフから外す</value>
+  </data>
+  <data name="Shelf_Title" xml:space="preserve">
+    <value>ファイルシェルフ</value>
+  </data>
+  <data name="ShellLayered" xml:space="preserve">
+    <value>階層型</value>
+  </data>
+  <data name="ShellStyle" xml:space="preserve">
+    <value>インターフェイスのスタイル</value>
+  </data>
+  <data name="ShellStyleDescription" xml:space="preserve">
+    <value>一体型は連続した背景、階層型は色調の違いで領域を分けます。変更はすぐに反映されます。</value>
+  </data>
+  <data name="ShellUnified" xml:space="preserve">
+    <value>一体型</value>
+  </data>
+  <data name="Shortcut_Change" xml:space="preserve">
+    <value>ショートカットを変更</value>
+  </data>
+  <data name="Shortcut_ChangeConflict" xml:space="preserve">
+    <value>このショートカットは使用中です。元の設定を保持しました。別の組み合わせを選ぶか、使用中のアプリを閉じてください。</value>
+  </data>
+  <data name="Shortcut_CloseTab" xml:space="preserve">
+    <value>タブを閉じる</value>
+  </data>
+  <data name="Shortcut_Conflict" xml:space="preserve">
+    <value>{0} で使用されています。</value>
+  </data>
+  <data name="Shortcut_DeleteHint" xml:space="preserve">
+    <value>
+
+一覧のショートカットのみを削除します。リンク先のプログラムは削除もアンインストールもされません。</value>
+  </data>
+  <data name="Shortcut_DeleteMenu" xml:space="preserve">
+    <value>ショートカットを削除…</value>
+  </data>
+  <data name="Shortcut_EditAddress" xml:space="preserve">
+    <value>アドレスを編集</value>
+  </data>
+  <data name="Shortcut_ExampleF" xml:space="preserve">
+    <value>例：Ctrl+Alt+F</value>
+  </data>
+  <data name="Shortcut_ExampleK" xml:space="preserve">
+    <value>例：Ctrl+Alt+K</value>
+  </data>
+  <data name="Shortcut_FilterFolder" xml:space="preserve">
+    <value>ファイルを検索</value>
+  </data>
+  <data name="Shortcut_InUse" xml:space="preserve">
+    <value>{0} は使用されています</value>
+  </data>
+  <data name="Shortcut_InUseHint" xml:space="preserve">
+    <value>他のアプリがこのショートカットを使用しています。そのアプリを閉じるか、設定でショートカットを変更してください。</value>
+  </data>
+  <data name="Shortcut_Invalid" xml:space="preserve">
+    <value>ショートカットが無効です</value>
+  </data>
+  <data name="Shortcut_InvalidHint" xml:space="preserve">
+    <value>Alt、Ctrl、Shift と、スペース、英字、数字、F12 以外のファンクションキーを組み合わせてください。「キーを入力」から直接入力することもできます。</value>
+  </data>
+  <data name="Shortcut_Lead" xml:space="preserve">
+    <value>ショートカットをクリックして、新しいキーの組み合わせを押してください。</value>
+  </data>
+  <data name="Shortcut_PressCombination" xml:space="preserve">
+    <value>キーの組み合わせを押してください…</value>
+  </data>
+  <data name="Shortcut_PressKeys" xml:space="preserve">
+    <value>キーを押してください</value>
+  </data>
+  <data name="Shortcut_Preview" xml:space="preserve">
+    <value>プレビューの切り替え</value>
+  </data>
+  <data name="Shortcut_Record" xml:space="preserve">
+    <value>キーを入力</value>
+  </data>
+  <data name="Shortcut_RecordHint" xml:space="preserve">
+    <value>クリックしてキーの組み合わせを押してください</value>
+  </data>
+  <data name="Shortcut_Redo" xml:space="preserve">
+    <value>やり直す</value>
+  </data>
+  <data name="Shortcut_RegisterFailed" xml:space="preserve">
+    <value>ショートカットを登録できませんでした（Windows エラー {0}）。別の組み合わせをお試しください。</value>
+  </data>
+  <data name="Shortcut_RestoreDefaults" xml:space="preserve">
+    <value>既定に戻す</value>
+  </data>
+  <data name="Shortcut_SaveFailed" xml:space="preserve">
+    <value>ショートカットを保存できませんでした。</value>
+  </data>
+  <data name="Shortcut_TryAnother" xml:space="preserve">
+    <value>別の組み合わせを押してください…</value>
+  </data>
+  <data name="Shortcut_Undo" xml:space="preserve">
+    <value>元に戻す</value>
+  </data>
+  <data name="Shortcut_ValidKeys" xml:space="preserve">
+    <value>Alt、Ctrl、Shift と、スペース、英字、数字、F12 以外のファンクションキーを組み合わせてください。</value>
+  </data>
+  <data name="Shortcut_WinUnsupported" xml:space="preserve">
+    <value>Windows キーは使用できません</value>
+  </data>
+  <data name="ShortcutsBody" xml:space="preserve">
+    <value>Enter で開く。Backspace または Alt+Up で親フォルダーへ。Alt+Left / Alt+Right で履歴を移動。
+Ctrl+T で新しいタブ。Ctrl+W でタブを閉じる。Ctrl+L でアドレス。Ctrl+F で検索。F5 で更新。Ctrl+Z で元に戻す。Ctrl+Y でやり直す。</value>
+  </data>
+  <data name="ShortcutsHeader" xml:space="preserve">
+    <value>キーボード</value>
+  </data>
+  <data name="ShortcutsTitle" xml:space="preserve">
+    <value>キーボードショートカット</value>
+  </data>
+  <data name="ShowExtensionsDescription" xml:space="preserve">
+    <value>ファイル名の末尾に拡張子を表示します。</value>
+  </data>
+  <data name="ShowExtensionsTitle" xml:space="preserve">
+    <value>ファイルの拡張子を表示</value>
+  </data>
+  <data name="ShowFolderSizesDescription" xml:space="preserve">
+    <value>フォルダーのサイズを一覧に表示します。大きなフォルダーでは処理に時間がかかるため、既定ではオフです。</value>
+  </data>
+  <data name="ShowFolderSizesTitle" xml:space="preserve">
+    <value>フォルダーのサイズを表示</value>
+  </data>
+  <data name="ShowHiddenFilesDescription" xml:space="preserve">
+    <value>隠し項目とシステム項目をフォルダー内に表示します。</value>
+  </data>
+  <data name="ShowHiddenFilesTitle" xml:space="preserve">
+    <value>隠しファイルを表示</value>
+  </data>
+  <data name="ShowNavigation" xml:space="preserve">
+    <value>ナビゲーションを表示</value>
+  </data>
+  <data name="SidebarDefaultsRestored" xml:space="preserve">
+    <value>サイドバーの項目を既定に戻しました。</value>
+  </data>
+  <data name="SidebarPinsDescription" xml:space="preserve">
+    <value>各項目のメニューからピン留めを解除できます。ここでは既定の項目に戻せます。</value>
+  </data>
+  <data name="SidebarPinsTitle" xml:space="preserve">
+    <value>サイドバーのピン留め</value>
+  </data>
+  <data name="SidebarSection" xml:space="preserve">
+    <value>サイドバー</value>
+  </data>
+  <data name="Sidebar_AddCloud" xml:space="preserve">
+    <value>クラウドストレージを追加</value>
+  </data>
+  <data name="Sidebar_AddCloudFolder" xml:space="preserve">
+    <value>クラウドフォルダーを追加</value>
+  </data>
+  <data name="Sidebar_CloudEntryHint" xml:space="preserve">
+    <value>サイドバーの項目のみを変更します。ファイルやクラウドのアカウントには影響しません。削除した項目は「+」から再追加できます。</value>
+  </data>
+  <data name="Sidebar_CloudInvalid" xml:space="preserve">
+    <value>名前と、存在するフォルダーの絶対パスを入力してください。</value>
+  </data>
+  <data name="Sidebar_CloudPath" xml:space="preserve">
+    <value>ローカルの同期フォルダー</value>
+  </data>
+  <data name="Sidebar_CloudSaveFailed" xml:space="preserve">
+    <value>この項目を保存できませんでした。もう一度お試しください。</value>
+  </data>
+  <data name="Sidebar_Collapse" xml:space="preserve">
+    <value>ナビゲーションを折りたたむ</value>
+  </data>
+  <data name="Sidebar_DisconnectNetworkDrive" xml:space="preserve">
+    <value>ネットワークドライブの切断</value>
+  </data>
+  <data name="Sidebar_EditCloud" xml:space="preserve">
+    <value>クラウドの項目を編集</value>
+  </data>
+  <data name="Sidebar_Eject" xml:space="preserve">
+    <value>取り出し</value>
+  </data>
+  <data name="Sidebar_Expand" xml:space="preserve">
+    <value>ナビゲーションを展開</value>
+  </data>
+  <data name="Sidebar_MapNetworkDrive" xml:space="preserve">
+    <value>ネットワークドライブの割り当て</value>
+  </data>
+  <data name="Sidebar_OneDriveSettings" xml:space="preserve">
+    <value>OneDrive の設定</value>
+  </data>
+  <data name="Sidebar_PinFolder" xml:space="preserve">
+    <value>フォルダーをピン留め</value>
+  </data>
+  <data name="Sidebar_RemoveCloud" xml:space="preserve">
+    <value>クラウドの項目を削除</value>
+  </data>
+  <data name="Sort" xml:space="preserve">
+    <value>並べ替え</value>
+  </data>
+  <data name="SortByModified" xml:space="preserve">
+    <value>更新日時で並べ替え</value>
+  </data>
+  <data name="SortByName" xml:space="preserve">
+    <value>名前で並べ替え</value>
+  </data>
+  <data name="SortBySize" xml:space="preserve">
+    <value>サイズで並べ替え</value>
+  </data>
+  <data name="SortByType" xml:space="preserve">
+    <value>種類で並べ替え</value>
+  </data>
+  <data name="Sort_MixedPinyin" xml:space="preserve">
+    <value>中国語と英字をピンイン順で並べる</value>
+  </data>
+  <data name="Sort_MixedPinyinHint" xml:space="preserve">
+    <value>名前順では中国語のピンインを英字と一緒に並べます（例：阿と A）。オフでは中国語を別に並べます。複数の読みがある字は辞書の既定の読みを使います。</value>
+  </data>
+  <data name="Sort_Modified" xml:space="preserve">
+    <value>更新日時</value>
+  </data>
+  <data name="Sort_Name" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="Sort_Size" xml:space="preserve">
+    <value>サイズ</value>
+  </data>
+  <data name="Sort_Type" xml:space="preserve">
+    <value>種類</value>
+  </data>
+  <data name="StartAtLogin" xml:space="preserve">
+    <value>サインイン時に起動</value>
+  </data>
+  <data name="StartupFolderDescription" xml:space="preserve">
+    <value>新しいウィンドウにホームまたはデスクトップを表示します。</value>
+  </data>
+  <data name="StartupFolderTitle" xml:space="preserve">
+    <value>起動時に開く場所</value>
+  </data>
+  <data name="StartupSection" xml:space="preserve">
+    <value>起動</value>
+  </data>
+  <data name="Startup_SaveFailed" xml:space="preserve">
+    <value>自動起動を設定できませんでした：</value>
+  </data>
+  <data name="StatusBar" xml:space="preserve">
+    <value>ステータスバー</value>
+  </data>
+  <data name="StatusBarDescription" xml:space="preserve">
+    <value>ファイル一覧の下に項目数と選択状態を表示します。</value>
+  </data>
+  <data name="Status_FolderCalculating" xml:space="preserve">
+    <value>フォルダーのサイズを計算中…</value>
+  </data>
+  <data name="Status_FolderSize" xml:space="preserve">
+    <value>フォルダーのサイズ：{0}</value>
+  </data>
+  <data name="Status_FolderUnavailable" xml:space="preserve">
+    <value>フォルダーのサイズを取得できません</value>
+  </data>
+  <data name="Status_Free" xml:space="preserve">
+    <value>空き領域 {0}</value>
+  </data>
+  <data name="Status_FreeOfTotal" xml:space="preserve">
+    <value>空き領域 {0} / 合計 {1}</value>
+  </data>
+  <data name="Status_Items" xml:space="preserve">
+    <value>{0} 項目</value>
+  </data>
+  <data name="Status_ItemsCancelled" xml:space="preserve">
+    <value>{0} 項目 · キャンセル済み</value>
+  </data>
+  <data name="Status_ItemsFailed" xml:space="preserve">
+    <value>{0} 項目 · 読み込み失敗</value>
+  </data>
+  <data name="Status_ItemsLoading" xml:space="preserve">
+    <value>{0} 項目 · 読み込み中</value>
+  </data>
+  <data name="Status_Selected" xml:space="preserve">
+    <value>{0} 項目を選択</value>
+  </data>
+  <data name="SystemLocation_Failed" xml:space="preserve">
+    <value>システムの場所を開けませんでした。名前またはパスを確認してください。</value>
+  </data>
+  <data name="SystemSection" xml:space="preserve">
+    <value>システム</value>
+  </data>
+  <data name="System_ControlPanel" xml:space="preserve">
+    <value>コントロールパネル</value>
+  </data>
+  <data name="System_Libraries" xml:space="preserve">
+    <value>ライブラリ</value>
+  </data>
+  <data name="System_Network" xml:space="preserve">
+    <value>ネットワーク</value>
+  </data>
+  <data name="System_RecycleBin" xml:space="preserve">
+    <value>ごみ箱</value>
+  </data>
+  <data name="TabStateDescription" xml:space="preserve">
+    <value>各タブは場所、履歴、並べ替え、表示方法を個別に保持します。</value>
+  </data>
+  <data name="TabStateTitle" xml:space="preserve">
+    <value>タブごとの移動履歴</value>
+  </data>
+  <data name="Tab_Close" xml:space="preserve">
+    <value>タブを閉じる</value>
+  </data>
+  <data name="Tab_CloseOthers" xml:space="preserve">
+    <value>他のタブを閉じる</value>
+  </data>
+  <data name="Tab_CloseToTheRight" xml:space="preserve">
+    <value>右側のタブを閉じる</value>
+  </data>
+  <data name="Tab_Duplicate" xml:space="preserve">
+    <value>タブを複製</value>
+  </data>
+  <data name="Tab_KeepActive" xml:space="preserve">
+    <value>このタブをアクティブに保つ</value>
+  </data>
+  <data name="Tab_MemoryAggressive" xml:space="preserve">
+    <value>積極的 · 2 分</value>
+  </data>
+  <data name="Tab_MemoryBalanced" xml:space="preserve">
+    <value>標準 · 10 分</value>
+  </data>
+  <data name="Tab_MemoryHint" xml:space="preserve">
+    <value>未使用のタブを休止し、選択時に元の場所を復元します。タブのメニューからアクティブ状態を維持できます。</value>
+  </data>
+  <data name="Tab_MemoryMode" xml:space="preserve">
+    <value>メモリ節約</value>
+  </data>
+  <data name="Tab_MemoryModerate" xml:space="preserve">
+    <value>控えめ · 30 分</value>
+  </data>
+  <data name="Tab_MoveToNewWindow" xml:space="preserve">
+    <value>新しいウィンドウに移動</value>
+  </data>
+  <data name="Tab_Reopen" xml:space="preserve">
+    <value>閉じたタブを開き直す</value>
+  </data>
+  <data name="Tab_Suspend" xml:space="preserve">
+    <value>このタブを休止</value>
+  </data>
+  <data name="Tab_SuspendedHint" xml:space="preserve">
+    <value>
+休止中 — 選択して復元</value>
+  </data>
+  <data name="TabsDescription" xml:space="preserve">
+    <value>Ctrl+T で新しいタブにホームを開きます。</value>
+  </data>
+  <data name="TabsSection" xml:space="preserve">
+    <value>タブ</value>
+  </data>
+  <data name="TabsTitle" xml:space="preserve">
+    <value>タブ</value>
+  </data>
+  <data name="TagColorsDescription" xml:space="preserve">
+    <value>短い名前と統一した色を使うと、フォルダー内の項目を見分けやすくなります。</value>
+  </data>
+  <data name="TagColorsTitle" xml:space="preserve">
+    <value>タグの色</value>
+  </data>
+  <data name="TagCreate" xml:space="preserve">
+    <value>タグを作成</value>
+  </data>
+  <data name="TagNamePlaceholder" xml:space="preserve">
+    <value>新しいタグの名前</value>
+  </data>
+  <data name="TagPickerActionHint" xml:space="preserve">
+    <value>選択して適用 · × で解除</value>
+  </data>
+  <data name="TagPickerEmpty" xml:space="preserve">
+    <value>タグはありません。名前を入力して作成してください。</value>
+  </data>
+  <data name="TagPickerHint" xml:space="preserve">
+    <value>タグを選択するか、名前を入力して「完了」を選んでください。</value>
+  </data>
+  <data name="TagPickerPlaceholder" xml:space="preserve">
+    <value>タグを検索または作成</value>
+  </data>
+  <data name="TagPickerTitle" xml:space="preserve">
+    <value>タグ</value>
+  </data>
+  <data name="Tag_Color" xml:space="preserve">
+    <value>色</value>
+  </data>
+  <data name="Tag_Create" xml:space="preserve">
+    <value>作成</value>
+  </data>
+  <data name="Tag_Delete" xml:space="preserve">
+    <value>削除</value>
+  </data>
+  <data name="Tag_DeleteBody" xml:space="preserve">
+    <value>タグ「{0}」を削除しますか？ファイルは削除されませんが、このタグは解除されます。</value>
+  </data>
+  <data name="Tag_DeleteTitle" xml:space="preserve">
+    <value>タグを削除しますか？</value>
+  </data>
+  <data name="Tag_Done" xml:space="preserve">
+    <value>完了</value>
+  </data>
+  <data name="Tag_Edit" xml:space="preserve">
+    <value>タグを編集</value>
+  </data>
+  <data name="Tag_EditTitle" xml:space="preserve">
+    <value>タグを編集</value>
+  </data>
+  <data name="Tag_Empty" xml:space="preserve">
+    <value>タグはありません。作成して始めましょう。</value>
+  </data>
+  <data name="Tag_Name" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="Tag_NameRequired" xml:space="preserve">
+    <value>タグ名を入力してください。</value>
+  </data>
+  <data name="Tag_New" xml:space="preserve">
+    <value>新しいタグ</value>
+  </data>
+  <data name="Tag_Remove" xml:space="preserve">
+    <value>解除</value>
+  </data>
+  <data name="TagsLead" xml:space="preserve">
+    <value>色付きのタグを作成して、ファイルを整理します。</value>
+  </data>
+  <data name="TagsSection" xml:space="preserve">
+    <value>登録済みのタグ</value>
+  </data>
+  <data name="TagsTitle" xml:space="preserve">
+    <value>タグ</value>
+  </data>
+  <data name="Tags_NotReady" xml:space="preserve">
+    <value>タグの準備ができていません。</value>
+  </data>
+  <data name="ThemeDark" xml:space="preserve">
+    <value>ダーク</value>
+  </data>
+  <data name="ThemeDescription" xml:space="preserve">
+    <value>ライト、ダーク、または Windows の設定に合わせます。</value>
+  </data>
+  <data name="ThemeLight" xml:space="preserve">
+    <value>ライト</value>
+  </data>
+  <data name="ThemeSection" xml:space="preserve">
+    <value>アプリのテーマ</value>
+  </data>
+  <data name="ThemeSystem" xml:space="preserve">
+    <value>システムに合わせる</value>
+  </data>
+  <data name="Toolbar" xml:space="preserve">
+    <value>ツールバー</value>
+  </data>
+  <data name="ToolbarDescription" xml:space="preserve">
+    <value>アドレスバーの近くに並べ替えと表示方法のボタンを表示します。</value>
+  </data>
+  <data name="Transfer_ApplyAll" xml:space="preserve">
+    <value>今回の操作で同じ種類の競合にすべて適用</value>
+  </data>
+  <data name="Transfer_ApplyAllCompact" xml:space="preserve">
+    <value>今回の同種の競合すべてに適用</value>
+  </data>
+  <data name="Transfer_Bytes" xml:space="preserve">
+    <value>{0} バイト</value>
+  </data>
+  <data name="Transfer_ConflictHint" xml:space="preserve">
+    <value>「{0}」は既に存在します。処理方法を選択してください。</value>
+  </data>
+  <data name="Transfer_CreateCopy" xml:space="preserve">
+    <value>コピーを作成</value>
+  </data>
+  <data name="Transfer_Details" xml:space="preserve">
+    <value>失敗した項目を表示</value>
+  </data>
+  <data name="Transfer_ExistingLabel" xml:space="preserve">
+    <value>転送先の項目</value>
+  </data>
+  <data name="Transfer_IncomingLabel" xml:space="preserve">
+    <value>転送元の項目</value>
+  </data>
+  <data name="Transfer_InvalidDestination" xml:space="preserve">
+    <value>転送先は項目自身、現在の親フォルダー、または子フォルダーです。別の場所を選択してください。</value>
+  </data>
+  <data name="Transfer_KeepBoth" xml:space="preserve">
+    <value>両方を保持（名前に括弧付きの番号を追加）</value>
+  </data>
+  <data name="Transfer_KeepBothButton" xml:space="preserve">
+    <value>両方を保持</value>
+  </data>
+  <data name="Transfer_LinkHint" xml:space="preserve">
+    <value>転送先はリンクのため置き換えません。両方を保持するか、スキップしてください。</value>
+  </data>
+  <data name="Transfer_Merge" xml:space="preserve">
+    <value>フォルダーを統合（内部の同名ファイルは確認）</value>
+  </data>
+  <data name="Transfer_Newer" xml:space="preserve">
+    <value>更新日時が新しい</value>
+  </data>
+  <data name="Transfer_NumberedName" xml:space="preserve">
+    <value>両方を保持する場合の名前：{0}</value>
+  </data>
+  <data name="Transfer_Replace" xml:space="preserve">
+    <value>既存のファイルを置き換える</value>
+  </data>
+  <data name="Transfer_ReplaceButton" xml:space="preserve">
+    <value>置き換える</value>
+  </data>
+  <data name="Transfer_ReplaceHint" xml:space="preserve">
+    <value>コピー元の内容に置き換えます。このセッションの履歴に残っている間は、元に戻す操作で以前の内容を復元できます。</value>
+  </data>
+  <data name="Transfer_ResultCounts" xml:space="preserve">
+    <value>転送済み {0} 件 · スキップ {1} 件 · 失敗 {2} 件</value>
+  </data>
+  <data name="Transfer_SameItemHint" xml:space="preserve">
+    <value>転送元と転送先は同じ項目のため、自分自身を置き換えることはできません。番号付きのコピーを作成するか、スキップしてください。</value>
+  </data>
+  <data name="Transfer_SameItemTitle" xml:space="preserve">
+    <value>同じ項目です</value>
+  </data>
+  <data name="Transfer_Skipped" xml:space="preserve">
+    <value>{0} 項目をスキップ</value>
+  </data>
+  <data name="Transfer_Source" xml:space="preserve">
+    <value>コピー元：{0}</value>
+  </data>
+  <data name="Transfer_Target" xml:space="preserve">
+    <value>既存の項目：{0}</value>
+  </data>
+  <data name="Transfer_TypeHint" xml:space="preserve">
+    <value>同じ名前のファイルとフォルダーが存在します。統合や直接の置き換えはできません。両方を保持するか、スキップしてください。</value>
+  </data>
+  <data name="Transparency" xml:space="preserve">
+    <value>透明度</value>
+  </data>
+  <data name="TransparencyDescription" xml:space="preserve">
+    <value>すりガラスの透け感を調整します。0% は不透明です。値を上げても背景色と階層のコントラストを保ち、文字を読みやすくします。</value>
+  </data>
+  <data name="TransparencyDisabled" xml:space="preserve">
+    <value>半透明の背景を選び、ガラス効果を有効にすると透明度を調整できます。</value>
+  </data>
+  <data name="Tray_LeftClick" xml:space="preserve">
+    <value>トレイの左クリックで開く画面</value>
+  </data>
+  <data name="Tray_OpenManager" xml:space="preserve">
+    <value>トレイの左クリックでファイルマネージャーを開く</value>
+  </data>
+  <data name="Tray_OpenSearch" xml:space="preserve">
+    <value>トレイの左クリックで検索を開く</value>
+  </data>
+  <data name="Type_File" xml:space="preserve">
+    <value>ファイル</value>
+  </data>
+  <data name="Type_FileSuffix" xml:space="preserve">
+    <value>ファイル</value>
+  </data>
+  <data name="Type_Folder" xml:space="preserve">
+    <value>フォルダー</value>
+  </data>
+  <data name="Undo" xml:space="preserve">
+    <value>元に戻す</value>
+  </data>
+  <data name="Update_Automatic" xml:space="preserve">
+    <value>毎日の初回起動時に更新を確認</value>
+  </data>
+  <data name="Update_Available" xml:space="preserve">
+    <value>FilesMate の新しいバージョンがあります</value>
+  </data>
+  <data name="Update_Busy" xml:space="preserve">
+    <value>更新中です。しばらくお待ちください。</value>
+  </data>
+  <data name="Update_CancelDownload" xml:space="preserve">
+    <value>ダウンロードをキャンセル</value>
+  </data>
+  <data name="Update_Check" xml:space="preserve">
+    <value>更新を確認</value>
+  </data>
+  <data name="Update_CheckFailed" xml:space="preserve">
+    <value>更新を確認できませんでした。接続を確認して再試行してください。</value>
+  </data>
+  <data name="Update_CheckStateFailed" xml:space="preserve">
+    <value>更新確認の状態を保存できませんでした。後でもう一度お試しください。</value>
+  </data>
+  <data name="Update_Checking" xml:space="preserve">
+    <value>更新を確認中…</value>
+  </data>
+  <data name="Update_ChoiceHint" xml:space="preserve">
+    <value>更新がある場合に通知します。インストールするかどうかは選択できます。</value>
+  </data>
+  <data name="Update_Connecting" xml:space="preserve">
+    <value>ダウンロードサーバーに接続中…</value>
+  </data>
+  <data name="Update_Current" xml:space="preserve">
+    <value>最新バージョンです。</value>
+  </data>
+  <data name="Update_Demo" xml:space="preserve">
+    <value>デモ · インストールされません</value>
+  </data>
+  <data name="Update_DemoFooter" xml:space="preserve">
+    <value>このデモではアプリは変更されません</value>
+  </data>
+  <data name="Update_DemoProgress" xml:space="preserve">
+    <value>進行状況のデモです。ダウンロードやインストールは行いません。</value>
+  </data>
+  <data name="Update_Dismiss" xml:space="preserve">
+    <value>更新通知を閉じる</value>
+  </data>
+  <data name="Update_Downloading" xml:space="preserve">
+    <value>更新をダウンロード中</value>
+  </data>
+  <data name="Update_Failed" xml:space="preserve">
+    <value>更新が完了しませんでした。接続を確認するか、後でお試しください。現在のバージョンは引き続き使用できます。</value>
+  </data>
+  <data name="Update_FinishOperations" xml:space="preserve">
+    <value>更新前にファイル操作や名前の編集を完了してください。</value>
+  </data>
+  <data name="Update_FoundPrefix" xml:space="preserve">
+    <value>新しいバージョンがあります：</value>
+  </data>
+  <data name="Update_Install" xml:space="preserve">
+    <value>今すぐ更新</value>
+  </data>
+  <data name="Update_InstallHint" xml:space="preserve">
+    <value>完了後に自動でインストールして再起動</value>
+  </data>
+  <data name="Update_InstallerInvalid" xml:space="preserve">
+    <value>インストーラーの検証に失敗しました。再度ダウンロードしてください。</value>
+  </data>
+  <data name="Update_KeepUsing" xml:space="preserve">
+    <value>現在のバージョンは引き続き使用できます</value>
+  </data>
+  <data name="Update_MetadataInvalid" xml:space="preserve">
+    <value>更新情報の検証に失敗しました。後でもう一度お試しください。</value>
+  </data>
+  <data name="Update_PreserveHint" xml:space="preserve">
+    <value>更新後に FilesMate が再起動します。設定とタブは保持されます。</value>
+  </data>
+  <data name="Update_ReleaseNotes" xml:space="preserve">
+    <value>更新内容</value>
+  </data>
+  <data name="Update_SaveFailed" xml:space="preserve">
+    <value>更新設定を保存できませんでした。もう一度お試しください。</value>
+  </data>
+  <data name="Update_Section" xml:space="preserve">
+    <value>ソフトウェアの更新</value>
+  </data>
+  <data name="Update_Timeout" xml:space="preserve">
+    <value>ダウンロードがタイムアウトしました。後でもう一度お試しください。</value>
+  </data>
+  <data name="Update_Title" xml:space="preserve">
+    <value>FilesMate を更新</value>
+  </data>
+  <data name="Update_VerificationFailed" xml:space="preserve">
+    <value>更新ファイルの検証に失敗しました。インストーラーは実行されていません。後でもう一度お試しください。</value>
+  </data>
+  <data name="Update_Verifying" xml:space="preserve">
+    <value>ダウンロード完了。検証してインストーラーを起動しています…</value>
+  </data>
+  <data name="Update_VersionNotNewer" xml:space="preserve">
+    <value>更新先は現在より新しいバージョンである必要があります。</value>
+  </data>
+  <data name="UseBundledFileIcons" xml:space="preserve">
+    <value>FilesMate のファイルアイコンを使用</value>
+  </data>
+  <data name="UseBundledFileIconsHint" xml:space="preserve">
+    <value>既定でオンです。オフにすると、Windows で関連付けられたアプリのアイコンを使います。すぐに反映され、画像と動画のサムネイルは保持します。</value>
+  </data>
+  <data name="Videos" xml:space="preserve">
+    <value>ビデオ</value>
+  </data>
+  <data name="View_PerFolder" xml:space="preserve">
+    <value>フォルダーごとに記憶</value>
+  </data>
+  <data name="View_Scope" xml:space="preserve">
+    <value>表示設定の適用範囲</value>
+  </data>
+  <data name="View_ScopeHint" xml:space="preserve">
+    <value>一覧・アイコン表示、アイコンのサイズ、並べ替えを管理します。範囲を変更しても既存のフォルダー設定は保持されます。</value>
+  </data>
+  <data name="View_Shared" xml:space="preserve">
+    <value>すべてのフォルダーで共通</value>
+  </data>
+  <data name="View_SharedHint" xml:space="preserve">
+    <value>共通の表示設定を使用中です。どのフォルダーのツールバーからでも表示方法、サイズ、並べ替えを変更できます。</value>
+  </data>
+  <data name="Window_SaveSizeFailed" xml:space="preserve">
+    <value>ウィンドウのサイズを保存できませんでした</value>
+  </data>
+  <data name="WindowsSection" xml:space="preserve">
+    <value>ウィンドウとタブ</value>
+  </data>
+</root>

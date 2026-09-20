@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="FilesMate">
+  <!-- FilesMate warm yellow layered folder + mate pages. Original mark, not the Files app icon. -->
+  <path id="back" d="M52.48 33.28h46.08c9.19 0 16.64 7.45 16.64 16.64v.96c0 4.42 3.58 8 8 8h80.32c16.26 0 29.44 13.18 29.44 29.44V198.4c0 16.26-13.18 29.44-29.44 29.44H52.48c-16.26 0-29.44-13.18-29.44-29.44V62.72c0-16.26 13.18-29.44 29.44-29.44Z" fill="#FFD166" />
+  <rect x="122.88" y="61.44" width="81.92" height="115.2" rx="12.8" fill="#FFE6A3" />
+  <rect x="89.6" y="71.68" width="87.04" height="115.2" rx="13.312" fill="#FFF7DE" />
+  <rect x="23.04" y="107.52" width="209.92" height="120.32" rx="29.44" fill="#F4A525" />
+  <rect x="145.92" y="153.6" width="23.04" height="23.04" rx="6.912" fill="#FFF7DE" fill-opacity="0.902" />
+  <rect x="179.2" y="153.6" width="23.04" height="23.04" rx="6.912" fill="#FFF7DE" fill-opacity="0.69" />
+  <rect x="145.92" y="186.88" width="56.32" height="16.64" rx="6.4" fill="#FFF7DE" fill-opacity="0.69" />
+</svg>

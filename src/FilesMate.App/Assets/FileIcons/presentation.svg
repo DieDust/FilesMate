@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="paper" x1="18" y1="8" x2="105" y2="123" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E5EAF1"/>
+    </linearGradient>
+  </defs>
+  <path d="M24 10h50l31 31v67c0 10-8 18-18 18H24c-10 0-18-8-18-18V28c0-10 8-18 18-18Z" fill="#64748B" opacity=".16"/>
+  <path d="M24 6h50l31 31v67c0 10-8 18-18 18H24c-10 0-18-8-18-18V24c0-10 8-18 18-18Z" fill="url(#paper)"/>
+  <path d="M74 6v31h31L74 6Z" fill="#D7DEE8"/>
+  <path d="M75 8v27h27" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity=".72"/>
+  <g transform="translate(5 0)"><rect x="27" y="51" width="48" height="35" rx="7" fill="#E4EAF2"/><rect x="34" y="58" width="13" height="19" rx="4" fill="#AAB5C5"/><path d="M52 61h16M52 69h13M52 77h9" stroke="#9AA7B8" stroke-width="4" stroke-linecap="round"/></g>
+  <rect x="49" y="83" width="62" height="34" rx="11" fill="#F06F2F"/>
+  <g id="badge-label" fill="none" stroke="#FFFFFF" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(58.314 89) scale(1.571)"><path d="M1.4 12.4 V1.8 H5.1 C7 1.8 7.1 7 5.1 7 H1.4"/></g><g transform="translate(73.714 89) scale(1.571)"><path d="M1.4 12.4 V1.8 H5.1 C7 1.8 7.1 7 5.1 7 H1.4"/></g><g transform="translate(89.114 89) scale(1.571)"><path d="M1.2 1.8 H6.8 M4 1.8 V12.4"/></g></g>
+</svg>

@@ -1,0 +1,8 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; connect-src 'self' https://filesmate-document.local; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' blob:; object-src 'none'; base-uri 'none'">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="web/pdf_viewer.css"><link rel="stylesheet" href="preview.css">
+</head><body>
+<nav aria-label="PDF 工具栏"><button id="previous" title="上一页">‹</button><input id="page" type="number" min="1" value="1" aria-label="页码"><span id="count"></span><button id="next" title="下一页">›</button><span class="spacer"></span><button id="minus" title="缩小">−</button><button id="fit" title="适应宽度">适应</button><button id="plus" title="放大">＋</button><button id="hand" aria-pressed="true" title="切换拖动 / 文字选择">拖动</button></nav>
+<div id="viewport" tabindex="0" aria-label="PDF 内容"><div id="paper"></div></div>
+<div id="status" role="status">正在加载 PDF…</div><script type="module" src="preview.mjs"></script></body></html>
