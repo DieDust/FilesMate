@@ -13,6 +13,18 @@
   <data name="AboutVersion" xml:space="preserve">
     <value>版本 {0}</value>
   </data>
+  <data name="About_GitHubDescription" xml:space="preserve">
+    <value>FilesMate 已开源，欢迎查看源码、反馈问题和了解版本更新。</value>
+  </data>
+  <data name="About_GitHubIssues" xml:space="preserve">
+    <value>问题反馈与功能建议</value>
+  </data>
+  <data name="About_GitHubProject" xml:space="preserve">
+    <value>项目主页 · DieDust/FilesMate</value>
+  </data>
+  <data name="About_GitHubReleases" xml:space="preserve">
+    <value>版本说明与下载</value>
+  </data>
   <data name="AccentColor" xml:space="preserve">
     <value>强调色</value>
   </data>

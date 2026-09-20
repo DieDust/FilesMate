@@ -55,6 +55,22 @@
             </Grid>
         </glass:LiquidGlassSurface>
         <glass:LiquidGlassSurface Margin="0,12,0,0" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <StackPanel Spacing="8">
+                <TextBlock Text="GitHub" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock Text="{loc:LocalizedText Key=About_GitHubDescription}" TextWrapping="Wrap"
+                           Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+                <HyperlinkButton Content="{loc:LocalizedText Key=About_GitHubProject}"
+                                 NavigateUri="https://github.com/DieDust/FilesMate"
+                                 HorizontalAlignment="Left" />
+                <HyperlinkButton Content="{loc:LocalizedText Key=About_GitHubIssues}"
+                                 NavigateUri="https://github.com/DieDust/FilesMate/issues"
+                                 HorizontalAlignment="Left" />
+                <HyperlinkButton Content="{loc:LocalizedText Key=About_GitHubReleases}"
+                                 NavigateUri="https://github.com/DieDust/FilesMate/releases"
+                                 HorizontalAlignment="Left" />
+            </StackPanel>
+        </glass:LiquidGlassSurface>
+        <glass:LiquidGlassSurface Margin="0,12,0,0" Style="{StaticResource FilesMate.GlassCardStyle}">
             <StackPanel Spacing="12">
                 <TextBlock Text="{loc:LocalizedText Key=Update_Section}" FontSize="16" FontWeight="SemiBold" />
                 <ToggleSwitch x:Name="AutoUpdateCheck" Header="{loc:LocalizedText Key=Update_Automatic}" Toggled="AutoUpdateCheck_Toggled" />

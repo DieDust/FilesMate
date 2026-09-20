@@ -13,6 +13,18 @@
   <data name="AboutVersion" xml:space="preserve">
     <value>Version {0}</value>
   </data>
+  <data name="About_GitHubDescription" xml:space="preserve">
+    <value>FilesMate is open source. Explore the code, report an issue or read release notes.</value>
+  </data>
+  <data name="About_GitHubIssues" xml:space="preserve">
+    <value>Report an issue or suggest a feature</value>
+  </data>
+  <data name="About_GitHubProject" xml:space="preserve">
+    <value>Project homepage · DieDust/FilesMate</value>
+  </data>
+  <data name="About_GitHubReleases" xml:space="preserve">
+    <value>Releases and downloads</value>
+  </data>
   <data name="AccentColor" xml:space="preserve">
     <value>Accent</value>
   </data>

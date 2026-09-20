@@ -13,6 +13,18 @@
   <data name="AboutVersion" xml:space="preserve">
     <value>バージョン {0}</value>
   </data>
+  <data name="About_GitHubDescription" xml:space="preserve">
+    <value>FilesMate はオープンソースです。ソースコードの閲覧、不具合の報告、更新内容の確認ができます。</value>
+  </data>
+  <data name="About_GitHubIssues" xml:space="preserve">
+    <value>不具合の報告・機能の提案</value>
+  </data>
+  <data name="About_GitHubProject" xml:space="preserve">
+    <value>プロジェクト · DieDust/FilesMate</value>
+  </data>
+  <data name="About_GitHubReleases" xml:space="preserve">
+    <value>リリース情報とダウンロード</value>
+  </data>
   <data name="AccentColor" xml:space="preserve">
     <value>アクセントカラー</value>
   </data>
