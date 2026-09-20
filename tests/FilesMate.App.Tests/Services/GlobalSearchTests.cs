@@ -241,14 +241,19 @@ public sealed class GlobalSearchTests
             Assert.Equal("sample.exe", first.Hits[0].Name);
             Assert.EndsWith(".txt", first.Hits[1].Name);
             Assert.True(first.HasMore);
-            File.WriteAllText(Path.Combine(root, "search-index.json"), """{"roots":["D:\\"],"futureOption":42}""");
+            File.WriteAllText(Path.Combine(root, "search-index.json"), System.Text.Json.JsonSerializer.Serialize(new
+            {
+                roots = new[] { root },
+                databaseDirectory = root,
+                futureOption = 42,
+            }));
             SearchRankingConfiguration.Save([FilesMate.App.Models.SearchHitKind.Folder], root);
             Assert.True((await provider.SearchAsync("sample", default)).Hits[0].IsDirectory);
             var store = new FilesMate.App.Services.SearchIndexSettingsService(Path.Combine(root, "search-index.json"));
             Assert.Equal(FilesMate.App.Models.SearchHitKind.Folder, store.Load().RankOrder[0]);
             using var saved = System.Text.Json.JsonDocument.Parse(File.ReadAllText(store.FilePath));
             Assert.Equal(42, saved.RootElement.GetProperty("futureOption").GetInt32());
-            Assert.Equal("D:\\", saved.RootElement.GetProperty("roots")[0].GetString());
+            Assert.Equal(root, saved.RootElement.GetProperty("roots")[0].GetString());
             await store.SaveAsync(store.Load() with { RankOrder = [FilesMate.App.Models.SearchHitKind.Document] });
             Assert.EndsWith(".txt", (await provider.SearchAsync("sample", default)).Hits[0].Name);
         }

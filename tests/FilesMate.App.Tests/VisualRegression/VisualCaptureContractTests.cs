@@ -357,7 +357,9 @@ public sealed class VisualCaptureContractTests
             using var process = Process.Start(startInfo) ?? throw new InvalidOperationException("Could not start pwsh.");
             var outputTask = process.StandardOutput.ReadToEndAsync();
             var errorTask = process.StandardError.ReadToEndAsync();
-            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            // Include cold PowerShell startup on hosted Windows runners. This is
+            // a cleanup contract check, not a process-startup performance test.
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
             await WaitForExitOrKillAsync(process, timeout.Token);
             var standardOutput = await outputTask;
             var standardError = await errorTask;

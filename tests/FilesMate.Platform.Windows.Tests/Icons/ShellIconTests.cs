@@ -29,6 +29,10 @@ public sealed class ShellIconTests
         Directory.CreateDirectory(root);
         var target = Path.Combine(Environment.SystemDirectory, "cmd.exe");
         var linkPath = Path.Combine(root, "命令提示符.lnk");
+        // WScript's writer uses the system ANSI code page. Create an ASCII-named
+        // fixture, then rename it with Unicode filesystem APIs so extraction is
+        // still tested with a Chinese path on every Windows display language.
+        var stagingLinkPath = Path.Combine(root, "command-prompt.lnk");
         try
         {
             var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -40,7 +44,7 @@ public sealed class ShellIconTests
                 try
                 {
                     shell = Activator.CreateInstance(Type.GetTypeFromProgID("WScript.Shell")!);
-                    shortcut = ((dynamic)shell!).CreateShortcut(linkPath);
+                    shortcut = ((dynamic)shell!).CreateShortcut(stagingLinkPath);
                     ((dynamic)shortcut).TargetPath = target;
                     ((dynamic)shortcut).Save();
                     ready.SetResult();
@@ -55,6 +59,7 @@ public sealed class ShellIconTests
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
             await ready.Task;
+            File.Move(stagingLinkPath, linkPath);
             var service = new WindowsSystemIconService();
             foreach (var path in new[] { target, linkPath })
             {
