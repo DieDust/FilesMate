@@ -39,6 +39,7 @@ public sealed partial class MainWindow
             _shellHost.SetBackdrop(backdrop);
             _shellHost.Activated += () => DispatcherQueue.TryEnqueue(OnWindowActivated);
             _shellHost.CloseRequested += RequestCloseAfterFileWork;
+            _shellHost.MoveSizeChanged += SchedulePlacementSave;
         }
         catch
         {

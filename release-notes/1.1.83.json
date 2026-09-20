@@ -1,0 +1,5 @@
+{
+  "zh-CN": "改善窗口拖动流畅度：移动期间不再反复写入窗口位置配置，停止移动后统一保存，并在关闭时保留最终位置。拖动窗口期间暂停空闲标签的内存回收，减少操作中断。将文件和程序的启动调用移到后台，避免等待系统启动程序时阻塞文件列表；启动尚未完成时，重复打开同一文件会被忽略。",
+  "en-US": "Improved window dragging by saving window position after movement settles instead of repeatedly writing settings during movement. The final position is preserved on close. Idle tab memory reclamation pauses during window dragging. File and application activation now runs in the background so waiting for Windows to launch a program does not block the file list. Repeated requests to open the same file are ignored while activation is pending.",
+  "ja-JP": "ウィンドウ移動中の位置設定の連続書き込みをなくし、移動が止まってから保存することで、ドラッグ操作を改善しました。終了時には最後の位置を保存します。ウィンドウのドラッグ中は、非アクティブなタブのメモリ回収を一時停止します。ファイルやアプリの起動処理をバックグラウンドに移し、Windows の起動処理を待つ間もファイル一覧を操作できるようにしました。起動処理中に同じファイルを繰り返し開く操作は無視されます。"
+}

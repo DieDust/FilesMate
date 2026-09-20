@@ -12,7 +12,7 @@ public sealed partial class MainWindow
 {
     private DispatcherQueueTimer? _tabMemoryTimer;
     private bool _tabMemorySweepRunning;
-    internal bool IsMemoryReclamationBusy => !_windowClosed && (_tabDragging
+    internal bool IsMemoryReclamationBusy => !_windowClosed && (_tabDragging || _shellHost?.IsMovingOrSizing == true
         || TabHost.Content is Views.NavigatorPage { IsMemoryReclamationBusy: true });
     private void InitializeTabMemory()
     {
@@ -62,7 +62,7 @@ public sealed partial class MainWindow
 
     private async Task HibernateIdleTabsAsync()
     {
-        if (_tabMemorySweepRunning || _windowClosed || FileOperationLifetime.IsBusy) return;
+        if (_tabMemorySweepRunning || _windowClosed || _shellHost?.IsMovingOrSizing == true || FileOperationLifetime.IsBusy) return;
         _tabMemorySweepRunning = true;
         try
         {

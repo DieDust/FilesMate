@@ -169,7 +169,7 @@ public sealed class TabVisualContractTests
         Assert.Contains("item.Header = text", code, StringComparison.Ordinal);
         Assert.Contains("FilesMate.Text.PrimaryBrush", code, StringComparison.Ordinal);
         Assert.DoesNotContain("TranslateFadeAsync", code, StringComparison.Ordinal);
-        Assert.DoesNotContain("FromMilliseconds", code, StringComparison.Ordinal);
+        Assert.DoesNotContain("new DoubleAnimation", code, StringComparison.Ordinal);
         Assert.Contains("ContentTransitions", File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Themes", "TabStyles.xaml")), StringComparison.Ordinal);
         Assert.Contains("TextTrimming=\"CharacterEllipsis\"", File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Themes", "TabStyles.xaml")), StringComparison.Ordinal);
         Assert.Contains("PreferredHeightOption", code, StringComparison.Ordinal);

@@ -25,6 +25,8 @@ public sealed class MotionIntegrationContractTests
             ["PaneViewModel.cs"] = [200],
             // Coalesce transparency slider disk writes; this is not an animation.
             ["AppearancePage.xaml.cs"] = [250],
+            // Coalesce window placement writes after movement settles.
+            ["MainWindow.xaml.cs"] = [400],
             // External Shell selection RPC has a bounded UI-dispatch wait;
             // it is not an animation duration.
             ["NavigatorPage.Shell.cs"] = [500],
@@ -120,7 +122,8 @@ public sealed class MotionIntegrationContractTests
 
         var window = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "MainWindow.xaml.cs"));
         Assert.DoesNotContain("TranslateFadeAsync", window, StringComparison.Ordinal);
-        Assert.DoesNotContain("FromMilliseconds", window, StringComparison.Ordinal);
+        // Non-animation timers (such as placement persistence) use durations too.
+        Assert.DoesNotContain("new DoubleAnimation", window, StringComparison.Ordinal);
         Assert.Contains("SuppressTabStripEntrance", window, StringComparison.Ordinal);
         Assert.Contains("ItemContainerTransitions.Clear()", window, StringComparison.Ordinal);
 

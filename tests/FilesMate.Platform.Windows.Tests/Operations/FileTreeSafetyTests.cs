@@ -49,6 +49,26 @@ public sealed class FileTreeSafetyTests : IDisposable
     }
 
     [Fact]
+    public async Task Waiting_shell_activation_does_not_block_caller_or_other_shell_work()
+    {
+        using var release = new ManualResetEventSlim();
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var pending = ShellOperationWorker.RunAsync(() =>
+        {
+            entered.SetResult();
+            if (!release.Wait(TimeSpan.FromSeconds(10))) throw new TimeoutException();
+        });
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.False(pending.IsCompleted);
+            await ShellOperationWorker.RunAsync(() => { }).WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.False(pending.IsCompleted);
+        }
+        finally { release.Set(); await pending; }
+    }
+
+    [Fact]
     public void Managed_delete_of_directory_link_preserves_target()
     {
         var target = Directory.CreateDirectory(Path.Combine(_root, "target")).FullName;

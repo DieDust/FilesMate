@@ -25,6 +25,8 @@ internal sealed class ShellCompatibilityWindow : IDisposable
     public UIElement? Content => _content;
     public event Action? Activated;
     public event Action? CloseRequested;
+    public bool IsMovingOrSizing { get; private set; }
+    public event Action? MoveSizeChanged;
 
     public ShellCompatibilityWindow(UIElement content)
     {
@@ -90,6 +92,11 @@ internal sealed class ShellCompatibilityWindow : IDisposable
             try
             {
                 if (message == 0x0005 && wParam != 1) host.ResizeContent(); // WM_SIZE except minimized
+                if (message is 0x0231 or 0x0232) // WM_ENTERSIZEMOVE / WM_EXITSIZEMOVE
+                {
+                    host.IsMovingOrSizing = message == 0x0231;
+                    host.MoveSizeChanged?.Invoke();
+                }
                 if (message == 0x0007 && !host._source.HasFocus) // WM_SETFOCUS / task switch
                     host._source.NavigateFocus(new XamlSourceFocusNavigationRequest(XamlSourceFocusNavigationReason.Restore));
                 if (message == 0x0006 && (wParam & 0xffff) != 0) host.Activated?.Invoke();

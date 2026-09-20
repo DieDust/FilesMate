@@ -103,6 +103,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private string? _loadedPreviewPath;
     private bool _appliedStartupLayout;
     private bool _disposed;
+    private readonly HashSet<string> _openingFiles = new(StringComparer.OrdinalIgnoreCase);
     private TaskCompletionSource<bool>? _lockOverlayClosed;
 
     public NavigatorPage(string? initialPath = null, string? selectPath = null)
@@ -1899,16 +1900,25 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         Clipboard.SetContent(data);
     }
 
-    private void ViewModel_OpenFileRequested(object? sender, string path)
+    private async void ViewModel_OpenFileRequested(object? sender, string path)
     {
+        if (_disposed || !_openingFiles.Add(path)) return;
+        var pane = sender as PaneViewModel ?? ViewModel;
         try
         {
-            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            // Shell extensions, security scanning and elevation can delay activation.
+            // Keep that wait on an STA worker so the navigator continues painting.
+            await ShellOperationWorker.RunAsync(() =>
+            {
+                using var process = Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            });
         }
         catch (Exception ex)
         {
-            ViewModel.ReportUserError(ex.Message);
+            App.LogFailure("OpenFile", ex);
+            if (!_disposed) pane.ReportUserError(ex.Message);
         }
+        finally { _openingFiles.Remove(path); }
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)

@@ -72,7 +72,8 @@ public sealed partial class MainWindow : Window
     private readonly WindowPlacementService _windowPlacement = new(Program.SettingsPath(WindowPlacementService.DefaultFilePath));
     private readonly WindowSessionStore _windowSession = new(Program.SettingsPath(WindowSessionStore.DefaultFilePath));
     private WindowPlacement _normalPlacement = WindowPlacement.Default;
-    private bool _placementSavePending;
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _placementSaveTimer;
+    private WindowPlacement? _savedPlacement;
     private bool _restoringPlacement;
 
     public bool IsHostTearOut => _hostTearOut;
@@ -441,6 +442,7 @@ public sealed partial class MainWindow : Window
 
     private void AppWindow_Changed(AppWindow sender, AppWindowChangedEventArgs args)
     {
+        if (_windowClosed) return;
         if (args.DidSizeChange)
         {
             ScheduleNonClientRegionUpdate();
@@ -492,27 +494,23 @@ public sealed partial class MainWindow : Window
 
     private void SchedulePlacementSave()
     {
-        if (_placementSavePending)
+        Memory.TabResourceReclaimer.NotifyActivity();
+        CaptureNormalPlacement();
+        _placementSaveTimer?.Stop();
+        if (_shellHost?.IsMovingOrSizing == true) return;
+        if (_placementSaveTimer is null)
         {
-            return;
+            _placementSaveTimer = DispatcherQueue.CreateTimer();
+            _placementSaveTimer.IsRepeating = false;
+            _placementSaveTimer.Interval = TimeSpan.FromMilliseconds(400);
+            _placementSaveTimer.Tick += (_, _) => PersistPlacement();
         }
-
-        _placementSavePending = true;
-        if (!DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, PersistPlacement))
-        {
-            _placementSavePending = false;
-        }
+        _placementSaveTimer.Start();
     }
 
-    private void PersistPlacement()
+    private void CaptureNormalPlacement()
     {
-        _placementSavePending = false;
-        if (_hostTearOut || _restoringPlacement
-            || IsIconic(NativeHandle))
-        {
-            return;
-        }
-
+        if (_hostTearOut || _restoringPlacement || IsIconic(NativeHandle)) return;
         var maximized = AppWindow.Presenter is OverlappedPresenter presenter
             && presenter.State == OverlappedPresenterState.Maximized;
         if (!maximized && AppWindow.Size.Width > 0 && AppWindow.Size.Height > 0)
@@ -524,10 +522,23 @@ public sealed partial class MainWindow : Window
                 AppWindow.Size.Height,
                 false);
         }
+    }
+
+    private void PersistPlacement()
+    {
+        _placementSaveTimer?.Stop();
+        if (_hostTearOut || _restoringPlacement || IsIconic(NativeHandle)) return;
+        CaptureNormalPlacement();
+        var placement = _normalPlacement with
+        {
+            Maximized = AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Maximized },
+        };
+        if (placement == _savedPlacement) return;
 
         try
         {
-            _windowPlacement.Save(_normalPlacement with { Maximized = maximized });
+            _windowPlacement.Save(placement);
+            _savedPlacement = placement;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -1191,6 +1202,8 @@ public sealed partial class MainWindow : Window
     {
         if (_windowClosed) return;
         _windowClosed = true;
+        AppWindow.Changed -= AppWindow_Changed;
+        _placementSaveTimer?.Stop();
         _tabMemoryTimer?.Stop();
         CancelFileTabHover();
         App.ExplorerPreferencesChanged -= TabMemoryPreferencesChanged;
