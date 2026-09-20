@@ -1,7 +1,7 @@
 <div align="center">
   <img src="src/FilesMate.App/Assets/Branding/FilesMate.svg" width="88" alt="FilesMate logo" />
   <h1>FilesMate</h1>
-  <p>A native Windows file manager. Browse, find, preview and organize — in one place.</p>
+  <p>A Windows file manager with tabs, dual panes, file previews and global search.</p>
   <p><b>English</b> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.ja.md">日本語</a></p>
   <p><a href="https://github.com/DieDust/FilesMate/releases">Download</a> · <a href="#features">Features</a> · <a href="#community">Community</a> · <a href="CONTRIBUTING.md">Contribute</a></p>
   <p><img src="https://img.shields.io/badge/Windows_11-x64-0078D4" alt="Windows 11 x64" /> <img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache 2.0" /> <img src="https://img.shields.io/badge/status-preview-orange" alt="Preview software" /></p>
@@ -9,7 +9,7 @@
 
 ![FilesMate dark workspace with tabs, breadcrumb navigation and file details](docs/images/workspace-dark.png)
 
-FilesMate combines a familiar file browser with tools for the work around your files: compare two folders, collect files from different locations, rename a batch with a preview, or summon search without keeping the main window open.
+Browse two folders side by side, keep common locations in favorites, and collect files in the shelf before moving them. Preview documents and media as you browse, check names before a batch rename, and use global search after closing the main window.
 
 ## Download and get started
 
@@ -21,21 +21,21 @@ Already installed? Open **Settings → About → Check for updates**. Updates us
 
 ## Features
 
-### Tabs and two panes: less back-and-forth
+### Tabs and dual panes
 
 Keep folders open in tabs, or turn on **Dual pane** to work with two folders side by side. Copy or move a selection to the other pane, reopen a closed tab with `Ctrl+Shift+T`, and restore your tabs at startup. Idle-tab hibernation is configurable.
 
 ![Two folders open side by side](docs/images/dual-pane.png)
 
-### Global search that stays available
+### Independent global search
 
 With background search enabled, press **Alt+Space** by default to search indexed filenames and applications. Filter by type, preview supported files, or jump to their folder. The search process can stay open when you close the file manager; its shortcut, residency and login startup are configurable.
 
-This is **filename search**, not document-content search. You choose the index scope; building and refreshing the index is handled by the file manager.
+Search covers **filenames and applications**. You choose the index scope; the file manager builds and refreshes the index.
 
 ![Global search showing matching project files](docs/images/global-search.png)
 
-### Preview before opening
+### Media thumbnails, folder covers and previews
 
 Switch to **Large icons** to recognize images and supported videos from their thumbnails. Folders can show an automatic cover taken from their contents; choose a cover from an image or video inside the folder through **Folder appearance**, or restore the automatic cover. Thumbnail sizes are adjustable. Video thumbnails depend on Windows format and codec support.
 
@@ -45,7 +45,7 @@ Use **Alt+P** for the side preview, or **Space** for quick preview. Inspect text
 
 ![JSON preview beside the file list](docs/images/document-preview.png)
 
-### Favorites: your files and folders, grouped your way
+### Favorites and groups
 
 Keep frequently used files and folders in the **favorites bar** below the address bar. Drag items into it, save the current folder with the star, and collect related locations into groups. Reorder favorites, rename their labels, or organize them in the favorites manager. These are references: removing a favorite does not delete its file. Enable the bar in the first-run guide or Settings.
 
@@ -59,7 +59,7 @@ The feature is **off by default**, available in the first-run guide and **Settin
 
 ![Alphabet navigation jumping to files beginning with P](docs/images/alphabet-navigation.png)
 
-### File shelf: collect first, organize next
+### File shelf
 
 Gather files from different folders into the **file shelf**, then copy or move the selected items to a destination. The shelf stores references to the originals; collecting them does not create duplicate file copies. Removing a shelf reference does not delete the original.
 
@@ -71,7 +71,7 @@ Select several items and press **F2**. Choose a naming rule, inspect original an
 
 ![Batch rename with find-and-replace and name previews](docs/images/batch-rename.png)
 
-### Make the workspace yours
+### Appearance and workspace settings
 
 Choose light, dark or system theme; adjust glass transparency, accent color and layered or unified surfaces. Use FilesMate icons or Windows file-association icons. Customize home sections, bookmarks, tags and folder views. **English, Simplified Chinese and Japanese** are included; changing the language automatically restarts the app after transfers finish and restores tabs.
 
