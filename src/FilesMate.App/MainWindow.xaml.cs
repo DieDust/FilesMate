@@ -1222,15 +1222,20 @@ public sealed partial class MainWindow : Window
         _shellHost = null;
     }
 
-    private static async Task DisposeNavigatorAsync(NavigatorPage page)
+    private async Task DisposeNavigatorAsync(NavigatorPage page)
     {
         try
         {
+            var retiredResources = page.CaptureRetiredResources();
             await page.DisposeAsync();
+            ScheduleTabResourceRelease(retiredResources);
         }
         catch (Exception error)
         {
-            System.Diagnostics.Trace.TraceError("Navigator disposal failed: {0}", error);
+            App.LogFailure("NavigatorDisposal", error);
+#if FILESMATE_UI_TEST
+            File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "tab-disposal-errors.log"), error + Environment.NewLine);
+#endif
         }
     }
 

@@ -7,6 +7,30 @@ namespace FilesMate.App.Tests.Navigation;
 public sealed class DirectoryWatchTests
 {
     [Fact]
+    public async Task Disposed_pane_releases_published_folder_data_without_collecting_the_pane()
+    {
+        var root = Directory.CreateTempSubdirectory("filesmate-dispose-").FullName;
+        try
+        {
+            var enumerator = new FakeDirectoryEnumerator();
+            enumerator.Folders[root] = [FakeDirectoryEnumerator.Entry(1, "keep.txt")];
+            await using var vm = new PaneViewModel(new ImmediateUiDispatcher(), new WindowsPathService(),
+                enumerator, NaturalStringComparer.Instance);
+            vm.Navigate(root);
+            await vm.WhenCurrentSessionCompletes;
+            Assert.NotNull(vm.ViewIndex);
+            Assert.NotEmpty(vm.PlaceholderNames);
+
+            await vm.DisposeAsync();
+
+            Assert.Null(vm.Store);
+            Assert.Null(vm.ViewIndex);
+            Assert.Empty(vm.PlaceholderNames);
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
+
+    [Fact]
     public async Task Burst_coalesces_ui_dispatches_instead_of_posting_for_each_notification()
     {
         var root = Directory.CreateTempSubdirectory("filesmate-live-burst-").FullName;

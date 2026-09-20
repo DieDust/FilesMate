@@ -141,6 +141,36 @@ public sealed class FolderPreviewServiceTests
         Assert.Equal(2, calls);
     }
 
+    [Fact]
+    public async Task Budget_eviction_keeps_hot_cover_and_does_not_cancel_pending_request()
+    {
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var resume = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var cover = new IconBitmap(1024, 1024, new byte[4 * 1024 * 1024]);
+        var service = new FolderPreviewService(async (path, _, token) =>
+        {
+            if (path.EndsWith("pending", StringComparison.Ordinal))
+            {
+                entered.SetResult();
+                await resume.Task.WaitAsync(token);
+            }
+            return cover;
+        }, (path, _) => [path]);
+        await service.GetAsync(Folder + "hot", 48, default);
+        await service.GetAsync(Folder + "cold", 48, default);
+        Assert.True(service.TryGetCached(Folder + "hot", 48, out _));
+        var pending = service.GetAsync(Folder + "pending", 48, default);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await service.GetAsync(Folder + "new", 48, default);
+        Assert.False(service.TryGetCached(Folder + "cold", 48, out _));
+        Assert.True(service.TryGetCached(Folder + "hot", 48, out _));
+        Assert.Equal(8 * 1024 * 1024, service.CacheBytes);
+        resume.SetResult();
+        Assert.Same(cover, await pending.WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.True(service.TryGetCached(Folder + "hot", 48, out _));
+        Assert.False(service.TryGetCached(Folder + "new", 48, out _));
+    }
+
     private sealed class Clock : TimeProvider
     {
         public DateTimeOffset Now = DateTimeOffset.UtcNow;

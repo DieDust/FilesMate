@@ -237,6 +237,25 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         _previewHost?.CancelAndClear();
     }
 
+    internal void ReleaseInactiveVisuals()
+    {
+        if (IsLoaded) return;
+        FileSurface.ReleaseInactiveVisuals();
+        _rightSurface?.ReleaseInactiveVisuals();
+    }
+
+    internal WeakReference[] CaptureRetiredResources() =>
+        new[] { this, Content, FileSurface, _rightSurface }.OfType<object>()
+            // The XAML projection can disappear before its finalizable COM owner.
+            // Follow that owner through finalization so native teardown is not
+            // mistaken for complete merely because the Page weak reference died.
+            .SelectMany(resource => resource is WinRT.IWinRTObject native
+                ? new object[] { resource, native.NativeObject } : [resource])
+            .Select(resource => new WeakReference(resource, trackResurrection: true)).ToArray();
+
+    internal bool IsMemoryReclamationBusy => !_disposed && (_leftVm.IsLoading || _rightVm?.IsLoading == true
+        || FileSurface.IsMemoryReclamationBusy || _rightSurface?.IsMemoryReclamationBusy == true);
+
     public async ValueTask DisposeAsync()
     {
         if (_disposed)
@@ -274,6 +293,16 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         _rightSurface?.ReleaseResources();
         _previewHost?.CancelAndClear();
         HideLockOverlay();
+        _homeDashboard?.ReleaseResources();
+        _rightHome?.ReleaseResources();
+        HomeContainer.Content = null;
+        _homeDashboard = null;
+        _rightHome = null;
+
+        // This page will never be loaded again. Disconnect its native visual tree
+        // and shortcuts now, instead of waiting for WinRT reference tracking.
+        KeyboardAccelerators.Clear();
+        Content = null;
 
         var tagLoads = _tagLoadCts;
         tagLoads.Cancel();

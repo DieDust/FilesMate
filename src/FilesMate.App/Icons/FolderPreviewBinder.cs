@@ -35,6 +35,7 @@ internal static class FolderPreviewBinder
     }
 
     public static void ClearCache() => Service.ClearCache();
+    internal static long CacheBytes => Service.CacheBytes;
 
     private static async Task LoadAsync(Grid host, Image cover, string path, int size, BindingState state)
     {

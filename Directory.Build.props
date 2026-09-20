@@ -29,8 +29,8 @@
     so the main process and SearchHost keep binding across upgrades.
   -->
   <PropertyGroup>
-    <VersionPrefix>1.1.81</VersionPrefix>
-    <VersionSuffix>preview.20260920</VersionSuffix>
+    <VersionPrefix>1.1.82</VersionPrefix>
+    <VersionSuffix></VersionSuffix>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>$(VersionPrefix).0</FileVersion>
   </PropertyGroup>

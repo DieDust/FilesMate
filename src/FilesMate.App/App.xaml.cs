@@ -509,6 +509,9 @@ public partial class App : Application
 
     internal static void NotifyActivated(MainWindow window) => CurrentWindow = window;
 
+    internal static bool IsMemoryReclamationBusy => Current is App app
+        && app._windows.Any(window => window.IsMemoryReclamationBusy);
+
     internal static async Task VacateFoldersAsync(IReadOnlyList<string> paths)
     {
         if (Current is not App app)

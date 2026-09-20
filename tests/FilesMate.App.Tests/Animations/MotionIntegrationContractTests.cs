@@ -40,6 +40,7 @@ public sealed class MotionIntegrationContractTests
             ["QuickPreviewWindow.cs"] = [16],
             // Test-only dispatcher heartbeat measurement, not an animation.
             ["MainWindow.NativeOfficeHangSmoke.cs"] = [50],
+            ["MainWindow.TabMemorySmoke.cs"] = [20],
         };
 
         foreach (var path in EnumerateAppFiles("*.cs"))

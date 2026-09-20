@@ -17,10 +17,12 @@ namespace FilesMate.App.Icons;
 internal sealed class ShellThumbnailService
 {
     // UI bitmaps have their own cache; bound this duplicate raw-pixel working set.
-    private const long MaxCacheBytes = 16L * 1024 * 1024;
+    private const long MaxCacheBytes = 8L * 1024 * 1024;
 
     private readonly IconBitmapCache _cache = new(maxBytes: MaxCacheBytes);
     private readonly SemaphoreSlim _gate = new(2, 2);
+    private int _loads;
+    internal int LoadCount => Volatile.Read(ref _loads);
 
     public IconBitmap? TryGetCached(string? path, int pixelSize)
     {
@@ -31,6 +33,8 @@ internal sealed class ShellThumbnailService
 
         return _cache.TryGetValue(key, out var bitmap) ? bitmap : null;
     }
+
+    internal long CacheBytes => _cache.CurrentBytes;
 
     public void ClearCache() => _cache.Clear();
 
@@ -103,6 +107,7 @@ internal sealed class ShellThumbnailService
                     ExifOrientationMode.IgnoreExifOrientation,
                     ColorManagementMode.DoNotColorManage).AsTask(cancellationToken);
                 var bitmap = new IconBitmap((int)width, (int)height, pixels.DetachPixelData());
+                Interlocked.Increment(ref _loads);
                 _cache.Set(key, bitmap);
                 return bitmap;
             }

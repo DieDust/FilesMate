@@ -56,10 +56,9 @@ public sealed class ThumbnailIconContractTests
 
         Assert.Contains("MaxDynamicImageCacheEntries", binder, StringComparison.Ordinal);
         Assert.Contains("MaxDynamicImageCacheBytes", binder, StringComparison.Ordinal);
-        Assert.Contains("Interlocked.Add(ref _dynamicImageCacheBytes, -oldest.Bytes)", binder, StringComparison.Ordinal);
-        Assert.Contains("DynamicImageCacheOrder", binder, StringComparison.Ordinal);
-        Assert.Contains("TrimDynamicImageCache", binder, StringComparison.Ordinal);
-        Assert.Contains("Images.TryRemove", binder, StringComparison.Ordinal);
+        Assert.Contains("ByteBudgetCache<ImageSource>", binder, StringComparison.Ordinal);
+        Assert.Contains("new(MaxDynamicImageCacheBytes, MaxDynamicImageCacheEntries)", binder, StringComparison.Ordinal);
+        Assert.Contains("DynamicImages.Set(cacheKey, created, bitmap.Bgra.LongLength)", binder, StringComparison.Ordinal);
     }
 
     [Fact]

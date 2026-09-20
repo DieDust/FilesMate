@@ -8,7 +8,7 @@ internal sealed class FolderPreviewService
     internal const int MaxScannedEntries = 256;
     private const int MaxCandidates = 4;
     private const int MaxCacheEntries = 1024;
-    private const long MaxCacheBytes = 32L * 1024 * 1024;
+    private const long MaxCacheBytes = 8L * 1024 * 1024;
     private readonly object _sync = new();
     private readonly SemaphoreSlim _gate = new(2, 2);
     private readonly Dictionary<string, CacheEntry> _cache = new(StringComparer.OrdinalIgnoreCase);
@@ -17,7 +17,8 @@ internal sealed class FolderPreviewService
     private readonly Func<string, CancellationToken, IReadOnlyList<string>> _scan;
     private readonly TimeProvider _time;
     private readonly Func<string, Task<string?>>? _cover;
-    private long _cacheBytes;
+    private long _cacheBytes, _access;
+    internal long CacheBytes { get { lock (_sync) return _cacheBytes; } }
     private int _epoch;
 
     public FolderPreviewService(
@@ -44,7 +45,10 @@ internal sealed class FolderPreviewService
             if (_cache.TryGetValue(key, out var cached))
             {
                 if (_time.GetUtcNow() < cached.Expires)
+                {
+                    cached.LastAccess = ++_access;
                     return cached.Bitmap;
+                }
                 _cache.Remove(key);
                 _cacheBytes -= cached.Bytes;
             }
@@ -90,6 +94,7 @@ internal sealed class FolderPreviewService
         {
             if (_cache.TryGetValue(key, out var cached) && _time.GetUtcNow() < cached.Expires)
             {
+                cached.LastAccess = ++_access;
                 bitmap = cached.Bitmap;
                 return true;
             }
@@ -158,11 +163,11 @@ internal sealed class FolderPreviewService
                         _cacheBytes -= old.Bytes;
                     while (_cache.Count > 0 && (_cache.Count >= MaxCacheEntries || _cacheBytes + bytes > MaxCacheBytes))
                     {
-                        var oldest = _cache.MinBy(pair => pair.Value.Expires);
+                        var oldest = _cache.MinBy(pair => pair.Value.LastAccess);
                         _cache.Remove(oldest.Key);
                         _cacheBytes -= oldest.Value.Bytes;
                     }
-                    _cache[key] = new(bitmap, _time.GetUtcNow().AddSeconds(bitmap is null ? 15 : 120), bytes);
+                    _cache[key] = new(bitmap, _time.GetUtcNow().AddSeconds(bitmap is null ? 15 : 120), bytes) { LastAccess = ++_access };
                     _cacheBytes += bytes;
                 }
             }
@@ -209,5 +214,8 @@ internal sealed class FolderPreviewService
         public int Waiters { get; set; }
     }
 
-    private sealed record CacheEntry(IconBitmap? Bitmap, DateTimeOffset Expires, long Bytes);
+    private sealed record CacheEntry(IconBitmap? Bitmap, DateTimeOffset Expires, long Bytes)
+    {
+        public long LastAccess { get; set; }
+    }
 }

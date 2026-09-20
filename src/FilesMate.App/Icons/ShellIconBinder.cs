@@ -25,13 +25,11 @@ namespace FilesMate.App.Icons;
 internal static class ShellIconBinder
 {
     private const int MaxDynamicImageCacheEntries = 320;
-    private const long MaxDynamicImageCacheBytes = 64L * 1024 * 1024;
+    private const long MaxDynamicImageCacheBytes = 24L * 1024 * 1024;
     private static readonly ConcurrentDictionary<string, ImageSource> Images = new(StringComparer.Ordinal);
-    private static readonly ConcurrentQueue<(string Key, long Bytes)> DynamicImageCacheOrder = new();
+    private static readonly Services.ByteBudgetCache<ImageSource> DynamicImages = new(MaxDynamicImageCacheBytes, MaxDynamicImageCacheEntries);
     private static readonly ShellThumbnailService Thumbnails = new();
     private static readonly Services.VividThumbnailCache VividThumbnails = new();
-    private static int _dynamicImageCacheEntries;
-    private static long _dynamicImageCacheBytes;
     private static int _stamp;
     private static readonly ConditionalWeakTable<Image, IconBinding> Bindings = new();
     private sealed record IconBinding(FontIcon Fallback, IconKey Key, string? Path, FileAttributes Attributes,
@@ -90,13 +88,25 @@ internal static class ShellIconBinder
     public static void ClearCache()
     {
         Images.Clear();
-        DynamicImageCacheOrder.Clear();
-        Interlocked.Exchange(ref _dynamicImageCacheEntries, 0);
-        Interlocked.Exchange(ref _dynamicImageCacheBytes, 0);
+        DynamicImages.Clear();
         Thumbnails.ClearCache();
         VividThumbnails.Clear();
         FolderPreviewBinder.ClearCache();
     }
+
+    internal static object CacheStatistics => new
+    {
+        DynamicEntries = DynamicImages.Statistics.Count,
+        DynamicBytes = DynamicImages.Statistics.Bytes,
+        DynamicHits = DynamicImages.Statistics.Hits,
+        DynamicMisses = DynamicImages.Statistics.Misses,
+        RawThumbnailBytes = Thumbnails.CacheBytes,
+        ThumbnailLoads = Thumbnails.LoadCount,
+        FolderPreviewBytes = FolderPreviewBinder.CacheBytes,
+    };
+
+    private static bool TryGetImage(string key, out ImageSource source) =>
+        Images.TryGetValue(key, out source!) || DynamicImages.TryGetValue(key, out source);
 
     internal static Task<IconBitmap?> GetThumbnailAsync(
         string? path,
@@ -174,7 +184,7 @@ internal static class ShellIconBinder
         var state = BeginBinding(image);
         if (formatKind is not (FileIconKind.Image or FileIconKind.Video)
             && (!state.UseBundled || formatKind is null || FileTypeIconCatalog.PrefersShell(formatKind))
-            && Images.TryGetValue(key.CacheId, out var cached))
+            && TryGetImage(key.CacheId, out var cached))
         {
             Show(image, fallback, cached);
             state.Dispose();
@@ -246,7 +256,7 @@ internal static class ShellIconBinder
     private static bool TryGetFormatAsset(FileIconKind kind, int rasterPixels, out ImageSource source)
     {
         var cacheKey = AssetCacheKey(kind, rasterPixels);
-        if (Images.TryGetValue(cacheKey, out var cached))
+        if (TryGetImage(cacheKey, out var cached))
         {
             source = cached;
             return true;
@@ -286,9 +296,9 @@ internal static class ShellIconBinder
                 // File metadata can block on network paths; keep it off the UI thread.
                 var thumbnailKey = await Task.Run(() => ThumbnailCacheKey(path, thumbnailPixels), cancellationToken)
                     .ConfigureAwait(false);
-                if (Images.TryGetValue(thumbnailKey, out var thumbnailSource))
+                if (TryGetImage(thumbnailKey, out var thumbnailSource))
                 {
-                    await ShowSourceAsync(image, fallback, thumbnailKey, thumbnailSource, state, dispatcher)
+                    await ShowSourceAsync(image, fallback, thumbnailSource, state, dispatcher)
                         .ConfigureAwait(false);
                     return;
                 }
@@ -331,7 +341,6 @@ internal static class ShellIconBinder
                     await ShowSourceAsync(
                         image,
                         fallback,
-                        AssetCacheKey(kind, rasterPixels),
                         asset,
                         state,
                         dispatcher).ConfigureAwait(false);
@@ -399,7 +408,7 @@ internal static class ShellIconBinder
         DispatcherQueue dispatcher)
     {
         var cacheKey = AssetCacheKey(kind, rasterPixels);
-        if (Images.TryGetValue(cacheKey, out var cached))
+        if (TryGetImage(cacheKey, out var cached))
         {
             return Task.FromResult<ImageSource?>(cached);
         }
@@ -410,7 +419,7 @@ internal static class ShellIconBinder
         {
             try
             {
-                if (Images.TryGetValue(cacheKey, out var existing))
+                if (TryGetImage(cacheKey, out var existing))
                 {
                     completion.TrySetResult(existing);
                     return;
@@ -468,7 +477,6 @@ internal static class ShellIconBinder
     private static Task ShowSourceAsync(
         Image image,
         FontIcon fallback,
-        string cacheKey,
         ImageSource source,
         BindingState state,
         DispatcherQueue dispatcher)
@@ -482,7 +490,7 @@ internal static class ShellIconBinder
                 if (!state.Cancellation.IsCancellationRequested
                     && ReferenceEquals(image.Tag, state))
                 {
-                    Show(image, fallback, CacheStaticImage(cacheKey, source));
+                    Show(image, fallback, source);
                 }
             }
             finally
@@ -529,41 +537,10 @@ internal static class ShellIconBinder
 
     private static ImageSource CacheDynamicImage(string cacheKey, IconBitmap bitmap)
     {
-        if (Images.TryGetValue(cacheKey, out var cached))
-        {
-            return cached;
-        }
-
+        if (DynamicImages.TryGetValue(cacheKey, out var cached)) return cached;
         var created = ToBitmap(bitmap);
-        var bytes = bitmap.Bgra.LongLength;
-        if (bytes > MaxDynamicImageCacheBytes)
-        {
-            return created;
-        }
-        if (!Images.TryAdd(cacheKey, created))
-        {
-            return Images.TryGetValue(cacheKey, out cached) ? cached : created;
-        }
-
-        DynamicImageCacheOrder.Enqueue((cacheKey, bytes));
-        Interlocked.Increment(ref _dynamicImageCacheEntries);
-        Interlocked.Add(ref _dynamicImageCacheBytes, bytes);
-        TrimDynamicImageCache();
+        DynamicImages.Set(cacheKey, created, bitmap.Bgra.LongLength);
         return created;
-    }
-
-    private static void TrimDynamicImageCache()
-    {
-        while ((Volatile.Read(ref _dynamicImageCacheEntries) > MaxDynamicImageCacheEntries
-                || Volatile.Read(ref _dynamicImageCacheBytes) > MaxDynamicImageCacheBytes)
-            && DynamicImageCacheOrder.TryDequeue(out var oldest))
-        {
-            if (Images.TryRemove(oldest.Key, out _))
-            {
-                Interlocked.Decrement(ref _dynamicImageCacheEntries);
-                Interlocked.Add(ref _dynamicImageCacheBytes, -oldest.Bytes);
-            }
-        }
     }
 
     private static string AssetCacheKey(FileIconKind kind, int rasterPixels) =>

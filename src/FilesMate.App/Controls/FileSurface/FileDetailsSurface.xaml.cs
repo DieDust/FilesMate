@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 
 using FilesMate.App.Animations;
 using FilesMate.App.Commands;
@@ -85,6 +85,11 @@ public sealed partial class FileDetailsSurface : UserControl
     private uint? _resizePointerId;
     private double _resizeOriginX;
     private double _resizeOriginWidth;
+    private bool _visualsDetached;
+    private bool _restoreScrollOnLoad;
+    private bool _resourcesReleased;
+    private double _detachedScrollOffset;
+    private double? _pendingScrollRestore;
 
     public FileDetailsSurface()
     {
@@ -107,11 +112,28 @@ public sealed partial class FileDetailsSurface : UserControl
             ScheduleVisibleRange();
             SchedulePendingReveal();
         };
-        Repeater.SizeChanged += (_, _) => SchedulePendingReveal();
+        Repeater.SizeChanged += Repeater_SizeChanged;
         GotFocus += (_, _) => RefreshRealizedSelection();
         LostFocus += (_, _) => RefreshRealizedSelection();
+        Loaded += (_, _) =>
+        {
+            if (_resourcesReleased) return;
+            if (_visualsDetached)
+            {
+                _visualsDetached = false;
+                Repeater.ItemTemplate = (DataTemplate)Resources[_layout == FileLayoutKind.Grid ? "TileTemplate" : "RowTemplate"];
+                Repeater.ItemsSource = _items;
+            }
+            if (!_restoreScrollOnLoad) return;
+            _restoreScrollOnLoad = false;
+            RestoreScrollOffset(_detachedScrollOffset);
+        };
         Unloaded += (_, _) =>
         {
+            if (!_restoreScrollOnLoad && !_visualsDetached)
+                _detachedScrollOffset = _pendingScrollRestore ?? Scroller.VerticalOffset;
+            CancelScrollRestore();
+            _restoreScrollOnLoad = true;
             CancelMarquee();
             CancelFolderHover();
             CancelInlineRename();
@@ -137,17 +159,80 @@ public sealed partial class FileDetailsSurface : UserControl
     public FileLayoutKind LayoutKind => _layout;
 
     public GridSizePreset GridPreset => _gridPreset;
-    public double ScrollOffset => Scroller.VerticalOffset;
+    internal void ReleaseInactiveVisuals()
+    {
+        if (IsLoaded || _resourcesReleased || _visualsDetached) return;
+        if (!_restoreScrollOnLoad) _detachedScrollOffset = Scroller.VerticalOffset;
+        _restoreScrollOnLoad = true;
+        _visualsDetached = true;
+        RetireRepeater();
+    }
+
+    private void Repeater_SizeChanged(object sender, SizeChangedEventArgs args) => SchedulePendingReveal();
+
+    private void RetireRepeater()
+    {
+        // The old repeater also owns recycled visual children. Retire the host
+        // and its templates together; swapping ItemTemplate leaves those children.
+        var previous = Repeater;
+        previous.ItemsSource = null;
+        previous.ItemTemplate = new DataTemplate();
+        previous.ElementPrepared -= Repeater_ElementPrepared;
+        previous.ElementClearing -= Repeater_ElementClearing;
+        previous.SizeChanged -= Repeater_SizeChanged;
+        Scroller.Content = null;
+        foreach (var row in _realized.ToArray()) row.Clear();
+        foreach (var tile in _tiles.ToArray()) tile.Clear();
+        _realized.Clear();
+        _tiles.Clear();
+        var templates = new FileItemTemplates();
+        Resources["RowTemplate"] = templates["RowTemplate"];
+        Resources["TileTemplate"] = templates["TileTemplate"];
+        Repeater = new ItemsRepeater
+        {
+            HorizontalCacheLength = 0, VerticalCacheLength = 1,
+            MinWidth = previous.MinWidth,
+            Layout = _layout == FileLayoutKind.Grid ? FileGridLayout : _stackLayout,
+            ItemTemplate = (DataTemplate)Resources[_layout == FileLayoutKind.Grid ? "TileTemplate" : "RowTemplate"],
+        };
+        Repeater.ElementPrepared += Repeater_ElementPrepared;
+        Repeater.ElementClearing += Repeater_ElementClearing;
+        Repeater.SizeChanged += Repeater_SizeChanged;
+        Scroller.Content = Repeater;
+    }
+
+    public double ScrollOffset => _visualsDetached || _restoreScrollOnLoad ? _detachedScrollOffset : Scroller.VerticalOffset;
     internal bool IsBoundTo(EntryStore? store, EntryViewIndex index) => ReferenceEquals(_items.Store, store) && ReferenceEquals(_items.Index, index);
     public void RestoreScrollOffset(double offset)
     {
         if (!double.IsFinite(offset)) return;
-        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+        if (_visualsDetached || !IsLoaded)
         {
-            if (!IsLoaded) return;
-            UpdateLayout();
-            Scroller.ChangeView(null, Math.Clamp(offset, 0, Scroller.ScrollableHeight), null, true);
-        });
+            _detachedScrollOffset = offset;
+            _restoreScrollOnLoad = true;
+            return;
+        }
+        CancelScrollRestore();
+        _pendingScrollRestore = Math.Max(0, offset);
+        Scroller.LayoutUpdated += RestoreScrollAfterLayout;
+        InvalidateMeasure();
+    }
+
+    private void RestoreScrollAfterLayout(object? sender, object args)
+    {
+        if (!IsLoaded || _pendingScrollRestore is not double offset) return;
+        // A recreated repeater initially has an empty extent. Wait for its
+        // measured content to reach the ScrollViewer before clamping the target.
+        if (_items.Count > 0 && (Repeater.ActualHeight <= 0
+            || Scroller.ExtentHeight + 1 < Repeater.ActualHeight)) return;
+        CancelScrollRestore();
+        Scroller.ChangeView(null, Math.Clamp(offset, 0, Scroller.ScrollableHeight), null, true);
+    }
+
+    private void CancelScrollRestore()
+    {
+        Scroller.LayoutUpdated -= RestoreScrollAfterLayout;
+        _pendingScrollRestore = null;
     }
 
     public event EventHandler<FileEntryCore>? OpenRequested;
@@ -197,6 +282,8 @@ public sealed partial class FileDetailsSurface : UserControl
 
     public SelectionModel Selection => _selection;
     public bool IsMarqueeSelecting => _dragging;
+    internal bool IsMemoryReclamationBusy => _pointerDown || _dragging || _externalDragStarted
+        || _resizePointerId is not null || IsRenaming;
 
     public IReadOnlyList<string> SelectedPaths() => ResolveSelectionPaths();
 
@@ -267,9 +354,33 @@ public sealed partial class FileDetailsSurface : UserControl
 
     public void ReleaseResources()
     {
+        if (_resourcesReleased) return;
+        _resourcesReleased = true;
+        CancelScrollRestore();
         CancelMarquee();
+        CancelFolderHover();
+        CancelInlineRename();
         CancelPendingReveal();
         ResetPendingZoom();
+        HideAlphabet();
+        ResetFolderSizeWalks();
+        // Both panes must stop holding their owning page through callbacks.
+        ResolvePath = null;
+        ResolveFolder = null;
+        ResolveTags = null;
+        IsPinnedPath = null;
+        CreateTagPicker = null;
+        OtherPanePath = null;
+        RenameRequested = null;
+        DropRequested = null;
+        OpenRequested = null;
+        OpenInNewTabRequested = null;
+        UpRequested = BackRequested = ForwardRequested = null;
+        CopyPathRequested = QuickPreviewRequested = RefreshRequested = null;
+        SelectionChanged = PresentationChanged = null;
+        SortRequested = null;
+        CommandRequested = null;
+        TerminalRequested = null;
         _dragStorageItems = [];
         _dragSourcePaths = [];
         foreach (var row in _realized.ToArray())
@@ -286,7 +397,18 @@ public sealed partial class FileDetailsSurface : UserControl
         _tiles.Clear();
         _selection.Clear();
         _items.ClearView();
+        // Closing a tab retires its virtualized surface permanently. Clearing the
+        // data alone leaves the repeater's template/recycle pool attached until GC.
+        Repeater.ItemsSource = null;
+        // ItemsRepeater rejects a null template once a template has been assigned.
+        Repeater.ItemTemplate = new DataTemplate();
+        // WinUI attaches the recycle pool to the DataTemplate. Replacing the
+        // repeater's template alone leaves that pool owned by Resources.
+        Resources.Remove("RowTemplate");
+        Resources.Remove("TileTemplate");
         RefreshAlphabet();
+        Scroller.Content = null;
+        Content = null;
     }
 
     public void RefreshRealizedTags()
@@ -335,6 +457,8 @@ public sealed partial class FileDetailsSurface : UserControl
         _generation = generation;
         if (navigated)
         {
+            CancelScrollRestore();
+            _detachedScrollOffset = 0;
             if (IsRenaming) CancelInlineRename();
             _nameJump.Reset();
             CancelPendingReveal();
@@ -445,16 +569,20 @@ public sealed partial class FileDetailsSurface : UserControl
         try
         {
             Repeater.ItemsSource = null;
-            Repeater.Layout = grid ? FileGridLayout : _stackLayout;
-            Repeater.ItemTemplate = (DataTemplate)Resources[grid ? "TileTemplate" : "RowTemplate"];
-            Repeater.ItemsSource = _items;
+            if (switched) RetireRepeater();
+            else
+            {
+                Repeater.Layout = grid ? FileGridLayout : _stackLayout;
+                Repeater.ItemTemplate = (DataTemplate)Resources[grid ? "TileTemplate" : "RowTemplate"];
+            }
+            Repeater.ItemsSource = _visualsDetached ? null : _items;
         }
         catch (Exception error)
         {
             System.Diagnostics.Trace.TraceError("Layout switch failed: {0}", error);
             try
             {
-                Repeater.ItemsSource = _items;
+                Repeater.ItemsSource = _visualsDetached ? null : _items;
             }
             catch
             {
@@ -828,6 +956,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void OnPointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        CancelScrollRestore();
         if (IsRenaming) return;
         _nameJump.Reset();
         var point = e.GetCurrentPoint(Scroller);
@@ -1312,6 +1441,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void OnKeyDown(object sender, KeyRoutedEventArgs e)
     {
+        CancelScrollRestore();
         if (e.Handled || IsRenaming || FocusManager.GetFocusedElement(XamlRoot) is TextBox) return;
         // Alt navigation belongs to the page accelerators, not grid selection.
         if (IsModifier(VirtualKey.Menu))
@@ -1807,6 +1937,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
     {
+        CancelScrollRestore();
         if (_pointerDown && _dragging)
         {
             // Capture belongs to this surface, so wheel input may bypass the child ScrollViewer.

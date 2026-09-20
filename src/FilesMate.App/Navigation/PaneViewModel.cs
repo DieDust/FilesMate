@@ -367,6 +367,10 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         }
 
         _disposed = true;
+        // Release the large folder index even while cancellation is still draining.
+        _viewIndex = null;
+        _tagFilter = null;
+        PlaceholderNames = [];
         ExplorerPreferenceBridge.FolderSizesChanged -= OnFolderSizesChanged;
         CancelWatchRefresh();
         ClearWatchQueue();

@@ -2,7 +2,9 @@ using Loc = FilesMate.App.Localization.StringTable;
 using FilesMate.App.Models;
 using FilesMate.App.Services;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 
 namespace FilesMate.App;
 
@@ -10,14 +12,28 @@ public sealed partial class MainWindow
 {
     private DispatcherQueueTimer? _tabMemoryTimer;
     private bool _tabMemorySweepRunning;
-
+    internal bool IsMemoryReclamationBusy => !_windowClosed && (_tabDragging
+        || TabHost.Content is Views.NavigatorPage { IsMemoryReclamationBusy: true });
     private void InitializeTabMemory()
     {
+        var inputRoot = (UIElement)Content;
+        PointerEventHandler pointerInput = (_, _) => Memory.TabResourceReclaimer.NotifyActivity();
+        inputRoot.AddHandler(UIElement.PointerPressedEvent, pointerInput, true);
+        inputRoot.AddHandler(UIElement.PointerMovedEvent, pointerInput, true);
+        inputRoot.AddHandler(UIElement.PointerReleasedEvent, pointerInput, true);
+        inputRoot.AddHandler(UIElement.PointerWheelChangedEvent, pointerInput, true);
+        inputRoot.AddHandler(UIElement.KeyDownEvent,
+            new KeyEventHandler((_, _) => Memory.TabResourceReclaimer.NotifyActivity()), true);
         _tabMemoryTimer = DispatcherQueue.CreateTimer();
         _tabMemoryTimer.Interval = TimeSpan.FromSeconds(30);
         _tabMemoryTimer.Tick += async (_, _) => await HibernateIdleTabsAsync();
         App.ExplorerPreferencesChanged += TabMemoryPreferencesChanged;
         TabMemoryPreferencesChanged(null, App.ExplorerPreferences);
+    }
+
+    private void ScheduleTabResourceRelease(IReadOnlyList<WeakReference> retiredResources)
+    {
+        Memory.TabResourceReclaimer.Request(DispatcherQueue, retiredResources);
     }
 
     private void TabMemoryPreferencesChanged(object? sender, ExplorerPreferences preferences)
@@ -35,6 +51,13 @@ public sealed partial class MainWindow
             if (active || state.WasSelected) state.InactiveSince = Environment.TickCount64;
             state.WasSelected = active;
         }
+        // Keep the current and most recently visited tab ready for quick switching.
+        foreach (var state in Tabs.TabItems.OfType<TabViewItem>()
+            .Where(tab => !ReferenceEquals(tab, selected))
+            .Select(tab => tab.Tag).OfType<NavigatorTabContent>()
+            .Where(state => state.Navigator is not null)
+            .OrderByDescending(state => state.InactiveSince).Skip(1))
+            state.Navigator!.ReleaseInactiveVisuals();
     }
 
     private async Task HibernateIdleTabsAsync()

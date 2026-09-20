@@ -17,6 +17,7 @@ public sealed partial class HomeDashboard : UserControl
 {
     private int _reloadGeneration;
     private int _placesGeneration;
+    private bool _released;
     private readonly PinnedLocationStore _places = new(Program.SettingsPath(PinnedLocationStore.DefaultFilePath));
     private readonly HomeLayoutSettingsService _layoutStore = new(Program.SettingsPath(HomeLayoutSettingsService.DefaultFilePath));
     private readonly Dictionary<HomeSectionKind, bool> _sectionHasContent = [];
@@ -63,8 +64,28 @@ public sealed partial class HomeDashboard : UserControl
 
     public event EventHandler<PlaceContextInvokedEventArgs>? PlaceActionRequested;
 
+    internal void ReleaseResources()
+    {
+        if (_released) return;
+        _released = true;
+        _placesGeneration++;
+        _reloadGeneration++;
+        PlaceChosen = null;
+        PlaceActionRequested = null;
+        foreach (var host in new[] { FolderHost, DriveHost, CloudHost, TagHost, SystemHost })
+        {
+            host.ItemsSource = null;
+            host.ItemTemplate = new DataTemplate();
+        }
+        SearchResults.Children.Clear();
+        SectionsHost.Children.Clear();
+        _sections.Clear();
+        Content = null;
+    }
+
     public void Reload()
     {
+        if (_released) return;
         var generation = ++_placesGeneration;
         _ = ReloadPlacesAsync(generation);
         _ = ReloadDrivesAsync(generation);
@@ -99,6 +120,7 @@ public sealed partial class HomeDashboard : UserControl
 
     public void ShowSearchResults(IReadOnlyList<HomeSearchHit> hits)
     {
+        if (_released) return;
         SearchResults.Children.Clear();
         if (hits.Count == 0)
         {
@@ -193,6 +215,7 @@ public sealed partial class HomeDashboard : UserControl
 
     private void CustomizeButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_released) return;
         var menu = new MenuFlyout { Placement = FlyoutPlacementMode.BottomEdgeAlignedRight };
         if (Application.Current.Resources.TryGetValue("FilesMate.MenuFlyoutPresenterStyle", out var style)
             && style is Style presenter)
@@ -238,6 +261,7 @@ public sealed partial class HomeDashboard : UserControl
 
     private async Task ChangeLayoutAsync(HomeLayoutSettings next)
     {
+        if (_released) return;
         _layout = next;
         ApplyLayout();
         try

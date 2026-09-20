@@ -1,0 +1,5 @@
+{
+  "zh-CN": "改善多标签浏览后的内存回收：关闭标签时释放文件列表、缩略图引用及相关事件，限制图标和预览缓存占用，并在空闲时回收符合条件的闲置内存。后台标签按需加载和释放视图，切回时保留选中项与滚动位置。修复视图重新加载后滚动位置偶尔回到顶部的问题。内存回收效果取决于文件夹内容、预览和系统组件，使用后的占用仍可能高于刚启动时。",
+  "en-US": "Improved memory reclamation after browsing multiple tabs. Closing a tab releases its file list, thumbnail references and event handlers. Icon and preview caches have memory limits, and eligible unused memory is reclaimed while the app is idle. Background tabs load and release views as needed, preserving selection and scroll position when reopened. Fixed occasional jumps to the top after a view reload. Memory usage depends on folder contents, previews and system components, and may remain above the initial startup level.",
+  "ja-JP": "複数のタブを使用した後のメモリ回収を改善しました。タブを閉じるとファイル一覧、サムネイルへの参照、関連イベントを解放します。アイコンとプレビューのキャッシュ使用量に上限を設け、アプリの操作が止まっている間に、条件を満たす未使用メモリを回収します。バックグラウンドのタブは必要に応じてビューを読み込み・解放し、戻ったときに選択とスクロール位置を復元します。ビューの再読み込み後に先頭へ戻ることがある問題を修正しました。メモリ使用量はフォルダーの内容、プレビュー、システムコンポーネントによって異なり、起動直後より高くなる場合があります。"
+}

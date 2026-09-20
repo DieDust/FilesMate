@@ -1,0 +1,8 @@
+<ResourceDictionary
+    x:Class="FilesMate.App.Controls.FileSurface.FileItemTemplates"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:FilesMate.App.Controls.FileSurface">
+    <DataTemplate x:Key="RowTemplate"><local:FileRow /></DataTemplate>
+    <DataTemplate x:Key="TileTemplate"><local:FileTile /></DataTemplate>
+</ResourceDictionary>
