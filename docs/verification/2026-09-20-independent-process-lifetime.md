@@ -43,3 +43,13 @@ Desktop delegation requires an interactive Explorer session; those cases cannot 
 - Both actual installed processes were launched by Explorer. Enumerating job handles confirmed neither was in the development desktop's or command runner's jobs.
 - Closed the actual manager normally. The same search process remained responsive with its hotkey registered. Reopened the manager and rechecked that it had no membership in the tool's jobs.
 - This local repair has not been uploaded to GitHub Releases or the update server.
+
+## Follow-up: QQ attribution remains unconfirmed
+
+The user clarified that QQ is configured to start at login and that other applications opened through FilesMate were not necessarily affected. The earlier explanation must not treat QQ as a demonstrated descendant of FilesMate. The confirmed launch-isolation defect alone does not establish the cause of the reported three-application incident.
+
+Read-only follow-up confirmed both a QQ login startup entry and a startup-folder shortcut. QQ's launcher log records startup at 08:10:21, another startup at 20:14:29, and the user's subsequent restart at 21:25:36. It does not record the parent or cause of the 20:14 launch, nor the exit time of that instance. No corresponding new QQ crash report, Windows Application Error, memory-exhaustion event, or Defender action was found for the reported incident. Windows recorded destruction of the old development desktop's AppX container at 21:03:56, but the historical QQ process membership is unavailable.
+
+The currently running QQ main process was started by Explorer and does not share the development tool's jobs with the installed FilesMate processes. This is evidence about the current instances only. Source inspection found explicit end-task handling and disposal of owned preview workers; it did not establish an automatic QQ termination path.
+
+A temporary diagnostic utility outside the product watches only FilesMate.App, FilesMate.SearchHost, QQ and QQEX process metadata. It holds process exit handles to record exit times and exit codes, and discovers replacement instances every five seconds. Global WMI process-event subscription was denied, so no system audit policy or privilege settings were changed. The utility records no chat contents or command lines, limits its local log to 2 MiB, and ends automatically at 03:39:27 on September 21. A harmless isolated fixture verified start and exit capture. This diagnostic does not restart or terminate monitored applications. It may help distinguish a later recurrence; an exit code by itself does not identify who terminated a process.
