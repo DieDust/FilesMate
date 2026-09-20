@@ -37,9 +37,27 @@ This is **filename search**, not document-content search. You choose the index s
 
 ### Preview before opening
 
+Switch to **Large icons** to recognize images and supported videos from their thumbnails. Folders can show an automatic cover taken from their contents; choose a cover from an image or video inside the folder through **Folder appearance**, or restore the automatic cover. Thumbnail sizes are adjustable. Video thumbnails depend on Windows format and codec support.
+
+![Image and video thumbnails alongside folders with visual covers](docs/images/media-thumbnails.png)
+
 Use **Alt+P** for the side preview, or **Space** for quick preview. Inspect text and code, images, PDF, Markdown and supported Office formats without repeatedly opening another application. Format support and conversion behavior depend on the file and installed Windows components.
 
 ![JSON preview beside the file list](docs/images/document-preview.png)
+
+### Favorites: your files and folders, grouped your way
+
+Keep frequently used files and folders in the **favorites bar** below the address bar. Drag items into it, save the current folder with the star, and collect related locations into groups. Reorder favorites, rename their labels, or organize them in the favorites manager. These are references: removing a favorite does not delete its file. Enable the bar in the first-run guide or Settings.
+
+![Favorites bar with a Projects group expanded](docs/images/favorites.png)
+
+### Jump through large folders by first letter
+
+Enable **Alphabet navigation** and sort by name to jump directly to a letter instead of scrolling through a long list. Move over the right-hand navigation area to reveal the letters, then choose one; the letter indicator confirms your position.
+
+The feature is **off by default**, available in the first-run guide and **Settings → Files & folders → Alphabet navigation**. When enabled, it stays hidden below **20 items** and in **dual-pane mode** by default, leaving space for files. Both conditions are configurable.
+
+![Alphabet navigation jumping to files beginning with P](docs/images/alphabet-navigation.png)
 
 ### File shelf: collect first, organize next
 
