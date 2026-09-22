@@ -35,10 +35,17 @@ All measurements must record hardware, OS build, FilesMate commit, build configu
 
 ## Measurement
 
-Use `scripts/create-perf-data.ps1`, `scripts/run-perf.ps1`, and `scripts/capture-etw.ps1` for datasets and trace preparation. Dataset definitions live in `docs/performance-datasets.md`.
+Use `scripts/create-perf-data.ps1` and `scripts/capture-etw.ps1` for datasets and trace preparation. Dataset definitions live in `docs/performance-datasets.md`.
 
-Current tooling caveat: `run-perf.ps1` records environment and dataset presence
-only; it does not yet measure or certify the budgets above. For observational
+`pwsh ./scripts/run-perf.ps1 -Scenario ResourceChecks -Repetitions 3` now runs
+real bounded-resource checks: 100,000 metadata notifications across eight names,
+and repeated early disposal of Windows directory enumeration over 40 generated files.
+It records measured rounds after warm-up, allocation/work bounds, timing medians
+and P95, and emits JSON, Markdown and TRX. Use `-NoBuild` after a Release solution build.
+The old environment-only `AllReleaseGates` placeholder and dataset/app arguments
+were removed; this command does not launch the app or certify the UI budgets above.
+Latency results are observations; only resource/lifecycle assertions are pass gates.
+For observational
 idle CPU and memory samples of one running instance, use
 `pwsh ./scripts/measure-idle.ps1 -Seconds 60`. Add `-ProcessId <pid>` to select
 an isolated app or the search host. This does not measure startup,
@@ -63,4 +70,4 @@ The production enumerator converts each Win32 find record once into `FileEntryCo
 
 ## Verification scope
 
-See [public release checks](public-release.md). Functional tests do not certify the budgets above. The PerformanceTests project contains an explicitly skipped placeholder. Publish new benchmarks only with reproducible workloads and measurements that include child processes.
+See [public release checks](public-release.md). Functional tests do not certify the budgets above. The PerformanceTests project now checks bounded event work and enumerator disposal, with no skipped placeholder. UI frame-time, launch and full process-tree budgets still need controlled measurements. Publish whole-app benchmarks only with reproducible workloads and measurements that include child processes.

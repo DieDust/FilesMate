@@ -55,7 +55,8 @@ public sealed class PreviewService : IAsyncDisposable
             var result = await provider.CreateAsync(request, current.Token).ConfigureAwait(false);
             lock (_gate)
             {
-                if (_generation != request.Generation)
+                if (_disposed || current.IsCancellationRequested ||
+                    !ReferenceEquals(_active, current) || _generation != request.Generation)
                 {
                     throw new OperationCanceledException(current.Token);
                 }

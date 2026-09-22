@@ -237,6 +237,7 @@ public sealed partial class PreviewPane : UserControl
                 break;
             case PreviewResult.Image image:
                 await ShowImageAsync(image.Path, generation, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
                 if (ImageContent.Visibility == Visibility.Visible)
                 {
                     BindFromPath(image.Path);

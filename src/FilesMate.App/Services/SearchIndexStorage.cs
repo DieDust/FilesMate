@@ -108,7 +108,7 @@ public static class SearchIndexStorage
                     }
                     else
                     {
-                        Execute(output, "CREATE TABLE index_meta(key TEXT PRIMARY KEY,value TEXT NOT NULL); CREATE VIRTUAL TABLE file_name USING fts5(name,path,is_dir UNINDEXED);");
+                        Execute(output, "CREATE TABLE index_meta(key TEXT PRIMARY KEY,value TEXT NOT NULL); CREATE VIRTUAL TABLE file_name USING fts5(name UNINDEXED,path UNINDEXED,is_dir UNINDEXED);");
                     }
                     cancellationToken.ThrowIfCancellationRequested();
                     Execute(output, "PRAGMA journal_mode=DELETE;");

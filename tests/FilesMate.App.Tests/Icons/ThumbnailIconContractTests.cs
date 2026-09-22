@@ -68,7 +68,7 @@ public sealed class ThumbnailIconContractTests
         var binder = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Icons", "ShellIconBinder.cs"));
 
         Assert.Contains("MaxCacheBytes", service, StringComparison.Ordinal);
-        Assert.Contains("IconBitmapCache", service, StringComparison.Ordinal);
+        Assert.Contains("IconLoadCache", service, StringComparison.Ordinal);
         Assert.Contains("LastWriteTimeUtc", service, StringComparison.Ordinal);
         Assert.Contains("info.Length", service, StringComparison.Ordinal);
         Assert.Contains("ShellThumbnailService.TryCreateKey", binder, StringComparison.Ordinal);

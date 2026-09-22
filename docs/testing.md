@@ -10,7 +10,7 @@ Tests exist to lock contracts, cancellation, and resource bounds. Compilation is
 | `tests/FilesMate.Platform.Windows.Tests` | Path normalization, Win32 enumeration, watchers, icons |
 | `tests/FilesMate.IntegrationTests` | Real filesystem behavior inside marked temp roots |
 | `tests/FilesMate.App.Tests` | Navigation and virtualized surface behavior with fakes |
-| `tests/FilesMate.PerformanceTests` | Release-gate scenarios; not part of the default test script |
+| `tests/FilesMate.PerformanceTests` | Measured bounded-event and enumeration-release checks; run separately by `run-perf.ps1` |
 | `benchmarks/FilesMate.Benchmarks` | Microbenchmarks (BenchmarkDotNet) |
 | `tools/FilesMate.TestDataGenerator` | Deterministic datasets |
 

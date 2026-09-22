@@ -1,6 +1,6 @@
 namespace FilesMate.Core.Operations;
 
-public sealed class FileUndoStack
+public sealed class FileUndoStack(IFileUndoCleanupScheduler? cleanupScheduler = null)
 {
     public const int Limit = 5;
 
@@ -18,19 +18,17 @@ public sealed class FileUndoStack
     {
         ArgumentNullException.ThrowIfNull(record);
         _undo.Add(record);
-        foreach (var discarded in _redo) Release(discarded);
+        foreach (var discarded in _redo) ScheduleRelease(discarded);
         _redo.Clear();
-        if (_undo.Count > Limit)
-        {
-            Release(_undo[0]);
-            _undo.RemoveAt(0);
-        }
+        TrimHistory();
         Changed?.Invoke(this, EventArgs.Empty);
         Recorded?.Invoke(this, record);
     }
 
     public void Clear()
     {
+        // Final application shutdown must not abandon an older scheduled cleanup.
+        cleanupScheduler?.Drain();
         foreach (var record in _undo.Concat(_redo)) Release(record);
         _undo.Clear(); _redo.Clear();
         Changed?.Invoke(this, EventArgs.Empty);
@@ -39,6 +37,27 @@ public sealed class FileUndoStack
     private static void Release(FileUndoRecord record)
     {
         foreach (var replacement in record.Replacements) replacement.Dispose();
+    }
+
+    private void ScheduleRelease(FileUndoRecord record)
+    {
+        // Capture ownership now. The worker must never inspect a subsequently changed stack.
+        var replacements = record.Replacements.ToArray();
+        if (replacements.Length == 0) return;
+        void Cleanup() { foreach (var replacement in replacements) replacement.Dispose(); }
+        if (cleanupScheduler is null) Cleanup(); else cleanupScheduler.Schedule(Cleanup);
+    }
+
+    private void TrimHistory()
+    {
+        while (_undo.Count + _redo.Count > Limit)
+        {
+            // Partial operations create independent pieces. Keep the next undo and redo
+            // available, including a failed remainder; expire the farthest older piece.
+            var oldest = _undo.Count > 1 ? _undo : _redo;
+            ScheduleRelease(oldest[0]);
+            oldest.RemoveAt(0);
+        }
     }
 
     public bool TryUndo(ILocalFileOperations operations)
@@ -104,6 +123,7 @@ public sealed class FileUndoStack
         if (error.Remaining.HasActions)
             source.Add(error.Remaining);
         inverse.Add(error.Completed);
+        TrimHistory();
         Changed?.Invoke(this, EventArgs.Empty);
         // Keep cancellation and error handling unchanged after committing the actual progress.
         System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error.InnerException!).Throw();

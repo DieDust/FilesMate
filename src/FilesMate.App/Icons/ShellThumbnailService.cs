@@ -19,8 +19,7 @@ internal sealed class ShellThumbnailService
     // UI bitmaps have their own cache; bound this duplicate raw-pixel working set.
     private const long MaxCacheBytes = 8L * 1024 * 1024;
 
-    private readonly IconBitmapCache _cache = new(maxBytes: MaxCacheBytes);
-    private readonly SemaphoreSlim _gate = new(2, 2);
+    private readonly IconLoadCache _cache = new(MaxCacheBytes, concurrency: 2);
     private int _loads;
     internal int LoadCount => Volatile.Read(ref _loads);
 
@@ -31,90 +30,75 @@ internal sealed class ShellThumbnailService
             return null;
         }
 
-        return _cache.TryGetValue(key, out var bitmap) ? bitmap : null;
+        return _cache.TryGetCached(key);
     }
 
-    internal long CacheBytes => _cache.CurrentBytes;
+    internal long CacheBytes => _cache.CacheBytes;
 
     public void ClearCache() => _cache.Clear();
 
     public Task<IconBitmap?> GetAsync(string? path, int pixelSize, CancellationToken cancellationToken)
-        => Task.Run(() => GetCoreAsync(path, pixelSize, cancellationToken), cancellationToken);
+    {
+        var generation = _cache.Generation;
+        return Task.Run(() => GetCoreAsync(path, pixelSize, generation, cancellationToken), cancellationToken);
+    }
 
-    private Task<IconBitmap?> GetCoreAsync(string? path, int pixelSize, CancellationToken cancellationToken)
+    private Task<IconBitmap?> GetCoreAsync(string? path, int pixelSize, long generation, CancellationToken cancellationToken)
     {
         if (!TryCreateKey(path, pixelSize, out var key))
         {
             return Task.FromResult<IconBitmap?>(null);
         }
 
-        if (_cache.TryGetValue(key, out var cached))
-        {
-            return Task.FromResult<IconBitmap?>(cached);
-        }
-
-        return LoadAsync(key, Path.GetFullPath(path!), pixelSize, cancellationToken);
+        return _cache.GetAsync(key,
+            token => LoadAsync(Path.GetFullPath(path!), pixelSize, token),
+            cancellationToken, generation);
     }
 
     private async Task<IconBitmap?> LoadAsync(
-        string key,
         string path,
         int pixelSize,
         CancellationToken cancellationToken)
     {
         try
         {
-            await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-            try
+            cancellationToken.ThrowIfCancellationRequested();
+            var file = await StorageFile.GetFileFromPathAsync(path).AsTask(cancellationToken);
+            using var thumbnail = await file.GetThumbnailAsync(
+                ThumbnailMode.PicturesView,
+                (uint)Math.Clamp(pixelSize, 32, 512),
+                ThumbnailOptions.ResizeThumbnail).AsTask(cancellationToken);
+            if (thumbnail is null || thumbnail.Type != ThumbnailType.Image)
             {
-                if (_cache.TryGetValue(key, out var cached))
-                {
-                    return cached;
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
-                var file = await StorageFile.GetFileFromPathAsync(path).AsTask(cancellationToken);
-                using var thumbnail = await file.GetThumbnailAsync(
-                    ThumbnailMode.PicturesView,
-                    (uint)Math.Clamp(pixelSize, 32, 512),
-                    ThumbnailOptions.ResizeThumbnail).AsTask(cancellationToken);
-                if (thumbnail is null || thumbnail.Type != ThumbnailType.Image)
-                {
-                    return null;
-                }
-
-                var decoder = await BitmapDecoder.CreateAsync(thumbnail).AsTask(cancellationToken);
-                if (decoder.PixelWidth == 0 || decoder.PixelHeight == 0)
-                {
-                    return null;
-                }
-
-                var scale = Math.Min(
-                    (double)pixelSize / decoder.PixelWidth,
-                    (double)pixelSize / decoder.PixelHeight);
-                var width = (uint)Math.Max(1, Math.Round(decoder.PixelWidth * Math.Min(1, scale)));
-                var height = (uint)Math.Max(1, Math.Round(decoder.PixelHeight * Math.Min(1, scale)));
-                var transform = new BitmapTransform
-                {
-                    ScaledWidth = width,
-                    ScaledHeight = height,
-                    InterpolationMode = BitmapInterpolationMode.Fant,
-                };
-                var pixels = await decoder.GetPixelDataAsync(
-                    BitmapPixelFormat.Bgra8,
-                    BitmapAlphaMode.Premultiplied,
-                    transform,
-                    ExifOrientationMode.IgnoreExifOrientation,
-                    ColorManagementMode.DoNotColorManage).AsTask(cancellationToken);
-                var bitmap = new IconBitmap((int)width, (int)height, pixels.DetachPixelData());
-                Interlocked.Increment(ref _loads);
-                _cache.Set(key, bitmap);
-                return bitmap;
+                return null;
             }
-            finally
+
+            var decoder = await BitmapDecoder.CreateAsync(thumbnail).AsTask(cancellationToken);
+            if (decoder.PixelWidth == 0 || decoder.PixelHeight == 0)
             {
-                _gate.Release();
+                return null;
             }
+
+            var scale = Math.Min(
+                (double)pixelSize / decoder.PixelWidth,
+                (double)pixelSize / decoder.PixelHeight);
+            var width = (uint)Math.Max(1, Math.Round(decoder.PixelWidth * Math.Min(1, scale)));
+            var height = (uint)Math.Max(1, Math.Round(decoder.PixelHeight * Math.Min(1, scale)));
+            var transform = new BitmapTransform
+            {
+                ScaledWidth = width,
+                ScaledHeight = height,
+                InterpolationMode = BitmapInterpolationMode.Fant,
+            };
+            var pixels = await decoder.GetPixelDataAsync(
+                BitmapPixelFormat.Bgra8,
+                BitmapAlphaMode.Premultiplied,
+                transform,
+                ExifOrientationMode.IgnoreExifOrientation,
+                ColorManagementMode.DoNotColorManage).AsTask(cancellationToken);
+            var bitmap = new IconBitmap((int)width, (int)height, pixels.DetachPixelData());
+            Interlocked.Increment(ref _loads);
+            return bitmap;
         }
         catch (Exception) when (!cancellationToken.IsCancellationRequested)
         {

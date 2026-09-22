@@ -9,6 +9,7 @@ public sealed record ShelfTransferResult(IReadOnlyList<FilePathPair> Completed, 
     public int Skipped { get; init; }
     public FileUndoRecord? Undo { get; init; }
     public int WithoutUndo { get; init; }
+    public IReadOnlyList<string> RemovedSourceDirectories { get; init; } = [];
 }
 
 public static class FileShelfTransfer
@@ -35,7 +36,38 @@ public static class FileShelfTransfer
         }
         var result = await WindowsFileTransfer.RunAsync(operations, requests, move, resolveConflict, progress, token, byteProgress: byteProgress).ConfigureAwait(false);
         return new(result.Completed, errors.Concat(result.Errors).ToArray(), result.Cancelled)
-        { Skipped = result.Skipped + unchanged, Undo = result.Undo, WithoutUndo = result.WithoutUndo };
+        { Skipped = result.Skipped + unchanged, Undo = result.Undo, WithoutUndo = result.WithoutUndo,
+            RemovedSourceDirectories = result.RemovedSourceDirectories };
+    }
+
+    public static async Task RemoveMovedSourcesAsync(FileShelfStore shelf, ShelfTransferResult result)
+    {
+        var entries = await shelf.GetAsync().ConfigureAwait(false);
+        if (entries.Count == 0 || result.Completed.Count + result.RemovedSourceDirectories.Count == 0) return;
+        // Only inspect paths covered by completed work. A cancelled/failed source that
+        // disappeared externally must remain in the shelf, and unrelated network paths
+        // must not add disk latency to completing a local transfer.
+        var missing = await Task.Run(() =>
+        {
+            var completed = result.Completed.Select(pair => pair.Source).Concat(result.RemovedSourceDirectories)
+                .Select(Path.TrimEndingDirectorySeparator).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            return entries.Where(path =>
+            {
+                for (var current = Path.TrimEndingDirectorySeparator(path); current is not null; current = Path.GetDirectoryName(current))
+                    if (completed.Contains(current)) return ConfirmedMissing(path);
+                return false;
+            }).ToArray();
+        }).ConfigureAwait(false);
+        if (missing.Length > 0) await shelf.RemoveAsync(missing).ConfigureAwait(false);
+    }
+
+    private static bool ConfirmedMissing(string path)
+    {
+        if (!Directory.Exists(Path.GetPathRoot(path))) return false;
+        try { File.GetAttributes(path); return false; }
+        catch (FileNotFoundException) { return true; }
+        catch (DirectoryNotFoundException) { return true; }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException) { return false; }
     }
 
     internal static IReadOnlyList<string> SelectRoots(IReadOnlyList<string> sources)

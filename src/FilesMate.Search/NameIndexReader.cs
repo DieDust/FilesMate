@@ -1,5 +1,4 @@
 using Microsoft.Data.Sqlite;
-using System.Text;
 
 namespace FilesMate.Search;
 
@@ -107,9 +106,22 @@ public static class NameIndexReader
     {
         for (var i = 0; i + length <= folded.Length; i++)
         {
-            var encoded = new StringBuilder("x");
-            for (var j = 0; j < length; j++) encoded.Append(((int)folded[i + j]).ToString("X4", System.Globalization.CultureInfo.InvariantCulture));
-            yield return encoded.ToString();
+            // Encode directly into the final string. Per-character formatting and a
+            // StringBuilder for every gram create gigabytes of temporary rebuild data.
+            yield return string.Create(1 + length * 4, (folded, i, length), static (output, state) =>
+            {
+                const string hex = "0123456789ABCDEF";
+                output[0] = 'x';
+                for (var j = 0; j < state.length; j++)
+                {
+                    var value = state.folded[state.i + j];
+                    var start = 1 + j * 4;
+                    output[start] = hex[value >> 12];
+                    output[start + 1] = hex[(value >> 8) & 15];
+                    output[start + 2] = hex[(value >> 4) & 15];
+                    output[start + 3] = hex[value & 15];
+                }
+            });
         }
     }
 

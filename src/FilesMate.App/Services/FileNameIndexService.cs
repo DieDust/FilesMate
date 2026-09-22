@@ -515,7 +515,7 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
         connection.Close();
         cancellationToken.ThrowIfCancellationRequested();
         _gate.Wait(cancellationToken);
-        try { CommitDatabase(tempPath, original); NeedsUpgrade = false; }
+        try { CommitDatabase(tempPath, original, cancellationToken); NeedsUpgrade = false; }
         finally { _gate.Release(); }
         tempPath = string.Empty;
         return stats;
@@ -635,17 +635,28 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
         return new DatabaseStamp(identity.StableKey, info.Length, info.LastWriteTimeUtc);
     }
 
-    private void CommitDatabase(string tempPath, DatabaseStamp? original)
+    private void CommitDatabase(string tempPath, DatabaseStamp? original, CancellationToken cancellationToken)
     {
-        if (CaptureDatabase() != original)
-            throw new IOException("The index file changed during rebuilding. The existing file was preserved.");
-        if (original is null)
+        var waiting = Stopwatch.StartNew();
+        while (true)
         {
-            File.Move(tempPath, FilePath);
-            return;
+            cancellationToken.ThrowIfCancellationRequested();
+            if (CaptureDatabase() != original)
+                throw new IOException("The index file changed during rebuilding. The existing file was preserved.");
+            try
+            {
+                if (original is null) File.Move(tempPath, FilePath);
+                else File.Replace(tempPath, FilePath, destinationBackupFileName: null, ignoreMetadataErrors: true);
+                return;
+            }
+            catch (IOException error) when ((error.HResult & 0xFFFF) is 32 or 33 && waiting.Elapsed < TimeSpan.FromSeconds(5))
+            {
+                // SearchHost/Flow keep short-lived SQLite readers in separate processes.
+                // Wait only for their sharing locks, retaining this completed snapshot.
+                // Re-check identity on each attempt so another writer is never overwritten.
+                if (cancellationToken.WaitHandle.WaitOne(50)) cancellationToken.ThrowIfCancellationRequested();
+            }
         }
-
-        File.Replace(tempPath, FilePath, destinationBackupFileName: null, ignoreMetadataErrors: true);
     }
 
     private static void DeleteDatabaseFiles(string path)
@@ -674,6 +685,6 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
 
     private const string SchemaSql = """
         CREATE TABLE IF NOT EXISTS index_meta(key TEXT PRIMARY KEY, value TEXT NOT NULL);
-        CREATE VIRTUAL TABLE IF NOT EXISTS file_name USING fts5(name, path, is_dir UNINDEXED);
+        CREATE VIRTUAL TABLE IF NOT EXISTS file_name USING fts5(name UNINDEXED, path UNINDEXED, is_dir UNINDEXED);
         """;
 }

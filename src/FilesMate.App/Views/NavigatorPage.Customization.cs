@@ -226,8 +226,9 @@ public sealed partial class NavigatorPage
             if (result.Undo is not null)
             {
                 App.FileUndo.Push(result.Undo);
-                if (!_disposed) RefreshFilePanes();
             }
+            if (!_disposed && (result.Undo is not null || result.Completed.Count > 0 || result.RemovedSourceDirectories.Count > 0)) RefreshFilePanes();
+            if (move) await FileShelfTransfer.RemoveMovedSourcesAsync(App.FileShelf, result);
             ShowTransferFeedback(result);
             if (TransferFeedback.NeedsAttention(result) && !_disposed)
                 vm.ReportUserError(TransferFeedback.Format(result));

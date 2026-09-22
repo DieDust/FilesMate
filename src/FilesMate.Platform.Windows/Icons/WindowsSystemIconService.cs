@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -12,12 +11,12 @@ namespace FilesMate.Platform.Windows.Icons;
 /// </summary>
 public sealed class WindowsSystemIconService : IIconService
 {
-    private readonly IconBitmapCache _cache = new();
-    private readonly ConcurrentDictionary<string, Lazy<Task<IconBitmap?>>> _inflight = new(StringComparer.Ordinal);
-    private readonly SemaphoreSlim _gate = new(4, 4);
+    private readonly IconLoadCache _cache = new(16L * 1024 * 1024, concurrency: 4);
 
     public IconBitmap? TryGetCached(in IconKey key) =>
-        _cache.TryGetValue(key.CacheId, out var bitmap) ? bitmap : null;
+        _cache.TryGetCached(key.CacheId);
+
+    public void ClearCache() => _cache.Clear();
 
     public Task<IconBitmap?> GetAsync(
         IconKey key,
@@ -25,48 +24,9 @@ public sealed class WindowsSystemIconService : IIconService
         FileAttributes attributes,
         bool directory,
         CancellationToken cancellationToken)
-    {
-        if (_cache.TryGetValue(key.CacheId, out var cached))
-        {
-            return Task.FromResult<IconBitmap?>(cached);
-        }
-
-        return _inflight.GetOrAdd(key.CacheId, _ => new Lazy<Task<IconBitmap?>>(
-            () => LoadAsync(key, path, attributes, directory, cancellationToken))).Value;
-    }
-
-    private async Task<IconBitmap?> LoadAsync(
-        IconKey key,
-        string? path,
-        FileAttributes attributes,
-        bool directory,
-        CancellationToken cancellationToken)
-    {
-        var acquired = false;
-        try
-        {
-            await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
-            acquired = true;
-            if (_cache.TryGetValue(key.CacheId, out var cached))
-            {
-                return cached;
-            }
-
-            var bitmap = await Task.Run(() => Extract(key, path, attributes, directory), cancellationToken)
-                .ConfigureAwait(false);
-            if (bitmap is not null)
-            {
-                _cache.Set(key.CacheId, bitmap);
-            }
-
-            return bitmap;
-        }
-        finally
-        {
-            if (acquired) _gate.Release();
-            _inflight.TryRemove(key.CacheId, out _);
-        }
-    }
+        => _cache.GetAsync(key.CacheId,
+            token => Task.Run(() => Extract(key, path, attributes, directory), token),
+            cancellationToken);
 
     private static IconBitmap? Extract(IconKey key, string? path, FileAttributes attributes, bool directory)
     {

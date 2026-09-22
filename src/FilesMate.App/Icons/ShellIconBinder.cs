@@ -87,6 +87,7 @@ internal static class ShellIconBinder
 
     public static void ClearCache()
     {
+        (Service as WindowsSystemIconService)?.ClearCache();
         Images.Clear();
         DynamicImages.Clear();
         Thumbnails.ClearCache();

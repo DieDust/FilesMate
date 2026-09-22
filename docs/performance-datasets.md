@@ -38,5 +38,5 @@ Created by `scripts/create-perf-data.ps1 -Root <absolute-path>`:
 ## Scripts
 
 - `scripts/create-perf-data.ps1` builds the generator and materializes the table above.
-- `scripts/run-perf.ps1` writes JSON and Markdown under `artifacts/perf/<commit>/<timestamp>/`.
+- `scripts/run-perf.ps1 -Scenario ResourceChecks` uses small self-owned fixtures and writes measured JSON, Markdown and TRX under `artifacts/perf/<commit>/<timestamp>/`; it does not consume the canonical UI datasets above.
 - `scripts/capture-etw.ps1` starts WPR, runs an optional script block, and always stops the session in `finally`.

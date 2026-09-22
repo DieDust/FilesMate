@@ -7,6 +7,41 @@ namespace FilesMate.App.Tests.Navigation;
 public sealed class DirectoryWatchTests
 {
     [Fact]
+    public async Task Repeated_metadata_events_update_latest_file_state_without_reenumerating()
+    {
+        var root = Directory.CreateTempSubdirectory("filesmate-live-writes-").FullName;
+        try
+        {
+            File.WriteAllText(Path.Combine(root, "live.txt"), "latest-version");
+            var enumerator = new FakeDirectoryEnumerator();
+            enumerator.Folders[root] = [FakeDirectoryEnumerator.Entry(1, "live.txt")];
+            var watcher = new FakeDirectoryWatcher();
+            var dispatcher = new QueuedDispatcher();
+            await using var vm = new PaneViewModel(dispatcher, new WindowsPathService(),
+                enumerator, NaturalStringComparer.Instance, watcher);
+            vm.Navigate(root);
+            await WaitUntil(() => { dispatcher.Drain(); return !vm.IsLoading && watcher.Started == 1; });
+
+            for (var i = 0; i < 10_000; i++)
+                watcher.Notifications.Writer.TryWrite(Notice(vm, DirectoryWatchKind.Modified, "live.txt"));
+            // Leave the UI dispatcher queued until the watcher has received the burst.
+            await WaitUntil(() => watcher.Notifications.Reader.Count == 0);
+            await WaitUntil(() => { dispatcher.Drain(); return vm.Store?[0].Size == 14; });
+            Assert.Equal(1, enumerator.Started);
+            Assert.Equal(["live.txt"], vm.PlaceholderNames);
+        }
+        finally { Directory.Delete(root, recursive: true); }
+    }
+
+    private sealed class QueuedDispatcher : IUiDispatcher
+    {
+        private readonly System.Collections.Concurrent.ConcurrentQueue<Action> _actions = new();
+        public bool HasThreadAccess => false;
+        public void Post(Action action) => _actions.Enqueue(action);
+        public void Drain() { while (_actions.TryDequeue(out var action)) action(); }
+    }
+
+    [Fact]
     public async Task Disposed_pane_releases_published_folder_data_without_collecting_the_pane()
     {
         var root = Directory.CreateTempSubdirectory("filesmate-dispose-").FullName;

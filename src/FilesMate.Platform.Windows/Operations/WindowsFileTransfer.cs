@@ -7,6 +7,7 @@ public sealed record FileTransferResult(IReadOnlyList<FilePathPair> Completed, I
     bool Cancelled, int Skipped, FileUndoRecord? Undo)
 {
     public int WithoutUndo { get; init; }
+    public IReadOnlyList<string> RemovedSourceDirectories { get; init; } = [];
 }
 
 /// <summary>One operation-scoped conflict policy, including conflicts inside merged folders.</summary>
@@ -64,7 +65,8 @@ public static class WindowsFileTransfer
                 foreach (var replacement in replacements) replacement.Dispose();
                 undo = null;
             }
-            return new FileTransferResult(completed, errors, cancelled || token.IsCancellationRequested, skipped, undo) { WithoutUndo = withoutUndo };
+            return new FileTransferResult(completed, errors, cancelled || token.IsCancellationRequested, skipped, undo)
+            { WithoutUndo = withoutUndo, RemovedSourceDirectories = removedDirectories.ToArray() };
 
             async Task Transfer(string source, string originalTarget, int depth)
             {

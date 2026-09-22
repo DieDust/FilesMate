@@ -1,108 +1,63 @@
 #Requires -Version 7
 [CmdletBinding()]
 param(
-    [string]$AppPath,
-
-    [Parameter(Mandatory = $true)]
-    [string]$DatasetRoot,
-
-    [string]$Scenario = 'AllReleaseGates',
-
-    [int]$Repetitions = 3,
-
-    [string]$OutputDirectory
+    [ValidateSet('ResourceChecks')][string]$Scenario = 'ResourceChecks',
+    [ValidateRange(1, 20)][int]$Repetitions = 3,
+    [string]$OutputDirectory,
+    [switch]$NoBuild
 )
-
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-
 $repoRoot = Split-Path -Parent $PSScriptRoot
-Set-Location $repoRoot
-
-if ($Repetitions -lt 1) {
-    throw 'Repetitions must be >= 1.'
+$commit = (& git -C $repoRoot rev-parse --short HEAD).Trim()
+if ($LASTEXITCODE -ne 0) { throw 'Cannot identify the measured source revision.' }
+if (!$OutputDirectory) { $OutputDirectory = Join-Path $repoRoot ("artifacts/perf/{0}/{1}" -f $commit, (Get-Date -Format 'yyyyMMdd-HHmmss-fff')) }
+$output = [IO.Path]::GetFullPath($OutputDirectory)
+[IO.Directory]::CreateDirectory($output) | Out-Null
+$project = Join-Path $repoRoot 'tests/FilesMate.PerformanceTests/FilesMate.PerformanceTests.csproj'
+if (!$NoBuild) {
+    & dotnet build $project -c Release '-p:Platform=x64' *> (Join-Path $output 'build.log')
+    if ($LASTEXITCODE -ne 0) { throw "Resource-check build failed. See $output/build.log" }
 }
-
-if (-not [System.IO.Path]::IsPathRooted($DatasetRoot)) {
-    throw "DatasetRoot must be an absolute path. Received: $DatasetRoot"
-}
-
-$resolvedDatasets = [System.IO.Path]::GetFullPath($DatasetRoot)
-$commit = 'unknown'
-try {
-    $commit = (git -C $repoRoot rev-parse --short HEAD).Trim()
-}
-catch {
-    Write-Warning 'git rev-parse failed; using commit=unknown'
-}
-
-$timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
-    $OutputDirectory = Join-Path $repoRoot "artifacts\perf\$commit\$timestamp"
-}
-
-$resolvedOutput = [System.IO.Path]::GetFullPath($OutputDirectory)
-New-Item -ItemType Directory -Force -Path $resolvedOutput | Out-Null
-
-Write-Host "FilesMate run-perf"
-Write-Host "  scenario     : $Scenario"
-Write-Host "  repetitions  : $Repetitions"
-Write-Host "  app          : $(if ($AppPath) { $AppPath } else { '(not supplied)' })"
-Write-Host "  datasets     : $resolvedDatasets"
-Write-Host "  output       : $resolvedOutput"
-Write-Host "  commit       : $commit"
-Write-Host "  machine      : $env:COMPUTERNAME"
-Write-Host "  os           : $([System.Environment]::OSVersion.VersionString)"
-Write-Host "  dotnet       : $(dotnet --version)"
-Write-Host "  time         : $((Get-Date).ToString('o'))"
-
-$datasetNames = @('small-1k', 'medium-10k', 'large-100k', 'images-10k', 'unicode-5k', 'deep-tree')
-$present = @()
-foreach ($name in $datasetNames) {
-    $path = Join-Path $resolvedDatasets $name
-    $marker = Join-Path $path '.filesmate-dataset-marker'
-    $present += [pscustomobject]@{
-        name       = $name
-        path       = $path
-        present    = (Test-Path $marker)
-        markerPath = $marker
+$samples = [Collections.Generic.List[object]]::new()
+$runs = [Collections.Generic.List[object]]::new()
+for ($i = 1; $i -le $Repetitions; $i++) {
+    & dotnet test $project -c Release --no-build '-p:Platform=x64' --logger "trx;LogFileName=resource-$i.trx" --results-directory $output *> (Join-Path $output "run-$i.log")
+    $testExit = $LASTEXITCODE
+    $trxPath = Join-Path $output "resource-$i.trx"
+    if (!(Test-Path -LiteralPath $trxPath)) { throw "No measurement result for run $i; see its log." }
+    [xml]$trx = Get-Content -LiteralPath $trxPath -Raw
+    $counter = $trx.TestRun.ResultSummary.Counters
+    $runs.Add([pscustomobject]@{Run=$i;ExitCode=$testExit;Total=[int]$counter.total;Passed=[int]$counter.passed;Failed=[int]$counter.failed;Skipped=[int]$counter.notExecuted})
+    foreach ($node in $trx.SelectNodes("//*[local-name()='StdOut']")) {
+        foreach ($match in [regex]::Matches($node.InnerText, '(?m)^PERF_SAMPLE (.+)$')) {
+            $sample = $match.Groups[1].Value.Trim() | ConvertFrom-Json
+            $sample | Add-Member -NotePropertyName Run -NotePropertyValue $i
+            $samples.Add($sample)
+        }
     }
 }
-
+function Percentile([double[]]$Values, [double]$Quantile) {
+    $sorted = @($Values | Sort-Object)
+    return [math]::Round($sorted[[math]::Max(0, [math]::Ceiling($sorted.Count * $Quantile) - 1)], 4)
+}
+$statistics = @($samples | Group-Object Scenario | ForEach-Object {
+    [pscustomobject]@{Scenario=$_.Name;Samples=$_.Count;MedianMs=(Percentile $_.Group.Milliseconds .5);P95Ms=(Percentile $_.Group.Milliseconds .95)}
+})
+$passed = @($runs | Where-Object { $_.ExitCode -ne 0 -or $_.Total -ne 2 -or $_.Passed -ne 2 -or $_.Failed -ne 0 -or $_.Skipped -ne 0 }).Count -eq 0 -and $statistics.Count -eq 2
 $summary = [ordered]@{
-    schema        = 'filesmate-perf-summary/v1'
-    scenario      = $Scenario
-    repetitions   = $Repetitions
-    commit        = $commit
-    machine       = $env:COMPUTERNAME
-    os            = [System.Environment]::OSVersion.VersionString
-    dotnet        = (dotnet --version)
-    appPath       = $AppPath
-    datasetRoot   = $resolvedDatasets
-    generatedUtc  = [DateTimeOffset]::UtcNow.ToString('o')
-    status        = 'skeleton'
-    notes         = 'End-to-end scenario instrumentation lands in Task 20. This run records environment and dataset presence only.'
-    datasets      = $present
-    results       = @()
+    Schema='filesmate-resource-checks/v1'; Scenario=$Scenario; Commit=$commit
+    GeneratedUtc=[DateTimeOffset]::UtcNow.ToString('O'); Machine=$env:COMPUTERNAME
+    OS=[Environment]::OSVersion.VersionString; LogicalProcessors=[Environment]::ProcessorCount
+    Configuration='Release x64'; Repetitions=$Repetitions; Passed=$passed
+    Scope='100,000 metadata events over 8 names; repeated early disposal of real Windows enumeration over 40 generated files. Each run warms up before measured rounds.'
+    Limits='Bounded-work and release checks. Timing is observational, with no latency pass threshold. Does not measure app launch, UI frames, preview child processes, or certify all release budgets.'
+    Statistics=$statistics; Runs=$runs; Samples=$samples
 }
-
-$jsonPath = Join-Path $resolvedOutput 'summary.json'
-$mdPath = Join-Path $resolvedOutput 'summary.md'
-$summary | ConvertTo-Json -Depth 6 | Set-Content -Path $jsonPath -Encoding utf8
-
-$md = @()
-$md += "# FilesMate perf $Scenario"
-$md += ""
-$md += "- commit: $commit"
-$md += "- machine: $env:COMPUTERNAME"
-$md += "- status: skeleton (Task 20 fills measurements)"
-$md += ""
-$md += "| Dataset | Present |"
-$md += "| --- | --- |"
-foreach ($row in $present) {
-    $md += "| $($row.name) | $($row.present) |"
-}
-$md -join [Environment]::NewLine | Set-Content -Path $mdPath -Encoding utf8
-
-Write-Host "Wrote $jsonPath"
-Write-Host "Wrote $mdPath"
+$summary | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $output 'summary.json') -Encoding utf8
+$lines = @('# FilesMate resource checks', '', "- Commit: $commit", "- Passed: $passed", "- Scope: $($summary.Scope)", "- Limits: $($summary.Limits)", '', '| Scenario | Samples | Median ms | P95 ms |', '| --- | ---: | ---: | ---: |')
+foreach ($row in $statistics) { $lines += "| $($row.Scenario) | $($row.Samples) | $($row.MedianMs) | $($row.P95Ms) |" }
+$lines -join [Environment]::NewLine | Set-Content -LiteralPath (Join-Path $output 'summary.md') -Encoding utf8
+$statistics | Format-Table
+Write-Output "Results: $output"
+if (!$passed) { throw 'One or more resource checks failed or measurements are missing.' }

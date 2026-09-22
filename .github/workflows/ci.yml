@@ -23,6 +23,9 @@ jobs:
         run: ./scripts/test.ps1 -Configuration Release
       - name: Verify bounded PDF page layout
         run: node scripts/test-pdf-window.mjs
+      - name: Verify resource bounds and directory lifecycle
+        shell: pwsh
+        run: ./scripts/run-perf.ps1 -NoBuild -Repetitions 1 -OutputDirectory artifacts/test-results/resources
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

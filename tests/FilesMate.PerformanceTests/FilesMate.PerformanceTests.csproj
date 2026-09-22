@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\FilesMate.Core\FilesMate.Core.csproj" />
     <ProjectReference Include="..\..\src\FilesMate.Platform.Windows\FilesMate.Platform.Windows.csproj" />
+    <Compile Include="..\..\src\FilesMate.App\Navigation\DirectoryWatchBuffer.cs" Link="DirectoryWatchBuffer.cs" />
   </ItemGroup>
 
 </Project>

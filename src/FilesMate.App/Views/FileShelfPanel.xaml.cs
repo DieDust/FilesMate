@@ -220,16 +220,9 @@ public sealed partial class FileShelfPanel : UserControl
             if (result.Undo is not null)
             {
                 App.FileUndo.Push(result.Undo);
-                if (_host.IsLoaded) _refresh();
-                if (move)
-                {
-                    var all = await App.FileShelf.GetAsync();
-                    await App.FileShelf.RemoveAsync(all.Where(source => !Path.Exists(source) && (sources.Contains(source, StringComparer.OrdinalIgnoreCase) || result.Completed.Any(pair =>
-                        string.Equals(pair.Source, source, StringComparison.OrdinalIgnoreCase)
-                        || source.StartsWith(Path.TrimEndingDirectorySeparator(pair.Source) + Path.DirectorySeparatorChar,
-                            StringComparison.OrdinalIgnoreCase)))));
-                }
             }
+            if (_host.IsLoaded && (result.Undo is not null || result.Completed.Count > 0 || result.RemovedSourceDirectories.Count > 0)) _refresh();
+            if (move) await FileShelfTransfer.RemoveMovedSourcesAsync(App.FileShelf, result);
             SetStatus(TransferFeedback.Format(result));
         }
         finally { _transfer.Dispose(); _transfer = null; }

@@ -64,7 +64,7 @@ public partial class App : Application
 
     public static ShortcutMap Shortcuts { get; private set; } = new();
 
-    internal static FileUndoStack FileUndo { get; } = new();
+    internal static FileUndoStack FileUndo { get; } = new(new FileUndoCleanupScheduler());
 
     internal static bool IsShortcutCaptureActive { get; set; }
 

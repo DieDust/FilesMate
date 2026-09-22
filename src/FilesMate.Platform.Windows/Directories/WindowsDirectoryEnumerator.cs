@@ -29,6 +29,8 @@ public sealed class WindowsDirectoryEnumerator : IDirectoryEnumerator
         DirectoryRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        using var lifetime = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var token = lifetime.Token;
         var channel = Channel.CreateBounded<DirectoryBatch>(new BoundedChannelOptions(4)
         {
             SingleReader = true,
@@ -36,17 +38,20 @@ public sealed class WindowsDirectoryEnumerator : IDirectoryEnumerator
             FullMode = BoundedChannelFullMode.Wait,
         });
 
-        var worker = Task.Run(() => ProduceAsync(request, channel.Writer, cancellationToken), CancellationToken.None);
+        var worker = Task.Run(() => ProduceAsync(request, channel.Writer, token), CancellationToken.None);
 
         try
         {
-            await foreach (var batch in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
+            await foreach (var batch in channel.Reader.ReadAllAsync(token).ConfigureAwait(false))
             {
                 yield return batch;
             }
         }
         finally
         {
+            // A consumer can stop early without cancelling its own token. Release
+            // a producer waiting on the bounded channel before awaiting its exit.
+            await lifetime.CancelAsync().ConfigureAwait(false);
             try
             {
                 await worker.ConfigureAwait(false);
