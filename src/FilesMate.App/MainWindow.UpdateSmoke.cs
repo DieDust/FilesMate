@@ -36,6 +36,8 @@ public sealed partial class MainWindow
             App.Updates.TestInstallerStart = start =>
             {
                 if (!File.Exists(start.FileName) || !start.ArgumentList.Contains("/FILESMATEUPDATE=1")
+                    || !start.ArgumentList.Contains("/NOCLOSEAPPLICATIONS")
+                    || !start.ArgumentList.Contains("/NOFORCECLOSEAPPLICATIONS")
                     || !start.ArgumentList.Contains("/DIR=" + AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar)))
                     throw new Exception("Unsafe installer handoff");
                 invoked = true;

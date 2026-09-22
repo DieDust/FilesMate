@@ -34,7 +34,7 @@ internal static class WindowsRecycleOperation
                 var fullPath = Path.GetFullPath(path);
                 ShellFileOperation.SHCreateItemFromParsingName(fullPath, 0, ShellFileOperation.ShellItemId, out var item);
                 items.Add(item);
-                var sink = new DeleteSink(fullPath, completed);
+                var sink = new DeleteSink(fullPath, File.GetAttributes(fullPath), completed);
                 sinks.Add(sink);
                 operation.DeleteItem(item, sink);
             }
@@ -52,7 +52,7 @@ internal static class WindowsRecycleOperation
     }
 
     [ComVisible(true), ClassInterface(ClassInterfaceType.None)]
-    private sealed class DeleteSink(string path, Action<RecycleItemResult>? completed) : ShellFileOperation.IProgressSink
+    private sealed class DeleteSink(string path, FileAttributes originalAttributes, Action<RecycleItemResult>? completed) : ShellFileOperation.IProgressSink
     {
         internal bool Completed { get; private set; }
         public int PostDeleteItem(uint flags, nint item, int result, nint recycled)
@@ -62,9 +62,37 @@ internal static class WindowsRecycleOperation
             if (!Completed)
             {
                 Completed = true;
-                completed?.Invoke(new(path, recycled != 0));
+                completed?.Invoke(new(path, recycled != 0) { Receipt = ReadReceipt(recycled) });
             }
             return 0;
+        }
+
+        private RecycleReceipt? ReadReceipt(nint recycled)
+        {
+            if (!OperatingSystem.IsWindows() || recycled == 0) return null;
+            object? wrapper = null;
+            nint text = 0;
+            try
+            {
+                wrapper = Marshal.GetObjectForIUnknown(recycled);
+                ((ShellFileOperation.IShellItem)wrapper).GetDisplayName(0x80058000u, out text); // SIGDN_FILESYSPATH
+                var dataPath = Marshal.PtrToStringUni(text);
+                if (dataPath is null || !Path.GetFileName(dataPath).StartsWith("$R", StringComparison.Ordinal)) return null;
+                var infoPath = Path.Combine(Path.GetDirectoryName(dataPath)!, "$I" + Path.GetFileName(dataPath)[2..]);
+                if (!RecycleBinRestore.TryReadOriginalPath(infoPath, out var original, out _)
+                    || !string.Equals(original, Path.GetFullPath(path), StringComparison.OrdinalIgnoreCase)) return null;
+                return new(path, dataPath, infoPath, originalAttributes);
+            }
+            catch (Exception error) when (error is COMException or IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                // The deletion still completed. Missing proof must never become a name-only undo.
+                return null;
+            }
+            finally
+            {
+                if (text != 0) Marshal.FreeCoTaskMem(text);
+                if (wrapper is not null && Marshal.IsComObject(wrapper)) Marshal.ReleaseComObject(wrapper);
+            }
         }
         public int StartOperations() => 0;
         public int FinishOperations(int result) => 0;

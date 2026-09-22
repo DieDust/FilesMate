@@ -90,6 +90,9 @@ public sealed class WindowsLocalFileOperations : ILocalFileOperations
         File.Move(source, destinationPath);
     }
 
+    public bool TryRenameFileWithoutCopy(string source, string destinationPath) =>
+        WindowsFileMove.TryRename(source, destinationPath);
+
     public void Recycle(IReadOnlyList<string> paths, Action<RecycleItemResult>? completed = null)
     {
         EnsureSources(paths);
@@ -100,7 +103,10 @@ public sealed class WindowsLocalFileOperations : ILocalFileOperations
     }
 
     public void RestoreRecycled(IReadOnlyList<string> originalPaths) =>
-        RecycleBinRestore.Restore(originalPaths);
+        throw new UndoStateChangedException(); // Restoring by name cannot identify the deleted version.
+
+    public void RestoreRecycledItems(IReadOnlyList<RecycleItemResult> items, Action<string>? completed = null) =>
+        RecycleBinRestore.RestoreItems(items, completed);
 
     public void PermanentDelete(IReadOnlyList<string> paths)
     {

@@ -193,4 +193,9 @@ public readonly record struct SearchIndexProgress(
     long Files,
     long Folders,
     long Errors,
-    bool Running);
+    bool Running)
+{
+    public bool Cancelled { get; init; }
+    public string? Error { get; init; }
+    public DateTimeOffset? CompletedUtc { get; init; }
+}

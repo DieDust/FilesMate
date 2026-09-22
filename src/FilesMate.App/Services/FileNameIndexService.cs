@@ -4,6 +4,7 @@ using System.Globalization;
 using FilesMate.App.Models;
 using FilesMate.App.Navigation;
 using FilesMate.Search;
+using FilesMate.Platform.Windows.Metadata;
 
 using Microsoft.Data.Sqlite;
 
@@ -21,12 +22,12 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
 
     internal const int FetchLimit = 240;
 
-    private readonly string _connectionString;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly SemaphoreSlim _rebuildGate = new(1, 1);
     private readonly object _lifetimeGate = new();
     private CancellationTokenSource? _runCts;
     private bool _disposed;
+    private string? _buildingPath;
 
     public FileNameIndexService(string filePath)
     {
@@ -42,14 +43,6 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
             Directory.CreateDirectory(directory);
         }
 
-        _connectionString = new SqliteConnectionStringBuilder
-        {
-            DataSource = FilePath,
-            Mode = SqliteOpenMode.ReadWriteCreate,
-            Cache = SqliteCacheMode.Shared,
-            Pooling = false,
-        }.ToString();
-
         Stats = LoadStats();
     }
 
@@ -58,6 +51,10 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
     public bool IsRunning { get; private set; }
 
     public bool NeedsUpgrade { get; private set; }
+
+    public string? StorageError { get; private set; }
+
+    public string? BuildingPath => Volatile.Read(ref _buildingPath);
 
     public SearchIndexStats Stats { get; private set; }
 
@@ -79,8 +76,10 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
         try
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            indexed = await Task.Run(() => NameIndexReader.Search(FilePath, query, prefix, FetchLimit, cancellationToken, SearchHitRanking.CreateRank(rankOrder, query), rankByPath: true)
-                .Select(hit => new HomeSearchHit(hit.Name, hit.Path, hit.IsDirectory)).ToArray(), cancellationToken).ConfigureAwait(false);
+            indexed = await Task.Run(() => !File.Exists(FilePath) && StorageError is null
+                ? Array.Empty<HomeSearchHit>()
+                : NameIndexReader.Search(FilePath, query, prefix, FetchLimit, cancellationToken, SearchHitRanking.CreateRank(rankOrder, query), rankByPath: true)
+                    .Select(hit => new HomeSearchHit(hit.Name, hit.Path, hit.IsDirectory)).ToArray(), cancellationToken).ConfigureAwait(false);
         }
         finally { _gate.Release(); }
 
@@ -123,14 +122,28 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
             await _rebuildGate.WaitAsync(run.Token).ConfigureAwait(false);
             enteredGate = true;
             Stats = await Task.Run(() => RebuildCore(settings, run.Token), run.Token).ConfigureAwait(false);
+            StorageError = null;
+            Raise(new SearchIndexProgress(null, Stats.Files, Stats.Folders, Stats.Errors, false)
+                { CompletedUtc = Stats.CompletedUtc });
         }
         catch (OperationCanceledException)
         {
             if (IsCurrentRun(run))
             {
-                Raise(new SearchIndexProgress(null, Stats.Files, Stats.Folders, Stats.Errors, false));
+                Raise(new SearchIndexProgress(null, Stats.Files, Stats.Folders, Stats.Errors, false)
+                    { Cancelled = true, CompletedUtc = Stats.CompletedUtc });
             }
 
+            throw;
+        }
+        catch (Exception error)
+        {
+            if (IsCurrentRun(run))
+            {
+                StorageError = error.Message;
+                Raise(new SearchIndexProgress(null, Stats.Files, Stats.Folders, Stats.Errors, false)
+                    { Error = error.Message, CompletedUtc = Stats.CompletedUtc });
+            }
             throw;
         }
         finally
@@ -261,6 +274,8 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
 
     private SearchIndexStats RebuildCore(SearchIndexSettings settings, CancellationToken cancellationToken)
     {
+        var original = CaptureDatabase();
+        if (original is not null) SearchIndexStorage.ValidateDatabase(FilePath);
         long files = 0;
         long folders = 0;
         long errors = 0;
@@ -268,6 +283,9 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
         // even when a small tree finishes inside the throttle window.
         long lastReport = 0;
         var tempPath = FilePath + ".rebuild-" + Guid.NewGuid().ToString("N") + ".db";
+        // Reserve only our unique staging file; never initialize a pre-existing path.
+        using (new FileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.None)) { }
+        Volatile.Write(ref _buildingPath, tempPath);
         try
         {
             using var connection = new SqliteConnection(BuildConnectionString(tempPath));
@@ -497,15 +515,15 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
         connection.Close();
         cancellationToken.ThrowIfCancellationRequested();
         _gate.Wait(cancellationToken);
-        try { CommitDatabase(tempPath); NeedsUpgrade = false; }
+        try { CommitDatabase(tempPath, original); NeedsUpgrade = false; }
         finally { _gate.Release(); }
         tempPath = string.Empty;
-        Raise(new SearchIndexProgress(null, files, folders, errors, false));
         return stats;
         }
         finally
         {
             DeleteDatabaseFiles(tempPath);
+            Volatile.Write(ref _buildingPath, null);
         }
     }
 
@@ -513,17 +531,22 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
     {
         try
         {
-            using var connection = new SqliteConnection(_connectionString);
+            if (!File.Exists(FilePath) && !Directory.Exists(FilePath)) return SearchIndexStats.Empty;
+            SearchIndexStorage.ValidateDatabase(FilePath);
+            using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+            {
+                DataSource = FilePath, Mode = SqliteOpenMode.ReadOnly, Pooling = false,
+            }.ToString());
             connection.Open();
             PrepareConnection(connection);
-            EnsureSchema(connection);
             using var version = connection.CreateCommand();
             version.CommandText = "SELECT value FROM index_meta WHERE key='schema';";
             NeedsUpgrade = version.ExecuteScalar() as string != "3";
             return ReadStats(connection);
         }
-        catch (Exception ex) when (ex is SqliteException or IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is SqliteException or IOException or InvalidDataException or UnauthorizedAccessException)
         {
+            StorageError = ex.Message;
             return SearchIndexStats.Empty;
         }
     }
@@ -595,9 +618,28 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
             Pooling = false,
         }.ToString();
 
-    private void CommitDatabase(string tempPath)
+    private sealed record DatabaseStamp(string Identity, long Length, DateTime Written);
+
+    private DatabaseStamp? CaptureDatabase()
     {
-        if (!File.Exists(FilePath))
+        if (Directory.Exists(FilePath)) throw new IOException("The index path is occupied by a folder.");
+        foreach (var suffix in new[] { "-wal", "-shm", "-journal" })
+            if (File.Exists(FilePath + suffix) || Directory.Exists(FilePath + suffix))
+                throw new IOException("The index has active database logs. Close other index writers before rebuilding.");
+        if (!File.Exists(FilePath)) return null;
+        var info = new FileInfo(FilePath);
+        if ((info.Attributes & FileAttributes.ReparsePoint) != 0)
+            throw new IOException("The index path is a link. Choose a regular index location.");
+        var identity = new WindowsFileIdentityProvider().Resolve(FilePath);
+        if (!identity.IsStable) throw new IOException("Cannot verify the existing index file identity.");
+        return new DatabaseStamp(identity.StableKey, info.Length, info.LastWriteTimeUtc);
+    }
+
+    private void CommitDatabase(string tempPath, DatabaseStamp? original)
+    {
+        if (CaptureDatabase() != original)
+            throw new IOException("The index file changed during rebuilding. The existing file was preserved.");
+        if (original is null)
         {
             File.Move(tempPath, FilePath);
             return;

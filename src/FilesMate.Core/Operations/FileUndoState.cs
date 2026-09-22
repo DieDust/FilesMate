@@ -10,9 +10,11 @@ internal sealed class FileUndoState
     private readonly Dictionary<string, Version> _entries = new(StringComparer.OrdinalIgnoreCase);
     private readonly string[] _roots;
     private readonly bool _complete = true;
+    private readonly bool _recursive;
 
-    private FileUndoState(IEnumerable<string> roots)
+    private FileUndoState(IEnumerable<string> roots, bool recursive = true)
     {
+        _recursive = recursive;
         _roots = roots.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         try
         {
@@ -23,10 +25,44 @@ internal sealed class FileUndoState
     }
 
     public static FileUndoState Capture(IEnumerable<string> paths) => new(paths);
+    internal static FileUndoState CaptureRootsOnly(IEnumerable<string> paths) => new(paths, recursive: false);
+
+    private FileUndoState(FileUndoState original, IEnumerable<string> roots)
+    {
+        var selected = new HashSet<string>(roots, StringComparer.OrdinalIgnoreCase);
+        _roots = original._roots.Where(selected.Contains).ToArray();
+        _complete = original._complete;
+        _recursive = original._recursive;
+        foreach (var entry in original._entries)
+            if (_roots.Any(root => string.Equals(root, entry.Key, StringComparison.OrdinalIgnoreCase)
+                || entry.Key.StartsWith(Path.TrimEndingDirectorySeparator(root) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)))
+                _entries.Add(entry.Key, entry.Value);
+    }
+
+    internal FileUndoState SelectRoots(IEnumerable<string> roots) => new(this, roots);
+
+    private FileUndoState(FileUndoState original, FileUndoState replacement)
+    {
+        _roots = original._roots;
+        _recursive = original._recursive;
+        _complete = original._complete && replacement._complete;
+        foreach (var entry in original._entries) _entries.Add(entry.Key, entry.Value);
+        foreach (var root in replacement._roots.Where(root => original._roots.Contains(root, StringComparer.OrdinalIgnoreCase)))
+        {
+            foreach (var key in _entries.Keys.Where(key => string.Equals(key, root, StringComparison.OrdinalIgnoreCase)
+                || key.StartsWith(Path.TrimEndingDirectorySeparator(root) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)).ToArray())
+                _entries.Remove(key);
+            foreach (var entry in replacement._entries)
+                if (string.Equals(entry.Key, root, StringComparison.OrdinalIgnoreCase)
+                    || entry.Key.StartsWith(Path.TrimEndingDirectorySeparator(root) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                    _entries.Add(entry.Key, entry.Value);
+        }
+    }
+    internal FileUndoState WithReplacement(FileUndoState replacement) => new(this, replacement);
 
     public void Validate()
     {
-        var current = Capture(_roots);
+        var current = new FileUndoState(_roots, _recursive);
         if (!_complete || !current._complete || _entries.Count != current._entries.Count
             || _entries.Any(pair => !current._entries.TryGetValue(pair.Key, out var value) || pair.Value != value))
             throw new UndoStateChangedException();
@@ -43,7 +79,7 @@ internal sealed class FileUndoState
         var identity = ReadIdentity(path);
         _entries[path] = new(attributes, info.CreationTimeUtc, info.LastWriteTimeUtc,
             directory ? 0 : ((FileInfo)info).Length, identity.Volume, identity.File);
-        if (directory)
+        if (directory && _recursive)
             foreach (var child in Directory.EnumerateFileSystemEntries(path)) Read(child, depth + 1);
     }
 

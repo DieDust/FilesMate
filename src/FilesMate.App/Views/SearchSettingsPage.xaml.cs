@@ -146,6 +146,9 @@ public sealed partial class SearchSettingsPage : UserControl
     private IFileNameSearchIndex? _index;
     private bool _syncing;
     private bool _rankingChanged;
+    private bool _relocating;
+    private bool _readingUsage;
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _usageTimer;
     private readonly ObservableCollection<SearchRankItem> _rankItems = [];
 
     public SearchSettingsPage()
@@ -197,8 +200,22 @@ public sealed partial class SearchSettingsPage : UserControl
         SelectDepth(_settings.MaxDepth);
         _syncing = false;
         ProgressText.Text = StringTable.Get("SearchIdle");
-        Unloaded += (_, _) => { if (_capturingHotkey) EndHotkeyCapture(); if (_globalDelay is not null) QueueGlobalSave(false); AttachIndex(null); };
-        Loaded += (_, _) => { AttachIndex(App.SearchIndex); _ = RefreshHostStateAsync(_globalRevision); };
+        Unloaded += (_, _) => { _usageTimer?.Stop(); if (_capturingHotkey) EndHotkeyCapture(); if (_globalDelay is not null) QueueGlobalSave(false); AttachIndex(null); };
+        Loaded += (_, _) =>
+        {
+            AttachIndex(App.SearchIndex);
+            _ = RefreshHostStateAsync(_globalRevision);
+            _usageTimer ??= DispatcherQueue.CreateTimer();
+            _usageTimer.Interval = TimeSpan.FromSeconds(3);
+            _usageTimer.Tick -= UsageTimer_Tick;
+            _usageTimer.Tick += UsageTimer_Tick;
+            _usageTimer.Start();
+            _ = RefreshUsageAsync();
+            if (_index is FileNameIndexService { StorageError: { } error })
+                ProgressText.Text = Loc.Format("SearchOperationFailed", error);
+            else if (_index?.Stats.CompletedUtc is not null && !_index.IsRunning)
+                ProgressText.Text = Loc.Get("SearchDone");
+        };
     }
 
     private void BuildDrives()
@@ -303,12 +320,12 @@ public sealed partial class SearchSettingsPage : UserControl
     private async Task StartIndex()
     {
         var index = App.SearchIndex;
-        if (index is null || index.IsRunning)
+        if (index is null || index.IsRunning || _relocating)
         {
             return;
         }
 
-        await SaveSettingsAsync().ConfigureAwait(true);
+        if (!await SaveSettingsAsync().ConfigureAwait(true)) return;
         SetRunning(true);
         try
         {
@@ -316,16 +333,17 @@ public sealed partial class SearchSettingsPage : UserControl
         }
         catch (OperationCanceledException)
         {
-            ProgressText.Text = StringTable.Get("SearchIdle");
+            ProgressText.Text = Loc.Get("SearchIndexCancelled");
         }
-        catch (Exception)
+        catch (Exception error)
         {
-            ProgressText.Text = StringTable.Get("SearchIdle");
+            ReportSettingsFailure("Building the search index", error);
         }
         finally
         {
             SetRunning(false);
             PaintStats(index.Stats);
+            await RefreshUsageAsync();
         }
     }
 
@@ -359,7 +377,7 @@ public sealed partial class SearchSettingsPage : UserControl
 
     private async Task ChangeLocationAsync()
     {
-        if (App.SearchIndex?.IsRunning == true)
+        if (App.SearchIndex?.IsRunning == true || _relocating)
         {
             return;
         }
@@ -380,21 +398,30 @@ public sealed partial class SearchSettingsPage : UserControl
             return;
         }
 
-        _settings = SearchIndexSettings.Sanitize(
-            _settings.Roots,
-            _settings.Exclusions,
-            _settings.ScanInParallel,
-            _settings.MaxDepth,
-            folder.Path,
-            _settings.AutoRefresh,
-            _store?.Load().RankOrder ?? _settings.RankOrder);
-        if (_store is not null)
-        {
-            await _store.SaveAsync(_settings).ConfigureAwait(true);
-        }
+        await ChangeLocationToAsync(folder.Path);
+    }
 
-        await App.RelocateSearchIndexAsync(_settings.DatabaseDirectory).ConfigureAwait(true);
-        AttachIndex(App.SearchIndex);
+    internal async Task ChangeLocationToAsync(string directory)
+    {
+        if (_relocating || App.SearchIndex?.IsRunning == true) return;
+        _relocating = true;
+        SetRunning(false);
+        ProgressText.Text = Loc.Get("SearchRelocating");
+        try
+        {
+            var result = await App.RelocateSearchIndexAsync(directory);
+            ProgressText.Text = result.OldFilesRetained
+                ? Loc.Format("SearchRelocatedRetained", _index?.FilePath ?? _settings.ResolveDatabasePath())
+                : Loc.Get("SearchRelocated");
+        }
+        finally
+        {
+            _relocating = false;
+            _settings = _store?.Load() ?? _settings;
+            AttachIndex(App.SearchIndex);
+            SetRunning(_index?.IsRunning == true);
+            await RefreshUsageAsync();
+        }
     }
 
     private void OnProgress(object? sender, SearchIndexProgress progress)
@@ -403,20 +430,21 @@ public sealed partial class SearchSettingsPage : UserControl
         {
             if (!IsLoaded || !ReferenceEquals(sender, _index)) return;
             SetRunning(progress.Running);
-            PaintStats(new SearchIndexStats(progress.Files, progress.Folders, progress.Errors, null));
+            PaintStats(new SearchIndexStats(progress.Files, progress.Folders, progress.Errors, progress.CompletedUtc ?? _index?.Stats.CompletedUtc));
             ProgressText.Text = progress.Running
                 ? (progress.CurrentPath ?? StringTable.Get("SearchProgress"))
-                : StringTable.Get("SearchDone");
+                : progress.Error is { } error ? Loc.Format("SearchOperationFailed", error)
+                : Loc.Get(progress.Cancelled ? "SearchIndexCancelled" : "SearchDone");
             IndexProgress.IsIndeterminate = progress.Running;
         });
     }
 
     private void SetRunning(bool running)
     {
-        IndexButton.IsEnabled = !running;
-        ChangeLocationButton.IsEnabled = !running;
-        CancelButton.IsEnabled = running;
-        IndexProgress.IsIndeterminate = running;
+        IndexButton.IsEnabled = !running && !_relocating;
+        ChangeLocationButton.IsEnabled = !running && !_relocating;
+        CancelButton.IsEnabled = running && !_relocating;
+        IndexProgress.IsIndeterminate = running || _relocating;
     }
 
     private void PaintStats(SearchIndexStats stats)
@@ -425,6 +453,7 @@ public sealed partial class SearchSettingsPage : UserControl
         StatFoldersValue.Text = stats.Folders.ToString();
         StatErrorsValue.Text = stats.Errors.ToString();
         StatIndexedValue.Text = stats.Indexed.ToString();
+        StatCompletedValue.Text = stats.CompletedUtc?.ToLocalTime().ToString("g") ?? Loc.Get("SearchNotIndexed");
     }
 
     private void PaintLocation()
@@ -456,7 +485,30 @@ public sealed partial class SearchSettingsPage : UserControl
         PaintLocation();
     }
 
-    private async Task SaveSettingsAsync()
+    private void UsageTimer_Tick(Microsoft.UI.Dispatching.DispatcherQueueTimer sender, object args) => _ = RefreshUsageAsync();
+
+    internal async Task RefreshUsageAsync()
+    {
+        if (_readingUsage || !IsLoaded) return;
+        if (!_relocating && App.SearchIndex is { } active && !ReferenceEquals(active, _index))
+        {
+            _settings = _store?.Load() ?? _settings;
+            AttachIndex(active);
+        }
+        _readingUsage = true;
+        var index = _index;
+        var path = index?.FilePath ?? _settings.ResolveDatabasePath();
+        var building = (index as FileNameIndexService)?.BuildingPath;
+        try
+        {
+            var usage = await Task.Run(() => SearchIndexStorage.ReadUsage(path, building));
+            if (IsLoaded && ReferenceEquals(index, _index))
+                StatSizeValue.Text = usage.IsAvailable ? Navigation.DriveCapacity.FormatBytes(usage.Bytes) : Loc.Get("SearchSizeUnavailable");
+        }
+        finally { _readingUsage = false; }
+    }
+
+    private async Task<bool> SaveSettingsAsync()
     {
         var roots = DriveHost.Children.OfType<CheckBox>()
             .Where(box => box.IsChecked == true && box.Tag is string)
@@ -476,14 +528,17 @@ public sealed partial class SearchSettingsPage : UserControl
                 _rankingChanged ? _rankItems.Select(item => item.Kind) : _store?.Load().RankOrder ?? _settings.RankOrder);
             if (_store is not null)
             {
-                await _store.SaveAsync(_settings).ConfigureAwait(true);
+                await _store.SaveAsync(_settings, updateRankOrder: _rankingChanged).ConfigureAwait(true);
+                _settings = _store.Load();
                 _rankingChanged = false;
                 BuildRankList();
             }
+            return true;
         }
         catch (Exception error)
         {
             ReportSettingsFailure("Saving search settings", error);
+            return false;
         }
         finally
         {
@@ -494,8 +549,8 @@ public sealed partial class SearchSettingsPage : UserControl
     private void ReportSettingsFailure(string operation, Exception error)
     {
         System.Diagnostics.Trace.TraceError("{0} failed: {1}", operation, error);
-        ProgressText.Text = StringTable.Get("SearchIdle");
-        SetRunning(false);
+        ProgressText.Text = Loc.Format("SearchOperationFailed", error.Message);
+        SetRunning(App.SearchIndex?.IsRunning == true);
     }
 
     private int SelectedMaxDepth()

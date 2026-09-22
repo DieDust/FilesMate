@@ -80,7 +80,7 @@ internal sealed class UpdateController
                 throw new InvalidDataException(Loc.Get("Update_InstallerInvalid"));
             if (FileOperationLifetime.IsBusy || !App.CanInstallUpdate()) throw new InvalidOperationException(Loc.Get("Update_FinishOperations"));
             var start = new ProcessStartInfo(installer) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(installer)! };
-            foreach (var argument in new[] { "/SILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/SP-", "/FILESMATEUPDATE=1", "/DIR=" + AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar) }) start.ArgumentList.Add(argument);
+            foreach (var argument in UpdateInstallPolicy.Arguments(AppContext.BaseDirectory)) start.ArgumentList.Add(argument);
 #if FILESMATE_UI_TEST
             if (TestInstallerStart is { } testStart) { testStart(start); IsInstalling = false; return; }
 #endif

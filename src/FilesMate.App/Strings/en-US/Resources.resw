@@ -1836,6 +1836,12 @@ Modified: {1}</value>
   <data name="SearchDepthUnlimited" xml:space="preserve">
     <value>Unlimited</value>
   </data>
+  <data name="SearchDiskUsage" xml:space="preserve">
+    <value>Index disk usage</value>
+  </data>
+  <data name="SearchDiskUsageHint" xml:space="preserve">
+    <value>Includes database logs and temporary files used by an active rebuild.</value>
+  </data>
   <data name="SearchDone" xml:space="preserve">
     <value>Indexing finished.</value>
   </data>
@@ -1854,6 +1860,9 @@ Modified: {1}</value>
   <data name="SearchIndex" xml:space="preserve">
     <value>Index</value>
   </data>
+  <data name="SearchIndexCancelled" xml:space="preserve">
+    <value>Indexing cancelled. The previous index is still available.</value>
+  </data>
   <data name="SearchIndexDescription" xml:space="preserve">
     <value>Scan selected drives. Excluded folders are skipped. A full disk can take a long time.</value>
   </data>
@@ -1863,11 +1872,20 @@ Modified: {1}</value>
   <data name="SearchIndexTitle" xml:space="preserve">
     <value>Name index</value>
   </data>
+  <data name="SearchLastCompleted" xml:space="preserve">
+    <value>Last completed</value>
+  </data>
   <data name="SearchLead" xml:space="preserve">
     <value>Index file names, then search from the box beside the address bar. After the first index, FilesMate refreshes it in the background when it is older than a day.</value>
   </data>
   <data name="SearchLocation" xml:space="preserve">
     <value>Index file</value>
+  </data>
+  <data name="SearchNotIndexed" xml:space="preserve">
+    <value>Not indexed yet</value>
+  </data>
+  <data name="SearchOperationFailed" xml:space="preserve">
+    <value>Could not complete the operation: {0}</value>
   </data>
   <data name="SearchParallel" xml:space="preserve">
     <value>Scan drives together</value>
@@ -1923,8 +1941,20 @@ Modified: {1}</value>
   <data name="SearchRankVideo" xml:space="preserve">
     <value>Videos</value>
   </data>
+  <data name="SearchRelocated" xml:space="preserve">
+    <value>Index moved. Search now uses the new location.</value>
+  </data>
+  <data name="SearchRelocatedRetained" xml:space="preserve">
+    <value>Index moved. The old copy could not be safely removed and is still at: {0}</value>
+  </data>
+  <data name="SearchRelocating" xml:space="preserve">
+    <value>Moving the index… Search will use the new location after verification.</value>
+  </data>
   <data name="SearchShortcut" xml:space="preserve">
     <value>Search shortcut</value>
+  </data>
+  <data name="SearchSizeUnavailable" xml:space="preserve">
+    <value>Unavailable</value>
   </data>
   <data name="SearchStatErrors" xml:space="preserve">
     <value>Skipped</value>

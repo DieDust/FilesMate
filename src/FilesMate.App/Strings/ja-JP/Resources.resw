@@ -1836,6 +1836,12 @@
   <data name="SearchDepthUnlimited" xml:space="preserve">
     <value>制限なし</value>
   </data>
+  <data name="SearchDiskUsage" xml:space="preserve">
+    <value>インデックスのディスク使用量</value>
+  </data>
+  <data name="SearchDiskUsageHint" xml:space="preserve">
+    <value>データベースのログと再構築中の一時ファイルを含みます。</value>
+  </data>
   <data name="SearchDone" xml:space="preserve">
     <value>インデックスへの登録が完了しました。</value>
   </data>
@@ -1854,6 +1860,9 @@
   <data name="SearchIndex" xml:space="preserve">
     <value>登録を開始</value>
   </data>
+  <data name="SearchIndexCancelled" xml:space="preserve">
+    <value>インデックス作成を中止しました。以前のインデックスは保持されています。</value>
+  </data>
   <data name="SearchIndexDescription" xml:space="preserve">
     <value>選択したドライブをスキャンします。除外フォルダーはスキップします。ドライブ全体の処理には時間がかかる場合があります。</value>
   </data>
@@ -1863,11 +1872,20 @@
   <data name="SearchIndexTitle" xml:space="preserve">
     <value>ファイル名インデックス</value>
   </data>
+  <data name="SearchLastCompleted" xml:space="preserve">
+    <value>前回の完了日時</value>
+  </data>
   <data name="SearchLead" xml:space="preserve">
     <value>ファイル名をインデックスに登録すると、アドレスバー横の検索欄から検索できます。初回登録後は、1 日以上経過したインデックスをバックグラウンドで更新します。</value>
   </data>
   <data name="SearchLocation" xml:space="preserve">
     <value>インデックスファイル</value>
+  </data>
+  <data name="SearchNotIndexed" xml:space="preserve">
+    <value>まだ完了していません</value>
+  </data>
+  <data name="SearchOperationFailed" xml:space="preserve">
+    <value>操作を完了できませんでした：{0}</value>
   </data>
   <data name="SearchParallel" xml:space="preserve">
     <value>複数のドライブをスキャン</value>
@@ -1923,8 +1941,20 @@
   <data name="SearchRankVideo" xml:space="preserve">
     <value>動画</value>
   </data>
+  <data name="SearchRelocated" xml:space="preserve">
+    <value>インデックスを移動しました。検索は新しい場所を使用します。</value>
+  </data>
+  <data name="SearchRelocatedRetained" xml:space="preserve">
+    <value>インデックスを移動しました。安全に削除できなかった旧コピーが残っています：{0}</value>
+  </data>
+  <data name="SearchRelocating" xml:space="preserve">
+    <value>インデックスを移動中… 検証後に新しい場所へ切り替えます。</value>
+  </data>
   <data name="SearchShortcut" xml:space="preserve">
     <value>検索ショートカット</value>
+  </data>
+  <data name="SearchSizeUnavailable" xml:space="preserve">
+    <value>取得できません</value>
   </data>
   <data name="SearchStatErrors" xml:space="preserve">
     <value>スキップ</value>

@@ -64,6 +64,7 @@
     <Compile Include="..\..\src\FilesMate.App\Controls\Menus\FileContextMenuBuilder.cs" Link="LinkedApp\Menus\FileContextMenuBuilder.cs" />
     <Compile Remove="..\..\src\FilesMate.App\Models\SearchHitKind.cs;..\..\src\FilesMate.App\Models\HomeSearchHit.cs;..\..\src\FilesMate.App\Services\SearchHitRanking.cs" />
     <Compile Include="..\..\src\FilesMate.App\Icons\FolderPreviewService.cs" Link="LinkedApp\Icons\FolderPreviewService.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Updates\UpdateInstallPolicy.cs" Link="LinkedApp\Updates\UpdateInstallPolicy.cs" />
   </ItemGroup>
 
   <ItemGroup><Compile Remove="..\..\src\FilesMate.App\Navigation\ShellCompatibilityWindow.cs" /></ItemGroup>

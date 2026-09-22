@@ -171,38 +171,7 @@ public static class FlowPluginHost
         });
     }
 
-    public static string ResolveDatabasePath()
-    {
-        var settings = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FilesMate",
-            "search-index.json");
-        if (File.Exists(settings))
-        {
-            try
-            {
-                using var document = JsonDocument.Parse(File.ReadAllText(settings));
-                var directory = document.RootElement.EnumerateObject()
-                    .FirstOrDefault(property => property.Name.Equals("databaseDirectory", StringComparison.OrdinalIgnoreCase)).Value;
-                if (directory.ValueKind == JsonValueKind.String)
-                {
-                    var folder = directory.GetString();
-                    if (!string.IsNullOrWhiteSpace(folder))
-                    {
-                        return Path.Combine(folder, "search-index.db");
-                    }
-                }
-            }
-            catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException)
-            {
-            }
-        }
-
-        return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FilesMate",
-            "search-index.db");
-    }
+    public static string ResolveDatabasePath() => GlobalSearchConfiguration.ResolveDatabase();
 
     public static string ReadRequest(string[] args)
     {

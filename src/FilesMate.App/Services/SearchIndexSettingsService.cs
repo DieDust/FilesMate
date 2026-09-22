@@ -1,6 +1,8 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using FilesMate.App.Models;
+using FilesMate.Search;
 
 namespace FilesMate.App.Services;
 
@@ -20,7 +22,7 @@ public sealed class SearchIndexSettingsService
             throw new ArgumentException("Settings path is required.", nameof(filePath));
         }
 
-        FilePath = filePath;
+        FilePath = Path.GetFullPath(filePath);
     }
 
     public string FilePath { get; }
@@ -39,7 +41,7 @@ public sealed class SearchIndexSettingsService
                 return SearchIndexSettings.Default;
             }
 
-            var dto = JsonSerializer.Deserialize<Dto>(File.ReadAllText(FilePath), JsonOptions);
+            var dto = SearchIndexConfigurationFile.Read(FilePath).Deserialize<Dto>(JsonOptions);
             return dto is null
                 ? SearchIndexSettings.Default
                 : SearchIndexSettings.Sanitize(
@@ -57,10 +59,11 @@ public sealed class SearchIndexSettingsService
         }
     }
 
-    public async Task SaveAsync(SearchIndexSettings settings, CancellationToken cancellationToken = default)
+    public Task SaveAsync(SearchIndexSettings settings, CancellationToken cancellationToken = default,
+        bool updateDatabaseDirectory = false, bool updateRankOrder = false)
     {
         ArgumentNullException.ThrowIfNull(settings);
-        var json = JsonSerializer.Serialize(
+        var changes = JsonSerializer.SerializeToNode(
             new Dto
             {
                 Roots = [.. settings.Roots],
@@ -72,24 +75,36 @@ public sealed class SearchIndexSettingsService
                 RankOrder = [.. settings.RankOrder.Select(kind => kind.ToString())],
                 RankVersion = 3,
             },
-            JsonOptions);
+            JsonOptions)!.AsObject();
+        return Task.Run(() => SearchIndexConfigurationFile.Update(FilePath, document =>
+        {
+            // Never turn a failed load into a write that discards malformed existing settings.
+            _ = document.Deserialize<Dto>(JsonOptions);
+            foreach (var name in new[] { "roots", "exclusions", "scanInParallel", "maxDepth", "autoRefresh" })
+                SearchIndexConfigurationFile.SetProperty(document, name, changes[name]?.DeepClone());
+            // A settings page may predate a successful relocation or a host-side ranking change.
+            // Update these shared fields only for an explicit edit or their first initialization.
+            if (updateDatabaseDirectory || !SearchIndexConfigurationFile.HasProperty(document, "databaseDirectory"))
+                SearchIndexConfigurationFile.SetProperty(document, "databaseDirectory", changes["databaseDirectory"]?.DeepClone());
+            if (updateRankOrder || !SearchIndexConfigurationFile.HasProperty(document, "rankOrder"))
+            {
+                SearchIndexConfigurationFile.SetProperty(document, "rankOrder", changes["rankOrder"]?.DeepClone());
+                SearchIndexConfigurationFile.SetProperty(document, "rankVersion", JsonValue.Create(3));
+            }
+        }, cancellationToken), cancellationToken);
+    }
 
-        var directory = Path.GetDirectoryName(FilePath);
-        if (!string.IsNullOrEmpty(directory))
+    /// <summary>Publishes a successfully prepared index location without overwriting other settings.</summary>
+    public Task UpdateDatabaseDirectoryAsync(string directory, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(directory);
+        if (!Path.IsPathFullyQualified(directory)) throw new ArgumentException("Index directory must be an absolute path.", nameof(directory));
+        var fullPath = Path.GetFullPath(directory);
+        return Task.Run(() => SearchIndexConfigurationFile.Update(FilePath, document =>
         {
-            Directory.CreateDirectory(directory);
-        }
-
-        var temp = FilePath + ".tmp";
-        await File.WriteAllTextAsync(temp, json, cancellationToken).ConfigureAwait(false);
-        if (File.Exists(FilePath))
-        {
-            File.Replace(temp, FilePath, destinationBackupFileName: null);
-        }
-        else
-        {
-            File.Move(temp, FilePath);
-        }
+            _ = document.Deserialize<Dto>(JsonOptions);
+            SearchIndexConfigurationFile.SetProperty(document, "databaseDirectory", JsonValue.Create(fullPath));
+        }, cancellationToken), cancellationToken);
     }
 
     private sealed class Dto

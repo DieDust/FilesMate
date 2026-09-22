@@ -2,6 +2,7 @@ using System.IO.Pipes;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace FilesMate.Search;
 
@@ -73,9 +74,10 @@ public static class GlobalSearchConfiguration
         var root = directory ?? DefaultDirectory;
         try
         {
-            using var json = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "search-index.json")));
-            if (json.RootElement.TryGetProperty("databaseDirectory", out var location) && !string.IsNullOrWhiteSpace(location.GetString()))
-                return Path.Combine(location.GetString()!, "search-index.db");
+            var document = SearchIndexConfigurationFile.Read(Path.Combine(root, "search-index.json"));
+            if (SearchIndexConfigurationFile.GetProperty(document, "databaseDirectory") is JsonValue location &&
+                location.TryGetValue<string>(out var folder) && !string.IsNullOrWhiteSpace(folder) && Path.IsPathFullyQualified(folder))
+                return Path.Combine(Path.GetFullPath(folder), "search-index.db");
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException or ArgumentException) { }
         return Path.Combine(root, "search-index.db");

@@ -42,8 +42,30 @@ public sealed record FileUndoRecord(
             ? Pairs.Select(pair => pair.Destination)
             : Kind is FileUndoKind.Created or FileUndoKind.Copied ? Paths : []);
 
+    internal void AcceptReplacementState(FileReplacement replacement)
+    {
+        // These snapshots were captured by our successful swaps. Preserve all unrelated
+        // original snapshots so a partial retry never accepts an external modification.
+        _undoState = _undoState.WithReplacement(replacement.DestinationState);
+    }
+
+    internal bool HasOrdinaryActions => Paths.Count > 0 || Pairs.Count > 0 || CreatedDirectories.Count > 0;
+    internal bool HasActions => HasOrdinaryActions || Replacements.Count > 0;
+
     public IReadOnlyList<string> CreatedDirectories { get; init; } = [];
     public IReadOnlyList<FileReplacement> Replacements { get; init; } = [];
+    public IReadOnlyList<RecycleItemResult> RecycledItems { get; internal set; } = [];
+
+    internal FileUndoRecord SelectPaths(IReadOnlyList<string> paths, IReadOnlyList<FileReplacement> replacements)
+    {
+        var selected = new HashSet<string>(paths, StringComparer.OrdinalIgnoreCase);
+        return this with
+        {
+            Paths = paths.ToArray(), Replacements = replacements,
+            RecycledItems = RecycledItems.Where(item => selected.Contains(item.OriginalPath)).ToArray(),
+            _undoState = _undoState.SelectRoots(paths), _redoState = _redoState?.SelectRoots(paths),
+        };
+    }
 
     public static FileUndoRecord Copied(IReadOnlyList<string> files, IReadOnlyList<string> directories) =>
         new(FileUndoKind.Copied, files.Count == 0 ? [] : Snapshot(files), [])
@@ -54,6 +76,10 @@ public sealed record FileUndoRecord(
 
     public static FileUndoRecord Recycled(IReadOnlyList<string> paths) =>
         new(FileUndoKind.Recycled, Snapshot(paths), []);
+
+    public static FileUndoRecord RecycledWithReceipts(IReadOnlyList<RecycleItemResult> items) =>
+        new(FileUndoKind.Recycled, Snapshot(items.Select(item => item.OriginalPath).ToArray()), [])
+        { RecycledItems = items.ToArray() };
 
     public static FileUndoRecord Relocated(IReadOnlyList<FilePathPair> pairs) =>
         new(FileUndoKind.Relocated, [], Snapshot(pairs));

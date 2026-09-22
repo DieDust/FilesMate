@@ -91,10 +91,11 @@ public sealed class RecycleBinRestoreTests
             File.WriteAllText(file, "undo-me");
             var completed = new List<FilesMate.Core.Operations.RecycleItemResult>();
             ops.Recycle([file], completed.Add);
-            Assert.Equal(new FilesMate.Core.Operations.RecycleItemResult(file, true), Assert.Single(completed));
+            var result = Assert.Single(completed);
+            Assert.Equal(file, result.OriginalPath); Assert.True(result.IsRecycled); Assert.NotNull(result.Receipt);
             Assert.False(File.Exists(file));
 
-            ops.RestoreRecycled([file]);
+            ops.RestoreRecycledItems(completed);
             Assert.True(File.Exists(file));
             Assert.Equal("undo-me", File.ReadAllText(file));
         }

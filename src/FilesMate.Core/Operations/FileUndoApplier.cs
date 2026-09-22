@@ -7,7 +7,7 @@ public static class FileUndoApplier
         ArgumentNullException.ThrowIfNull(operations);
         ArgumentNullException.ThrowIfNull(record);
         record.ValidateUndo(operations);
-        foreach (var replacement in record.Replacements.Reverse()) replacement.Undo();
+        ApplyReplacements(record, undo: true);
         switch (record.Kind)
         {
             case FileUndoKind.Merged:
@@ -16,7 +16,7 @@ public static class FileUndoApplier
                 RemoveEmptyDirectories(record.CreatedDirectories);
                 break;
             case FileUndoKind.Copied:
-                if (record.Paths.Count > 0) RecycleForHistory(operations, record.Paths);
+                if (record.Paths.Count > 0) RecycleForHistory(operations, record, undo: true);
                 RemoveEmptyDirectories(record.CreatedDirectories);
                 break;
             case FileUndoKind.Grouped:
@@ -30,13 +30,13 @@ public static class FileUndoApplier
                 }
                 break;
             case FileUndoKind.Created:
-                RecycleForHistory(operations, record.Paths);
+                RecycleForHistory(operations, record, undo: true);
                 break;
             case FileUndoKind.Relocated:
                 Relocate(operations, Reverse(record.Pairs));
                 break;
             case FileUndoKind.Recycled:
-                operations.RestoreRecycled(record.Paths);
+                RestoreForHistory(operations, record, undo: true);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(record));
@@ -58,38 +58,126 @@ public static class FileUndoApplier
                 break;
             case FileUndoKind.Copied:
                 foreach (var folder in record.CreatedDirectories.OrderBy(path => path.Length)) operations.CreateDirectory(folder);
-                if (record.Paths.Count > 0) operations.RestoreRecycled(record.Paths);
+                if (record.Paths.Count > 0) RestoreForHistory(operations, record, undo: false);
                 break;
             case FileUndoKind.Grouped:
                 foreach (var folder in record.Paths) operations.CreateDirectory(folder);
                 Relocate(operations, record.Pairs);
                 break;
             case FileUndoKind.Created:
-                operations.RestoreRecycled(record.Paths);
+                RestoreForHistory(operations, record, undo: false);
                 break;
             case FileUndoKind.Relocated:
                 Relocate(operations, record.Pairs);
                 break;
             case FileUndoKind.Recycled:
-                RecycleForHistory(operations, record.Paths);
+                RecycleForHistory(operations, record, undo: false);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(record));
         }
-        foreach (var replacement in record.Replacements) replacement.Redo();
-        if (record.Kind == FileUndoKind.Merged) RemoveEmptyDirectories(record.Paths);
+        // Capture the ordinary work now, then update only destinations changed by our
+        // successful replacements. A later failure must not adopt an external edit.
         record.CaptureUndo();
+        ApplyReplacements(record, undo: false);
+        if (record.Kind == FileUndoKind.Merged) RemoveEmptyDirectories(record.Paths);
     }
 
-    private static void RecycleForHistory(ILocalFileOperations operations, IReadOnlyList<string> paths)
+    private static void ApplyReplacements(FileUndoRecord record, bool undo)
+    {
+        var completed = new HashSet<FileReplacement>();
+        foreach (var replacement in undo ? record.Replacements.Reverse() : record.Replacements)
+        {
+            var wasApplied = replacement.IsApplied;
+            try
+            {
+                if (undo) replacement.Undo(); else replacement.Redo();
+                completed.Add(replacement);
+                record.AcceptReplacementState(replacement);
+            }
+            catch (Exception error)
+            {
+                // The rename may have committed even if a subsequent metadata read failed.
+                if (replacement.IsApplied != wasApplied)
+                {
+                    completed.Add(replacement);
+                    record.AcceptReplacementState(replacement);
+                }
+                if (completed.Count == 0 && (undo || !record.HasOrdinaryActions)) throw;
+                var done = record.Replacements.Where(completed.Contains).ToArray();
+                var pending = record.Replacements.Where(item => !completed.Contains(item)).ToArray();
+                // Preserve chronological order for redo, and give each backup to one record.
+                FileUndoRecord remaining;
+                FileUndoRecord changed;
+                if (undo)
+                {
+                    remaining = record with { Replacements = pending };
+                    changed = FileUndoRecord.Copied([], []) with { Replacements = done };
+                    changed.CaptureRedo();
+                }
+                else
+                {
+                    remaining = FileUndoRecord.Copied([], []) with { Replacements = pending };
+                    remaining.CaptureRedo();
+                    changed = record with { Replacements = done };
+                }
+                throw new PartialFileUndoException(remaining, changed, error);
+            }
+        }
+    }
+
+    private static void RecycleForHistory(ILocalFileOperations operations, FileUndoRecord record, bool undo)
     {
         var permanent = 0;
-        try { operations.Recycle(paths, item => { if (!item.IsRecycled) permanent++; }); }
+        var completed = new List<RecycleItemResult>();
+        try
+        {
+            operations.Recycle(record.Paths, item =>
+            {
+                if (!item.IsRecycled) permanent++;
+                else completed.Add(item);
+            });
+        }
+        catch (Exception error) when (permanent == 0)
+        {
+            record.RecycledItems = completed.ToArray();
+            ThrowPartial(record, completed.Select(item => item.OriginalPath).ToArray(), undo, error);
+            throw;
+        }
         finally
         {
             // Windows may ask to permanently delete even during undo/redo.
             if (permanent > 0) throw new IrreversibleDeletionException(permanent);
         }
+        record.RecycledItems = completed.ToArray();
+    }
+
+    private static void RestoreForHistory(ILocalFileOperations operations, FileUndoRecord record, bool undo)
+    {
+        var receipts = new Dictionary<string, RecycleItemResult>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in record.RecycledItems) receipts[item.OriginalPath] = item;
+        var items = record.Paths.Select(path => receipts.TryGetValue(path, out var item) ? item : new(path, true)).ToArray();
+        var completed = new List<string>();
+        try { operations.RestoreRecycledItems(items, completed.Add); }
+        catch (Exception error)
+        {
+            ThrowPartial(record, completed, undo, error);
+            throw;
+        }
+    }
+
+    private static void ThrowPartial(FileUndoRecord record, IReadOnlyList<string> completedPaths, bool undo, Exception error)
+    {
+        // Copy replacements run before recycling on undo and after restoration on redo.
+        // Give each retained backup to exactly one of the split records.
+        var replacementsDone = undo && record.Kind == FileUndoKind.Copied;
+        if (completedPaths.Count == 0 && (!replacementsDone || record.Replacements.Count == 0)) return;
+        var completedNames = new HashSet<string>(completedPaths, StringComparer.OrdinalIgnoreCase);
+        var remaining = record.SelectPaths(record.Paths.Where(path => !completedNames.Contains(path)).ToArray(),
+            replacementsDone ? [] : record.Replacements);
+        var completed = record.SelectPaths(completedPaths, replacementsDone ? record.Replacements : []);
+        if (undo) completed.CaptureRedo(); else completed.CaptureUndo();
+        throw new PartialFileUndoException(remaining, completed, error);
     }
 
     private static void RemoveEmptyDirectories(IReadOnlyList<string> directories)

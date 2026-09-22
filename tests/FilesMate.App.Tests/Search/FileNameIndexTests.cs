@@ -244,7 +244,7 @@ public sealed class FileNameIndexTests
                 SearchHitKind.Program,
             ]);
             var paused = SearchIndexSettings.Sanitize([root], ["node_modules"], true, 3, root, false, custom);
-            await store.SaveAsync(paused);
+            await store.SaveAsync(paused, updateRankOrder: true);
             var reloaded = store.Load();
             Assert.False(reloaded.AutoRefresh);
             Assert.Equal(SearchHitKind.Folder, reloaded.RankOrder[0]);

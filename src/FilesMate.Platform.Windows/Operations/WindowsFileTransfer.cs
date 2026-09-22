@@ -162,7 +162,11 @@ public static class WindowsFileTransfer
                             await TransferChildren(source, target, depth).ConfigureAwait(false);
                             return;
                         }
-                        if (move) operations.Rename(source, target);
+                        if (move)
+                        {
+                            if (!operations.TryRenameFileWithoutCopy(source, target))
+                                await MoveFileAcrossVolumesAsync(source, target, token, byteProgress).ConfigureAwait(false);
+                        }
                         else await CopyFileAsync(source, target, token, byteProgress).ConfigureAwait(false);
                         targetAcquired = true;
                         completed.Add(new(source, target));
@@ -228,16 +232,23 @@ public static class WindowsFileTransfer
             lease = budget.Reserve(backupDirectory, backupBytes,
                 () => new WindowsLocalFileOperations().CreateDirectory(backupDirectory, failIfExists: true));
         }
-        var backup = retainUndo ? Path.Combine(backupDirectory, Path.GetFileName(target)) : null;
+        // Even an operation without retained undo needs a temporary previous version while
+        // ReplaceFile commits. Native errors 1176/1177 can otherwise remove the old target.
+        if (!retainUndo) new WindowsLocalFileOperations().CreateDirectory(backupDirectory, failIfExists: true);
+        var backup = Path.Combine(backupDirectory, Path.GetFileName(target));
         var leaseTransferred = false;
         var stagedOwned = false;
+        var sourceWasMoved = false;
+        var replacementPublished = false;
+        var sourceRemoved = false;
         try
         {
-            if (retainUndo) File.SetAttributes(backupDirectory, FileAttributes.Hidden);
+            File.SetAttributes(backupDirectory, FileAttributes.Hidden);
             // Deny concurrent writers while preparing the full replacement. Delete sharing
             // permits the subsequent filesystem rename; no file is ever opened for truncation.
             using var sourceGuard = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
             using var targetGuard = new FileStream(target, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
+            using var sourceLease = move ? new WindowsFileMove.SourceLease(source) : null;
             var identities = new WindowsFileIdentityProvider();
             if (!IsNormalFile(source) || !IsNormalFile(target)
                 || identities.Resolve(source).StableKey != sourceIdentity || identities.Resolve(target).StableKey != targetIdentity
@@ -247,19 +258,43 @@ public static class WindowsFileTransfer
                 throw new IOException("The file grew before replacement. Please choose again.");
             if (move)
             {
-                File.Move(source, staged, overwrite: false);
-                sourceGuard.Dispose(); // ReplaceFile must open the moved staging file for metadata writes.
+                sourceWasMoved = WindowsFileMove.TryRename(source, staged);
+                if (sourceWasMoved)
+                {
+                    sourceGuard.Dispose(); // ReplaceFile must open the moved staging file for metadata writes.
+                    sourceLease!.Dispose();
+                }
+                else
+                {
+                    await CopyFileAsync(source, staged, token, byteProgress, () => sourceLease!.ValidatePath(source),
+                        validateSource: sourceLease!.ValidateCopyHandle).ConfigureAwait(false);
+                }
             }
             else await CopyFileAsync(source, staged, token, byteProgress).ConfigureAwait(false);
             stagedOwned = true;
             token.ThrowIfCancellationRequested();
             if (!IsNormalFile(target) || FileConflictDetails.Read(target) != existing || identities.Resolve(target).StableKey != targetIdentity)
                 throw new IOException("The destination changed before replacement. Please try again.");
+            // ReplaceFile itself needs metadata write access. Pin the incoming object now,
+            // then deny writers on its final name before removing a cross-volume source.
+            using var publishedLease = move && !sourceWasMoved ? new WindowsFileMove.SourceLease(staged, denyWrites: false, metadataOnly: true) : null;
             // Both names are on the destination volume. Windows replaces the directory entry
             // and retains the old file; failures do not turn into a destructive copy fallback.
             File.Replace(staged, target, backup);
             stagedOwned = false;
-            if (!retainUndo) return null;
+            replacementPublished = true;
+            if (move && !sourceWasMoved)
+            {
+                using var publishedGuard = publishedLease!.LockPublishedPath(target);
+                sourceLease!.ValidatePath(source);
+                sourceLease.Delete();
+                sourceRemoved = true;
+            }
+            if (!retainUndo)
+            {
+                File.Delete(backup);
+                return null;
+            }
             var retained = new FileReplacement(source, target, backup!, move, lease);
             leaseTransferred = true;
             return retained;
@@ -270,6 +305,14 @@ public static class WindowsFileTransfer
             // Restore the previous name only if free, and always keep the recoverable data.
             if (File.Exists(backup))
             {
+                // A recoverable exceptional result must be visible even with hidden files disabled.
+                try { File.SetAttributes(backupDirectory, File.GetAttributes(backupDirectory) & ~FileAttributes.Hidden); }
+                catch (Exception visibilityError) when (IsOperationError(visibilityError)) { /* The explicit path below remains available. */ }
+                if (replacementPublished)
+                {
+                    var removal = move && !sourceWasMoved && !sourceRemoved ? " The source could not be removed." : "";
+                    throw new IOException($"The new version was written to: {target}.{removal} Previous version retained at: {backup}. {error.Message}", error);
+                }
                 if (!Path.Exists(target))
                 {
                     try { File.Move(backup, target, overwrite: false); }
@@ -284,7 +327,7 @@ public static class WindowsFileTransfer
         {
             if (stagedOwned && File.Exists(staged))
             {
-                if (move)
+                if (sourceWasMoved)
                 {
                     try { File.Move(staged, source, overwrite: false); }
                     catch (Exception error) when (IsOperationError(error))
@@ -295,13 +338,25 @@ public static class WindowsFileTransfer
             // A successful replacement keeps its previous version until its undo record expires.
             try
             {
-                if (retainUndo && !File.Exists(backup) && Directory.Exists(backupDirectory)) Directory.Delete(backupDirectory, recursive: false);
+                if (!File.Exists(backup) && Directory.Exists(backupDirectory)) Directory.Delete(backupDirectory, recursive: false);
             }
             finally { if (!leaseTransferred) lease?.Dispose(); }
         }
     }
 
-    private static Task CopyFileAsync(string source, string target, CancellationToken token, IProgress<FileCopyProgress>? byteProgress)
+    private static async Task MoveFileAcrossVolumesAsync(string source, string target, CancellationToken token, IProgress<FileCopyProgress>? byteProgress)
+    {
+        using var sourceLease = new WindowsFileMove.SourceLease(source);
+        await CopyFileAsync(source, target, token, byteProgress, () => sourceLease.ValidatePath(source), () =>
+        {
+            sourceLease.ValidatePath(source);
+            // Delete this exact file object. A newly created same-name file is never removed by path.
+            sourceLease.Delete();
+        }, sourceLease.ValidateCopyHandle).ConfigureAwait(false);
+    }
+
+    private static Task CopyFileAsync(string source, string target, CancellationToken token, IProgress<FileCopyProgress>? byteProgress,
+        Action? beforePublish = null, Action? afterPublish = null, Action<nint>? validateSource = null)
     {
         token.ThrowIfCancellationRequested();
         var staging = Path.Combine(Path.GetDirectoryName(target)!, ".filesmate-copy-" + Guid.NewGuid().ToString("N"));
@@ -312,10 +367,21 @@ public static class WindowsFileTransfer
         {
             using (reservation)
             {
-                WindowsFileCopy.Copy(source, staging, target, token, byteProgress);
+                WindowsFileCopy.Copy(source, staging, target, token, byteProgress, validateSource);
+                reservation.Flush(flushToDisk: true);
             }
             token.ThrowIfCancellationRequested();
+            beforePublish?.Invoke();
+            using var stagedLease = afterPublish is null ? null : new WindowsFileMove.SourceLease(staging);
             File.Move(staging, target, overwrite: false);
+            try { afterPublish?.Invoke(); }
+            catch
+            {
+                // Source removal failed. Roll back only the exact copy we just published.
+                stagedLease!.ValidatePath(target);
+                stagedLease.Delete();
+                throw;
+            }
         }
         finally
         {

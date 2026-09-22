@@ -254,7 +254,7 @@ public sealed class GlobalSearchTests
             using var saved = System.Text.Json.JsonDocument.Parse(File.ReadAllText(store.FilePath));
             Assert.Equal(42, saved.RootElement.GetProperty("futureOption").GetInt32());
             Assert.Equal(root, saved.RootElement.GetProperty("roots")[0].GetString());
-            await store.SaveAsync(store.Load() with { RankOrder = [FilesMate.App.Models.SearchHitKind.Document] });
+            await store.SaveAsync(store.Load() with { RankOrder = [FilesMate.App.Models.SearchHitKind.Document] }, updateRankOrder: true);
             Assert.EndsWith(".txt", (await provider.SearchAsync("sample", default)).Hits[0].Name);
         }
         finally { Directory.Delete(root, true); }

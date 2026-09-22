@@ -32,7 +32,9 @@ Compression=lzma2
 SolidCompression=yes
 MergeDuplicateFiles=yes
 WizardStyle=modern
-CloseApplications=yes
+; File locks can belong to unrelated applications. Never let Restart Manager
+; close them during a silent update or an interactive installation.
+CloseApplications=no
 RestartApplications=no
 
 [Languages]

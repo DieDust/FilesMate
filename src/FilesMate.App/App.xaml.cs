@@ -760,59 +760,47 @@ public partial class App : Application
         }
     }
 
-    internal static async Task RelocateSearchIndexAsync(string directory)
+    private static readonly SemaphoreSlim IndexRelocationGate = new(1, 1);
+
+    internal static async Task<SearchIndexMigrationResult> RelocateSearchIndexAsync(string directory)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(directory);
-        var newPath = Path.Combine(Path.GetFullPath(directory), SearchIndexSettings.DatabaseFileName);
-        var previous = SearchIndex;
-        if (previous is not null &&
-            string.Equals(previous.FilePath, newPath, StringComparison.OrdinalIgnoreCase))
+        using var operation = FileOperationLifetime.Begin();
+        await IndexRelocationGate.WaitAsync();
+        try
         {
-            return;
-        }
-
-        var oldPath = previous?.FilePath;
-        if (previous is not null)
-        {
-            previous.Cancel();
-            await previous.DisposeAsync().ConfigureAwait(true);
+            var store = SearchIndexSettingsStore ?? throw new InvalidOperationException("Search settings are unavailable.");
+            var newPath = Path.Combine(Path.GetFullPath(directory), SearchIndexSettings.DatabaseFileName);
+            var previous = SearchIndex;
+            var oldPath = previous?.FilePath ?? store.Load().ResolveDatabasePath();
+            if (string.Equals(oldPath, newPath, StringComparison.OrdinalIgnoreCase))
+                return new SearchIndexMigrationResult(newPath, false, null);
+            if (previous?.IsRunning == true) throw new IOException("Wait for indexing to finish before moving the index.");
+            // Stop this process's readers/writer before the snapshot; host readers open the
+            // published path per query and can finish against the old database independently.
             SearchIndex = null;
-        }
-
-        var folder = Path.GetDirectoryName(newPath);
-        if (!string.IsNullOrEmpty(folder))
-        {
-            Directory.CreateDirectory(folder);
-        }
-        TryMoveSqlite(oldPath, newPath);
-        SearchIndex = new FileNameIndexService(newPath);
-    }
-
-    private static void TryMoveSqlite(string? from, string to)
-    {
-        if (string.IsNullOrEmpty(from) ||
-            string.Equals(from, to, StringComparison.OrdinalIgnoreCase) ||
-            File.Exists(to))
-        {
-            return;
-        }
-
-        foreach (var suffix in new[] { string.Empty, "-wal", "-shm", "-journal" })
-        {
-            var source = from + suffix;
-            var dest = to + suffix;
-            if (!File.Exists(source) || File.Exists(dest))
-            {
-                continue;
-            }
-
+            if (previous is not null) await previous.DisposeAsync();
+            var settingsCommitted = false;
             try
             {
-                File.Move(source, dest);
+                var result = await Task.Run(() => SearchIndexStorage.MigrateAsync(oldPath, newPath,
+                    async (path, token) =>
+                    {
+                        await store.UpdateDatabaseDirectoryAsync(Path.GetDirectoryName(path)!, token).ConfigureAwait(false);
+                        settingsCommitted = true;
+                    }));
+                SearchIndex = await Task.Run(() => new FileNameIndexService(newPath));
+                return result;
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            catch
             {
+                // A failed settings read defaults its path. Recovery must use the known
+                // transaction state, including when malformed settings caused the failure.
+                var activePath = settingsCommitted ? newPath : oldPath;
+                SearchIndex = await Task.Run(() => new FileNameIndexService(activePath));
+                throw;
             }
         }
+        finally { IndexRelocationGate.Release(); }
     }
 }

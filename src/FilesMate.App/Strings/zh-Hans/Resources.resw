@@ -1836,6 +1836,12 @@
   <data name="SearchDepthUnlimited" xml:space="preserve">
     <value>无限制</value>
   </data>
+  <data name="SearchDiskUsage" xml:space="preserve">
+    <value>索引磁盘占用</value>
+  </data>
+  <data name="SearchDiskUsageHint" xml:space="preserve">
+    <value>包含数据库日志和本次重建的临时文件。</value>
+  </data>
   <data name="SearchDone" xml:space="preserve">
     <value>索引已完成。</value>
   </data>
@@ -1854,6 +1860,9 @@
   <data name="SearchIndex" xml:space="preserve">
     <value>索引</value>
   </data>
+  <data name="SearchIndexCancelled" xml:space="preserve">
+    <value>已取消索引，本次重建未替换原索引。</value>
+  </data>
   <data name="SearchIndexDescription" xml:space="preserve">
     <value>扫描所选驱动器，并跳过排除路径。全盘扫描可能需要很长时间。</value>
   </data>
@@ -1863,11 +1872,20 @@
   <data name="SearchIndexTitle" xml:space="preserve">
     <value>文件名索引</value>
   </data>
+  <data name="SearchLastCompleted" xml:space="preserve">
+    <value>最近完成时间</value>
+  </data>
   <data name="SearchLead" xml:space="preserve">
     <value>先建立文件名索引，再用地址栏旁边的搜索框查找。完成第一次索引后，若超过一天未更新，FilesMate 会在应用打开时在后台刷新。</value>
   </data>
   <data name="SearchLocation" xml:space="preserve">
     <value>索引文件</value>
+  </data>
+  <data name="SearchNotIndexed" xml:space="preserve">
+    <value>尚未完成索引</value>
+  </data>
+  <data name="SearchOperationFailed" xml:space="preserve">
+    <value>操作未完成：{0}</value>
   </data>
   <data name="SearchParallel" xml:space="preserve">
     <value>同时扫描多个驱动器</value>
@@ -1923,8 +1941,20 @@
   <data name="SearchRankVideo" xml:space="preserve">
     <value>视频</value>
   </data>
+  <data name="SearchRelocated" xml:space="preserve">
+    <value>索引已迁移，搜索已使用新位置。</value>
+  </data>
+  <data name="SearchRelocatedRetained" xml:space="preserve">
+    <value>索引已迁移。旧副本暂时无法安全清理，仍保留在：{0}</value>
+  </data>
+  <data name="SearchRelocating" xml:space="preserve">
+    <value>正在迁移索引… 校验完成后切换到新位置。</value>
+  </data>
   <data name="SearchShortcut" xml:space="preserve">
     <value>搜索快捷键</value>
+  </data>
+  <data name="SearchSizeUnavailable" xml:space="preserve">
+    <value>暂时无法读取</value>
   </data>
   <data name="SearchStatErrors" xml:space="preserve">
     <value>已跳过</value>

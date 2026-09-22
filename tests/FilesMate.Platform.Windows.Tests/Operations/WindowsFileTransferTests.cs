@@ -518,6 +518,8 @@ public sealed class WindowsFileTransferTests : IDisposable
         private readonly Dictionary<string, string> _recycled = [];
         public Action<string, string>? BeforeRename { get; init; }
         public void Rename(string source, string target) { BeforeRename?.Invoke(source, target); _inner.Rename(source, target); }
+        public bool TryRenameFileWithoutCopy(string source, string target)
+        { BeforeRename?.Invoke(source, target); return _inner.TryRenameFileWithoutCopy(source, target); }
         public void CreateDirectory(string path, bool failIfExists = false) => _inner.CreateDirectory(path, failIfExists);
         public void Recycle(IReadOnlyList<string> paths, Action<RecycleItemResult>? completed = null)
         { foreach (var path in paths) { var saved = Path.Combine(root, Guid.NewGuid().ToString("N")); File.Move(path, saved); _recycled.Add(path, saved); } }

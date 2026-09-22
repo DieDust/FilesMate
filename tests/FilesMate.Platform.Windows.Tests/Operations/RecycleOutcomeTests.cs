@@ -19,8 +19,9 @@ public sealed class RecycleOutcomeTests
         {
             operations.Recycle([folder], completed.Add);
             Assert.False(Directory.Exists(folder));
-            Assert.Equal(new RecycleItemResult(folder, true), Assert.Single(completed));
-            operations.RestoreRecycled([folder]);
+            var result = Assert.Single(completed);
+            Assert.Equal(folder, result.OriginalPath); Assert.True(result.IsRecycled); Assert.NotNull(result.Receipt);
+            operations.RestoreRecycledItems(completed);
             Assert.Equal("preserved", File.ReadAllText(file));
         }
         finally

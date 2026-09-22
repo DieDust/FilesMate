@@ -5,6 +5,16 @@ public static partial class StringTable
     public static readonly IReadOnlyDictionary<string, (string English, string Chinese, string Japanese)> Additional =
         new Dictionary<string, (string English, string Chinese, string Japanese)>(StringComparer.Ordinal)
         {
+            ["SearchDiskUsage"] = ("Index disk usage", "索引磁盘占用", "インデックスのディスク使用量"),
+            ["SearchDiskUsageHint"] = ("Includes database logs and temporary files used by an active rebuild.", "包含数据库日志和本次重建的临时文件。", "データベースのログと再構築中の一時ファイルを含みます。"),
+            ["SearchLastCompleted"] = ("Last completed", "最近完成时间", "前回の完了日時"),
+            ["SearchNotIndexed"] = ("Not indexed yet", "尚未完成索引", "まだ完了していません"),
+            ["SearchSizeUnavailable"] = ("Unavailable", "暂时无法读取", "取得できません"),
+            ["SearchRelocating"] = ("Moving the index… Search will use the new location after verification.", "正在迁移索引… 校验完成后切换到新位置。", "インデックスを移動中… 検証後に新しい場所へ切り替えます。"),
+            ["SearchRelocated"] = ("Index moved. Search now uses the new location.", "索引已迁移，搜索已使用新位置。", "インデックスを移動しました。検索は新しい場所を使用します。"),
+            ["SearchRelocatedRetained"] = ("Index moved. The old copy could not be safely removed and is still at: {0}", "索引已迁移。旧副本暂时无法安全清理，仍保留在：{0}", "インデックスを移動しました。安全に削除できなかった旧コピーが残っています：{0}"),
+            ["SearchOperationFailed"] = ("Could not complete the operation: {0}", "操作未完成：{0}", "操作を完了できませんでした：{0}"),
+            ["SearchIndexCancelled"] = ("Indexing cancelled. The previous index is still available.", "已取消索引，本次重建未替换原索引。", "インデックス作成を中止しました。以前のインデックスは保持されています。"),
             ["Backup_LocationUnavailable"] = ("This backup location is no longer available. Refresh the backup list or reconnect its drive.", "这个备份位置暂时不可用，请刷新备份列表或重新连接所在磁盘。", "このバックアップの場所は利用できません。一覧を更新するか、ドライブを再接続してください。"),
             ["UseBundledFileIcons"] = ("Use FilesMate file icons", "使用 FilesMate 文件图标", "FilesMate のファイルアイコンを使用"),
             ["UseBundledFileIconsHint"] = ("On by default. Turn off to use Windows icons for the associated apps. Applies immediately; image and video thumbnails are preserved.", "默认开启。关闭后使用 Windows 文件关联图标，显示默认打开软件对应的图标。立即生效，保留图片和视频缩略图。", "既定でオンです。オフにすると、Windows で関連付けられたアプリのアイコンを使います。すぐに反映され、画像と動画のサムネイルは保持します。"),

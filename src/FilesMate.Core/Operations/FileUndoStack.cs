@@ -52,6 +52,7 @@ public sealed class FileUndoStack
         var record = _undo[^1];
         try { FileUndoApplier.Undo(operations, record); }
         catch (IrreversibleDeletionException) { Clear(); throw; }
+        catch (PartialFileUndoException error) { ApplyPartial(_undo, _redo, error); throw; }
         _undo.RemoveAt(_undo.Count - 1);
         _redo.Add(record);
         Changed?.Invoke(this, EventArgs.Empty);
@@ -72,6 +73,7 @@ public sealed class FileUndoStack
             });
         }
         catch (IrreversibleDeletionException) { Clear(); throw; }
+        catch (PartialFileUndoException error) { ApplyPartial(source, redo ? _undo : _redo, error); throw; }
         source.RemoveAt(source.Count - 1);
         (redo ? _undo : _redo).Add(record);
         Changed?.Invoke(this, EventArgs.Empty);
@@ -89,9 +91,21 @@ public sealed class FileUndoStack
         var record = _redo[^1];
         try { FileUndoApplier.Redo(operations, record); }
         catch (IrreversibleDeletionException) { Clear(); throw; }
+        catch (PartialFileUndoException error) { ApplyPartial(_redo, _undo, error); throw; }
         _redo.RemoveAt(_redo.Count - 1);
         _undo.Add(record);
         Changed?.Invoke(this, EventArgs.Empty);
         return true;
+    }
+
+    private void ApplyPartial(List<FileUndoRecord> source, List<FileUndoRecord> inverse, PartialFileUndoException error)
+    {
+        source.RemoveAt(source.Count - 1);
+        if (error.Remaining.HasActions)
+            source.Add(error.Remaining);
+        inverse.Add(error.Completed);
+        Changed?.Invoke(this, EventArgs.Empty);
+        // Keep cancellation and error handling unchanged after committing the actual progress.
+        System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(error.InnerException!).Throw();
     }
 }

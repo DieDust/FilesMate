@@ -404,10 +404,10 @@ internal sealed partial class PaneFileActions
         {
             // Shell deletion may finish some items before a cancellation/error.
             // Keep their undo record and refresh even when the call throws.
-            var recycled = completed.Where(item => item.IsRecycled).Select(item => item.OriginalPath).ToArray();
+            var recycled = completed.Where(item => item.IsRecycled).ToArray();
             var permanent = completed.Count(item => !item.IsRecycled);
             if (permanent > 0) App.FileUndo.Clear();
-            var record = recycled.Length > 0 ? FileUndoRecord.Recycled(recycled) : null;
+            var record = recycled.Length > 0 ? FileUndoRecord.RecycledWithReceipts(recycled) : null;
             if (record is not null) App.FileUndo.Push(record);
             _refresh();
             if (permanent > 0 && _host is NavigatorPage page)
