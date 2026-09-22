@@ -17,10 +17,12 @@ public sealed class WindowsDirectoryWatcher : IDirectoryWatcher
             yield break;
         }
 
-        var channel = Channel.CreateUnbounded<DirectoryWatchNotification>(new UnboundedChannelOptions
+        var overflow = 0;
+        var channel = Channel.CreateBounded<DirectoryWatchNotification>(new BoundedChannelOptions(1024)
         {
             SingleReader = true,
             SingleWriter = false,
+            FullMode = BoundedChannelFullMode.Wait,
         });
 
         using var watcher = TryCreate(request.Path);
@@ -30,13 +32,15 @@ public sealed class WindowsDirectoryWatcher : IDirectoryWatcher
             yield break;
         }
 
-        void Push(DirectoryWatchKind kind, string? name, string? oldName = null) =>
-            channel.Writer.TryWrite(new DirectoryWatchNotification(
+        void Push(DirectoryWatchKind kind, string? name, string? oldName = null)
+        {
+            if (!channel.Writer.TryWrite(new DirectoryWatchNotification(
                 request.PaneId,
                 request.Generation,
                 kind,
                 name ?? string.Empty,
-                oldName ?? string.Empty));
+                oldName ?? string.Empty))) Interlocked.Exchange(ref overflow, 1);
+        }
 
         watcher.Created += (_, e) => Push(DirectoryWatchKind.Created, e.Name);
         watcher.Deleted += (_, e) => Push(DirectoryWatchKind.Deleted, e.Name);
@@ -59,6 +63,8 @@ public sealed class WindowsDirectoryWatcher : IDirectoryWatcher
         {
             await foreach (var notice in channel.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
             {
+                if (Interlocked.Exchange(ref overflow, 0) != 0)
+                    yield return new(request.PaneId, request.Generation, DirectoryWatchKind.Overflow, string.Empty);
                 yield return notice;
                 if (notice.Kind is DirectoryWatchKind.WatcherDisabled)
                 {

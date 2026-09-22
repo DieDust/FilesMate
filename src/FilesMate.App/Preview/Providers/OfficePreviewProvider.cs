@@ -1,5 +1,5 @@
 using Loc = FilesMate.App.Localization.StringTable;
-using System.Diagnostics;
+using FilesMate.Platform.Windows.Processes;
 
 namespace FilesMate.App.Preview.Providers;
 
@@ -22,34 +22,18 @@ public sealed class OfficePreviewProvider : IPreviewProvider
             Directory.CreateDirectory(directory);
             var executable = Path.Combine(AppContext.BaseDirectory, "SearchHost", "FilesMate.SearchHost.exe");
             if (!File.Exists(executable)) executable = Path.Combine(AppContext.BaseDirectory, "FilesMate.SearchHost.exe");
-            var start = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden };
-            start.ArgumentList.Add("--office-preview");
-            start.ArgumentList.Add(Path.GetFullPath(request.Path));
-            start.ArgumentList.Add(directory);
-            using var process = Process.Start(start) ?? throw new IOException(Loc.Get("Preview_StartFailed"));
+            using var worker = PreviewWorkerProcess.Start(executable, ["--office-preview", Path.GetFullPath(request.Path), directory]);
+            var process = worker.Process;
             using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             deadline.CancelAfter(TimeSpan.FromSeconds(15));
             try
             {
-                var exited = process.WaitForExitAsync(deadline.Token);
-                while (!exited.IsCompleted)
-                {
-                    await Task.WhenAny(exited, Task.Delay(200, deadline.Token)).ConfigureAwait(false);
-                    deadline.Token.ThrowIfCancellationRequested();
-                    if (process.HasExited) break;
-                    process.Refresh();
-                    if (process.PrivateMemorySize64 > 384L * 1024 * 1024)
-                    {
-                        process.Kill(entireProcessTree: true);
-                        await process.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
-                        return new PreviewResult.Unsupported(request.Path, Loc.Get("Preview_MemoryLimit"));
-                    }
-                }
-                await exited.ConfigureAwait(false);
+                // The job enforces the memory ceiling before the converter starts.
+                await process.WaitForExitAsync(deadline.Token).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
-                if (!process.HasExited) process.Kill(entireProcessTree: true);
+                worker.Terminate();
                 await process.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
                 cancellationToken.ThrowIfCancellationRequested();
                 return new PreviewResult.Unsupported(request.Path, Loc.Get("Preview_Timeout"));

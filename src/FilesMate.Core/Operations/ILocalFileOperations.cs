@@ -2,6 +2,8 @@ namespace FilesMate.Core.Operations;
 
 public interface ILocalFileOperations
 {
+    public bool RequiresUndoValidation => false;
+
     public void CreateDirectory(string path, bool failIfExists = false);
 
     public void CreateEmptyFile(string path);

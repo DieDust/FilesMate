@@ -519,7 +519,7 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
             EnsureSchema(connection);
             using var version = connection.CreateCommand();
             version.CommandText = "SELECT value FROM index_meta WHERE key='schema';";
-            NeedsUpgrade = version.ExecuteScalar() as string != "2";
+            NeedsUpgrade = version.ExecuteScalar() as string != "3";
             return ReadStats(connection);
         }
         catch (Exception ex) when (ex is SqliteException or IOException or UnauthorizedAccessException)

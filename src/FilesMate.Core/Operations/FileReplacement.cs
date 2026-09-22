@@ -10,10 +10,16 @@ public sealed class FileReplacement(string source, string destination, string ba
     private FileConflictDetails _destinationVersion = FileConflictDetails.Read(destination);
     private FileConflictDetails _backupVersion = FileConflictDetails.Read(backup);
 
+    private FileUndoState _destinationState = FileUndoState.Capture([destination]);
+    private FileUndoState _backupState = FileUndoState.Capture([backup]);
+    private FileUndoState? _sourceState;
+
     public void Undo()
     {
         if (!IsApplied) return;
+        _destinationState.Validate();
         Validate(Destination, _destinationVersion);
+        _backupState.Validate();
         Validate(Backup, _backupVersion);
         if (move)
         {
@@ -21,29 +27,35 @@ public sealed class FileReplacement(string source, string destination, string ba
             File.Move(Destination, Source, overwrite: false);
             try { File.Move(Backup, Destination, overwrite: false); }
             catch { File.Move(Source, Destination, overwrite: false); throw; }
+            _sourceState = FileUndoState.Capture([Source]);
             _incomingVersion = FileConflictDetails.Read(Source); // NTFS may restore the old name's creation timestamp.
         }
         else Swap();
         IsApplied = false;
         _destinationVersion = FileConflictDetails.Read(Destination);
+        _destinationState = FileUndoState.Capture([Destination]);
     }
 
     public void Redo()
     {
         if (IsApplied) return;
+        _destinationState.Validate();
         Validate(Destination, _destinationVersion);
         if (move)
         {
             // An edited source is not the version whose replacement was approved.
+            (_sourceState ?? throw new IOException("Missing replacement state.")).Validate();
             Validate(Source, _incomingVersion);
             File.Move(Destination, Backup, overwrite: false);
             try { File.Move(Source, Destination, overwrite: false); }
             catch { File.Move(Backup, Destination, overwrite: false); throw; }
             _backupVersion = FileConflictDetails.Read(Backup);
+            _backupState = FileUndoState.Capture([Backup]);
         }
-        else { Validate(Backup, _backupVersion); Swap(); }
+        else { _backupState.Validate(); Validate(Backup, _backupVersion); Swap(); }
         IsApplied = true;
         _destinationVersion = FileConflictDetails.Read(Destination);
+        _destinationState = FileUndoState.Capture([Destination]);
     }
 
     private FileConflictDetails _incomingVersion = FileConflictDetails.Read(destination);
@@ -54,6 +66,7 @@ public sealed class FileReplacement(string source, string destination, string ba
         File.Replace(Backup, Destination, nextBackup);
         Backup = nextBackup;
         _backupVersion = FileConflictDetails.Read(Backup);
+        _backupState = FileUndoState.Capture([Backup]);
     }
 
     private static void Validate(string path, FileConflictDetails expected)
@@ -70,6 +83,7 @@ public sealed class FileReplacement(string source, string destination, string ba
         {
             if ((!move || IsApplied) && File.Exists(Backup))
             {
+                _backupState.Validate();
                 Validate(Backup, _backupVersion);
                 File.Delete(Backup);
             }

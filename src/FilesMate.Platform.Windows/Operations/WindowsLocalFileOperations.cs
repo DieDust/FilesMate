@@ -10,6 +10,8 @@ namespace FilesMate.Platform.Windows.Operations;
 
 public sealed class WindowsLocalFileOperations : ILocalFileOperations
 {
+    public bool RequiresUndoValidation => true;
+
     public void CreateDirectory(string path, bool failIfExists = false)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
@@ -256,16 +258,6 @@ public sealed class WindowsLocalFileOperations : ILocalFileOperations
 
     private static void DeleteDirectoryRoot(string path, string root)
     {
-        try
-        {
-            Directory.Delete(root);
-            return;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-        }
-
-        FileLockQuery.ReleaseOwn([path, root]);
         try
         {
             Directory.Delete(root);

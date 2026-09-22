@@ -551,7 +551,7 @@ public sealed partial class PreviewPane : UserControl
             core.Settings.IsWebMessageEnabled = markdown is null && html is null;
             core.WebMessageReceived += (_, e) =>
             {
-                if (e.Source == PdfPreviewAssets.ViewerUri && e.TryGetWebMessageAsString() == "close-preview") DispatcherQueue.TryEnqueue(() => { if (_pdfContent == view) CloseRequested?.Invoke(this, EventArgs.Empty); });
+                if (PdfPreviewAssets.IsCloseMessage(e.Source, e.WebMessageAsJson)) DispatcherQueue.TryEnqueue(() => { if (_pdfContent == view) CloseRequested?.Invoke(this, EventArgs.Empty); });
             };
             core.Settings.AreDevToolsEnabled = false;
             core.Settings.AreDefaultContextMenusEnabled = false;

@@ -6,6 +6,7 @@ public static class FileUndoApplier
     {
         ArgumentNullException.ThrowIfNull(operations);
         ArgumentNullException.ThrowIfNull(record);
+        record.ValidateUndo(operations);
         foreach (var replacement in record.Replacements.Reverse()) replacement.Undo();
         switch (record.Kind)
         {
@@ -40,12 +41,14 @@ public static class FileUndoApplier
             default:
                 throw new ArgumentOutOfRangeException(nameof(record));
         }
+        record.CaptureRedo();
     }
 
     public static void Redo(ILocalFileOperations operations, FileUndoRecord record)
     {
         ArgumentNullException.ThrowIfNull(operations);
         ArgumentNullException.ThrowIfNull(record);
+        record.ValidateRedo(operations);
         switch (record.Kind)
         {
             case FileUndoKind.Merged:
@@ -75,6 +78,7 @@ public static class FileUndoApplier
         }
         foreach (var replacement in record.Replacements) replacement.Redo();
         if (record.Kind == FileUndoKind.Merged) RemoveEmptyDirectories(record.Paths);
+        record.CaptureUndo();
     }
 
     private static void RecycleForHistory(ILocalFileOperations operations, IReadOnlyList<string> paths)

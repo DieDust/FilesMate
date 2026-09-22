@@ -58,7 +58,7 @@ public partial class PaletteWindow
             core.Settings.IsWebMessageEnabled = interactivePdf;
             core.WebMessageReceived += (_, e) =>
             {
-                if (e.Source == PdfPreviewAssets.ViewerUri && e.TryGetWebMessageAsString() == "close-preview") Dispatcher.BeginInvoke(new Action(() => { if (_documentPreview == view) ClearPreview(); }));
+                if (PdfPreviewAssets.IsCloseMessage(e.Source, e.WebMessageAsJson)) Dispatcher.BeginInvoke(new Action(() => { if (_documentPreview == view) ClearPreview(); }));
             };
             core.Settings.AreDefaultContextMenusEnabled = false;
             core.Settings.HiddenPdfToolbarItems = CoreWebView2PdfToolbarItems.Save | CoreWebView2PdfToolbarItems.SaveAs

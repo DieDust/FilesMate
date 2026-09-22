@@ -3,7 +3,8 @@ const asset = path => new URL(path, import.meta.url).href;
 GlobalWorkerOptions.workerSrc = asset('build/pdf.worker.mjs');
 const $ = id => document.getElementById(id), viewport = $('viewport'), paper = $('paper');
 let pdf, pageNumber = 1, zoom = 1, fit = true, hand = true, epoch = 0, pointer, resizeTimer, frame;
-let observer, working = false, disposed = false;
+let working = false, disposed = false;
+const mounted = new Set();
 const pages = [], wanted = new Set(), cache = new Map();
 const status = text => $('status').textContent = text;
 function clearPointer() { pointer = null; viewport.classList.remove('dragging'); }
@@ -25,7 +26,7 @@ function updateToolbar() {
 function drop(number) {
   const entry = cache.get(number); if (!entry) return;
   cache.delete(number); entry.cancelled = true; entry.render?.cancel(); entry.text?.cancel();
-  pages[number - 1].element.replaceChildren();
+  pages[number - 1].element?.replaceChildren();
   Promise.resolve(entry.render?.promise).catch(() => {}).then(() => {
     if (entry.canvas) entry.canvas.width = entry.canvas.height = 0;
     entry.page?.cleanup();
@@ -48,7 +49,11 @@ async function pump() {
       try {
         entry.page = await pdf.getPage(number);
         if (entry.cancelled || mine !== epoch) { entry.page.cleanup(); continue; }
-        const natural = entry.page.getViewport({ scale: 1 }); slot.width = natural.width; slot.height = natural.height;
+        const natural = entry.page.getViewport({ scale: 1 });
+        if (slot.width !== natural.width || slot.height !== natural.height) {
+          const anchor = pages[pageNumber - 1], offset = viewport.scrollTop - anchor.top;
+          slot.width = natural.width; slot.height = natural.height; geometry(); viewport.scrollTop = anchor.top + offset;
+        }
         const view = entry.page.getViewport({ scale: zoom });
         slot.element.style.width = view.width + 'px'; slot.element.style.height = view.height + 'px';
         const canvas = entry.canvas = document.createElement('canvas'), layer = document.createElement('div'); layer.className = 'textLayer';
@@ -68,31 +73,60 @@ async function pump() {
     }
   } finally { working = false; }
 }
+function pageAt(top) {
+  let lo = 0, hi = pages.length - 1;
+  while (lo < hi) { const mid = (lo + hi + 1) >>> 1; if (pages[mid].top <= top) lo = mid; else hi = mid - 1; }
+  return lo + 1;
+}
+function position(slot) {
+  if (!slot.element) return;
+  Object.assign(slot.element.style, { top: slot.top + 'px', width: slot.width * zoom + 'px', height: slot.height * zoom + 'px', marginLeft: -slot.width * zoom / 2 + 'px' });
+}
+function geometry() {
+  let top = 0, width = 0;
+  for (const slot of pages) { slot.top = top; top += slot.height * zoom + 16; width = Math.max(width, slot.width * zoom); }
+  paper.style.height = Math.max(0, top - 16) + 'px'; paper.style.width = width + 'px';
+  for (const number of mounted) position(pages[number - 1]);
+}
+function mountVisible() {
+  if (!pdf || disposed) return;
+  const first = pageAt(Math.max(0, viewport.scrollTop - 120));
+  const last = Math.min(first + 8, pageAt(viewport.scrollTop + viewport.clientHeight + 120));
+  wanted.clear();
+  for (let number = first; number <= last; number++) {
+    wanted.add(number);
+    const slot = pages[number - 1];
+    if (!slot.element) {
+      slot.element = document.createElement('div'); slot.element.className = 'pdf-page'; slot.element.dataset.page = number;
+      slot.element.setAttribute('aria-label', '第 ' + number + ' 页'); paper.append(slot.element); mounted.add(number); position(slot);
+    }
+  }
+  for (const number of [...mounted]) if (!wanted.has(number)) {
+    drop(number); pages[number - 1].element.remove(); pages[number - 1].element = null; mounted.delete(number);
+  }
+}
 function onScroll() {
   cancelAnimationFrame(frame);
   frame = requestAnimationFrame(() => {
-    const top = viewport.getBoundingClientRect().top + 24;
-    const visible = [...wanted].filter(n => pages[n - 1].element.getBoundingClientRect().bottom > top);
-    if (visible.length) pageNumber = visible.sort((a, b) => Math.abs(pages[a - 1].element.getBoundingClientRect().top - top) - Math.abs(pages[b - 1].element.getBoundingClientRect().top - top))[0];
-    updateToolbar(); pump();
+    if (!pdf || disposed) return;
+    mountVisible(); pageNumber = pageAt(viewport.scrollTop + 24); updateToolbar(); pump();
   });
 }
 viewport.addEventListener('scroll', onScroll, { passive: true });
 function layout() {
   if (!pdf || !pages.length) return;
-  const anchor = pages[pageNumber - 1], offset = viewport.scrollTop - anchor.element.offsetTop;
-  const leftFraction = viewport.scrollLeft / Math.max(1, anchor.element.offsetWidth);
+  const anchor = pages[pageNumber - 1], offset = viewport.scrollTop - anchor.top;
+  const leftFraction = viewport.scrollLeft / Math.max(1, anchor.width * zoom);
   epoch++; for (const number of [...cache.keys()]) drop(number);
   if (fit) zoom = Math.min(3, Math.max(.25, (viewport.clientWidth - 32) / pages[0].width));
-  for (const slot of pages) { slot.element.style.width = slot.width * zoom + 'px'; slot.element.style.height = slot.height * zoom + 'px'; }
-  viewport.scrollTop = anchor.element.offsetTop + offset; viewport.scrollLeft = leftFraction * anchor.element.offsetWidth;
-  updateToolbar(); pump();
+  geometry(); viewport.scrollTop = anchor.top + offset; viewport.scrollLeft = leftFraction * anchor.width * zoom;
+  mountVisible(); updateToolbar(); pump();
 }
 function go(number) {
   if (!pdf) return;
   pageNumber = Math.max(1, Math.min(pdf.numPages, Math.floor(number) || 1));
-  viewport.scrollTop = pages[pageNumber - 1].element.offsetTop;
-  updateToolbar();
+  viewport.scrollTop = pages[pageNumber - 1].top;
+  mountVisible(); updateToolbar(); pump();
 }
 function changeZoom(factor) { fit = false; zoom = Math.max(.25, Math.min(5, zoom * factor)); layout(); }
 $('previous').onclick = () => go(pageNumber - 1); $('next').onclick = () => go(pageNumber + 1);
@@ -106,24 +140,18 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'PageDown') { e.preventDefault(); viewport.scrollTop += viewport.clientHeight * .9; }
   else if (e.key === 'PageUp') { e.preventDefault(); viewport.scrollTop -= viewport.clientHeight * .9; }
 });
-new ResizeObserver(() => { if (fit) { clearTimeout(resizeTimer); resizeTimer = setTimeout(layout, 120); } }).observe(viewport);
+const resizeObserver = new ResizeObserver(() => { if (fit) { clearTimeout(resizeTimer); resizeTimer = setTimeout(layout, 120); } });
+resizeObserver.observe(viewport);
 try {
   pdf = await getDocument({ url: 'https://filesmate-document.local/document.pdf',
     // Absolute asset URLs are required inside the build/ worker (JBIG2/CJK/fonts).
     cMapUrl: asset('cmaps/'), cMapPacked: true, standardFontDataUrl: asset('standard_fonts/'), wasmUrl: asset('wasm/'),
     isEvalSupported: false, disableAutoFetch: true, disableStream: true, rangeChunkSize: 65536, canvasMaxAreaInBytes: 16_000_000 }).promise;
   const first = await pdf.getPage(1), natural = first.getViewport({ scale: 1 }); first.cleanup();
-  const fragment = document.createDocumentFragment();
-  for (let number = 1; number <= pdf.numPages; number++) {
-    const element = document.createElement('div'); element.className = 'pdf-page'; element.dataset.page = number;
-    element.setAttribute('aria-label', '第 ' + number + ' 页'); pages.push({ element, width: natural.width, height: natural.height }); fragment.append(element);
-  }
-  paper.replaceChildren(fragment); $('count').textContent = '/ ' + pdf.numPages; $('page').max = pdf.numPages;
+  // Only lightweight geometry is stored for distant pages. DOM, observers, canvases
+  // and text layers are bounded by the viewport, regardless of document length.
+  for (let number = 1; number <= pdf.numPages; number++) pages.push({ element: null, top: 0, width: natural.width, height: natural.height });
+  paper.replaceChildren(); $('count').textContent = '/ ' + pdf.numPages; $('page').max = pdf.numPages;
   layout();
-  observer = new IntersectionObserver(entries => {
-    for (const entry of entries) { const number = Number(entry.target.dataset.page); if (entry.isIntersecting) wanted.add(number); else wanted.delete(number); }
-    onScroll(); pump();
-  }, { root: viewport, rootMargin: '120px 0px' });
-  for (const slot of pages) observer.observe(slot.element);
 } catch (error) { document.body.dataset.error = String(error); status('无法预览此 PDF，文件可能已加密或损坏，请打开文件查看。'); }
-window.addEventListener('pagehide', () => { disposed = true; observer?.disconnect(); for (const n of [...cache.keys()]) drop(n); pdf?.destroy(); });
+window.addEventListener('pagehide', () => { disposed = true; resizeObserver.disconnect(); clearTimeout(resizeTimer); cancelAnimationFrame(frame); for (const n of [...cache.keys()]) drop(n); pdf?.destroy(); });

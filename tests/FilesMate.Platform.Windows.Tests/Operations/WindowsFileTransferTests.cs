@@ -12,6 +12,30 @@ public sealed class WindowsFileTransferTests : IDisposable
     public WindowsFileTransferTests() { Directory.CreateDirectory(Source); Directory.CreateDirectory(Target); }
 
     [Fact]
+    public async Task Cancellation_during_one_file_keeps_source_and_never_publishes_partial_destination()
+    {
+        var source = Path.Combine(Source, "large.bin");
+        using (var file = File.Create(source)) file.SetLength(32L * 1024 * 1024);
+        var target = Path.Combine(Target, "large.bin");
+        using var cancel = new CancellationTokenSource();
+        long observed = 0;
+        var result = await WindowsFileTransfer.RunAsync(_operations, [new(source, target)], false, token: cancel.Token,
+            byteProgress: new InlineProgress(value => { observed = value.Transferred; cancel.Cancel(); }));
+        Assert.True(result.Cancelled);
+        Assert.Empty(result.Completed);
+        Assert.Empty(result.Errors);
+        Assert.InRange(observed, 1, new FileInfo(source).Length - 1);
+        Assert.False(File.Exists(target));
+        Assert.Empty(Directory.EnumerateFileSystemEntries(Target));
+        Assert.Equal(32L * 1024 * 1024, new FileInfo(source).Length);
+    }
+
+    private sealed class InlineProgress(Action<FileCopyProgress> report) : IProgress<FileCopyProgress>
+    {
+        public void Report(FileCopyProgress value) => report(value);
+    }
+
+    [Fact]
     public async Task BudgetExhaustionInterruptsRememberedReplaceAndNeverExceedsBatchLimit()
     {
         var budget = new ReplacementBackupBudget(16, 16);
@@ -177,7 +201,7 @@ public sealed class WindowsFileTransferTests : IDisposable
         var result = await WindowsFileTransfer.RunAsync(_operations, [new(a, b)], false,
             (_, _) => Task.FromResult(new FileConflictChoice(FileConflictAction.Replace)));
         File.WriteAllText(b, "subsequent edit");
-        Assert.Throws<IOException>(() => FileUndoApplier.Undo(_operations, result.Undo!));
+        Assert.Throws<UndoStateChangedException>(() => FileUndoApplier.Undo(_operations, result.Undo!));
         Assert.Equal("subsequent edit", File.ReadAllText(b));
         Assert.Single(result.Undo!.Replacements).Dispose();
     }

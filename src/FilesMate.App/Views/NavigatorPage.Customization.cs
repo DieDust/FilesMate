@@ -214,6 +214,8 @@ public sealed partial class NavigatorPage
 
     private async Task TransferShelfDropAsync(FileDropRequest request, string destination, PaneViewModel vm)
     {
+        if (FileOperationLifetime.IsBusy) { vm.ReportUserError(StringTable.Get("Files_Busy")); return; }
+        using var lifetime = FileOperationLifetime.Begin();
         try
         {
             var move = request.Operation == DataPackageOperation.Move;

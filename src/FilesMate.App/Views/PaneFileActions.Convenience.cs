@@ -16,7 +16,7 @@ internal sealed partial class PaneFileActions
     internal static bool IsBusy => _fileWorkActive;
     public async Task<string?> RenamePathAsync(string source, string name)
     {
-        if (_fileWorkActive) { _reportError(Loc.Get("Files_Busy")); return null; }
+        if (_fileWorkActive || FileOperationLifetime.IsBusy) { _reportError(Loc.Get("Files_Busy")); return null; }
         _fileWorkActive = true;
         using var lifetime = FileOperationLifetime.Begin();
         try { return await RenameCoreAsync(source, name); }
@@ -36,7 +36,7 @@ internal sealed partial class PaneFileActions
             try { await Task.Run(() => _operations.Rename(source, destination)); }
             catch (IOException) when (!samePath && Path.Exists(destination))
             { return await ResolveRenameConflictAsync(source, destination); }
-            App.FileUndo.Push(FileUndoRecord.Relocated([new(source, destination)]));
+            App.FileUndo.Push(await Task.Run(() => FileUndoRecord.Relocated([new(source, destination)])));
             _refresh();
             return destination;
         }
@@ -169,7 +169,7 @@ internal sealed partial class PaneFileActions
         _operations.CreateDirectory(target, failIfExists: true);
         var result = await FileShelfTransfer.RunAsync(_operations, selected, target, move: true, resolveConflict: FileConflictDialog.For(_host));
         if (result.WithoutUndo > 0) App.FileUndo.Clear();
-        else if (result.Completed.Count > 0) App.FileUndo.Push(FileUndoRecord.Grouped(target, result.Completed));
+        else if (result.Completed.Count > 0) App.FileUndo.Push(await Task.Run(() => FileUndoRecord.Grouped(target, result.Completed)));
         else RecordCreated([target]);
         if (_host is NavigatorPage page) page.ShowTransferFeedback(result);
         if (TransferFeedback.NeedsAttention(result)) _reportError(TransferFeedback.Format(result));

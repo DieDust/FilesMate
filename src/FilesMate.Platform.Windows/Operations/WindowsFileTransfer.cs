@@ -14,7 +14,7 @@ public static class WindowsFileTransfer
 {
     public static Task<FileTransferResult> RunAsync(ILocalFileOperations operations, IReadOnlyList<FilePathPair> requests,
         bool move, FileConflictResolver? resolveConflict = null, IProgress<int>? progress = null, CancellationToken token = default,
-        ReplacementBackupBudget? backupBudget = null) =>
+        ReplacementBackupBudget? backupBudget = null, IProgress<FileCopyProgress>? byteProgress = null) =>
         Task.Run(async () =>
         {
             var completed = new List<FilePathPair>();
@@ -124,7 +124,7 @@ public static class WindowsFileTransfer
                                     continue;
                                 }
                                 var replacement = await ReplaceFileAsync(source, target, move, incoming!, existing!, sourceIdentity!, existingIdentity!, token,
-                                    budget, retainUndo: choice.Action == FileConflictAction.Replace).ConfigureAwait(false);
+                                    budget, retainUndo: choice.Action == FileConflictAction.Replace, byteProgress).ConfigureAwait(false);
                                 if (replacement is not null) replacements.Add(replacement); else withoutUndo++;
                                 completed.Add(new(source, target)); progress?.Report(completed.Count); return;
                             }
@@ -163,7 +163,7 @@ public static class WindowsFileTransfer
                             return;
                         }
                         if (move) operations.Rename(source, target);
-                        else await CopyFileAsync(source, target, token).ConfigureAwait(false);
+                        else await CopyFileAsync(source, target, token, byteProgress).ConfigureAwait(false);
                         targetAcquired = true;
                         completed.Add(new(source, target));
                         ordinary.Add(new(source, target));
@@ -208,7 +208,7 @@ public static class WindowsFileTransfer
 
     private static async Task<FileReplacement?> ReplaceFileAsync(string source, string target, bool move,
         FileConflictDetails incoming, FileConflictDetails existing, string sourceIdentity, string targetIdentity, CancellationToken token,
-        ReplacementBackupBudget budget, bool retainUndo)
+        ReplacementBackupBudget budget, bool retainUndo, IProgress<FileCopyProgress>? byteProgress)
     {
         var parent = Path.GetDirectoryName(target)!;
         var staged = Path.Combine(parent, ".filesmate-copy-" + Guid.NewGuid().ToString("N"));
@@ -250,7 +250,7 @@ public static class WindowsFileTransfer
                 File.Move(source, staged, overwrite: false);
                 sourceGuard.Dispose(); // ReplaceFile must open the moved staging file for metadata writes.
             }
-            else await CopyFileAsync(source, staged, token).ConfigureAwait(false);
+            else await CopyFileAsync(source, staged, token, byteProgress).ConfigureAwait(false);
             stagedOwned = true;
             token.ThrowIfCancellationRequested();
             if (!IsNormalFile(target) || FileConflictDetails.Read(target) != existing || identities.Resolve(target).StableKey != targetIdentity)
@@ -301,7 +301,7 @@ public static class WindowsFileTransfer
         }
     }
 
-    private static Task CopyFileAsync(string source, string target, CancellationToken token)
+    private static Task CopyFileAsync(string source, string target, CancellationToken token, IProgress<FileCopyProgress>? byteProgress)
     {
         token.ThrowIfCancellationRequested();
         var staging = Path.Combine(Path.GetDirectoryName(target)!, ".filesmate-copy-" + Guid.NewGuid().ToString("N"));
@@ -312,7 +312,7 @@ public static class WindowsFileTransfer
         {
             using (reservation)
             {
-                File.Copy(source, staging, overwrite: true);
+                WindowsFileCopy.Copy(source, staging, target, token, byteProgress);
             }
             token.ThrowIfCancellationRequested();
             File.Move(staging, target, overwrite: false);

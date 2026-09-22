@@ -16,13 +16,15 @@ public sealed record FileLockProcess(
     string? ServiceName,
     bool CanTerminate,
     IReadOnlyList<string> Paths,
-    IReadOnlyList<FileLockHandle> Handles);
+    IReadOnlyList<FileLockHandle> Handles)
+{
+    public DateTime? StartedAtUtc { get; init; }
+}
 
 public static class FileLockQuery
 {
-    // ponytail: Restart Manager misses kernel/system handles; the handle table
-    // walk misses Protected Process Light. Closing a remote handle can destabilize
-    // that app — the upgrade is a driver. Skip pid 4 and our own process.
+    // Inspection uses the caller's existing rights. Only duplicates owned by
+    // this query are closed; application handles must be released by their owners.
     public static IReadOnlyList<FileLockProcess> Find(IReadOnlyList<string> paths)
     {
         ArgumentNullException.ThrowIfNull(paths);
@@ -36,7 +38,6 @@ public static class FileLockQuery
             return [];
         }
 
-        EnableDebugPrivilege();
         var rows = new Dictionary<int, Builder>();
         AddRestartManager(targets, rows);
         AddHandleLocks(targets, rows);
@@ -61,124 +62,18 @@ public static class FileLockQuery
             && FileLockPath.Matches(handle.Path, lockedPath, directory))];
     }
 
-    public static int Unlock(IReadOnlyList<FileLockProcess> processes)
+    public static bool Terminate(FileLockProcess expected)
     {
-        ArgumentNullException.ThrowIfNull(processes);
-        return Unlock(processes.SelectMany(process => process.Handles).ToArray());
-    }
-
-    public static int Unlock(IReadOnlyList<FileLockHandle> handles)
-    {
-        ArgumentNullException.ThrowIfNull(handles);
-        var closed = 0;
-        foreach (var group in handles.GroupBy(handle => handle.ProcessId))
-        {
-            if (group.Key is 0 or 4)
-            {
-                continue;
-            }
-
-            if (group.Key == Environment.ProcessId)
-            {
-                closed += CloseLocal(group);
-                continue;
-            }
-
-            using var handle = OpenProcess(DupAccess, false, group.Key);
-            if (handle.IsInvalid)
-            {
-                continue;
-            }
-
-            foreach (var item in group)
-            {
-                if (NtDuplicateObject(
-                        handle.DangerousGetHandle(),
-                        item.Value,
-                        0,
-                        out _,
-                        0,
-                        0,
-                        DuplicateCloseSource) == 0)
-                {
-                    closed++;
-                }
-            }
-        }
-
-        return closed;
-    }
-
-    public static int ReleaseOwn(IReadOnlyList<string> paths)
-    {
-        ArgumentNullException.ThrowIfNull(paths);
-        var targets = paths
-            .Where(path => !string.IsNullOrWhiteSpace(path))
-            .Select(path => (Path: FileLockPath.Normalize(path), Directory: Directory.Exists(path)))
-            .Distinct()
-            .ToArray();
-        if (targets.Length == 0)
-        {
-            return 0;
-        }
-
-        var snapshot = SnapshotHandles();
-        if (snapshot.Length == 0)
-        {
-            return 0;
-        }
-
-        var self = Environment.ProcessId;
-        var matches = new List<nint>();
-        foreach (var entry in snapshot)
-        {
-            if ((int)entry.UniqueProcessId != self)
-            {
-                continue;
-            }
-
-            if (NtDuplicateObject(
-                    GetCurrentProcess(),
-                    entry.HandleValue,
-                    GetCurrentProcess(),
-                    out var dup,
-                    0,
-                    0,
-                    DuplicateSameAccess) != 0)
-            {
-                continue;
-            }
-
-            try
-            {
-                if (GetFileType(dup) != FileTypeDisk)
-                {
-                    continue;
-                }
-
-                var path = PathFromHandle(dup);
-                if (path is not null && targets.Any(target => FileLockPath.Matches(path, target.Path, target.Directory)))
-                {
-                    matches.Add(entry.HandleValue);
-                }
-            }
-            finally
-            {
-                _ = CloseHandle(dup);
-            }
-        }
-
-        return CloseLocal(matches.Select(value => new FileLockHandle(self, value, string.Empty)));
-    }
-
-    public static bool Terminate(int processId)
-    {
+        var processId = expected.ProcessId;
+        if (!expected.CanTerminate || expected.StartedAtUtc is null) return false;
         if (processId is 0 or 4 || processId == Environment.ProcessId)
         {
             return false;
         }
 
         using var process = Process.GetProcessById(processId);
+        _ = process.Handle; // Hold this process instance across validation and termination.
+        if (process.StartTime.ToUniversalTime() != expected.StartedAtUtc) return false;
         process.Kill(entireProcessTree: false);
         return true;
     }
@@ -484,27 +379,6 @@ public static class FileLockQuery
         return [];
     }
 
-    private static int CloseLocal(IEnumerable<FileLockHandle> handles)
-    {
-        var closed = 0;
-        foreach (var item in handles)
-        {
-            if (NtDuplicateObject(
-                    GetCurrentProcess(),
-                    item.Value,
-                    0,
-                    out _,
-                    0,
-                    0,
-                    DuplicateCloseSource) == 0)
-            {
-                closed++;
-            }
-        }
-
-        return closed;
-    }
-
     private static string? PathFromHandle(nint handle)
     {
         var buffer = new char[32768];
@@ -520,13 +394,14 @@ public static class FileLockQuery
         return null;
     }
 
-    private static void EnableDebugPrivilege()
-    {
-        _ = RtlAdjustPrivilege(SeDebugPrivilege, enable: true, currentThread: false, out _);
-    }
-
     private sealed class Builder(int processId, string Name, string? ImagePath, string? ServiceName)
     {
+        private readonly DateTime? _startedAt = StartTime(processId);
+        private static DateTime? StartTime(int id)
+        {
+            try { using var process = Process.GetProcessById(id); return process.StartTime.ToUniversalTime(); }
+            catch (Exception e) when (e is ArgumentException or InvalidOperationException or Win32Exception) { return null; }
+        }
         private readonly HashSet<string> _paths = new(StringComparer.OrdinalIgnoreCase);
         private readonly List<FileLockHandle> _handles = [];
 
@@ -546,21 +421,19 @@ public static class FileLockQuery
                 Name,
                 ImagePath,
                 ServiceName,
-                processId is not (0 or 4) && processId != Environment.ProcessId,
+                _startedAt is not null && processId is not (0 or 4) && processId != Environment.ProcessId,
                 _paths.OrderBy(path => path, StringComparer.OrdinalIgnoreCase).ToArray(),
-                _handles);
+                _handles) { StartedAtUtc = _startedAt };
     }
 
     private const int SystemExtendedHandleInformation = 64;
     private const int StatusInfoLengthMismatch = unchecked((int)0xC0000004);
     private const int ErrorMoreData = 234;
-    private const uint DuplicateCloseSource = 1;
     private const uint DuplicateSameAccess = 2;
     private const uint FileTypeDisk = 1;
     private const uint DupAccess = 0x0040 | 0x1000;
     private const uint QueryAccess = 0x1000;
     private const uint FileNameOpened = 8;
-    private const int SeDebugPrivilege = 20;
 
     [DllImport("ntdll.dll")]
     private static extern int NtQuerySystemInformation(int infoClass, nint info, int length, out int returned);
@@ -574,9 +447,6 @@ public static class FileLockQuery
         uint access,
         uint attributes,
         uint options);
-
-    [DllImport("ntdll.dll")]
-    private static extern int RtlAdjustPrivilege(int privilege, bool enable, bool currentThread, out bool enabled);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern SafeProcessHandle OpenProcess(uint access, bool inherit, int processId);

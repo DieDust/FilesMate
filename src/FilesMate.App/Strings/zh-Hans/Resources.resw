@@ -1009,6 +1009,9 @@
   <data name="Files_TargetExists" xml:space="preserve">
     <value>目标名称已存在，请重试。</value>
   </data>
+  <data name="Files_UndoChanged" xml:space="preserve">
+    <value>无法撤销：文件已变化、无法读取，或目录超出安全检查范围。文件已保留。</value>
+  </data>
   <data name="Files_UndoRecycledOnly" xml:space="preserve">
     <value>恢复回收站项目</value>
   </data>
@@ -1183,6 +1186,9 @@
   <data name="Lock_EndTask" xml:space="preserve">
     <value>结束进程</value>
   </data>
+  <data name="Lock_EndWarning" xml:space="preserve">
+    <value>结束所选程序会丢失尚未保存的内容。建议先正常关闭程序。仍要结束吗？</value>
+  </data>
   <data name="Lock_HandleCount" xml:space="preserve">
     <value>{0} 个对象</value>
   </data>
@@ -1205,7 +1211,7 @@
     <value>服务：{0}</value>
   </data>
   <data name="Lock_Unlock" xml:space="preserve">
-    <value>解锁</value>
+    <value>释放 FilesMate 预览</value>
   </data>
   <data name="MemoryDescription" xml:space="preserve">
     <value>文件行和图块采用虚拟化，不会为每个项目创建单独的视图模型。</value>
@@ -2739,6 +2745,9 @@ Ctrl+T 新标签　　Ctrl+W 关闭标签　　Ctrl+L 路径　　Ctrl+F 筛选�
   </data>
   <data name="Transfer_ConflictHint" xml:space="preserve">
     <value>“{0}”已存在，请选择如何处理。</value>
+  </data>
+  <data name="Transfer_CopyByteProgress" xml:space="preserve">
+    <value>正在复制 {0}：{1} / {2} MiB</value>
   </data>
   <data name="Transfer_CreateCopy" xml:space="preserve">
     <value>创建副本</value>

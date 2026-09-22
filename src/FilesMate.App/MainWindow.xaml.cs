@@ -150,6 +150,8 @@ public sealed partial class MainWindow : Window
         {
             InitializeTabs(launch, restartSession);
 #if FILESMATE_UI_TEST
+            if (Environment.GetEnvironmentVariable("FILESMATE_REVIEW_PREVIEW_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunReviewPreviewSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_LANGUAGE_RESTART_SMOKE") == "1"
                 || Environment.GetCommandLineArgs().Contains("--language-restart-smoke"))
                 DispatcherQueue.TryEnqueue(async () => await RunLanguageRestartSmokeAsync());

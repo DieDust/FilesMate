@@ -150,13 +150,7 @@ public sealed partial class FileLockDialog : UserControl
 
     public IReadOnlyList<FileLockProcess> Processes => _processes;
 
-    public IReadOnlyList<FileLockHandle> HandlesToUnlock()
-    {
-        var selected = SelectedNodes();
-        return selected.Count == 0
-            ? _processes.SelectMany(process => process.Handles).ToArray()
-            : [.. selected.SelectMany(node => node.Handles).Distinct()];
-    }
+    public Func<Task>? ReleasePreviewAsync { get; set; }
 
     public IReadOnlyList<string> TargetsToDelete()
     {
@@ -273,8 +267,7 @@ public sealed partial class FileLockDialog : UserControl
 
     private async void Unlock_Click(object sender, RoutedEventArgs e)
     {
-        var handles = HandlesToUnlock();
-        if (_busy || handles.Count == 0)
+        if (_busy || ReleasePreviewAsync is null)
         {
             return;
         }
@@ -282,7 +275,7 @@ public sealed partial class FileLockDialog : UserControl
         _busy = true;
         try
         {
-            await Task.Run(() => FileLockQuery.Unlock(handles)).ConfigureAwait(true);
+            await ReleasePreviewAsync().ConfigureAwait(true);
             await ReloadAsync().ConfigureAwait(true);
         }
         finally
@@ -304,25 +297,33 @@ public sealed partial class FileLockDialog : UserControl
 
     private async void EndTask_Click(object sender, RoutedEventArgs e)
     {
-        var ids = SelectedNodes()
+        var processes = SelectedNodes()
             .Select(node => node.Process)
             .Where(process => process.CanTerminate)
-            .Select(process => process.ProcessId)
-            .Distinct()
+            .DistinctBy(process => process.ProcessId)
             .ToArray();
-        if (_busy || ids.Length == 0)
+        if (_busy || processes.Length == 0)
         {
             return;
         }
+
+        var confirmation = new ContentDialog
+        {
+            Title = StringTable.Get("Lock_EndTask"), Content = StringTable.Get("Lock_EndWarning"),
+            PrimaryButtonText = StringTable.Get("Lock_EndTask"), CloseButtonText = StringTable.Get("Cancel"),
+            DefaultButton = ContentDialogButton.Close, XamlRoot = XamlRoot,
+        };
+        ContentDialogTheme.Apply(confirmation, this);
+        if (await confirmation.ShowAsync() != ContentDialogResult.Primary) return;
 
         _busy = true;
         try
         {
             await Task.Run(() =>
             {
-                foreach (var id in ids)
+                foreach (var process in processes)
                 {
-                    FileLockQuery.Terminate(id);
+                    if (!FileLockQuery.Terminate(process)) throw new InvalidOperationException();
                 }
             }).ConfigureAwait(true);
             await ReloadAsync().ConfigureAwait(true);
@@ -419,7 +420,7 @@ public sealed partial class FileLockDialog : UserControl
     private void SyncButtons()
     {
         var selected = SelectedNodes();
-        UnlockButton.IsEnabled = !_busy && HandlesToUnlock().Count > 0;
+        UnlockButton.IsEnabled = !_busy && ReleasePreviewAsync is not null;
         DeleteButton.IsEnabled = !_busy && TargetsToDelete().Count > 0;
         OtherButton.IsEnabled = !_busy && selected.Any(node => node.Process.CanTerminate);
         EndTaskItem.IsEnabled = OtherButton.IsEnabled;

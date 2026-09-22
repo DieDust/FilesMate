@@ -72,8 +72,9 @@ internal sealed partial class PaneFileActions
     public async Task RunAsync(AppCommandId id)
     {
         var mutates = id is AppCommandId.NewFolder or AppCommandId.NewFile or AppCommandId.Paste
-            or AppCommandId.Rename or AppCommandId.BatchRename or AppCommandId.Recycle or AppCommandId.PermanentDelete or AppCommandId.NewFolderWithSelection;
-        if (mutates && _fileWorkActive) { _reportError(Loc.Get("Files_Busy")); return; }
+            or AppCommandId.Rename or AppCommandId.BatchRename or AppCommandId.Recycle or AppCommandId.PermanentDelete
+            or AppCommandId.NewFolderWithSelection or AppCommandId.CreateShortcut;
+        if (mutates && (_fileWorkActive || FileOperationLifetime.IsBusy)) { _reportError(Loc.Get("Files_Busy")); return; }
         if (mutates) _fileWorkActive = true;
         using var lifetime = mutates ? FileOperationLifetime.Begin() : null;
         try
@@ -154,7 +155,8 @@ internal sealed partial class PaneFileActions
         DataPackageOperation operation,
         bool allowSameDirectoryCopy = false)
     {
-        if (_fileWorkActive) { _reportError(Loc.Get("Files_Busy")); return; }
+        if (_fileWorkActive || FileOperationLifetime.IsBusy) { _reportError(Loc.Get("Files_Busy")); return; }
+        using var lifetime = FileOperationLifetime.Begin();
         _fileWorkActive = true;
         try
         {
@@ -343,7 +345,7 @@ internal sealed partial class PaneFileActions
             .ToArray();
         if (pairs.Length > 0)
         {
-            App.FileUndo.Push(FileUndoRecord.Relocated(pairs));
+            App.FileUndo.Push(await Task.Run(() => FileUndoRecord.Relocated(pairs)));
         }
 
         _refresh();
@@ -413,15 +415,18 @@ internal sealed partial class PaneFileActions
         }
     }
 
-    private void ApplyUndo(bool redo)
+    private async void ApplyUndo(bool redo)
     {
-        if (_fileWorkActive) { _reportError(Loc.Get("Files_Busy")); return; }
+        if (_fileWorkActive || FileOperationLifetime.IsBusy) { _reportError(Loc.Get("Files_Busy")); return; }
         using var lifetime = FileOperationLifetime.Begin();
         _fileWorkActive = true;
         try
         {
-            if (redo) App.FileUndo.TryRedo(_operations);
-            else App.FileUndo.TryUndo(_operations);
+            await App.FileUndo.TryApplyAsync(_operations, redo, action => ShellOperationWorker.RunAsync(action));
+        }
+        catch (UndoStateChangedException)
+        {
+            _reportError(Loc.Get("Files_UndoChanged"));
         }
         catch (IrreversibleDeletionException error)
         {
@@ -505,18 +510,22 @@ internal sealed partial class PaneFileActions
             return;
         }
 
+        panel.ReleasePreviewAsync = async () =>
+        {
+            panel.ReleaseIcons();
+            await _prepareDelete(panel.Paths).ConfigureAwait(true);
+        };
         panel.DeleteRequested += async (_, _) =>
         {
+            if (FileOperationLifetime.IsBusy) { _reportError(Loc.Get("Files_Busy")); return; }
+            using var lifetime = FileOperationLifetime.Begin();
             var targets = panel.TargetsToDelete();
             try
             {
                 panel.ReleaseIcons();
                 await _prepareDelete(targets).ConfigureAwait(true);
-                var handles = panel.HandlesToUnlock();
                 await Task.Run(() =>
                 {
-                    FileLockQuery.Unlock(handles);
-                    FileLockQuery.ReleaseOwn(targets);
                     _operations.PermanentDelete(targets);
                 }).ConfigureAwait(true);
                 page.HideLockOverlay();

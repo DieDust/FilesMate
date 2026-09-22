@@ -20,6 +20,28 @@ public sealed record FileUndoRecord(
     IReadOnlyList<string> Paths,
     IReadOnlyList<FilePathPair> Pairs)
 {
+    private FileUndoState _undoState = FileUndoState.Capture(
+        Kind is FileUndoKind.Relocated or FileUndoKind.Merged or FileUndoKind.Grouped
+            ? Pairs.Select(pair => pair.Destination)
+            : Kind is FileUndoKind.Created or FileUndoKind.Copied ? Paths : []);
+    private FileUndoState? _redoState;
+
+    internal void ValidateUndo(ILocalFileOperations operations)
+    {
+        if (operations.RequiresUndoValidation) _undoState.Validate();
+    }
+    internal void ValidateRedo(ILocalFileOperations operations)
+    {
+        if (operations.RequiresUndoValidation) (_redoState ?? throw new IOException("Missing undo state.")).Validate();
+    }
+    internal void CaptureRedo() => _redoState = FileUndoState.Capture(
+        Kind is FileUndoKind.Relocated or FileUndoKind.Merged or FileUndoKind.Grouped
+            ? Pairs.Select(pair => pair.Source) : Kind == FileUndoKind.Recycled ? Paths : []);
+    internal void CaptureUndo() => _undoState = FileUndoState.Capture(
+        Kind is FileUndoKind.Relocated or FileUndoKind.Merged or FileUndoKind.Grouped
+            ? Pairs.Select(pair => pair.Destination)
+            : Kind is FileUndoKind.Created or FileUndoKind.Copied ? Paths : []);
+
     public IReadOnlyList<string> CreatedDirectories { get; init; } = [];
     public IReadOnlyList<FileReplacement> Replacements { get; init; } = [];
 

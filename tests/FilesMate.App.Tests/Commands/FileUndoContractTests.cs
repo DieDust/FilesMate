@@ -13,8 +13,8 @@ public sealed class FileUndoContractTests
 
         Assert.Contains("App.FileUndo.Push", actions, StringComparison.Ordinal);
         Assert.Contains("FileUndoRecord.Recycled", actions, StringComparison.Ordinal);
-        Assert.Contains("TryUndo", actions, StringComparison.Ordinal);
-        Assert.Contains("TryRedo", actions, StringComparison.Ordinal);
+        Assert.Contains("TryApplyAsync", actions, StringComparison.Ordinal);
+        Assert.Contains("ShellOperationWorker.RunAsync", actions, StringComparison.Ordinal);
         Assert.Contains("x:Name=\"UndoAccelerator\"", navigator, StringComparison.Ordinal);
         Assert.Contains("x:Name=\"RedoAccelerator\"", navigator, StringComparison.Ordinal);
         Assert.Contains("FileAcceleratorsBlocked()", code, StringComparison.Ordinal);

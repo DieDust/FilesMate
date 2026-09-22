@@ -23,11 +23,11 @@ public sealed class FileLockDialogContractTests
         Assert.Contains("IsExpanded, Mode=OneWay", xaml, StringComparison.Ordinal);
         Assert.Contains("IsSelected", code, StringComparison.Ordinal);
         Assert.DoesNotContain("SelectedItem = nodes[0]", code, StringComparison.Ordinal);
-        Assert.Contains("HandlesToUnlock", code, StringComparison.Ordinal);
+        Assert.Contains("ReleasePreviewAsync", code, StringComparison.Ordinal);
         Assert.Contains("TargetsToDelete", code, StringComparison.Ordinal);
         Assert.Contains("FileLockQuery.HandlesFor", code, StringComparison.Ordinal);
         Assert.Contains("FileLockQuery.Find", code, StringComparison.Ordinal);
-        Assert.Contains("FileLockQuery.Unlock", code, StringComparison.Ordinal);
+        Assert.DoesNotContain("FileLockQuery.Unlock", code, StringComparison.Ordinal);
         Assert.Contains("FileLockQuery.Terminate", code, StringComparison.Ordinal);
         Assert.Contains("ShowError", code, StringComparison.Ordinal);
         Assert.Contains("ShellIconBinder.BindPath", row, StringComparison.Ordinal);
@@ -47,7 +47,7 @@ public sealed class FileLockDialogContractTests
         Assert.Contains("VacateFoldersAsync", File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "App.xaml.cs")), StringComparison.Ordinal);
         Assert.Contains("WhenFolderReleased", File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Navigation", "PaneViewModel.cs")), StringComparison.Ordinal);
         Assert.Contains("RestartManagerFiles", File.ReadAllText(Path.Combine(ThemeXaml.RepoRoot, "src", "FilesMate.Platform.Windows", "Locks", "FileLockQuery.cs")), StringComparison.Ordinal);
-        Assert.Contains("ReleaseOwn", File.ReadAllText(Path.Combine(ThemeXaml.RepoRoot, "src", "FilesMate.Platform.Windows", "Locks", "FileLockQuery.cs")), StringComparison.Ordinal);
+        Assert.DoesNotContain("ReleaseOwn", File.ReadAllText(Path.Combine(ThemeXaml.RepoRoot, "src", "FilesMate.Platform.Windows", "Locks", "FileLockQuery.cs")), StringComparison.Ordinal);
         Assert.DoesNotContain("group.Key is 0 or 4 || group.Key == Environment.ProcessId", File.ReadAllText(Path.Combine(ThemeXaml.RepoRoot, "src", "FilesMate.Platform.Windows", "Locks", "FileLockQuery.cs")), StringComparison.Ordinal);
         Assert.Contains("internal static ElementTheme Resolve", File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Theming", "ContentDialogTheme.cs")), StringComparison.Ordinal);
         Assert.Contains("content.RequestedTheme", File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "NavigatorPage.xaml.cs")), StringComparison.Ordinal);

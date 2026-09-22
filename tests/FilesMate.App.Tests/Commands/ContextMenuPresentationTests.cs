@@ -287,9 +287,9 @@ public sealed class ContextMenuPresentationTests
         Assert.Contains("CompactMateSession.Launch", actions, StringComparison.Ordinal);
         Assert.Contains("ShellShortcut.Create", actions, StringComparison.Ordinal);
         Assert.Contains("AppCommandId.WhoLocks", actions, StringComparison.Ordinal);
-        Assert.Contains("FileLockQuery", actions, StringComparison.Ordinal);
+        Assert.Contains("ReleasePreviewAsync", actions, StringComparison.Ordinal);
         Assert.Contains("FileLockDialog", actions, StringComparison.Ordinal);
-        Assert.Contains("FileLockQuery.ReleaseOwn", actions, StringComparison.Ordinal);
+        Assert.DoesNotContain("FileLockQuery.ReleaseOwn", actions, StringComparison.Ordinal);
         Assert.Contains("ShowLockOverlayAsync", actions, StringComparison.Ordinal);
         Assert.Contains("HideLockOverlay", actions, StringComparison.Ordinal);
         Assert.DoesNotContain("ContentDialogMaxWidth", actions, StringComparison.Ordinal);

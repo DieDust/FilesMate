@@ -16,7 +16,7 @@ public static class FileShelfTransfer
     public static async Task<ShelfTransferResult> RunAsync(
         ILocalFileOperations operations, IReadOnlyList<string> sources, string destination, bool move,
         IProgress<int>? progress = null, CancellationToken token = default,
-        bool allowSameDirectoryCopy = false, FileConflictResolver? resolveConflict = null)
+        bool allowSameDirectoryCopy = false, FileConflictResolver? resolveConflict = null, IProgress<FileCopyProgress>? byteProgress = null)
     {
         using var lifetime = FileOperationLifetime.Begin();
         var errors = new List<string>();
@@ -33,7 +33,7 @@ public static class FileShelfTransfer
                 errors.Add($"{source}: {StringTable.Get("Transfer_InvalidDestination")}");
             else requests.Add(new(source, Path.Combine(destination, Path.GetFileName(Path.TrimEndingDirectorySeparator(source)))));
         }
-        var result = await WindowsFileTransfer.RunAsync(operations, requests, move, resolveConflict, progress, token).ConfigureAwait(false);
+        var result = await WindowsFileTransfer.RunAsync(operations, requests, move, resolveConflict, progress, token, byteProgress: byteProgress).ConfigureAwait(false);
         return new(result.Completed, errors.Concat(result.Errors).ToArray(), result.Cancelled)
         { Skipped = result.Skipped + unchanged, Undo = result.Undo, WithoutUndo = result.WithoutUndo };
     }

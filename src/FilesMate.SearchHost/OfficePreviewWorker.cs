@@ -66,23 +66,23 @@ internal static class OfficePreviewWorker
                 }
                 try
                 {
-                    using var writer = new StreamWriter(output, false, new UTF8Encoding(false));
+                    using var writer = new StreamWriter(new FilesMate.Core.IO.BoundedWriteStream(File.Create(output), 24L * 1024 * 1024), new UTF8Encoding(false));
                     new DocxToHtmlConverter { FixedLayout = false, OriginalFolderPath = null }.Convert(document, writer);
                 }
                 catch (Exception error) when (error is FormatException or ArgumentException or InvalidOperationException)
                 {
-                    File.WriteAllText(output, SimpleWord(document));
+                    WriteHtml(output, SimpleWord(document));
                 }
             }
             else if (extension is ".xls" or ".xlsx")
             {
                 if (extension == ".xlsx") CheckArchive(path);
-                File.WriteAllText(output, Spreadsheet(path, outputDirectory));
+                WriteHtml(output, Spreadsheet(path, outputDirectory));
             }
             else if (extension is ".pptx" or ".ppt")
             {
                 CheckArchive(path);
-                File.WriteAllText(output, Presentation(path));
+                WriteHtml(output, Presentation(path));
             }
             else return 2;
             if (new FileInfo(output).Length > 24 * 1024 * 1024) return 2;
@@ -94,7 +94,7 @@ internal static class OfficePreviewWorker
                 <meta name="viewport" content="width=device-width,initial-scale=1">
                 <style>html{background:#fff;color:#202020;color-scheme:light}body{margin:0!important;padding:18px!important;font:14px/1.65 'Segoe UI','Microsoft YaHei UI',sans-serif;overflow-wrap:anywhere}img{max-width:100%;height:auto}table{border-collapse:collapse;max-width:100%}td,th{padding:5px 8px;border:1px solid #ddd}a{color:#0067c0}section{margin-bottom:24px}h2{font-size:18px}.note{color:#666;font-size:12px}figure{margin:16px 0}.chart svg{width:100%;max-height:300px}::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#8889;border:2px solid transparent;background-clip:padding-box;border-radius:8px}::-webkit-scrollbar-corner{background:transparent}::-webkit-scrollbar-button{display:none}</style>
                 """);
-            File.WriteAllText(output, html, new UTF8Encoding(false));
+            WriteHtml(output, html);
             return 0;
         }
         catch (Exception e)
@@ -103,6 +103,13 @@ internal static class OfficePreviewWorker
             try { File.WriteAllText(Path.Combine(outputDirectory, "error.txt"), e.ToString()); } catch { }
             return 1;
         }
+    }
+
+    private static void WriteHtml(string path, string html)
+    {
+        if (Encoding.UTF8.GetByteCount(html) > 24 * 1024 * 1024)
+            throw new InvalidDataException("Generated preview exceeds its output limit.");
+        File.WriteAllText(path, html, new UTF8Encoding(false));
     }
 
     private static void CheckArchive(string path)

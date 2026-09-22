@@ -6,6 +6,17 @@ public static class PdfPreviewAssets
     public const string Host = "filesmate-pdf.local";
     public const string ViewerUri = "https://filesmate-pdf.local/index.html";
     public const string DocumentUri = "https://filesmate-document.local/document.pdf";
+    public static bool IsCloseMessage(string source, string json)
+    {
+        if (source != ViewerUri || json.Length > 128) return false;
+        try
+        {
+            using var value = System.Text.Json.JsonDocument.Parse(json);
+            return value.RootElement.ValueKind == System.Text.Json.JsonValueKind.String
+                && value.RootElement.GetString() == "close-preview";
+        }
+        catch (System.Text.Json.JsonException) { return false; }
+    }
     public static string Folder => Path.Combine(AppContext.BaseDirectory, "Assets", "PdfPreview");
     public static Stream OpenDocument(string path)
     {

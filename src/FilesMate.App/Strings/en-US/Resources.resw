@@ -1009,6 +1009,9 @@ Destination folder:
   <data name="Files_TargetExists" xml:space="preserve">
     <value>The target name already exists. Please try again.</value>
   </data>
+  <data name="Files_UndoChanged" xml:space="preserve">
+    <value>Undo stopped: files changed, could not be read, or the folder exceeds the safety-check limit. Your files were kept.</value>
+  </data>
   <data name="Files_UndoRecycledOnly" xml:space="preserve">
     <value>Restore recycled items</value>
   </data>
@@ -1183,6 +1186,9 @@ Destination folder:
   <data name="Lock_EndTask" xml:space="preserve">
     <value>End task</value>
   </data>
+  <data name="Lock_EndWarning" xml:space="preserve">
+    <value>Ending the selected application can lose unsaved work. Close it normally when possible. End it now?</value>
+  </data>
   <data name="Lock_HandleCount" xml:space="preserve">
     <value>{0} items</value>
   </data>
@@ -1205,7 +1211,7 @@ Destination folder:
     <value>Service: {0}</value>
   </data>
   <data name="Lock_Unlock" xml:space="preserve">
-    <value>Unlock</value>
+    <value>Release FilesMate previews</value>
   </data>
   <data name="MemoryDescription" xml:space="preserve">
     <value>Rows and tiles are virtualized instead of creating a view model for every item.</value>
@@ -2739,6 +2745,9 @@ Sleeping — select to restore</value>
   </data>
   <data name="Transfer_ConflictHint" xml:space="preserve">
     <value>“{0}” already exists. Choose how to handle this item.</value>
+  </data>
+  <data name="Transfer_CopyByteProgress" xml:space="preserve">
+    <value>Copying {0}: {1} / {2} MiB</value>
   </data>
   <data name="Transfer_CreateCopy" xml:space="preserve">
     <value>Create a copy</value>

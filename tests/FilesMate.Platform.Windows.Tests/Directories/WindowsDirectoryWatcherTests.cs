@@ -9,6 +9,34 @@ namespace FilesMate.Platform.Windows.Tests.Directories;
 public sealed class WindowsDirectoryWatcherTests
 {
     [Fact]
+    public async Task Paused_consumer_receives_overflow_after_a_file_event_burst()
+    {
+        var root = Directory.CreateTempSubdirectory("filesmate-watch-burst-");
+        try
+        {
+            await using var watcher = new WindowsDirectoryWatcher();
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            var request = new DirectoryRequest(PaneId.New(), 1, root.FullName, DirectoryReadOptions.Default);
+            await using var stream = watcher.WatchAsync(request, deadline.Token).GetAsyncEnumerator();
+            var first = stream.MoveNextAsync().AsTask();
+            File.WriteAllText(Path.Combine(root.FullName, "ready.txt"), "ready");
+            Assert.True(await first);
+            // Deliberately stop consuming while the OS watcher continues producing.
+            for (var i = 0; i < 2500; i++)
+                File.WriteAllText(Path.Combine(root.FullName, $"item-{i}.txt"), "data");
+            var overflow = false;
+            for (var i = 0; i < 1026 && await stream.MoveNextAsync(); i++)
+            {
+                if (stream.Current.Kind != DirectoryWatchKind.Overflow) continue;
+                overflow = true;
+                break;
+            }
+            Assert.True(overflow);
+        }
+        finally { root.Delete(true); }
+    }
+
+    [Fact]
     public async Task WatchAsync_reports_when_a_file_is_created()
     {
         var root = Directory.CreateTempSubdirectory("filesmate-watch-");

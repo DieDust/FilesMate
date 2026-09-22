@@ -1,0 +1,5 @@
+{
+  "zh-CN": "加强撤销安全检查，文件被修改或替换后保留现场并提示。移除强制关闭文件句柄和查询占用时启用调试权限的操作。修复搜索漏掉完全同名结果的问题，增加短关键词索引。文件复制支持过程中取消；目录监听采用有界队列并在后台读取属性。长 PDF 仅创建可见区域的页面元素，Office 转换增加内存及输出大小限制。",
+  "en-US": "Undo now checks file identity and changes before touching files. Removed forced handle closure and debug-privilege changes from lock inspection. Fixed missing exact search matches and added indexing for short queries. File copies can be cancelled during transfer. Directory notifications use bounded queues and background metadata reads. Long PDFs create page elements only near the viewport; Office conversion has memory and output limits.",
+  "ja-JP": "元に戻す操作でファイルの識別情報と変更を確認し、変更済みのファイルを保持するようにしました。ファイルハンドルの強制切断と占有調査時のデバッグ権限変更を削除しました。完全一致の検索結果が欠落する問題を修正し、短い検索語の索引を追加しました。コピー中のキャンセル、フォルダー通知の上限、バックグラウンドでの属性取得に対応しました。PDF のページ要素は表示範囲付近のみ生成し、Office 変換にはメモリと出力サイズの制限を設けました。"
+}

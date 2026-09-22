@@ -197,6 +197,8 @@ public sealed partial class FileShelfPanel : UserControl
 
     private async Task TransferAsync(bool move)
     {
+        if (FileOperationLifetime.IsBusy) { SetStatus(StringTable.Get("Files_Busy")); return; }
+        using var lifetime = FileOperationLifetime.Begin();
         var sources = Selected();
         if (sources.Length == 0) return;
         var picker = new FolderPicker { SuggestedStartLocation = PickerLocationId.ComputerFolder };
@@ -211,7 +213,9 @@ public sealed partial class FileShelfPanel : UserControl
             SetStatus(StringTable.Format("Shelf_Progress", 0));
             var progress = new Progress<int>(count => SetStatus(StringTable.Format("Shelf_Progress", count)));
             var result = await FileShelfTransfer.RunAsync(new WindowsLocalFileOperations(), sources, folder.Path, move,
-                progress, _transfer.Token, allowSameDirectoryCopy: !move, resolveConflict: FileConflictDialog.For(_host));
+                progress, _transfer.Token, allowSameDirectoryCopy: !move, resolveConflict: FileConflictDialog.For(_host),
+                byteProgress: new Progress<FileCopyProgress>(value => SetStatus(StringTable.Format("Transfer_CopyByteProgress", Path.GetFileName(value.Source),
+                    (value.Transferred / 1048576d).ToString("N1"), (value.Total / 1048576d).ToString("N1")))));
             if (result.WithoutUndo > 0) App.FileUndo.Clear();
             if (result.Undo is not null)
             {

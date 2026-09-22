@@ -43,6 +43,41 @@ public sealed class SearchRegressionTests : IDisposable
     }
 
     [Theory]
+    [InlineData("a", 4000)]
+    [InlineData("abc", 20000)]
+    [InlineData("文档", 5000)]
+    public void Exact_match_inserted_after_many_substrings_is_not_lost(string query, int count)
+    {
+        CreateIndex(true, Enumerable.Range(0, count)
+            .Select(i => ($"{query}_long_name_{i}.txt", $@"C:\{query}_long_name_{i}.txt"))
+            .Append(($"{query}.txt", $@"C:\{query}.txt")).ToArray());
+        Assert.Equal(query + ".txt", NameIndexReader.Search(Database, query, null, 80)[0].Name);
+        var page1 = NameIndexReader.Search(Database, query, null, 20);
+        var page2 = NameIndexReader.Search(Database, query, null, 20, offset: 20);
+        Assert.Empty(page1.Select(h => h.Path).Intersect(page2.Select(h => h.Path)));
+    }
+
+    [Fact]
+    public void Short_absent_query_uses_postings_instead_of_evaluating_every_row()
+    {
+        CreateIndex(true, Enumerable.Range(0, 100000).Select(i => ($"file_{i}.txt", $@"C:\file_{i}.txt")).ToArray());
+        var diagnostics = new NameSearchDiagnostics();
+        Assert.Empty(NameIndexReader.Search(Database, "zz", null, 80, diagnostics: diagnostics));
+        Assert.Equal(0, diagnostics.EvaluatedNames);
+    }
+
+    [Theory]
+    [InlineData("ÉTÉ", "été.txt")]
+    [InlineData("文档", "中文文档.txt")]
+    [InlineData("a%", "A%report.txt")]
+    [InlineData("𐐀", "𐐨.txt")]
+    public void Encoded_index_preserves_ordinal_case_and_literal_characters(string query, string name)
+    {
+        CreateIndex(true, (name, @"C:\" + name));
+        Assert.Equal(name, Assert.Single(NameIndexReader.Search(Database, query, null, 40)).Name);
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public void Flow_prioritizes_applications_before_limiting_candidates(bool upgraded)
@@ -148,6 +183,8 @@ public sealed class SearchRegressionTests : IDisposable
         using var command = connection.CreateCommand();
         command.CommandText = "CREATE TABLE index_meta(key TEXT PRIMARY KEY,value TEXT); CREATE VIRTUAL TABLE file_name USING fts5(name,path,is_dir UNINDEXED);";
         command.ExecuteNonQuery();
+        using var transaction = connection.BeginTransaction();
+        command.Transaction = transaction;
         command.CommandText = "INSERT INTO file_name VALUES($name,$path,$is_dir);";
         command.Parameters.AddWithValue("$name", "");
         command.Parameters.AddWithValue("$path", "");
@@ -159,6 +196,7 @@ public sealed class SearchRegressionTests : IDisposable
             command.Parameters["$is_dir"].Value = row.IsDirectory ? "1" : "0";
             command.ExecuteNonQuery();
         }
+        transaction.Commit();
         if (upgraded) NameIndexReader.BuildSubstringIndex(connection, default);
     }
 

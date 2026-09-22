@@ -58,6 +58,26 @@ public sealed class FileUndoStack
         return true;
     }
 
+    public async Task<bool> TryApplyAsync(ILocalFileOperations operations, bool redo, Func<Action, Task> worker)
+    {
+        var source = redo ? _redo : _undo;
+        if (source.Count == 0) return false;
+        var record = source[^1];
+        try
+        {
+            await worker(() =>
+            {
+                if (redo) FileUndoApplier.Redo(operations, record);
+                else FileUndoApplier.Undo(operations, record);
+            });
+        }
+        catch (IrreversibleDeletionException) { Clear(); throw; }
+        source.RemoveAt(source.Count - 1);
+        (redo ? _undo : _redo).Add(record);
+        Changed?.Invoke(this, EventArgs.Empty);
+        return true;
+    }
+
     public bool TryRedo(ILocalFileOperations operations)
     {
         ArgumentNullException.ThrowIfNull(operations);

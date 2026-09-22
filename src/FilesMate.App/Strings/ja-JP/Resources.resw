@@ -1009,6 +1009,9 @@
   <data name="Files_TargetExists" xml:space="preserve">
     <value>指定した名前は既に存在します。もう一度お試しください。</value>
   </data>
+  <data name="Files_UndoChanged" xml:space="preserve">
+    <value>変更や読み取りエラー、または安全確認の上限超過により、元に戻せません。ファイルは保持されました。</value>
+  </data>
   <data name="Files_UndoRecycledOnly" xml:space="preserve">
     <value>ごみ箱の項目を戻す</value>
   </data>
@@ -1183,6 +1186,9 @@
   <data name="Lock_EndTask" xml:space="preserve">
     <value>タスクの終了</value>
   </data>
+  <data name="Lock_EndWarning" xml:space="preserve">
+    <value>選択したアプリを終了すると、未保存の作業が失われます。可能であれば通常の方法で閉じてください。強制終了しますか？</value>
+  </data>
   <data name="Lock_HandleCount" xml:space="preserve">
     <value>{0} 項目</value>
   </data>
@@ -1205,7 +1211,7 @@
     <value>サービス：{0}</value>
   </data>
   <data name="Lock_Unlock" xml:space="preserve">
-    <value>ロックを解除</value>
+    <value>FilesMate のプレビューを解放</value>
   </data>
   <data name="MemoryDescription" xml:space="preserve">
     <value>すべての項目を同時に描画せず、必要な行とタイルのみを表示します。</value>
@@ -2739,6 +2745,9 @@ Ctrl+T で新しいタブ。Ctrl+W でタブを閉じる。Ctrl+L でアドレ�
   </data>
   <data name="Transfer_ConflictHint" xml:space="preserve">
     <value>「{0}」は既に存在します。処理方法を選択してください。</value>
+  </data>
+  <data name="Transfer_CopyByteProgress" xml:space="preserve">
+    <value>{0} をコピー中：{1} / {2} MiB</value>
   </data>
   <data name="Transfer_CreateCopy" xml:space="preserve">
     <value>コピーを作成</value>

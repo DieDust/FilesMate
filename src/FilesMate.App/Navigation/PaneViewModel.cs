@@ -30,6 +30,7 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
     private readonly object _indexBuildGate = new();
     private readonly DirectoryWatchBuffer _watchQueue = new(WatchQueueLimit);
     private long _watchScheduledGeneration;
+    private bool _watchBatchActive;
 
     private DirectorySession? _session;
     private CancellationTokenSource? _listenCts;
@@ -602,78 +603,89 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
             return;
         }
 
-        var overflow = false;
-        var mutated = false;
-        var applied = 0;
-        while (applied < WatchBatchSize && _watchQueue.TryDequeue(out var notice))
+        if (_watchBatchActive) return;
+        var notices = new List<DirectoryWatchNotification>();
+        while (notices.Count < WatchBatchSize && _watchQueue.TryDequeue(out var notice))
         {
-            if (!_navigation.Allows(notice.Generation) || notice.Generation != session.Generation)
-            {
-                continue;
-            }
-
+            if (notice.Generation != session.Generation) continue;
             if (notice.Kind == DirectoryWatchKind.Overflow)
             {
-                overflow = true;
-                break;
+                ClearWatchQueue();
+                RefreshSession(preserveSurface: true);
+                return;
             }
-
-            mutated |= ApplyWatchNotice(session, notice);
-            applied++;
+            notices.Add(notice);
         }
+        if (notices.Count == 0) return;
+        _watchBatchActive = true;
+        _ = PrepareWatchBatchAsync(session, notices);
+    }
 
-        if (overflow)
+    private async Task PrepareWatchBatchAsync(DirectorySession session, List<DirectoryWatchNotification> notices)
+    {
+        var prepared = new List<(DirectoryWatchNotification Notice, FileEntryCore? Entry)>();
+        var failed = false;
+        try
         {
-            ClearWatchQueue();
-            RefreshSession(preserveSurface: true);
-            return;
+            await Task.Run(() =>
+            {
+                foreach (var notice in notices)
+                {
+                    if (!_navigation.Allows(session.Generation)) break;
+                    FileEntryCore? entry = null;
+                    if (notice.Kind is DirectoryWatchKind.Created or DirectoryWatchKind.Modified or DirectoryWatchKind.Renamed
+                        && LiveDirectoryEntry.TryRead(session.Path, notice.Name, session.Options, out var read)) entry = read;
+                    prepared.Add((notice, entry));
+                }
+            }).ConfigureAwait(false);
         }
-
-        if (mutated)
+        catch (Exception error)
         {
-            RebuildIndex();
+            failed = true;
+            Trace.TraceError("Directory watch metadata read failed: {0}", error);
         }
-
-        if (!_watchQueue.IsEmpty)
+        finally
         {
-            _dispatcher.Post(ApplyWatchBatch);
+            _dispatcher.Post(() =>
+            {
+                _watchBatchActive = false;
+                if (_disposed) return;
+                if (_navigation.Allows(session.Generation))
+                {
+                    if (failed)
+                    {
+                        ClearWatchQueue();
+                        RefreshSession(preserveSurface: true);
+                        return;
+                    }
+                    var mutated = false;
+                    foreach (var (notice, entry) in prepared) mutated |= ApplyWatchNotice(session, notice, entry);
+                    if (mutated) RebuildIndex();
+                }
+                if (!_watchQueue.IsEmpty) ApplyWatchBatch();
+            });
         }
     }
 
-    private static bool ApplyWatchNotice(DirectorySession session, DirectoryWatchNotification notice)
+    private static bool ApplyWatchNotice(DirectorySession session, DirectoryWatchNotification notice, FileEntryCore? entry)
     {
-        switch (notice.Kind)
+        if (notice.Kind == DirectoryWatchKind.Deleted)
+            return !string.IsNullOrEmpty(notice.Name) && session.Store.RemoveByName(notice.Name);
+        if (notice.Kind == DirectoryWatchKind.Renamed)
         {
-            case DirectoryWatchKind.Deleted:
-                return !string.IsNullOrEmpty(notice.Name) && session.Store.RemoveByName(notice.Name);
-            case DirectoryWatchKind.Renamed:
-                if (string.IsNullOrEmpty(notice.Name))
-                {
-                    return !string.IsNullOrEmpty(notice.OldName) && session.Store.RemoveByName(notice.OldName);
-                }
-
-                if (LiveDirectoryEntry.TryRead(session.Path, notice.Name, session.Options, out var renamed))
-                {
-                    session.Store.Rename(
-                        string.IsNullOrEmpty(notice.OldName) ? notice.Name : notice.OldName,
-                        renamed);
-                    return true;
-                }
-
-                return !string.IsNullOrEmpty(notice.OldName) && session.Store.RemoveByName(notice.OldName);
-            case DirectoryWatchKind.Created:
-            case DirectoryWatchKind.Modified:
-                if (string.IsNullOrEmpty(notice.Name)
-                    || !LiveDirectoryEntry.TryRead(session.Path, notice.Name, session.Options, out var entry))
-                {
-                    return false;
-                }
-
-                session.Store.Upsert(entry);
+            if (entry is { } renamed)
+            {
+                session.Store.Rename(string.IsNullOrEmpty(notice.OldName) ? notice.Name : notice.OldName, renamed);
                 return true;
-            default:
-                return false;
+            }
+            return !string.IsNullOrEmpty(notice.OldName) && session.Store.RemoveByName(notice.OldName);
         }
+        if (entry is { } changed)
+        {
+            session.Store.Upsert(changed);
+            return true;
+        }
+        return false;
     }
 
     private void CancelWatchRefresh()
