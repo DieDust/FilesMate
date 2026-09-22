@@ -1,10 +1,38 @@
 using FilesMate.App.Navigation;
+using FilesMate.App.Commands;
+using FilesMate.App.Services;
 using FilesMate.Search;
 
 namespace FilesMate.App.Tests.Navigation;
 
 public sealed class SearchFileActionTests
 {
+    [Theory]
+    [InlineData("CompressZip")]
+    [InlineData("Compress7z")]
+    [InlineData("CompressNew")]
+    [InlineData("ExtractHere")]
+    [InlineData("ExtractToFolder")]
+    [InlineData("ExtractToOther")]
+    [InlineData("SmartExtract")]
+    [InlineData("OpenInCompactMate")]
+    public void Search_archive_commands_reach_a_supported_main_window_archive_route(string command)
+    {
+        Assert.True(SearchFileAction.Supports(command));
+        WithProfile(profile =>
+        {
+            var paths = new[] { @"C:\资料\one.zip", @"D:\another folder\two.zip" };
+            var id = new SearchFileAction(command, paths).Write(profile);
+            var launch = LaunchPath.Parse(["--search-action", id]);
+            var request = SearchFileAction.Take(launch.SearchAction!, profile);
+            Assert.Equal(command, request.Command);
+            Assert.Equal(paths, request.Paths);
+            Assert.True(Enum.TryParse<AppCommandId>(request.Command, out var action));
+            Assert.NotNull(CompactMateSession.VerbFor(action));
+            Assert.ThrowsAny<IOException>(() => SearchFileAction.Take(id, profile));
+        });
+    }
+
     [Fact]
     public void Action_launch_preserves_request_id_and_does_not_toggle_window()
     {

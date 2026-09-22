@@ -482,5 +482,5 @@ public static partial class StringTable
             ["Preview_SlideLimits"] = ("Up to 100 slides. Embedded images are limited to 8 MB in total.", "最多预览 100 页；内嵌图片总量限制为 8 MB。", "最大 100 枚のスライドを表示します。埋め込み画像の合計は 8 MB までです。"),
             ["Preview_SheetTruncated"] = ("Only part of the cells are shown. Open the file for the full spreadsheet.", "已截取部分单元格，请打开文件查看完整表格。", "一部のセルのみを表示しています。表全体を見るにはファイルを開いてください。"),
             ["Preview_SlideNumber"] = ("Slide {0}", "第 {0} 页", "スライド {0}"),
-        };
+        }.Concat(ArchiveEntries()).ToDictionary(entry => entry.Key, entry => entry.Value, StringComparer.Ordinal);
 }

@@ -214,6 +214,108 @@
   <data name="Applying" xml:space="preserve">
     <value>Applying…</value>
   </data>
+  <data name="Archive_BuiltinHint" xml:space="preserve">
+    <value>Built-in support handles ordinary ZIP archives. Encrypted ZIPs and other formats need CompactMate or another archive app.</value>
+  </data>
+  <data name="Archive_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Archive_Cancelled" xml:space="preserve">
+    <value>Operation cancelled.</value>
+  </data>
+  <data name="Archive_Cancelling" xml:space="preserve">
+    <value>Cancelling…</value>
+  </data>
+  <data name="Archive_CheckingProvider" xml:space="preserve">
+    <value>Checking CompactMate…</value>
+  </data>
+  <data name="Archive_ChooseDestination" xml:space="preserve">
+    <value>Choose a destination folder</value>
+  </data>
+  <data name="Archive_Completed" xml:space="preserve">
+    <value>Completed: {0}</value>
+  </data>
+  <data name="Archive_CreateZip" xml:space="preserve">
+    <value>Create ZIP</value>
+  </data>
+  <data name="Archive_DefaultName" xml:space="preserve">
+    <value>Archive</value>
+  </data>
+  <data name="Archive_ErrorArchiveTooLarge" xml:space="preserve">
+    <value>The expanded content exceeds the built-in limit of 64 GiB.</value>
+  </data>
+  <data name="Archive_ErrorDestinationExists" xml:space="preserve">
+    <value>The destination already exists. Choose another name or folder.</value>
+  </data>
+  <data name="Archive_ErrorDestinationNotEmpty" xml:space="preserve">
+    <value>The destination folder is not empty. Choose an empty folder.</value>
+  </data>
+  <data name="Archive_ErrorInsufficientSpace" xml:space="preserve">
+    <value>There is not enough free space at the destination. Free some space or choose another drive.</value>
+  </data>
+  <data name="Archive_ErrorInvalidArchive" xml:space="preserve">
+    <value>The archive is damaged or its contents could not be verified.</value>
+  </data>
+  <data name="Archive_ErrorInvalidPath" xml:space="preserve">
+    <value>A file path is invalid or points outside the destination folder.</value>
+  </data>
+  <data name="Archive_ErrorMetadataTooLarge" xml:space="preserve">
+    <value>The archive's directory information exceeds the built-in limit of 64 MiB.</value>
+  </data>
+  <data name="Archive_ErrorOperationFailed" xml:space="preserve">
+    <value>The operation could not be completed. Check file permissions and available disk space, then try again.</value>
+  </data>
+  <data name="Archive_ErrorSecurityMetadataUnavailable" xml:space="preserve">
+    <value>The file's internet-origin marker could not be read or preserved safely. Use a local drive that supports this marker, or extract with CompactMate.</value>
+  </data>
+  <data name="Archive_ErrorSourceChanged" xml:space="preserve">
+    <value>A source file changed during the operation. Wait for changes to finish and try again.</value>
+  </data>
+  <data name="Archive_ErrorTooManyEntries" xml:space="preserve">
+    <value>This archive exceeds the built-in limit of 100,000 items.</value>
+  </data>
+  <data name="Archive_ErrorUnsafeLink" xml:space="preserve">
+    <value>This operation includes a symbolic link or redirected folder. Choose regular files and folders.</value>
+  </data>
+  <data name="Archive_ErrorUnsupportedEntry" xml:space="preserve">
+    <value>The archive contains encrypted data or an unsupported entry. Open it with a compatible archive app.</value>
+  </data>
+  <data name="Archive_ExternalOnly" xml:space="preserve">
+    <value>Requires CompactMate</value>
+  </data>
+  <data name="Archive_Failed" xml:space="preserve">
+    <value>Operation failed: {0}</value>
+  </data>
+  <data name="Archive_FolderPicker" xml:space="preserve">
+    <value>Choose folder…</value>
+  </data>
+  <data name="Archive_InvalidSelection" xml:space="preserve">
+    <value>Select at least one existing file or folder.</value>
+  </data>
+  <data name="Archive_NameInvalid" xml:space="preserve">
+    <value>Enter a valid ZIP filename without a folder path.</value>
+  </data>
+  <data name="Archive_NameLabel" xml:space="preserve">
+    <value>Archive name</value>
+  </data>
+  <data name="Archive_OutputLabel" xml:space="preserve">
+    <value>Save to</value>
+  </data>
+  <data name="Archive_Progress" xml:space="preserve">
+    <value>{0} / {1} items · {2} / {3} MB</value>
+  </data>
+  <data name="Archive_TemporaryFilesRemain" xml:space="preserve">
+    <value>Some temporary files could not be removed. Location: {0}</value>
+  </data>
+  <data name="Archive_TitleCompress" xml:space="preserve">
+    <value>Compress</value>
+  </data>
+  <data name="Archive_TitleExtract" xml:space="preserve">
+    <value>Extract</value>
+  </data>
+  <data name="Archive_Unsupported" xml:space="preserve">
+    <value>This archive format needs CompactMate or another compatible archive app.</value>
+  </data>
   <data name="Attribute_Archive" xml:space="preserve">
     <value>Archive</value>
   </data>

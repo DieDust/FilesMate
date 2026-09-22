@@ -187,13 +187,28 @@ public sealed partial class FileShelfPanel : UserControl
     private void Remove_Click(object sender, RoutedEventArgs e) => Schedule(() => App.FileShelf.RemoveAsync(Selected()));
     private void Clear_Click(object sender, RoutedEventArgs e) => Schedule(async () =>
         await App.FileShelf.RemoveAsync(await App.FileShelf.GetAsync()));
-    private void Compress_Click(object sender, RoutedEventArgs e) => Schedule(() =>
-    {
-        CompactMateSession.Launch(CompactMateVerb.CompressNew, Selected(), new CurrentUserRegistry());
-        return Task.CompletedTask;
-    });
+    private void Compress_Click(object sender, RoutedEventArgs e) => Schedule(CompressAsync);
     private void Copy_Click(object sender, RoutedEventArgs e) => Schedule(() => TransferAsync(false));
     private void Move_Click(object sender, RoutedEventArgs e) => Schedule(() => TransferAsync(true));
+
+    private async Task CompressAsync()
+    {
+        if (FileOperationLifetime.IsBusy) { SetStatus(StringTable.Get("Files_Busy")); return; }
+        using var lifetime = FileOperationLifetime.Begin();
+        _transfer = new CancellationTokenSource();
+        try
+        {
+            var result = await ArchiveOperationUI.RunAsync(_host, CompactMateVerb.CompressNew,
+                Selected(), null, new WindowsLocalFileOperations(), _transfer.Token);
+            if (result is null) return;
+            if (result.WithoutUndo > 0) App.FileUndo.Clear();
+            if (result.Undo is not null) App.FileUndo.Push(result.Undo);
+            if (_host.IsLoaded && (result.Undo is not null || result.Completed.Count > 0)) _refresh();
+            SetStatus(TransferFeedback.Format(ArchiveOperationUI.AsShelfResult(result)));
+        }
+        catch (OperationCanceledException) { SetStatus(StringTable.Get("Archive_Cancelled")); }
+        finally { _transfer.Dispose(); _transfer = null; }
+    }
 
     private async Task TransferAsync(bool move)
     {

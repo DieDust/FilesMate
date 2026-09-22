@@ -214,6 +214,108 @@
   <data name="Applying" xml:space="preserve">
     <value>正在应用…</value>
   </data>
+  <data name="Archive_BuiltinHint" xml:space="preserve">
+    <value>内置支持普通 ZIP。加密 ZIP 和其他格式请使用 CompactMate 或其他压缩软件。</value>
+  </data>
+  <data name="Archive_Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="Archive_Cancelled" xml:space="preserve">
+    <value>操作已取消。</value>
+  </data>
+  <data name="Archive_Cancelling" xml:space="preserve">
+    <value>正在取消…</value>
+  </data>
+  <data name="Archive_CheckingProvider" xml:space="preserve">
+    <value>正在检查 CompactMate…</value>
+  </data>
+  <data name="Archive_ChooseDestination" xml:space="preserve">
+    <value>选择目标文件夹</value>
+  </data>
+  <data name="Archive_Completed" xml:space="preserve">
+    <value>已完成：{0}</value>
+  </data>
+  <data name="Archive_CreateZip" xml:space="preserve">
+    <value>创建 ZIP</value>
+  </data>
+  <data name="Archive_DefaultName" xml:space="preserve">
+    <value>压缩文件</value>
+  </data>
+  <data name="Archive_ErrorArchiveTooLarge" xml:space="preserve">
+    <value>解压后的内容超过内置功能的 64 GiB 上限。</value>
+  </data>
+  <data name="Archive_ErrorDestinationExists" xml:space="preserve">
+    <value>目标已存在，请更换名称或文件夹。</value>
+  </data>
+  <data name="Archive_ErrorDestinationNotEmpty" xml:space="preserve">
+    <value>目标文件夹不为空，请选择空文件夹。</value>
+  </data>
+  <data name="Archive_ErrorInsufficientSpace" xml:space="preserve">
+    <value>目标磁盘空间不足，请释放空间或选择其他磁盘。</value>
+  </data>
+  <data name="Archive_ErrorInvalidArchive" xml:space="preserve">
+    <value>压缩文件已损坏，或内容校验失败。</value>
+  </data>
+  <data name="Archive_ErrorInvalidPath" xml:space="preserve">
+    <value>文件路径无效，或指向目标文件夹以外的位置。</value>
+  </data>
+  <data name="Archive_ErrorMetadataTooLarge" xml:space="preserve">
+    <value>压缩文件的目录信息超过内置功能的 64 MiB 上限。</value>
+  </data>
+  <data name="Archive_ErrorOperationFailed" xml:space="preserve">
+    <value>操作未能完成。请检查文件访问权限和磁盘可用空间，然后重试。</value>
+  </data>
+  <data name="Archive_ErrorSecurityMetadataUnavailable" xml:space="preserve">
+    <value>无法安全读取或保留文件的互联网来源标记。请使用支持此标记的本地磁盘，或改用 CompactMate 解压。</value>
+  </data>
+  <data name="Archive_ErrorSourceChanged" xml:space="preserve">
+    <value>来源文件在操作过程中发生了变化，请等待文件更改完成后重试。</value>
+  </data>
+  <data name="Archive_ErrorTooManyEntries" xml:space="preserve">
+    <value>压缩文件超过内置功能的 100,000 项上限。</value>
+  </data>
+  <data name="Archive_ErrorUnsafeLink" xml:space="preserve">
+    <value>操作中包含符号链接或重定向文件夹，请选择普通文件和文件夹。</value>
+  </data>
+  <data name="Archive_ErrorUnsupportedEntry" xml:space="preserve">
+    <value>压缩文件包含加密数据或不支持的内容，请用兼容的压缩软件打开。</value>
+  </data>
+  <data name="Archive_ExternalOnly" xml:space="preserve">
+    <value>需要 CompactMate</value>
+  </data>
+  <data name="Archive_Failed" xml:space="preserve">
+    <value>操作失败：{0}</value>
+  </data>
+  <data name="Archive_FolderPicker" xml:space="preserve">
+    <value>选择文件夹…</value>
+  </data>
+  <data name="Archive_InvalidSelection" xml:space="preserve">
+    <value>请至少选择一个已存在的文件或文件夹。</value>
+  </data>
+  <data name="Archive_NameInvalid" xml:space="preserve">
+    <value>请输入有效的 ZIP 文件名，不要包含文件夹路径。</value>
+  </data>
+  <data name="Archive_NameLabel" xml:space="preserve">
+    <value>压缩文件名称</value>
+  </data>
+  <data name="Archive_OutputLabel" xml:space="preserve">
+    <value>保存到</value>
+  </data>
+  <data name="Archive_Progress" xml:space="preserve">
+    <value>{0} / {1} 项 · {2} / {3} MB</value>
+  </data>
+  <data name="Archive_TemporaryFilesRemain" xml:space="preserve">
+    <value>部分临时文件未能清理，位置：{0}</value>
+  </data>
+  <data name="Archive_TitleCompress" xml:space="preserve">
+    <value>压缩</value>
+  </data>
+  <data name="Archive_TitleExtract" xml:space="preserve">
+    <value>解压</value>
+  </data>
+  <data name="Archive_Unsupported" xml:space="preserve">
+    <value>此压缩格式需要使用 CompactMate 或其他兼容的压缩软件。</value>
+  </data>
   <data name="Attribute_Archive" xml:space="preserve">
     <value>存档</value>
   </data>

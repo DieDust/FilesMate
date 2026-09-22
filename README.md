@@ -21,6 +21,12 @@ Already installed? Open **Settings → About → Check for updates**. Updates us
 
 ## Features
 
+### ZIP compression and extraction
+
+Archive commands use **CompactMate** when it is installed. Without it, FilesMate provides built-in ZIP creation and extraction with progress, cancellation, and replace, skip or keep-both choices. Extract into the current folder, a named subfolder, or another location. The file shelf can also create ZIP archives from selected items.
+
+Built-in support covers ordinary ZIP files on local drives. Encrypted archives and other formats require a compatible archive app. See [archive behavior and limits](docs/archive-support.md).
+
 ### Tabs and dual panes
 
 Keep folders open in tabs, or turn on **Dual pane** to work with two folders side by side. Copy or move a selection to the other pane, reopen a closed tab with `Ctrl+Shift+T`, and restore your tabs at startup. Idle-tab hibernation is configurable.

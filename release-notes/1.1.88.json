@@ -1,0 +1,5 @@
+{
+  "zh-CN": "压缩和解压优先使用已安装的 CompactMate；未安装时可直接使用内置 ZIP 压缩和解压，支持进度、取消及同名文件的替换、跳过和保留两者。解压内容先在目标磁盘校验，通过后再写入目标位置，并接入现有撤销功能。内置功能会检查路径越界、链接、损坏内容和磁盘空间。7z、加密压缩包及其他格式仍需兼容的压缩软件。",
+  "en-US": "Archive operations use CompactMate when it is installed. Otherwise, built-in ZIP creation and extraction provide progress, cancellation, and replace, skip or keep-both choices for name conflicts. Extracted contents are validated on the destination drive before being transferred into place, with support for existing undo operations. Built-in checks cover unsafe paths, links, damaged contents and disk space. 7z, encrypted archives and other formats require a compatible archive app.",
+  "ja-JP": "CompactMate がインストールされている場合は、圧縮・展開に優先して使用します。未インストールの場合は、標準の ZIP 作成・展開機能を利用でき、進捗表示、キャンセル、同名ファイルの置き換え・スキップ・両方保持に対応します。展開内容は保存先ドライブ上で検証した後に配置され、元に戻す機能にも対応します。危険なパス、リンク、破損データ、空き容量を確認します。7z、暗号化アーカイブ、その他の形式には対応する圧縮ソフトが必要です。"
+}

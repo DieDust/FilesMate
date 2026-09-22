@@ -152,6 +152,8 @@ public sealed partial class MainWindow : Window
 #if FILESMATE_UI_TEST
             if (Environment.GetEnvironmentVariable("FILESMATE_INDEX_STORAGE_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunIndexStorageSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_ARCHIVE_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunArchiveSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_REVIEW_PREVIEW_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunReviewPreviewSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_LANGUAGE_RESTART_SMOKE") == "1"

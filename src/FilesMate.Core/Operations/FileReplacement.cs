@@ -15,6 +15,13 @@ public sealed class FileReplacement(string source, string destination, string ba
     private FileUndoState? _sourceState;
     internal FileUndoState DestinationState => _destinationState;
 
+    /// <summary>Retain both versions without restoring an internal staging source on undo.</summary>
+    public void ConvertToCreatedOperation()
+    {
+        if (!IsApplied) throw new InvalidOperationException("Only an applied replacement can become a created operation.");
+        move = false;
+    }
+
     public void Undo()
     {
         if (!IsApplied) return;

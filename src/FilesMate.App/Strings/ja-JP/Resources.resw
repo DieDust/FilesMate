@@ -214,6 +214,108 @@
   <data name="Applying" xml:space="preserve">
     <value>適用中…</value>
   </data>
+  <data name="Archive_BuiltinHint" xml:space="preserve">
+    <value>標準機能は通常の ZIP に対応しています。暗号化 ZIP やその他の形式には CompactMate などの圧縮ソフトをご利用ください。</value>
+  </data>
+  <data name="Archive_Cancel" xml:space="preserve">
+    <value>キャンセル</value>
+  </data>
+  <data name="Archive_Cancelled" xml:space="preserve">
+    <value>操作をキャンセルしました。</value>
+  </data>
+  <data name="Archive_Cancelling" xml:space="preserve">
+    <value>キャンセル中…</value>
+  </data>
+  <data name="Archive_CheckingProvider" xml:space="preserve">
+    <value>CompactMate を確認中…</value>
+  </data>
+  <data name="Archive_ChooseDestination" xml:space="preserve">
+    <value>保存先フォルダーを選択</value>
+  </data>
+  <data name="Archive_Completed" xml:space="preserve">
+    <value>完了：{0}</value>
+  </data>
+  <data name="Archive_CreateZip" xml:space="preserve">
+    <value>ZIP を作成</value>
+  </data>
+  <data name="Archive_DefaultName" xml:space="preserve">
+    <value>アーカイブ</value>
+  </data>
+  <data name="Archive_ErrorArchiveTooLarge" xml:space="preserve">
+    <value>展開後の内容が標準機能の上限である 64 GiB を超えています。</value>
+  </data>
+  <data name="Archive_ErrorDestinationExists" xml:space="preserve">
+    <value>保存先は既に存在します。別の名前またはフォルダーを選択してください。</value>
+  </data>
+  <data name="Archive_ErrorDestinationNotEmpty" xml:space="preserve">
+    <value>保存先フォルダーが空ではありません。空のフォルダーを選択してください。</value>
+  </data>
+  <data name="Archive_ErrorInsufficientSpace" xml:space="preserve">
+    <value>保存先の空き容量が不足しています。空き容量を増やすか、別のドライブを選択してください。</value>
+  </data>
+  <data name="Archive_ErrorInvalidArchive" xml:space="preserve">
+    <value>アーカイブが破損しているか、内容の検証に失敗しました。</value>
+  </data>
+  <data name="Archive_ErrorInvalidPath" xml:space="preserve">
+    <value>ファイルのパスが無効か、保存先フォルダーの外を指しています。</value>
+  </data>
+  <data name="Archive_ErrorMetadataTooLarge" xml:space="preserve">
+    <value>アーカイブのディレクトリ情報が標準機能の上限である 64 MiB を超えています。</value>
+  </data>
+  <data name="Archive_ErrorOperationFailed" xml:space="preserve">
+    <value>操作を完了できませんでした。ファイルのアクセス権とディスクの空き容量を確認して再試行してください。</value>
+  </data>
+  <data name="Archive_ErrorSecurityMetadataUnavailable" xml:space="preserve">
+    <value>ファイルのインターネット由来のマークを安全に読み取るか保持することができません。このマークに対応したローカルドライブを使用するか、CompactMate で展開してください。</value>
+  </data>
+  <data name="Archive_ErrorSourceChanged" xml:space="preserve">
+    <value>操作中に元のファイルが変更されました。変更が完了してから再試行してください。</value>
+  </data>
+  <data name="Archive_ErrorTooManyEntries" xml:space="preserve">
+    <value>このアーカイブは標準機能の上限である 100,000 項目を超えています。</value>
+  </data>
+  <data name="Archive_ErrorUnsafeLink" xml:space="preserve">
+    <value>シンボリックリンクまたはリダイレクトされたフォルダーが含まれています。通常のファイルやフォルダーを選択してください。</value>
+  </data>
+  <data name="Archive_ErrorUnsupportedEntry" xml:space="preserve">
+    <value>暗号化データまたは未対応の項目が含まれています。対応する圧縮ソフトで開いてください。</value>
+  </data>
+  <data name="Archive_ExternalOnly" xml:space="preserve">
+    <value>CompactMate が必要</value>
+  </data>
+  <data name="Archive_Failed" xml:space="preserve">
+    <value>操作に失敗しました：{0}</value>
+  </data>
+  <data name="Archive_FolderPicker" xml:space="preserve">
+    <value>フォルダーを選択…</value>
+  </data>
+  <data name="Archive_InvalidSelection" xml:space="preserve">
+    <value>既存のファイルまたはフォルダーを 1 つ以上選択してください。</value>
+  </data>
+  <data name="Archive_NameInvalid" xml:space="preserve">
+    <value>フォルダーのパスを含まない有効な ZIP ファイル名を入力してください。</value>
+  </data>
+  <data name="Archive_NameLabel" xml:space="preserve">
+    <value>アーカイブ名</value>
+  </data>
+  <data name="Archive_OutputLabel" xml:space="preserve">
+    <value>保存先</value>
+  </data>
+  <data name="Archive_Progress" xml:space="preserve">
+    <value>{0} / {1} 件 · {2} / {3} MB</value>
+  </data>
+  <data name="Archive_TemporaryFilesRemain" xml:space="preserve">
+    <value>一部の一時ファイルを削除できませんでした。場所：{0}</value>
+  </data>
+  <data name="Archive_TitleCompress" xml:space="preserve">
+    <value>圧縮</value>
+  </data>
+  <data name="Archive_TitleExtract" xml:space="preserve">
+    <value>展開</value>
+  </data>
+  <data name="Archive_Unsupported" xml:space="preserve">
+    <value>この形式には CompactMate または対応する圧縮ソフトが必要です。</value>
+  </data>
   <data name="Attribute_Archive" xml:space="preserve">
     <value>アーカイブ</value>
   </data>

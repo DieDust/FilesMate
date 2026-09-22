@@ -73,7 +73,10 @@ internal sealed partial class PaneFileActions
     {
         var mutates = id is AppCommandId.NewFolder or AppCommandId.NewFile or AppCommandId.Paste
             or AppCommandId.Rename or AppCommandId.BatchRename or AppCommandId.Recycle or AppCommandId.PermanentDelete
-            or AppCommandId.NewFolderWithSelection or AppCommandId.CreateShortcut;
+            or AppCommandId.NewFolderWithSelection or AppCommandId.CreateShortcut
+            or AppCommandId.CompressZip or AppCommandId.Compress7z or AppCommandId.CompressNew
+            or AppCommandId.ExtractHere or AppCommandId.ExtractToFolder or AppCommandId.ExtractToOther
+            or AppCommandId.SmartExtract;
         if (mutates && (_fileWorkActive || FileOperationLifetime.IsBusy)) { _reportError(Loc.Get("Files_Busy")); return; }
         if (mutates) _fileWorkActive = true;
         using var lifetime = mutates ? FileOperationLifetime.Begin() : null;
@@ -134,7 +137,7 @@ internal sealed partial class PaneFileActions
                 case AppCommandId.ExtractToOther:
                 case AppCommandId.SmartExtract:
                 case AppCommandId.OpenInCompactMate:
-                    LaunchCompactMate(id);
+                    await RunArchiveAsync(id);
                     break;
             }
         }
@@ -591,7 +594,7 @@ internal sealed partial class PaneFileActions
         _refresh();
     }
 
-    private void LaunchCompactMate(AppCommandId id)
+    private async Task RunArchiveAsync(AppCommandId id)
     {
         if (CompactMateSession.VerbFor(id) is not CompactMateVerb verb)
         {
@@ -604,7 +607,10 @@ internal sealed partial class PaneFileActions
             return;
         }
 
-        CompactMateSession.Launch(verb, paths, new CurrentUserRegistry());
+        var result = await ArchiveOperationUI.RunAsync(_host, verb, paths, _folderPath(), _operations);
+        if (result is null) return;
+        RecordTransfer(ArchiveOperationUI.AsShelfResult(result), move: false);
+        if (_host.IsLoaded) _refresh();
     }
 
     private string RequireFolder()

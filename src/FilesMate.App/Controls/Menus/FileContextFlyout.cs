@@ -2,6 +2,7 @@
 using FilesMate.App.Controls.FileSurface;
 using FilesMate.App.Controls.Tags;
 using FilesMate.App.Localization;
+using FilesMate.App.Services;
 using FilesMate.Core.Entries;
 using FilesMate.App.Theming;
 
@@ -196,6 +197,16 @@ public static class FileContextFlyout
             button.Style = style;
         }
 
+        if (entry.Command is { } providerCommand && CompactMateSession.RequiresExternalProvider(providerCommand))
+        {
+            _ = ApplyArchiveProviderAsync(entry.Label, entry.Enabled, button, (text, enabled) =>
+            {
+                label.Text = text;
+                button.IsEnabled = enabled;
+                ToolTipService.SetToolTip(button, text);
+            });
+        }
+
         if (entry.Command is AppCommandId.AddTags && tagPicker is not null)
         {
             var tags = submenu.EnsureTags(tagPicker);
@@ -340,6 +351,16 @@ public static class FileContextFlyout
                 item.Style = style;
             }
 
+            if (CompactMateSession.RequiresExternalProvider(id))
+            {
+                _ = ApplyArchiveProviderAsync(item.Text, item.IsEnabled, item, (text, enabled) =>
+                {
+                    item.Text = text;
+                    item.IsEnabled = enabled;
+                    ToolTipService.SetToolTip(item, text);
+                });
+            }
+
             var captured = id;
             item.Click += (_, _) =>
             {
@@ -350,6 +371,29 @@ public static class FileContextFlyout
         }
 
         return menu;
+    }
+
+    private static async Task ApplyArchiveProviderAsync(
+        string label,
+        bool commandEnabled,
+        FrameworkElement element,
+        Action<string, bool> update)
+    {
+        var availability = CompactMateSession.IsAvailableAsync();
+        if (availability.IsCompletedSuccessfully)
+        {
+            Apply(availability.Result);
+            return;
+        }
+        update(label + " · " + StringTable.Get("Archive_CheckingProvider"), false);
+        bool available;
+        try { available = await availability.ConfigureAwait(false); }
+        catch (Exception) { available = false; }
+        element.DispatcherQueue.TryEnqueue(() => Apply(available));
+
+        void Apply(bool found) => update(
+            found ? label : label + " · " + StringTable.Get("Archive_ExternalOnly"),
+            commandEnabled && found);
     }
 
     private static MenuFlyout CreateSubmenu()

@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using FilesMate.App.Commands;
 using FilesMate.App.Controls.Menus;
+using FilesMate.App.Services;
 using FilesMate.Search;
 
 namespace FilesMate.SearchHost;
@@ -55,6 +56,8 @@ public partial class PaletteWindow
         {
             var item = new MenuItem { Header = title, Icon = Glyph(glyph), InputGestureText = shortcut ?? "", IsEnabled = enabled, Tag = command };
             item.Click += (_, e) => { e.Handled = true; Invoke(command); };
+            if (Enum.TryParse<AppCommandId>(command, out var id) && CompactMateSession.RequiresExternalProvider(id))
+                _ = ApplyArchiveProviderAsync(item, title, enabled);
             return item;
         }
         void AddSeparator()
@@ -147,6 +150,32 @@ public partial class PaletteWindow
         };
         menu.IsOpen = true;
         if (keyboard) menu.Focus();
+    }
+
+    private static async Task ApplyArchiveProviderAsync(MenuItem item, string label, bool commandEnabled)
+    {
+        var availability = CompactMateSession.IsAvailableAsync();
+        if (availability.IsCompletedSuccessfully)
+        {
+            Apply(availability.Result);
+            return;
+        }
+
+        item.Header = label + " · " + Loc.Get("Archive_CheckingProvider");
+        item.IsEnabled = false;
+        bool found;
+        try { found = await availability; }
+        catch (Exception) { found = false; }
+        if (item.Dispatcher.HasShutdownStarted || item.Dispatcher.HasShutdownFinished) return;
+        Apply(found);
+
+        void Apply(bool available)
+        {
+            item.Header = available ? label : label + " · " + Loc.Get("Archive_ExternalOnly");
+            item.IsEnabled = commandEnabled && available;
+            item.ToolTip = available ? null : Loc.Get("Archive_ExternalOnly");
+            ToolTipService.SetShowOnDisabled(item, !available);
+        }
     }
 
     private void InvokeFileCommand(string command)

@@ -284,7 +284,7 @@ public sealed class ContextMenuPresentationTests
         Assert.Contains("Launcher.LaunchFileAsync", actions, StringComparison.Ordinal);
         Assert.Contains("AppCommandId.OpenInTerminal", actions, StringComparison.Ordinal);
         Assert.Contains("TerminalLaunch.Open(folder)", actions, StringComparison.Ordinal);
-        Assert.Contains("CompactMateSession.Launch", actions, StringComparison.Ordinal);
+        Assert.Contains("ArchiveOperationUI.RunAsync", actions, StringComparison.Ordinal);
         Assert.Contains("ShellShortcut.Create", actions, StringComparison.Ordinal);
         Assert.Contains("AppCommandId.WhoLocks", actions, StringComparison.Ordinal);
         Assert.Contains("ReleasePreviewAsync", actions, StringComparison.Ordinal);
@@ -293,6 +293,44 @@ public sealed class ContextMenuPresentationTests
         Assert.Contains("ShowLockOverlayAsync", actions, StringComparison.Ordinal);
         Assert.Contains("HideLockOverlay", actions, StringComparison.Ordinal);
         Assert.DoesNotContain("ContentDialogMaxWidth", actions, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Archive_entries_share_the_provider_or_builtin_route()
+    {
+        var actions = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "PaneFileActions.cs"));
+        var shelf = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "FileShelfPanel.xaml.cs"));
+        var archiveUi = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "ArchiveOperationUI.cs"));
+        Assert.Contains("ArchiveOperationUI.RunAsync", actions, StringComparison.Ordinal);
+        Assert.Contains("ArchiveOperationUI.RunAsync", shelf, StringComparison.Ordinal);
+        Assert.DoesNotContain("CompactMateSession.Launch", actions, StringComparison.Ordinal);
+        Assert.DoesNotContain("CompactMateSession.Launch", shelf, StringComparison.Ordinal);
+        Assert.Contains("ShellOperationWorker.RunAsync", archiveUi, StringComparison.Ordinal);
+        Assert.Contains("CompactMateSession.TryLaunch", archiveUi, StringComparison.Ordinal);
+        Assert.Contains("BuiltInArchiveTransfer.RunAsync", archiveUi, StringComparison.Ordinal);
+
+        var flyout = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Controls", "Menus", "FileContextFlyout.cs"));
+        Assert.Contains("CompactMateSession.RequiresExternalProvider", flyout, StringComparison.Ordinal);
+        Assert.Contains("CompactMateSession.IsAvailableAsync", flyout, StringComparison.Ordinal);
+        Assert.Contains("commandEnabled && found", flyout, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Search_archive_menu_uses_the_same_async_provider_capability_and_main_window_handoff()
+    {
+        var searchRoot = Path.Combine(ThemeXaml.RepoRoot, "src", "FilesMate.SearchHost");
+        var menu = File.ReadAllText(Path.Combine(searchRoot, "PaletteWindow.FileMenu.cs"));
+        var project = File.ReadAllText(Path.Combine(searchRoot, "FilesMate.SearchHost.csproj"));
+        var host = File.ReadAllText(Path.Combine(searchRoot, "Program.cs"));
+        var main = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "MainWindow.xaml.cs"));
+        Assert.Contains("CompactMateSession.cs", project, StringComparison.Ordinal);
+        Assert.Contains("CompactMateSession.RequiresExternalProvider(id)", menu, StringComparison.Ordinal);
+        Assert.Contains("CompactMateSession.IsAvailableAsync()", menu, StringComparison.Ordinal);
+        Assert.Contains("commandEnabled && available", menu, StringComparison.Ordinal);
+        Assert.Contains("ToolTipService.SetShowOnDisabled", menu, StringComparison.Ordinal);
+        Assert.Contains("_host.RunFileAction(command", menu, StringComparison.Ordinal);
+        Assert.Contains("new SearchFileAction(command, paths).Write()", host, StringComparison.Ordinal);
+        Assert.Contains("SearchFileAction.Take(id)", main, StringComparison.Ordinal);
     }
 
     private static string[] Labels(CommandContext context) =>

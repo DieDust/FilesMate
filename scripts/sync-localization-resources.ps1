@@ -7,7 +7,9 @@ $root = Split-Path -Parent $PSScriptRoot
 $source = Join-Path $root 'src/FilesMate.App/Localization'
 $base = Get-Content -LiteralPath (Join-Path $source 'StringTable.cs') -Raw
 $japanese = Get-Content -LiteralPath (Join-Path $source 'StringTable.Japanese.cs') -Raw
-$additional = Get-Content -LiteralPath (Join-Path $source 'StringTable.Additional.cs') -Raw
+$additional = (Get-ChildItem -LiteralPath $source -Filter 'StringTable.*.cs' -File |
+    Where-Object Name -ne 'StringTable.Japanese.cs' | Sort-Object Name |
+    ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw }) -join [Environment]::NewLine
 $literal = '"(?:[^"\\]|\\.)*"'
 $pairPattern = '\[(?<key>' + $literal + ')\]\s*=\s*(?<value>' + $literal + ')'
 $tuplePattern = '\[(?<key>' + $literal + ')\]\s*=\s*\((?<en>' + $literal + '),\s*(?<zh>' + $literal + '),\s*(?<ja>' + $literal + ')\)'

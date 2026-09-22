@@ -38,6 +38,7 @@
     <Compile Include="..\FilesMate.App\Models\AccentPalette.cs" Link="Models\AccentPalette.cs" />
     <Compile Include="..\FilesMate.App\Commands\AppCommand.cs;..\FilesMate.App\Commands\CommandContext.cs;..\FilesMate.App\Commands\CommandCatalog.cs" Link="Commands\%(Filename)%(Extension)" />
     <Compile Include="..\FilesMate.App\Controls\Menus\FileContextMenuBuilder.cs" Link="Commands\FileContextMenuBuilder.cs" />
+    <Compile Include="..\FilesMate.App\Services\CompactMateSession.cs" Link="Commands\CompactMateSession.cs" />
     <Compile Include="..\FilesMate.App\Localization\StringTable.cs" Link="Commands\StringTable.cs" />
     <Compile Include="..\FilesMate.App\Localization\StringTable.*.cs" Link="Commands\%(Filename)%(Extension)" />
     <Compile Include="..\FilesMate.App\Localization\LanguageSettings.cs" Link="Commands\LanguageSettings.cs" />
