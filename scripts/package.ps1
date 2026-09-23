@@ -56,10 +56,6 @@ if (Test-Path -LiteralPath (Join-Path $payload 'test-profile')) {
 # Ship the native Shell host validated in the approved compatibility build.
 # The --no-native-shell argument remains available for troubleshooting.
 Set-Content -LiteralPath (Join-Path $payload 'shell-compatibility.enabled') -Encoding ascii -Value 'FilesMate native Shell selection compatibility'
-Copy-Item -LiteralPath (Join-Path $repoRoot 'installer\Preview-Readme.txt') -Destination $payload
-foreach ($language in @('en', 'ja')) {
-    Copy-Item -LiteralPath (Join-Path $repoRoot "installer\Preview-Readme.$language.txt") -Destination $payload
-}
 foreach ($notice in @('LICENSE', 'NOTICE', 'THIRD-PARTY-NOTICES.md')) {
     Copy-Item -LiteralPath (Join-Path $repoRoot $notice) -Destination $payload
 }

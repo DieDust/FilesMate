@@ -1,0 +1,5 @@
+{
+  "zh-CN": "字母定位仅在同一字母同时有文件夹和文件时显示分类选择。双分类字母增加淡色底与强调色边框；只有一类时直接跳转。修复中英文名称分段后误显示“文件夹 1 / 文件夹 2”的问题。",
+  "en-US": "Alphabet navigation now offers a folder/file choice only when both kinds exist for a letter. A tinted background and accent outline mark those letters; single-kind letters jump directly. Fixed duplicate folder choices caused by separate Latin and Chinese name runs.",
+  "ja-JP": "同じ頭文字にフォルダーとファイルの両方がある場合のみ選択メニューを表示します。対象の文字には淡い背景とアクセント色の枠を付け、1種類だけの場合は直接移動します。英字名と中国語名の並びでフォルダーが重複表示される問題を修正しました。"
+}

@@ -11,6 +11,7 @@ public static class LocationCaption
 
     public static string Title(string? path, string? tagName = null)
     {
+        if (FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out var device)) return device.Name;
         if (HomeLocation.IsHome(path))
         {
             return StringTable.Get("Home");
@@ -32,6 +33,7 @@ public static class LocationCaption
 
     public static string? Glyph(string? path)
     {
+        if (FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out _)) return "\uE8EA";
         if (HomeLocation.IsHome(path))
         {
             return HomeGlyph;

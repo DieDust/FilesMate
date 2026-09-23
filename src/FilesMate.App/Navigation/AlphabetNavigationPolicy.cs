@@ -2,10 +2,9 @@ namespace FilesMate.App.Navigation;
 
 public static class AlphabetNavigationPolicy
 {
-    // Ten DIPs was too tight for a 10-DIP glyph once fractional display scaling
-    // and the button template's line box were applied. Keep enough height for
-    // the full glyph and active-letter background; use two columns when needed.
-    public const double MinimumSingleColumnCellHeight = 14;
+    // Leave room around each letter's marker in a single column. Shorter
+    // surfaces use two columns so the buttons remain readable and separated.
+    public const double MinimumSingleColumnCellHeight = 22;
     public const double VerticalPadding = 8;
 
     public static bool ShouldShow(

@@ -1,0 +1,5 @@
+{
+  "zh-CN": "搜索结果排序现在将应用、独立 EXE/COM 程序、文件夹和其他快捷方式清晰区分。独立程序的显示开关已移入对应排序行；默认顺序更便于查找文件夹，手动排序保持不变。重建索引时可安全清理空的残留 SQLite 日志文件。",
+  "en-US": "Search ranking now clearly separates apps, standalone EXE/COM programs, folders, and other shortcuts. The standalone-program switch sits in its ranking row. The default order favors folders while custom orders stay intact. Index rebuilding can safely clear empty orphaned SQLite sidecars.",
+  "ja-JP": "検索結果の並び順でアプリ、単独の EXE/COM、フォルダー、その他のショートカットを明確に分けました。単独プログラムの表示切り替えは並び順の行に移動しました。既定順序を改善し、カスタム順序は維持します。インデックス再作成時には空の残留 SQLite ログを安全に処理できます。"
+}

@@ -71,7 +71,7 @@ public static class SidebarContextMenu
             actions.Add(SidebarContextAction.Unpin);
         }
 
-        if (item.Id.StartsWith("drive:", StringComparison.Ordinal))
+        if (item.Id.StartsWith("drive:", StringComparison.Ordinal) || item.Id.StartsWith("device:", StringComparison.Ordinal))
         {
             if (removableDrive)
             {
@@ -131,5 +131,6 @@ public static class SidebarContextMenu
             || item.Id.StartsWith("cloud:custom:", StringComparison.Ordinal));
 
     public static bool IsVirtual(string? path) =>
-        HomeLocation.IsHome(path) || TagLocation.IsTag(path);
+        HomeLocation.IsHome(path) || TagLocation.IsTag(path)
+        || FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out _);
 }

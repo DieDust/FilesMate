@@ -1,0 +1,5 @@
+{
+  "zh-CN": "固定预览现在会在同一窗口的标签页之间保持可见，进入其他文件夹时仍可查看参考文件；取消固定后各标签页恢复跟随选择。标题栏空白处的右键菜单改为跟随应用主题的 FilesMate 样式，并保留还原、移动、调整大小、最小化、最大化和关闭操作。",
+  "en-US": "Pinned previews now remain visible across tabs in the same window, including when browsing another folder. Unpinning resumes selection-based previews. Right-clicking empty title bar space now opens a FilesMate-themed window menu with the standard window actions.",
+  "ja-JP": "固定したプレビューは同じウィンドウ内のタブを切り替えても表示され、別のフォルダーを閲覧しながら参照できます。固定を解除すると選択項目への追従に戻ります。タイトルバーの空白部分を右クリックすると、アプリのテーマに合わせたウィンドウメニューが開きます。"
+}

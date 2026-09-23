@@ -376,6 +376,9 @@ public static class WindowsFileTransfer
             beforePublish?.Invoke();
             using var stagedLease = afterPublish is null ? null : new WindowsFileMove.SourceLease(staging);
             File.Move(staging, target, overwrite: false);
+            // Re-open the published name on its volume before removing a source
+            // from another disk. A disconnected or remapped destination fails here.
+            stagedLease?.ValidatePath(target);
             try { afterPublish?.Invoke(); }
             catch
             {

@@ -94,7 +94,8 @@ public sealed class NavigationReentrancyContractTests
         Assert.True(loadedStart >= 0 && loadedEnd > loadedStart);
         var loaded = source[loadedStart..loadedEnd];
         Assert.Contains("FileSurface.SetLayout", loaded, StringComparison.Ordinal);
-        Assert.Contains("ScheduleNavigation(() => ViewModel.Navigate(startPath))", loaded, StringComparison.Ordinal);
+        Assert.Contains("ScheduleNavigation(() =>", loaded, StringComparison.Ordinal);
+        Assert.Contains("ViewModel.Navigate(startPath);", loaded, StringComparison.Ordinal);
     }
 
     [Fact]

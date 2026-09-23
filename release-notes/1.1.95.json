@@ -1,0 +1,5 @@
+{
+  "zh-CN": "优化全局搜索的应用排序：应用目录和快捷方式中的应用始终排在独立 EXE、COM 程序之前，独立程序仍可在“应用”分类中找到。",
+  "en-US": "Improved app search ordering: registered apps and shortcuts always appear before standalone indexed EXE and COM programs, which remain searchable in Apps.",
+  "ja-JP": "グローバル検索のアプリ表示順を改善しました。登録済みアプリとショートカットを単独の EXE・COM プログラムより優先し、単独プログラムも「アプリ」で検索できます。"
+}

@@ -10,6 +10,7 @@ public static class PreviewDetails
 {
     public static string DisplayName(string path)
     {
+        if (FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out var device)) return device.Name;
         if (string.IsNullOrWhiteSpace(path))
         {
             return string.Empty;
@@ -21,6 +22,7 @@ public static class PreviewDetails
 
     public static string Location(string path)
     {
+        if (FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out var device)) return (device.Parent ?? device).Address;
         if (string.IsNullOrWhiteSpace(path))
         {
             return string.Empty;
@@ -31,7 +33,7 @@ public static class PreviewDetails
     }
 
     public static string TypeLabel(string path, bool isDirectory) =>
-        FileRowFormatter.FormatType(path, isDirectory);
+        FileRowFormatter.FormatType(FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out var device) ? device.Name : path, isDirectory);
 
     public static string Modified(DateTimeOffset? utc, DateFormatKind format = DateFormatKind.System) =>
         utc is null ? "—" : FileRowFormatter.FormatModified(utc.Value.UtcTicks, format);

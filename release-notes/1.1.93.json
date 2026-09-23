@@ -1,0 +1,5 @@
+{
+  "zh-CN": "修复主页驱动器卡片丢失设备类型，导致右键菜单缺少安全弹出的问题。主页和侧边栏使用相同的设备菜单和弹出流程。安全弹出被 USB 调试接口占用阻止时，明确显示 ADB 原因及处理步骤，并显示 Windows 报告的被占用接口名称。",
+  "en-US": "Fixed missing safe removal on Home drive cards by preserving their device identity. Home and the sidebar now use the same device menu and removal flow. When USB debugging blocks removal, the dialog explains the ADB connection and next steps, and shows the device interface reported by Windows.",
+  "ja-JP": "ホームのドライブカードでデバイス種別が失われ、安全な取り外しが表示されない問題を修正しました。ホームとサイドバーで共通のデバイスメニューと取り外し処理を使用します。USB デバッグによって取り外しが妨げられた場合、ADB 接続の原因と対処方法、Windows が報告したインターフェイス名を表示します。"
+}

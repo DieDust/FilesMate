@@ -61,7 +61,7 @@ internal sealed partial class PaneFileActions
         try
         {
             var data = Clipboard.GetContent();
-            return data.Contains(StandardDataFormats.StorageItems) || data.Contains(StandardDataFormats.Bitmap) || data.Contains(StandardDataFormats.Text);
+            return DeviceTransferUI.HasFiles(data) || data.Contains(StandardDataFormats.Bitmap) || data.Contains(StandardDataFormats.Text);
         }
         catch (Exception)
         {
@@ -71,6 +71,7 @@ internal sealed partial class PaneFileActions
 
     public async Task RunAsync(AppCommandId id)
     {
+        if (PortableDeviceLocation.TryParse(_folderPath(), out _) && !CommandCatalog.DeviceCommandSupported(id)) return;
         var mutates = id is AppCommandId.NewFolder or AppCommandId.NewFile or AppCommandId.Paste
             or AppCommandId.Rename or AppCommandId.BatchRename or AppCommandId.Recycle or AppCommandId.PermanentDelete
             or AppCommandId.NewFolderWithSelection or AppCommandId.CreateShortcut
@@ -163,6 +164,13 @@ internal sealed partial class PaneFileActions
         _fileWorkActive = true;
         try
         {
+            if (PortableDeviceLocation.TryParse(destinationDirectory, out _) || sources.Any(path => PortableDeviceLocation.TryParse(path, out _)))
+            {
+                if (operation == DataPackageOperation.Move) throw new IOException(Loc.Get("Device_CopyOnly"));
+                await DeviceTransferUI.CopyAsync(_host, sources, destinationDirectory);
+                _refresh();
+                return;
+            }
             var move = operation == DataPackageOperation.Move;
             var result = await FileShelfTransfer.RunAsync(_operations, sources, destinationDirectory, move, allowSameDirectoryCopy: allowSameDirectoryCopy,
                 resolveConflict: FileConflictDialog.For(_host));
@@ -211,6 +219,15 @@ internal sealed partial class PaneFileActions
     private async Task SetClipboardAsync(bool cut)
     {
         var paths = SelectedOrFolder();
+        if (paths.Count > 0 && paths.All(p => PortableDeviceLocation.TryParse(p, out _)))
+        {
+            if (cut) throw new IOException(Loc.Get("Device_CopyOnly"));
+            var package = new DataPackage();
+            await DeviceTransferUI.SetItemsAsync(package, paths.Select(p => { PortableDeviceLocation.TryParse(p, out var device); return device; }));
+            Clipboard.SetContent(package);
+            Clipboard.Flush();
+            return;
+        }
         if (paths.Count == 0)
         {
             return;
@@ -235,9 +252,16 @@ internal sealed partial class PaneFileActions
 
     private Task PasteAsync() => PasteItemsAsync(Clipboard.GetContent());
 
-    private async Task PasteItemsAsync(DataPackageView view)
+    internal async Task PasteItemsAsync(DataPackageView view)
     {
         var folder = RequireFolder();
+        if (PortableDeviceLocation.TryParse(folder, out _) || view.Contains(DeviceTransferUI.ClipboardFormat))
+        {
+            if (view.RequestedOperation == DataPackageOperation.Move) throw new IOException(Loc.Get("Device_CopyOnly"));
+            await DeviceTransferUI.CopyAsync(_host, await DeviceTransferUI.ReadItemsAsync(view), folder);
+            _refresh();
+            return;
+        }
         if (!view.Contains(StandardDataFormats.StorageItems))
         {
             await PasteContentAsync(folder, view);

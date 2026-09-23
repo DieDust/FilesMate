@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Globalization;
 
 using FilesMate.App.Controls.Tags;
@@ -122,6 +122,13 @@ public sealed partial class NavigationSidebar : UserControl
         {
             var sections = await Task.Run(() => WindowsNavigationSource.Create(_pinnedLocations, tags));
             if (generation == _reloadGeneration && IsLoaded) PublishPlaces(sections);
+            else return;
+            var devices = await Services.PortableDeviceCatalog.LoadAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            if (generation != _reloadGeneration || !IsLoaded) return;
+            if (_sections.FirstOrDefault(section => section.Id == "drives") is { } drives)
+                foreach (var device in devices)
+                    drives.Items.Add(new NavigationItem("device:" + device.Root, device.RootName, "\uE8EA", device.Uri));
+            NavigationCatalog.SelectPath(_sections, _selectedPath);
         }
         catch (Exception error) { App.LogFailure("NavigationPlaces", error); }
     }
@@ -390,7 +397,7 @@ public sealed partial class NavigationSidebar : UserControl
                 Unpin(item);
                 return;
             case SidebarContextAction.Eject:
-                DriveShell.Eject(path);
+                Enqueue(() => Views.DeviceEjectUI.ShowAsync(this, path));
                 return;
             case SidebarContextAction.DisconnectNetwork:
                 DriveShell.DisconnectLetter(path);
@@ -681,7 +688,9 @@ public sealed partial class NavigationSidebar : UserControl
         App.PinnedLocationsChanged += App_PinnedLocationsChanged;
         App.TagsChanged -= App_TagsChanged;
         App.TagsChanged += App_TagsChanged;
-        await ReloadAsync(replaceWhenTagsEmpty: _sections.Count == 0);
+        App.DevicesChanged -= App_DevicesChanged;
+        App.DevicesChanged += App_DevicesChanged;
+        await ReloadAsync(replaceWhenTagsEmpty: true);
         if (IsLoaded)
             DispatcherQueue.TryEnqueue(() =>
             {
@@ -697,11 +706,13 @@ public sealed partial class NavigationSidebar : UserControl
         SectionRepeater.ItemsSource = null;
         App.PinnedLocationsChanged -= App_PinnedLocationsChanged;
         App.TagsChanged -= App_TagsChanged;
+        App.DevicesChanged -= App_DevicesChanged;
     }
 
     private void App_PinnedLocationsChanged(object? sender, EventArgs e) => Reload();
 
     private void App_TagsChanged(object? sender, EventArgs e) => Reload();
+    private void App_DevicesChanged(object? sender, EventArgs e) => Reload();
 
     private void Root_KeyDown(object sender, KeyRoutedEventArgs e)
     {

@@ -102,6 +102,8 @@ public sealed partial class Omnibar : UserControl
 
     public event EventHandler<string>? SearchChosen;
 
+    public Func<string, IReadOnlyList<HomeSearchHit>>? SearchDeviceFolder { get; set; }
+
     public event EventHandler? ModeCanceled;
 
     public Func<long, string?>? ResolveTagName { get; set; }
@@ -632,6 +634,12 @@ public sealed partial class Omnibar : UserControl
         {
             await Task.Delay(TimeSpan.FromSeconds(0.2), request.Token);
             if (generation != _searchGeneration) return;
+            if (scope is not null && FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(scope, out _))
+            {
+                var hits = SearchDeviceFolder?.Invoke(query) ?? [];
+                PublishHits(generation, hits, StringTable.Format("Device_SearchCurrentFolder", hits.Count));
+                return;
+            }
             if (App.SearchIndex is null)
             {
                 PublishHits(generation, [], StringTable.Get("Search_Unavailable"));
@@ -1010,6 +1018,18 @@ public sealed partial class Omnibar : UserControl
 
         _crumbPath = path;
         _segments = [];
+        if (FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out var device))
+        {
+            var root = device with { Segments = [] };
+            _segments.Add(new NavigationPathSegment(root.Name, root.Uri, "\uE8EA"));
+            for (var i = 0; i < device.Segments.Length; i++)
+            {
+                var child = device with { Segments = device.Segments[..(i + 1)] };
+                _segments.Add(new NavigationPathSegment(child.Name, child.Uri));
+            }
+            PublishCrumbs();
+            return;
+        }
         if (string.IsNullOrWhiteSpace(path))
         {
             PublishCrumbs();

@@ -38,6 +38,9 @@ public sealed class NavigationController
 
     public NavigationHistoryState CaptureHistory() => new(_back.ToArray(), _forward.ToArray());
 
+    public NavigationHistoryState HistoryForNewTab(string target) => CurrentPath is not null && !_paths.IsSamePath(CurrentPath, target)
+        ? new([CurrentPath, .. _back], []) : CaptureHistory();
+
     public void RestoreHistory(NavigationHistoryState state)
     {
         _back.Clear();

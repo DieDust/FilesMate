@@ -18,6 +18,8 @@ public sealed partial class HomeDashboard : UserControl
     private int _reloadGeneration;
     private int _placesGeneration;
     private bool _released;
+    private int _driveCount;
+    private int _deviceCount;
     private readonly PinnedLocationStore _places = new(Program.SettingsPath(PinnedLocationStore.DefaultFilePath));
     private readonly HomeLayoutSettingsService _layoutStore = new(Program.SettingsPath(HomeLayoutSettingsService.DefaultFilePath));
     private readonly Dictionary<HomeSectionKind, bool> _sectionHasContent = [];
@@ -56,8 +58,8 @@ public sealed partial class HomeDashboard : UserControl
         ToolTipService.SetToolTip(RefreshButton, StringTable.Get("Command_Refresh"));
         AutomationProperties.SetName(CustomizeButton, StringTable.Get("Home_Customize"));
         ToolTipService.SetToolTip(CustomizeButton, StringTable.Get("Home_Customize"));
-        Loaded += (_, _) => Reload();
-        Unloaded += (_, _) => { _placesGeneration++; _reloadGeneration++; };
+        Loaded += (_, _) => { App.DevicesChanged += DevicesChanged; Reload(); };
+        Unloaded += (_, _) => { App.DevicesChanged -= DevicesChanged; _placesGeneration++; _reloadGeneration++; };
     }
 
     public event EventHandler<string>? PlaceChosen;
@@ -68,11 +70,12 @@ public sealed partial class HomeDashboard : UserControl
     {
         if (_released) return;
         _released = true;
+        App.DevicesChanged -= DevicesChanged;
         _placesGeneration++;
         _reloadGeneration++;
         PlaceChosen = null;
         PlaceActionRequested = null;
-        foreach (var host in new[] { FolderHost, DriveHost, CloudHost, TagHost, SystemHost })
+        foreach (var host in new[] { FolderHost, DriveHost, DeviceHost, CloudHost, TagHost, SystemHost })
         {
             host.ItemsSource = null;
             host.ItemTemplate = new DataTemplate();
@@ -89,6 +92,7 @@ public sealed partial class HomeDashboard : UserControl
         var generation = ++_placesGeneration;
         _ = ReloadPlacesAsync(generation);
         _ = ReloadDrivesAsync(generation);
+        _ = ReloadDevicesAsync(generation);
         _ = ReloadTagsAsync();
     }
 
@@ -104,6 +108,25 @@ public sealed partial class HomeDashboard : UserControl
         catch (Exception error) { App.LogFailure("HomePlaces", error); }
     }
 
+    private void DevicesChanged(object? sender, EventArgs args) => Reload();
+
+    private async Task ReloadDevicesAsync(int generation)
+    {
+        DeviceHost.ItemsSource = null;
+        _deviceCount = 0;
+        SetSectionContent(HomeSectionKind.Drives, _driveCount > 0);
+        try
+        {
+            var devices = await PortableDeviceCatalog.LoadAsync().WaitAsync(TimeSpan.FromSeconds(10));
+            if (generation != _placesGeneration || !IsLoaded) return;
+            DeviceHost.ItemsSource = devices.Select(device => new HomeFolderItem(
+                "device:" + device.Root, device.RootName, "\uE8EA", device.Uri)).ToArray();
+            _deviceCount = devices.Count;
+            SetSectionContent(HomeSectionKind.Drives, _driveCount + _deviceCount > 0);
+        }
+        catch (Exception error) { App.LogFailure("HomeDevices", error); }
+    }
+
     private async Task ReloadDrivesAsync(int generation)
     {
         try
@@ -112,7 +135,8 @@ public sealed partial class HomeDashboard : UserControl
             if (generation == _placesGeneration && IsLoaded)
             {
                 DriveHost.ItemsSource = drives;
-                SetSectionContent(HomeSectionKind.Drives, drives.Count > 0);
+                _driveCount = drives.Count;
+                SetSectionContent(HomeSectionKind.Drives, _driveCount + _deviceCount > 0);
             }
         }
         catch (Exception error) { App.LogFailure("HomeDrives", error); }
@@ -288,7 +312,7 @@ public sealed partial class HomeDashboard : UserControl
 
     private void Place_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { Tag: string path })
+        if (sender is FrameworkElement anchor && PlaceFrom(anchor)?.Target is { } path)
         {
             PlaceChosen?.Invoke(this, path);
         }
@@ -296,12 +320,18 @@ public sealed partial class HomeDashboard : UserControl
 
     private void Place_ContextRequested(UIElement sender, ContextRequestedEventArgs e)
     {
-        if (sender is FrameworkElement { Tag: string target } && SpecialLocation.ShellName(target) is not null)
+        if (sender is not FrameworkElement anchor) return;
+        ShowPlaceContext(anchor, e.TryGetPosition(anchor, out var point) ? point : null);
+        e.Handled = true;
+    }
+
+    internal void ShowPlaceContext(FrameworkElement anchor, Windows.Foundation.Point? position = null)
+    {
+        if (PlaceFrom(anchor)?.Target is { } target && SpecialLocation.ShellName(target) is not null)
         {
-            e.Handled = true;
             return;
         }
-        if (sender is not FrameworkElement anchor || PlaceFrom(anchor) is not { } item)
+        if (PlaceFrom(anchor) is not { } item)
         {
             return;
         }
@@ -312,15 +342,16 @@ public sealed partial class HomeDashboard : UserControl
             (action, navigationItem, path) =>
                 PlaceActionRequested?.Invoke(this, new PlaceContextInvokedEventArgs(action, navigationItem, path)),
             FlyoutPlacementMode.BottomEdgeAlignedLeft,
-            e.TryGetPosition(anchor, out var point) ? point : null);
-        e.Handled = true;
+            position);
     }
 
     private static NavigationItem? PlaceFrom(FrameworkElement anchor) =>
-        anchor.DataContext switch
+        anchor.Tag switch
         {
             HomeFolderItem folder => HomePlaces.Place(folder),
             HomeDriveItem drive => HomePlaces.Place(drive),
+            _ when anchor.DataContext is HomeFolderItem folder => HomePlaces.Place(folder),
+            _ when anchor.DataContext is HomeDriveItem drive => HomePlaces.Place(drive),
             _ when anchor.Tag is string path && !string.IsNullOrWhiteSpace(path) =>
                 new NavigationItem("place:" + path, PathCaption(path), "\uE8B7", path),
             _ => null,

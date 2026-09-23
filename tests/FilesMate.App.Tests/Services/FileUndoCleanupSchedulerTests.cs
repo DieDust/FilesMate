@@ -3,6 +3,7 @@ using FilesMate.Core.Operations;
 
 namespace FilesMate.App.Tests.Services;
 
+[Collection("File operation lifetime")]
 public sealed class FileUndoCleanupSchedulerTests
 {
     [Fact]

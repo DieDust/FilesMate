@@ -61,7 +61,8 @@ public sealed partial class NavigatorPage
     private string? OtherPaneDestination(bool right)
     {
         var path = _dualPane ? (right ? _leftVm : _rightVm)?.AddressText : null;
-        return path is not null && Directory.Exists(path) ? path : null;
+        var pane = right ? _leftVm : _rightVm;
+        return path is not null && (Directory.Exists(path) || pane?.IsPortableDevice == true && pane.CanReceiveFiles) ? path : null;
     }
 
     private async Task TransferToOtherPaneAsync(bool move)
@@ -69,7 +70,9 @@ public sealed partial class NavigatorPage
         var target = OtherPaneDestination(_rightActive);
         var sources = SelectedPaths().ToArray();
         if (target is null || sources.Length == 0) return;
-        if (FileDropPolicy.FilterSources(sources, target, move, false).Count != sources.Length)
+        var deviceTransfer = ViewModel.IsPortableDevice || FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(target, out _);
+        if (deviceTransfer && move) { ViewModel.ReportUserError(Loc.Get("Device_CopyOnly")); return; }
+        if (!deviceTransfer && FileDropPolicy.FilterSources(sources, target, move, false).Count != sources.Length)
         {
             ViewModel.ReportUserError(Loc.Get("Files_InvalidDestination"));
             return;
@@ -160,20 +163,21 @@ public sealed partial class NavigatorPage
     {
         if (_commandDialog is not null || _disposed || !IsLoaded) return;
         var folder = ViewModel.AddressText;
-        var hasFolder = Directory.Exists(folder);
+        var hasFolder = ViewModel.IsPortableDevice || Directory.Exists(folder);
         var selected = ActiveSurface.Selection.Count;
         var actions = new List<PaletteAction>();
         void Add(string label, string hint, bool enabled, Action run) => actions.Add(new(label, hint, enabled, run));
         void FileAction(AppCommandId id, bool enabled, string hint = "") =>
-            Add(CommandCatalog.Resolve(id, CommandContext.ForToolbar(selected)).Label, hint, enabled, () => RunFileCommand(id));
+            Add(CommandCatalog.Resolve(id, CommandContext.ForToolbar(selected)).Label, hint,
+                enabled && (!ViewModel.IsPortableDevice || CommandCatalog.CanExecute(id, DeviceCommandContext())), () => RunFileCommand(id));
         Add(Loc.Get("Action_ReopenTab"), App.Shortcuts[ShortcutAction.ReopenTab].DisplayText, true, () => App.CurrentWindow?.ReopenClosedTab());
         FileAction(AppCommandId.NewFolder, hasFolder, App.Shortcuts[ShortcutAction.NewFolder].DisplayText);
         FileAction(AppCommandId.NewFile, hasFolder);
         FileAction(AppCommandId.NewFolderWithSelection, hasFolder && selected > 0);
         FileAction(selected > 1 ? AppCommandId.BatchRename : AppCommandId.Rename, selected > 0, App.Shortcuts[ShortcutAction.Rename].DisplayText);
         FileAction(AppCommandId.OpenInTerminal, hasFolder, App.Shortcuts[ShortcutAction.OpenTerminal].DisplayText);
-        Add(Loc.Get("Action_CopySelectedPaths"), App.Shortcuts[ShortcutAction.CopyPath].DisplayText, selected > 0, () => CopySelectedPaths());
-        Add(Loc.Get("Action_CopyFolderPath"), "", hasFolder, () => { var data = new DataPackage(); data.SetText(folder); Clipboard.SetContent(data); });
+        Add(Loc.Get("Action_CopySelectedPaths"), App.Shortcuts[ShortcutAction.CopyPath].DisplayText, selected > 0 && !ViewModel.IsPortableDevice, () => CopySelectedPaths());
+        Add(Loc.Get("Action_CopyFolderPath"), "", hasFolder && !ViewModel.IsPortableDevice, () => { var data = new DataPackage(); data.SetText(folder); Clipboard.SetContent(data); });
         FileAction(AppCommandId.Copy, selected > 0, App.Shortcuts[ShortcutAction.Copy].DisplayText);
         FileAction(AppCommandId.Cut, selected > 0, App.Shortcuts[ShortcutAction.Cut].DisplayText);
         FileAction(AppCommandId.Paste, hasFolder && PaneFileActions.ClipboardHasFiles(), App.Shortcuts[ShortcutAction.Paste].DisplayText);
@@ -187,7 +191,7 @@ public sealed partial class NavigatorPage
         Add(_previewVisible ? Loc.Get("Action_ClosePreviewPane") : Loc.Get("Action_OpenPreviewPane"), App.Shortcuts[ShortcutAction.Preview].DisplayText, true, () => SetPreviewVisible(!_previewVisible));
         Add(_dualPane ? Loc.Get("Action_CloseDualPane") : Loc.Get("Action_OpenDualPane"), "Ctrl+Shift+S", true, ToggleDualPane);
         Add(Loc.Get("Action_ToggleHidden"), "", true, () => _ = App.SetExplorerPreferencesAsync(App.ExplorerPreferences with { ShowHiddenFiles = !App.ExplorerPreferences.ShowHiddenFiles }));
-        Add(Loc.Get("Action_ToggleFolderSizes"), "", true, ToggleFolderSizes);
+        Add(Loc.Get("Action_ToggleFolderSizes"), "", !ViewModel.IsPortableDevice, ToggleFolderSizes);
         Add(Loc.Get("DetailsView"), "", true, () => ActiveSurface.SetLayout(FileLayoutKind.Details));
         Add(Loc.Get("Action_IconView"), "", true, () => ActiveSurface.SetLayout(FileLayoutKind.Grid));
         foreach (var column in FilesMate.App.Models.DetailsColumn.Defaults())

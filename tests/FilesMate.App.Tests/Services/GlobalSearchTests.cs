@@ -190,10 +190,11 @@ public sealed class GlobalSearchTests
             }
             var provider = new IndexedFilesSearchProvider(root);
             var apps = await provider.SearchAsync("sample", default, SearchFilter.Apps);
-            Assert.Equal(2, apps.Hits.Count);
+            Assert.Single(apps.Hits);
             Assert.Equal(appLink, apps.Hits[0].Path);
             Assert.DoesNotContain(apps.Hits, hit => hit.Path == docLink || hit.Path == folderLink);
-            Assert.Equal(apps.Hits, (await provider.SearchAsync("sample", default)).Hits.Take(2));
+            Assert.Equal(Path.Combine(root, "sample.exe"), Assert.Single((await provider.SearchAsync("sample", default, SearchFilter.Executables)).Hits).Path);
+            Assert.Equal(appLink, (await provider.SearchAsync("sample", default)).Hits[0].Path);
         }
         finally { Directory.Delete(root, true); }
     }
@@ -239,7 +240,8 @@ public sealed class GlobalSearchTests
             var provider = new IndexedFilesSearchProvider(root);
             var first = await provider.SearchAsync("sample", default);
             Assert.Equal("sample.exe", first.Hits[0].Name);
-            Assert.EndsWith(".txt", first.Hits[1].Name);
+            Assert.True(first.Hits[1].IsDirectory);
+            Assert.EndsWith(".txt", first.Hits[2].Name);
             Assert.True(first.HasMore);
             File.WriteAllText(Path.Combine(root, "search-index.json"), System.Text.Json.JsonSerializer.Serialize(new
             {
@@ -266,7 +268,15 @@ public sealed class GlobalSearchTests
         var legacy = new[] { "Program", "Shortcut", "Folder", "Document", "Image", "Video", "Audio", "Archive", "Code", "Other" }
             .Select(Enum.Parse<FilesMate.App.Models.SearchHitKind>).ToArray();
         Assert.Equal(FilesMate.App.Models.SearchHitKinds.DefaultOrder, FilesMate.App.Models.SearchHitKinds.FromSavedOrder(legacy, 0));
-        Assert.Equal(legacy, FilesMate.App.Models.SearchHitKinds.FromSavedOrder(legacy, 2));
+        var migrated = FilesMate.App.Models.SearchHitKinds.FromSavedOrder(legacy, 2);
+        Assert.Equal(FilesMate.App.Models.SearchHitKind.Executable, migrated[1]);
+        Assert.Equal(legacy, migrated.Where(kind => kind != FilesMate.App.Models.SearchHitKind.Executable));
         Assert.Equal(FilesMate.App.Models.SearchHitKind.Folder, FilesMate.App.Models.SearchHitKinds.FromSavedOrder([FilesMate.App.Models.SearchHitKind.Folder], 0)[0]);
+        var lastDefault = new[] { "Program", "Executable", "Document", "Image", "Video", "Audio", "Archive", "Code", "Other", "Shortcut", "Folder" }
+            .Select(Enum.Parse<FilesMate.App.Models.SearchHitKind>).ToArray();
+        Assert.Equal(FilesMate.App.Models.SearchHitKinds.DefaultOrder, FilesMate.App.Models.SearchHitKinds.FromSavedOrder(lastDefault, 4));
+        Assert.Equal(lastDefault, FilesMate.App.Models.SearchHitKinds.FromSavedOrder(lastDefault, 5));
+        var customized = lastDefault.Reverse().ToArray();
+        Assert.Equal(customized, FilesMate.App.Models.SearchHitKinds.FromSavedOrder(customized, 4));
     }
 }

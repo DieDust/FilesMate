@@ -16,7 +16,8 @@ public readonly record struct CommandContext(
     string? FolderPath = null,
     bool PrimaryIsArchive = false,
     bool SelectionIsArchive = false,
-    string? OtherPanePath = null)
+    string? OtherPanePath = null,
+    bool IsPortableDevice = false)
 {
     public static CommandContext ForMenu(
         int selectionCount,

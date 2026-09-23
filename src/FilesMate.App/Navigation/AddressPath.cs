@@ -7,6 +7,7 @@ public static class AddressPath
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(draft);
         var text = Environment.ExpandEnvironmentVariables(draft.Trim().Trim('"'));
+        if (FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(text, out var device)) return device.Uri;
         if (Uri.TryCreate(text, UriKind.Absolute, out var uri) && uri.IsFile)
         {
             text = uri.LocalPath;
@@ -20,7 +21,8 @@ public static class AddressPath
             return paths.Normalize(text);
         }
 
-        if (HomeLocation.IsHome(currentFolder) || TagLocation.IsTag(currentFolder))
+        if (HomeLocation.IsHome(currentFolder) || TagLocation.IsTag(currentFolder)
+            || FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(currentFolder, out _))
         {
             throw new ArgumentException("Enter an absolute path from this location.", nameof(draft));
         }

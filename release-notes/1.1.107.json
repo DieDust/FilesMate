@@ -1,0 +1,5 @@
+{
+  "zh-CN": "字母快速定位改为悬停显示文件夹和文件目标，可直接选择跳转，取消字母后的小点和重复点击切换。安装程序移除了过时的安装前说明页，同时保留系统要求检查和原有安装位置。",
+  "en-US": "Alphabet navigation now shows folder and file destinations on hover for direct selection, replacing dotted letters and repeated-click cycling. Setup no longer shows the outdated pre-installation page, while retaining system checks and the previous installation directory.",
+  "ja-JP": "アルファベットナビゲーションでホバー時にフォルダーとファイルの移動先を表示し、直接選択できるようにしました。文字の点と繰り返しクリックによる切り替えは廃止しました。セットアップから古い説明画面を削除し、システム要件の確認と以前のインストール先の維持は続けます。"
+}

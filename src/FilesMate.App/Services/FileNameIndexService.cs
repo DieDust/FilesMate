@@ -25,11 +25,12 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly SemaphoreSlim _rebuildGate = new(1, 1);
     private readonly object _lifetimeGate = new();
+    private readonly Func<bool> _includeExecutables;
     private CancellationTokenSource? _runCts;
     private bool _disposed;
     private string? _buildingPath;
 
-    public FileNameIndexService(string filePath)
+    public FileNameIndexService(string filePath, Func<bool>? includeExecutables = null)
     {
         if (string.IsNullOrWhiteSpace(filePath))
         {
@@ -37,6 +38,7 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
         }
 
         FilePath = Path.GetFullPath(filePath);
+        _includeExecutables = includeExecutables ?? (() => SearchExecutableConfiguration.Load());
         var directory = Path.GetDirectoryName(FilePath);
         if (!string.IsNullOrEmpty(directory))
         {
@@ -71,6 +73,9 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (string.IsNullOrWhiteSpace(query) || !TryGetPathPrefix(directory, out var prefix)) return new([], false);
+        var includeExecutables = _includeExecutables();
+        bool Include(string path, bool directory) => includeExecutables ||
+            !ApplicationCatalog.IsIndexedExecutable(path, directory);
         IReadOnlyList<HomeSearchHit> indexed;
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -78,7 +83,8 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
             ObjectDisposedException.ThrowIf(_disposed, this);
             indexed = await Task.Run(() => !File.Exists(FilePath) && StorageError is null
                 ? Array.Empty<HomeSearchHit>()
-                : NameIndexReader.Search(FilePath, query, prefix, FetchLimit, cancellationToken, SearchHitRanking.CreateRank(rankOrder, query), rankByPath: true)
+                : NameIndexReader.Search(FilePath, query, prefix, FetchLimit, cancellationToken,
+                    SearchHitRanking.CreateRank(rankOrder, query), filter: Include, rankByPath: true)
                     .Select(hit => new HomeSearchHit(hit.Name, hit.Path, hit.IsDirectory)).ToArray(), cancellationToken).ConfigureAwait(false);
         }
         finally { _gate.Release(); }
@@ -88,9 +94,10 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
         var live = prefix is not null || Stats.Files + Stats.Folders == 0
             ? await Task.Run(() => SearchLiveDetailed(query,
                 prefix is null ? HomePlaces.UserFolders().Select(item => item.Path) : [prefix],
-                FetchLimit, cancellationToken), cancellationToken).ConfigureAwait(false)
+                FetchLimit, cancellationToken, Include), cancellationToken).ConfigureAwait(false)
             : new FileNameSearchResponse([], false);
-        var combined = live.Hits.Concat(indexed).DistinctBy(hit => hit.Path, StringComparer.OrdinalIgnoreCase).ToArray();
+        var combined = live.Hits.Concat(indexed).Where(hit => Include(hit.Path, hit.IsDirectory))
+            .DistinctBy(hit => hit.Path, StringComparer.OrdinalIgnoreCase).ToArray();
         return new(SearchHitRanking.Sort(combined, rankOrder, ResultLimit, query),
             live.Partial || combined.Length >= ResultLimit);
     }
@@ -223,7 +230,7 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
         CancellationToken cancellationToken) => SearchLiveDetailed(query, roots, limit, cancellationToken).Hits;
 
     private static FileNameSearchResponse SearchLiveDetailed(string query, IEnumerable<string> roots, int limit,
-        CancellationToken token)
+        CancellationToken token, Func<string, bool, bool>? include = null)
     {
         var hits = new List<HomeSearchHit>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -243,7 +250,8 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
                     token.ThrowIfCancellationRequested();
                     if (hits.Count >= limit || watch.ElapsedMilliseconds > 1500) return new(hits, true);
                     var directory = (entry.Attributes & FileAttributes.Directory) != 0;
-                    if (NameIndexReader.Matches(entry.Name, terms)) hits.Add(new(entry.Name, entry.FullName, directory));
+                    if (NameIndexReader.Matches(entry.Name, terms) && (include?.Invoke(entry.FullName, directory) ?? true))
+                        hits.Add(new(entry.Name, entry.FullName, directory));
                     if (directory) queue.Enqueue(entry.FullName);
                 }
             }
@@ -274,6 +282,7 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
 
     private SearchIndexStats RebuildCore(SearchIndexSettings settings, CancellationToken cancellationToken)
     {
+        RemoveAbandonedEmptyWal();
         var original = CaptureDatabase();
         if (original is not null) SearchIndexStorage.ValidateDatabase(FilePath);
         long files = 0;
@@ -619,6 +628,49 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
         }.ToString();
 
     private sealed record DatabaseStamp(string Identity, long Length, DateTime Written);
+
+    private void RemoveAbandonedEmptyWal()
+    {
+        var wal = FilePath + "-wal";
+        var shm = FilePath + "-shm";
+        if (!File.Exists(FilePath) || (!File.Exists(wal) && !File.Exists(shm)) ||
+            File.Exists(FilePath + "-journal") || Directory.Exists(wal) || Directory.Exists(shm) ||
+            (File.GetAttributes(FilePath) & FileAttributes.ReparsePoint) != 0 ||
+            (File.Exists(wal) && new FileInfo(wal).Length != 0)) return;
+
+        // An empty WAL has no frames. SQLite itself must first confirm that this
+        // database is in rollback-journal mode and grant an exclusive lock. Never
+        // remove a nonempty WAL or sidecars belonging to an active WAL database.
+        using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+        {
+            DataSource = FilePath,
+            Mode = SqliteOpenMode.ReadWrite,
+            Cache = SqliteCacheMode.Private,
+            Pooling = false,
+            DefaultTimeout = 1,
+        }.ToString());
+        connection.Open();
+        using var mode = connection.CreateCommand();
+        mode.CommandText = "PRAGMA journal_mode;";
+        if (!string.Equals(mode.ExecuteScalar()?.ToString(), "delete", StringComparison.OrdinalIgnoreCase)) return;
+        using var begin = connection.CreateCommand();
+        begin.CommandText = "PRAGMA locking_mode=EXCLUSIVE; BEGIN EXCLUSIVE;";
+        begin.ExecuteNonQuery();
+        try
+        {
+            if (File.Exists(FilePath + "-journal") ||
+                (File.Exists(wal) && (new FileInfo(wal).Length != 0 || (File.GetAttributes(wal) & FileAttributes.ReparsePoint) != 0)) ||
+                (File.Exists(shm) && (File.GetAttributes(shm) & FileAttributes.ReparsePoint) != 0)) return;
+            if (File.Exists(shm)) File.Delete(shm);
+            if (File.Exists(wal)) File.Delete(wal);
+        }
+        finally
+        {
+            using var rollback = connection.CreateCommand();
+            rollback.CommandText = "ROLLBACK;";
+            rollback.ExecuteNonQuery();
+        }
+    }
 
     private DatabaseStamp? CaptureDatabase()
     {

@@ -1,0 +1,5 @@
+{
+  "zh-CN": "全局搜索现将应用目录和快捷方式与独立 EXE/COM 程序分开显示。独立程序有单独分类，可在搜索设置中关闭或调整排序；关闭后保留索引，重新开启立即生效。",
+  "en-US": "Global search now separates registered apps and shortcuts from standalone indexed EXE/COM programs. Standalone programs have their own category and can be hidden or reordered in search settings without rebuilding the index.",
+  "ja-JP": "グローバル検索で登録済みアプリ・ショートカットと単独の EXE・COM プログラムを分けました。単独プログラムには専用カテゴリがあり、検索設定で非表示や順序の変更ができます。インデックスの再作成は不要です。"
+}

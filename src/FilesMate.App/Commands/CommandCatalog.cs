@@ -1,4 +1,4 @@
-﻿using FilesMate.App.Localization;
+using FilesMate.App.Localization;
 using FilesMate.App.Navigation;
 
 namespace FilesMate.App.Commands;
@@ -162,7 +162,18 @@ public static class CommandCatalog
         return commands;
     }
 
-    public static bool CanExecute(AppCommandId id, CommandContext context) => id switch
+    public static bool CanExecute(AppCommandId id, CommandContext context) =>
+        (!context.IsPortableDevice || DeviceCommandSupported(id)) && CanExecuteCore(id, context);
+
+    // Device objects are not filesystem paths. Only expose commands implemented by
+    // the Shell provider; never feed an opaque identity to a local mutation API.
+    public static bool DeviceCommandSupported(AppCommandId id) => id is
+        AppCommandId.Open or AppCommandId.OpenInNewTab or AppCommandId.OpenInNewWindow
+        or AppCommandId.Copy or AppCommandId.Paste or AppCommandId.CopyToOtherPane
+        or AppCommandId.SelectAll or AppCommandId.SelectSameType or AppCommandId.InvertSelection
+        or AppCommandId.Refresh or AppCommandId.Sort or AppCommandId.ChangeLayout or AppCommandId.SearchCommands;
+
+    private static bool CanExecuteCore(AppCommandId id, CommandContext context) => id switch
     {
         AppCommandId.AddToFavorites => context.SelectionCount > 0,
         AppCommandId.AddToShelf => context.SelectionCount > 0,
@@ -219,7 +230,11 @@ public static class CommandCatalog
         _ => false,
     };
 
-    private static bool IsVisible(AppCommandId id, CommandContext context) => context.Surface switch
+    private static bool IsVisible(AppCommandId id, CommandContext context) =>
+        (!context.IsPortableDevice || context.Surface == CommandSurface.Toolbar || DeviceCommandSupported(id))
+        && IsVisibleCore(id, context);
+
+    private static bool IsVisibleCore(AppCommandId id, CommandContext context) => context.Surface switch
     {
         CommandSurface.Toolbar => id switch
         {

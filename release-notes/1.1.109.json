@@ -1,0 +1,5 @@
+{
+  "zh-CN": "字母定位中同时含文件夹和文件的字母改用低对比度底色与细边框标记，减少重复蓝色描边；选中位置仍清晰可见。",
+  "en-US": "Letters that contain both folders and files now use a subtle neutral background and border instead of bright blue outlines. The current location remains clearly highlighted.",
+  "ja-JP": "フォルダーとファイルの両方がある文字の表示を、鮮やかな青い枠から控えめな背景色と細い枠に変更しました。現在位置の強調表示は維持します。"
+}

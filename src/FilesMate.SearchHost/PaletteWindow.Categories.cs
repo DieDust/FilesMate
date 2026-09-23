@@ -18,6 +18,7 @@ public partial class PaletteWindow
         ? Loc.Get(builtin switch
         {
             SearchFilter.All => "Category_All", SearchFilter.Apps => "Application",
+            SearchFilter.Executables => "SearchRankExecutable",
             SearchFilter.Documents => "SearchRankDocument", SearchFilter.Images => "SearchRankImage",
             SearchFilter.Media => "Category_Media", _ => "SearchRankFolder",
         }) : category.Name;
@@ -38,10 +39,12 @@ public partial class PaletteWindow
     {
         _buildingCategories = true;
         CategoryButtons.Children.Clear();
-        var selected = _categories.FirstOrDefault(c => c.Visible && c.Id == _categoryId) ?? _categories.First(c => c.Visible);
+        var executablesEnabled = SearchExecutableConfiguration.Load(_host.Profile);
+        var selected = _categories.FirstOrDefault(c => c.Visible && c.Id == _categoryId && (executablesEnabled || c.Builtin != SearchFilter.Executables))
+            ?? _categories.First(c => c.Visible && (executablesEnabled || c.Builtin != SearchFilter.Executables));
         _categoryId = selected.Id;
         _filter = selected.Builtin ?? SearchFilter.All;
-        foreach (var category in _categories.Where(c => c.Visible))
+        foreach (var category in _categories.Where(c => c.Visible && (executablesEnabled || c.Builtin != SearchFilter.Executables)))
         {
             var button = new RadioButton { Content = CategoryLabel(category), Tag = category, GroupName = "Filter", Style = (Style)FindResource("Segment"),
                 FontSize = 12, Padding = new Thickness(10, 5, 10, 5), IsChecked = category.Id == _categoryId,

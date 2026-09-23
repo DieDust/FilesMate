@@ -18,6 +18,8 @@ AppVersion={#AppVersion}
 AppPublisher=FilesMate
 VersionInfoVersion={#AppFileVersion}
 DefaultDirName={localappdata}\Programs\FilesMate
+DisableDirPage=no
+AlwaysShowDirOnReadyPage=yes
 DefaultGroupName=FilesMate
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
@@ -32,18 +34,31 @@ Compression=lzma2
 SolidCompression=yes
 MergeDuplicateFiles=yes
 WizardStyle=modern
-; File locks can belong to unrelated applications. Never let Restart Manager
-; close them during a silent update or an interactive installation.
-CloseApplications=no
+; Upgrades keep the directory the user previously selected, including D:.
+UsePreviousAppDir=yes
+; Older installers offered no Chinese. Detect the current Windows UI language
+; instead of silently reusing the forced English/Japanese choice on upgrade.
+UsePreviousLanguage=no
+; During interactive installs, offer to close only FilesMate processes using
+; the target executables. Silent self-updates pass /NOCLOSEAPPLICATIONS because
+; the app shuts itself down after launching Setup.
+CloseApplications=yes
+CloseApplicationsFilter=FilesMate.App.exe,FilesMate.SearchHost.exe
 RestartApplications=no
 
 [Languages]
-Name: "english"; MessagesFile: "compiler:Default.isl"; InfoBeforeFile: "Preview-Readme.en.txt"
-Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"; InfoBeforeFile: "Preview-Readme.ja.txt"
+; Vendored from jrsoftware/issrc at 6ef32198ef1f7b7b375cd4b6b90896c2a58eb4c2.
+; Source license: installer/Inno-Setup-LICENSE.txt.
+; Packaging does not depend on optional Inno Setup language packs.
+Name: "chinesesimplified"; MessagesFile: "ChineseSimplified.isl"
+Name: "english"; MessagesFile: "compiler:Default.isl"
+Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
 
 [CustomMessages]
+chinesesimplified.DesktopShortcut=创建桌面快捷方式
 english.DesktopShortcut=Create a desktop shortcut
 japanese.DesktopShortcut=デスクトップにショートカットを作成する
+chinesesimplified.LaunchFilesMate=启动 FilesMate
 english.LaunchFilesMate=Launch FilesMate
 japanese.LaunchFilesMate=FilesMate を起動する
 

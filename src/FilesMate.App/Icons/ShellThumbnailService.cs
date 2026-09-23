@@ -51,7 +51,7 @@ internal sealed class ShellThumbnailService
         }
 
         return _cache.GetAsync(key,
-            token => LoadAsync(Path.GetFullPath(path!), pixelSize, token),
+            token => LoadAsync(FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out _) ? path! : Path.GetFullPath(path!), pixelSize, token),
             cancellationToken, generation);
     }
 
@@ -63,6 +63,8 @@ internal sealed class ShellThumbnailService
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
+            if (FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out var device))
+                return await FilesMate.Platform.Windows.Shell.PortableDeviceService.GetThumbnailAsync(device, pixelSize, cancellationToken).ConfigureAwait(false);
             var file = await StorageFile.GetFileFromPathAsync(path).AsTask(cancellationToken);
             using var thumbnail = await file.GetThumbnailAsync(
                 ThumbnailMode.PicturesView,
@@ -109,6 +111,12 @@ internal sealed class ShellThumbnailService
     internal static bool TryCreateKey(string? path, int pixelSize, out string key)
     {
         key = string.Empty;
+        if (pixelSize > 0 && FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out var device)
+            && FileTypeIconCatalog.IsThumbnailPath(device.Name))
+        {
+            key = $"device-thumbnail:{device.Uri}:{pixelSize}";
+            return true;
+        }
         if (pixelSize <= 0 || !FileTypeIconCatalog.IsThumbnailPath(path))
         {
             return false;

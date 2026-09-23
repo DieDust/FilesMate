@@ -11,10 +11,7 @@ public static class SearchHitRanking
         return (path, directory) =>
         {
             var kind = Classify(path, directory);
-            // A verified application entry is more useful than its helper EXEs.
-            // Ordinary document/folder links never receive this application boost.
-            var entry = kind == SearchHitKind.Program && !FilesMate.Search.ApplicationShortcut.IsApplication(path) ? 4 : 0;
-            return priority[kind] * 8 + entry + FilesMate.Search.NameIndexReader.Relevance(Path.GetFileName(path), query);
+            return priority[kind] * 8 + FilesMate.Search.NameIndexReader.Relevance(Path.GetFileName(path), query);
         };
     }
     public static SearchHitKind Classify(string path, bool directory) => Classify(path, directory, recognizeApplicationShortcuts: true);
@@ -29,15 +26,15 @@ public static class SearchHitRanking
         if (recognizeApplicationShortcuts && FilesMate.Search.ApplicationShortcut.IsApplication(path)) return SearchHitKind.Program;
 
         var extension = Path.GetExtension(path ?? string.Empty).ToLowerInvariant();
-        if (extension is ".com")
+        if (extension is ".exe" or ".com")
         {
-            return SearchHitKind.Program;
+            return SearchHitKind.Executable;
         }
 
         var icon = FileTypeIconCatalog.ClassifyPath(path, false);
         if (icon is null)
         {
-            return SearchHitKind.Program;
+            return SearchHitKind.Other;
         }
 
         return icon switch
@@ -82,7 +79,6 @@ public static class SearchHitRanking
 
         return hits
             .OrderBy(hit => rank[Classify(hit.Path, hit.IsDirectory)])
-            .ThenBy(hit => Classify(hit.Path, hit.IsDirectory) == SearchHitKind.Program && !FilesMate.Search.ApplicationShortcut.IsApplication(hit.Path) ? 1 : 0)
             .ThenBy(hit => query is null ? 0 : FilesMate.Search.NameIndexReader.Relevance(hit.Name, query))
             .ThenBy(hit => hit.Name, StringComparer.CurrentCultureIgnoreCase)
             .Take(limit)

@@ -1,0 +1,5 @@
+{
+  "zh-CN": "修复全局搜索遗漏独立应用的问题。已建立索引的 EXE、COM 程序现在会出现在“应用”分类中，在“全部”结果里也会排在文档之前；已安装应用仍优先显示。",
+  "en-US": "Fixed global search omitting standalone applications. Indexed EXE and COM programs now appear in the Apps category and rank ahead of documents in All results, while installed applications retain priority.",
+  "ja-JP": "グローバル検索で単独のアプリが表示されない問題を修正しました。インデックス済みの EXE・COM プログラムが「アプリ」カテゴリに表示され、「すべて」でも文書より上に並びます。インストール済みアプリは引き続き優先されます。"
+}

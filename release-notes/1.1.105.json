@@ -1,0 +1,5 @@
+{
+  "zh-CN": "修复手动升级时安装位置意外改回 C 盘的问题。安装向导会沿用已有的 D 盘安装目录，并在文件被 FilesMate 占用时提示关闭程序后继续安装。保留简体中文安装界面与固定预览恢复修复。",
+  "en-US": "Fixed manual upgrades unexpectedly switching the installation path to C:. Setup now retains the existing installation directory and prompts to close FilesMate if its files are in use. Includes the Simplified Chinese setup and pinned-preview restoration fixes.",
+  "ja-JP": "手動アップグレード時にインストール先が C ドライブに戻る問題を修正しました。セットアップは既存のインストール先を維持し、FilesMate がファイルを使用中の場合は終了を案内します。簡体字中国語のセットアップと固定プレビュー復元の修正も含まれます。"
+}

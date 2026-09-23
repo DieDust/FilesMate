@@ -7,8 +7,16 @@ public sealed record SearchCategory(string Id, string Name, SearchFilter? Builti
 
 public static class SearchCategories
 {
-    public static List<SearchCategory> Defaults() => new[] { "全部", "应用", "文档", "图片", "影音", "文件夹" }
-        .Select((name, index) => new SearchCategory(((SearchFilter)index).ToString(), name, (SearchFilter)index, [])).ToList();
+    public static List<SearchCategory> Defaults() =>
+    [
+        new(nameof(SearchFilter.All), "全部", SearchFilter.All, []),
+        new(nameof(SearchFilter.Apps), "应用", SearchFilter.Apps, []),
+        new(nameof(SearchFilter.Executables), "独立程序", SearchFilter.Executables, []),
+        new(nameof(SearchFilter.Documents), "文档", SearchFilter.Documents, []),
+        new(nameof(SearchFilter.Images), "图片", SearchFilter.Images, []),
+        new(nameof(SearchFilter.Media), "影音", SearchFilter.Media, []),
+        new(nameof(SearchFilter.Folders), "文件夹", SearchFilter.Folders, []),
+    ];
 
     public static string[] ParseExtensions(string text)
     {
@@ -48,7 +56,13 @@ public static class SearchCategories
             else if (!string.IsNullOrWhiteSpace(category.Name) && category.Name.Length <= 24)
                 result.Add(category with { Extensions = ParseExtensions(string.Join(",", category.Extensions ?? [])) });
         }
-        foreach (var item in Defaults()) if (result.All(c => c.Builtin != item.Builtin)) result.Add(item with { Visible = false });
+        foreach (var item in Defaults()) if (result.All(c => c.Builtin != item.Builtin))
+        {
+            var appIndex = result.FindIndex(c => c.Builtin == SearchFilter.Apps);
+            if (item.Builtin == SearchFilter.Executables && appIndex >= 0)
+                result.Insert(appIndex + 1, item);
+            else result.Add(item with { Visible = item.Builtin == SearchFilter.Executables });
+        }
         if (result.All(c => !c.Visible)) result[0] = result[0] with { Visible = true };
         return result;
     }

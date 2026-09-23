@@ -21,7 +21,7 @@ public sealed partial class FileDetailsSurface
 
     public async void BeginInlineRename()
     {
-        if (IsRenaming || RenameRequested is null || !IsFolderWritable || _selection.Count != 1) return;
+        if (IsPortableDevice || IsRenaming || RenameRequested is null || !IsFolderWritable || _selection.Count != 1) return;
         var sequence = ++_renameSequence;
         var targetId = _selection.PrimaryId;
         var generation = _generation;

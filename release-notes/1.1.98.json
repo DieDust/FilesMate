@@ -1,0 +1,5 @@
+{
+  "zh-CN": "外置磁盘安全弹出被 Windows 拒绝时，可直接查看占用该磁盘文件的程序，并在关闭相关文件或释放 FilesMate 预览后重试。多分区设备会一起检查；此诊断入口不会自动结束程序或删除文件。",
+  "en-US": "When Windows denies safe removal of an external drive, FilesMate can show programs using files on its volumes and retry after you close them or release FilesMate previews. The diagnostic view checks every volume on the device and never ends programs or deletes files automatically.",
+  "ja-JP": "外付けドライブの安全な取り外しを Windows が拒否した場合、各ボリュームのファイルを使用中のアプリを確認できます。関連ファイルを閉じるか FilesMate のプレビューを解放してから再試行できます。この診断画面はアプリの強制終了やファイル削除を自動では行いません。"
+}

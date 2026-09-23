@@ -73,7 +73,7 @@ public sealed class SearchIndexSettingsService
                 DatabaseDirectory = settings.DatabaseDirectory,
                 AutoRefresh = settings.AutoRefresh,
                 RankOrder = [.. settings.RankOrder.Select(kind => kind.ToString())],
-                RankVersion = 3,
+                RankVersion = 5,
             },
             JsonOptions)!.AsObject();
         return Task.Run(() => SearchIndexConfigurationFile.Update(FilePath, document =>
@@ -89,7 +89,7 @@ public sealed class SearchIndexSettingsService
             if (updateRankOrder || !SearchIndexConfigurationFile.HasProperty(document, "rankOrder"))
             {
                 SearchIndexConfigurationFile.SetProperty(document, "rankOrder", changes["rankOrder"]?.DeepClone());
-                SearchIndexConfigurationFile.SetProperty(document, "rankVersion", JsonValue.Create(3));
+                SearchIndexConfigurationFile.SetProperty(document, "rankVersion", JsonValue.Create(5));
             }
         }, cancellationToken), cancellationToken);
     }

@@ -161,6 +161,9 @@ public static partial class StringTable
             ["Favorites_ResizeBottom"] = ("Drag the bottom edge to resize favorites", "拖动下边缘调整收藏页高度", "下端をドラッグしてお気に入りの高さを変更"),
             ["ResizeVertical"] = ("Drag up or down to resize", "上下拖动调整高度", "上下にドラッグして高さを変更"),
             ["Alphabet_AccessibleName"] = ("Jump by first letter", "按首字母快速定位", "先頭文字で移動"),
+            ["Alphabet_MultipleHint"] = ("{0}: choose a folder or file group", "{0}：选择文件夹或文件", "{0}：フォルダーまたはファイルを選択"),
+            ["Alphabet_FolderGroup"] = ("Folders", "文件夹", "フォルダー"),
+            ["Alphabet_FileGroup"] = ("Files", "文件", "ファイル"),
             ["Columns_Reset"] = ("Restore default columns", "恢复默认列", "列を既定に戻す"),
             ["FileName"] = ("File name", "文件名", "ファイル名"),
             ["Attribute_Archive"] = ("Archive", "存档", "アーカイブ"),
@@ -408,6 +411,9 @@ public static partial class StringTable
             ["Tray_OpenManager"] = ("Open file manager on tray left-click", "托盘左键打开文件管理器", "トレイの左クリックでファイルマネージャーを開く"),
             ["Category_Buttons"] = ("Category buttons", "分类按钮", "分類ボタン"),
             ["Category_Manage"] = ("Manage categories", "管理分类", "分類を管理"),
+            ["SearchRankExecutable"] = ("Standalone EXE/COM", "独立 EXE/COM 程序", "単独の EXE/COM"),
+            ["Search_StandaloneExecutables"] = ("Show standalone executables", "显示独立程序", "単独プログラムを表示"),
+            ["Search_StandaloneExecutablesHint"] = ("Search indexed EXE and COM files separately from app shortcuts. Turning this off keeps the index intact.", "在索引中单独搜索 EXE 和 COM 文件；关闭后保留索引。", "インデックス済みの EXE・COM をアプリのショートカットとは別に検索します。オフにしてもインデックスは保持されます。"),
             ["ResultOrder"] = ("Result order", "结果排序", "結果の優先順位"),
             ["ResultOrder_Edit"] = ("Reorder", "调整顺序", "順序を変更"),
             ["ResultOrder_SharedHint"] = ("Shared with the file manager", "与文件管理器共用排序设置", "ファイルマネージャーと共通の設定です"),
@@ -419,7 +425,7 @@ public static partial class StringTable
             ["RestoreAll"] = ("Restore all", "全部恢复", "すべて復元"),
             ["Search_HiddenHint"] = ("Hiding only affects search results. Files and apps are not deleted.", "隐藏仅影响搜索结果，不会删除文件或卸载应用。", "非表示は検索結果のみに適用されます。ファイルの削除やアプリのアンインストールは行いません。"),
             ["Restore"] = ("Restore", "恢复", "復元"),
-            ["ResultOrder_Hint"] = ("Types at the top appear first. Changes sync with the file manager.", "靠前的类型优先显示，与文件管理器同步", "上にある種類を優先して表示します。変更はファイルマネージャーと共有されます。"),
+            ["ResultOrder_Hint"] = ("Drag to rank result types. Turn standalone EXE/COM results on or off in their row. Changes sync with the file manager.", "拖动调整结果类型优先级；在“独立程序”一行可开关 EXE/COM 搜索。设置与文件管理器同步。", "ドラッグして結果の種類を並べ替えます。単独の EXE/COM はその行で表示を切り替えます。設定はファイルマネージャーと共有されます。"),
             ["MoveUp"] = ("Move up", "上移", "上へ移動"),
             ["MoveDown"] = ("Move down", "下移", "下へ移動"),
             ["Search_LoadingCount"] = ("{0}+ items · loading", "{0}+ 项 · 加载中", "{0} 件以上 · 読み込み中"),
@@ -482,5 +488,5 @@ public static partial class StringTable
             ["Preview_SlideLimits"] = ("Up to 100 slides. Embedded images are limited to 8 MB in total.", "最多预览 100 页；内嵌图片总量限制为 8 MB。", "最大 100 枚のスライドを表示します。埋め込み画像の合計は 8 MB までです。"),
             ["Preview_SheetTruncated"] = ("Only part of the cells are shown. Open the file for the full spreadsheet.", "已截取部分单元格，请打开文件查看完整表格。", "一部のセルのみを表示しています。表全体を見るにはファイルを開いてください。"),
             ["Preview_SlideNumber"] = ("Slide {0}", "第 {0} 页", "スライド {0}"),
-        }.Concat(ArchiveEntries()).ToDictionary(entry => entry.Key, entry => entry.Value, StringComparer.Ordinal);
+        }.Concat(ArchiveEntries()).Concat(DeviceEntries()).ToDictionary(entry => entry.Key, entry => entry.Value, StringComparer.Ordinal);
 }

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using FilesMate.App.Localization;
 using FilesMate.App.Models;
 using FilesMate.App.Services;
+using FilesMate.Search;
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -146,6 +147,9 @@ public sealed partial class SearchSettingsPage : UserControl
     private IFileNameSearchIndex? _index;
     private bool _syncing;
     private bool _rankingChanged;
+    private bool _rankingDragActive;
+    private SearchHitKind[]? _rankBeforeDrag;
+    private SearchRankingPreferencesWatcher? _rankingWatcher;
     private bool _relocating;
     private bool _readingUsage;
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _usageTimer;
@@ -200,9 +204,12 @@ public sealed partial class SearchSettingsPage : UserControl
         SelectDepth(_settings.MaxDepth);
         _syncing = false;
         ProgressText.Text = StringTable.Get("SearchIdle");
-        Unloaded += (_, _) => { _usageTimer?.Stop(); if (_capturingHotkey) EndHotkeyCapture(); if (_globalDelay is not null) QueueGlobalSave(false); AttachIndex(null); };
+        Unloaded += (_, _) => { _usageTimer?.Stop(); _rankingWatcher?.Dispose(); _rankingWatcher = null; if (_capturingHotkey) EndHotkeyCapture(); if (_globalDelay is not null) QueueGlobalSave(false); AttachIndex(null); };
         Loaded += (_, _) =>
         {
+            _rankingWatcher ??= new SearchRankingPreferencesWatcher(_store?.FilePath ?? SearchIndexSettingsService.DefaultFilePath,
+                () => DispatcherQueue.TryEnqueue(RefreshSharedRanking));
+            RefreshSharedRanking();
             AttachIndex(App.SearchIndex);
             _ = RefreshHostStateAsync(_globalRevision);
             _usageTimer ??= DispatcherQueue.CreateTimer();
@@ -244,24 +251,66 @@ public sealed partial class SearchSettingsPage : UserControl
         }
     }
 
-    private void BuildRankList()
+    private void BuildRankList(SearchRankingPreferences? preferences = null)
     {
+        preferences ??= SearchRankingConfiguration.LoadPreferences(Path.GetDirectoryName(_store?.FilePath ?? SearchIndexSettingsService.DefaultFilePath));
         _rankItems.Clear();
-        foreach (var kind in _settings.RankOrder)
+        foreach (var kind in preferences.RankOrder)
         {
-            _rankItems.Add(new SearchRankItem(kind, StringTable.Get(SearchHitKinds.TitleKey(kind))));
+            _rankItems.Add(new SearchRankItem(kind, StringTable.Get(SearchHitKinds.TitleKey(kind)), preferences.IncludeStandaloneExecutables));
         }
 
         RankList.ItemsSource = _rankItems;
     }
 
+    private void RefreshSharedRanking()
+    {
+        if (!IsLoaded || _syncing || _rankingChanged || _rankingDragActive) return;
+        var preferences = SearchRankingConfiguration.LoadPreferences(Path.GetDirectoryName(_store?.FilePath ?? SearchIndexSettingsService.DefaultFilePath));
+        if (_rankItems.Select(item => item.Kind).SequenceEqual(preferences.RankOrder)
+            && _rankItems.FirstOrDefault(item => item.Kind == SearchHitKind.Executable)?.ExecutablesEnabled == preferences.IncludeStandaloneExecutables) return;
+        _syncing = true;
+        try
+        {
+            _settings = _settings with { RankOrder = preferences.RankOrder };
+            BuildRankList(preferences);
+        }
+        finally { _syncing = false; }
+    }
+
+    private void RankList_DragItemsStarting(object sender, DragItemsStartingEventArgs args)
+    {
+        _rankingDragActive = true;
+        _rankBeforeDrag = [.. _rankItems.Select(item => item.Kind)];
+    }
+
     private async void RankList_DragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args)
     {
+        _rankingDragActive = false;
+        var previous = _rankBeforeDrag;
+        _rankBeforeDrag = null;
         if (_syncing)
         {
             return;
         }
 
+        if (previous is not null && previous.SequenceEqual(_rankItems.Select(item => item.Kind))) return;
+        _rankingChanged = true;
+        await SaveSettingsAsync().ConfigureAwait(true);
+    }
+
+    private async void RankList_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key is not (Windows.System.VirtualKey.Up or Windows.System.VirtualKey.Down)
+            || !Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Menu)
+                .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down)
+            || RankList.SelectedItem is not SearchRankItem item || _syncing) return;
+        var index = _rankItems.IndexOf(item);
+        var next = index + (e.Key == Windows.System.VirtualKey.Up ? -1 : 1);
+        if (index < 0 || next < 0 || next >= _rankItems.Count) return;
+        e.Handled = true;
+        _rankItems.Move(index, next);
+        RankList.SelectedItem = item;
         _rankingChanged = true;
         await SaveSettingsAsync().ConfigureAwait(true);
     }
@@ -294,6 +343,25 @@ public sealed partial class SearchSettingsPage : UserControl
         }
 
         await SaveSettingsAsync().ConfigureAwait(true);
+    }
+
+    private async void RankExecutableToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        var profile = Path.GetDirectoryName(_store?.FilePath ?? SearchIndexSettingsService.DefaultFilePath);
+        if (_syncing || sender is not ToggleSwitch { DataContext: SearchRankItem { Kind: SearchHitKind.Executable } } toggle ||
+            toggle.IsOn == SearchExecutableConfiguration.Load(profile)) return;
+        var enabled = toggle.IsOn;
+        try
+        {
+            await Task.Run(() => SearchExecutableConfiguration.Save(enabled, profile));
+        }
+        catch (Exception error)
+        {
+            _syncing = true;
+            toggle.IsOn = SearchExecutableConfiguration.Load(profile);
+            _syncing = false;
+            ReportSettingsFailure("Saving standalone executable search setting", error);
+        }
     }
 
     private async void DepthBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -485,7 +553,11 @@ public sealed partial class SearchSettingsPage : UserControl
         PaintLocation();
     }
 
-    private void UsageTimer_Tick(Microsoft.UI.Dispatching.DispatcherQueueTimer sender, object args) => _ = RefreshUsageAsync();
+    private void UsageTimer_Tick(Microsoft.UI.Dispatching.DispatcherQueueTimer sender, object args)
+    {
+        RefreshSharedRanking();
+        _ = RefreshUsageAsync();
+    }
 
     internal async Task RefreshUsageAsync()
     {
@@ -589,9 +661,17 @@ public sealed partial class SearchSettingsPage : UserControl
     }
 }
 
-public sealed class SearchRankItem(SearchHitKind kind, string title)
+public sealed class SearchRankItem(SearchHitKind kind, string title, bool executablesEnabled)
 {
     public SearchHitKind Kind { get; } = kind;
 
     public string Title { get; } = title;
+
+    public Visibility ExecutableToggleVisibility => Kind == SearchHitKind.Executable ? Visibility.Visible : Visibility.Collapsed;
+
+    public bool ExecutablesEnabled { get; set; } = executablesEnabled;
+
+    public string ExecutableToggleLabel => StringTable.Get("Search_StandaloneExecutables");
+
+    public string ExecutableToggleHint => StringTable.Get("Search_StandaloneExecutablesHint");
 }

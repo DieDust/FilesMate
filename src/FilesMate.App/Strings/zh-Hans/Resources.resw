@@ -190,6 +190,15 @@
   <data name="Alphabet_AccessibleName" xml:space="preserve">
     <value>按首字母快速定位</value>
   </data>
+  <data name="Alphabet_FileGroup" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="Alphabet_FolderGroup" xml:space="preserve">
+    <value>文件夹</value>
+  </data>
+  <data name="Alphabet_MultipleHint" xml:space="preserve">
+    <value>{0}：选择文件夹或文件</value>
+  </data>
   <data name="Alphabet_QuickNavigation" xml:space="preserve">
     <value>字母快速定位</value>
   </data>
@@ -756,6 +765,102 @@
   </data>
   <data name="DetailsView" xml:space="preserve">
     <value>详细信息视图</value>
+  </data>
+  <data name="Device_BrowseHint" xml:space="preserve">
+    <value>浏览设备向 Windows 开放的文件。如有提示，请解锁设备并允许访问。</value>
+  </data>
+  <data name="Device_CanPaste" xml:space="preserve">
+    <value>设备 · 可复制和粘贴</value>
+  </data>
+  <data name="Device_ClipboardReady" xml:space="preserve">
+    <value>已复制，请打开目标文件夹后粘贴。</value>
+  </data>
+  <data name="Device_CopyCancelled" xml:space="preserve">
+    <value>复制已取消：已完成 {0} 个项目，未完成或跳过 {1} 个。源文件已保留。</value>
+  </data>
+  <data name="Device_CopyCompleted" xml:space="preserve">
+    <value>已复制 {0} 个项目。</value>
+  </data>
+  <data name="Device_CopyIncomplete" xml:space="preserve">
+    <value>已完成 {0} 个项目，未完成或跳过 {1} 个。请检查设备连接和目标可用空间。源文件已保留。</value>
+  </data>
+  <data name="Device_CopyOnly" xml:space="preserve">
+    <value>设备传输请使用“复制”。此处暂不支持剪切和移动。</value>
+  </data>
+  <data name="Device_CopyTo" xml:space="preserve">
+    <value>复制到…</value>
+  </data>
+  <data name="Device_Copying" xml:space="preserve">
+    <value>正在复制文件…</value>
+  </data>
+  <data name="Device_EjectBlockingInterface" xml:space="preserve">
+    <value>被占用的设备接口：{0}</value>
+  </data>
+  <data name="Device_EjectBusy" xml:space="preserve">
+    <value>FilesMate 还有文件操作未结束。请检查复制、移动、压缩解压或同名冲突窗口，完成或取消操作后，再次尝试弹出。暂时保持设备连接。</value>
+  </data>
+  <data name="Device_EjectDebugging" xml:space="preserve">
+    <value>手机的 USB 调试连接（ADB）仍被占用。请退出正在连接手机的调试或投屏软件，或在手机“开发者选项”中关闭“USB 调试”，然后再次弹出。关闭后会断开调试连接；弹出成功前请保持数据线连接。</value>
+  </data>
+  <data name="Device_EjectDenied" xml:space="preserve">
+    <value>Windows 未能弹出设备。请关闭正在使用它的文件和程序后重试，暂时保持设备连接。</value>
+  </data>
+  <data name="Device_EjectShowBlockers" xml:space="preserve">
+    <value>查看文件占用</value>
+  </data>
+  <data name="Device_EjectRetry" xml:space="preserve">
+    <value>重试安全弹出</value>
+  </data>
+  <data name="Device_EjectReleaseOwn" xml:space="preserve">
+    <value>释放 FilesMate 的预览占用</value>
+  </data>
+  <data name="Device_EjectNoFileLocks" xml:space="preserve">
+    <value>未发现占用此磁盘文件的程序。驱动、系统服务或设备接口仍可能在使用它；请保持连接，关闭相关程序后重试。</value>
+  </data>
+  <data name="Device_EjectPreparing" xml:space="preserve">
+    <value>正在准备弹出，释放已打开的设备文件夹和预览…</value>
+  </data>
+  <data name="Device_EjectRemoving" xml:space="preserve">
+    <value>正在等待 Windows 安全弹出设备。结果显示前请保持连接。</value>
+  </data>
+  <data name="Device_EjectSuccess" xml:space="preserve">
+    <value>设备已安全弹出，现在可以拔出。</value>
+  </data>
+  <data name="Device_EjectUnavailable" xml:space="preserve">
+    <value>设备已断开，或不支持在此安全弹出。</value>
+  </data>
+  <data name="Device_Empty" xml:space="preserve">
+    <value>暂无可显示的项目。如果缺少文件，请解锁设备并允许此电脑访问，然后刷新。</value>
+  </data>
+  <data name="Device_InvalidClipboard" xml:space="preserve">
+    <value>无法粘贴这些项目。请在 FilesMate 的设备标签页复制文件后重试。</value>
+  </data>
+  <data name="Device_Loading" xml:space="preserve">
+    <value>正在读取设备…</value>
+  </data>
+  <data name="Device_OpenFailed" xml:space="preserve">
+    <value>无法打开设备中的文件，请检查连接后重试。</value>
+  </data>
+  <data name="Device_PreviewHint" xml:space="preserve">
+    <value>此设备项目暂时没有可用的预览，可双击通过 Windows 打开。</value>
+  </data>
+  <data name="Device_ReadOnly" xml:space="preserve">
+    <value>设备 · 只读</value>
+  </data>
+  <data name="Device_ReadOnlyHint" xml:space="preserve">
+    <value>此设备目录支持复制文件到电脑，不接受写入。选中文件并复制，再到电脑中的目标文件夹粘贴。</value>
+  </data>
+  <data name="Device_SearchCurrentFolder" xml:space="preserve">
+    <value>当前设备文件夹：{0} 个结果</value>
+  </data>
+  <data name="Device_TransferFailed" xml:space="preserve">
+    <value>无法复制文件，请检查设备连接、访问权限和可用空间后重试。</value>
+  </data>
+  <data name="Device_Unavailable" xml:space="preserve">
+    <value>设备已断开、被锁定或暂时无响应。请重新连接或解锁后刷新。</value>
+  </data>
+  <data name="Device_WritableHint" xml:space="preserve">
+    <value>可粘贴或拖入文件。传输完成前请保持设备连接。</value>
   </data>
   <data name="DiagnosticsCopied" xml:space="preserve">
     <value>诊断信息已复制</value>
@@ -1512,6 +1617,18 @@
   <data name="PreviewInfoTab" xml:space="preserve">
     <value>信息</value>
   </data>
+  <data name="Preview_FollowingSelection" xml:space="preserve"><value>跟随选择</value></data>
+  <data name="Preview_PinnedStatus" xml:space="preserve"><value>本窗口已固定：{0}</value></data>
+  <data name="TitleBar_Restore" xml:space="preserve"><value>还原</value></data>
+  <data name="TitleBar_Move" xml:space="preserve"><value>移动</value></data>
+  <data name="TitleBar_Size" xml:space="preserve"><value>调整大小</value></data>
+  <data name="TitleBar_Minimize" xml:space="preserve"><value>最小化</value></data>
+  <data name="TitleBar_Maximize" xml:space="preserve"><value>最大化</value></data>
+  <data name="TitleBar_Close" xml:space="preserve"><value>关闭窗口</value></data>
+  <data name="Preview_Pin" xml:space="preserve"><value>固定</value></data>
+  <data name="Preview_Unpin" xml:space="preserve"><value>取消固定</value></data>
+  <data name="Preview_RefreshPinned" xml:space="preserve"><value>刷新</value></data>
+  <data name="Preview_PinnedUnavailable" xml:space="preserve"><value>固定的项目已无法访问。请刷新或取消固定。</value></data>
   <data name="PreviewMediaError" xml:space="preserve">
     <value>此格式暂时无法在这里播放，请打开文件播放。</value>
   </data>
@@ -1885,7 +2002,7 @@
     <value>调整顺序</value>
   </data>
   <data name="ResultOrder_Hint" xml:space="preserve">
-    <value>靠前的类型优先显示，与文件管理器同步</value>
+    <value>拖动调整结果类型优先级；在“独立程序”一行可开关 EXE/COM 搜索。设置与文件管理器同步。</value>
   </data>
   <data name="ResultOrder_SharedHint" xml:space="preserve">
     <value>与文件管理器共用排序设置</value>
@@ -2017,7 +2134,7 @@
     <value>代码</value>
   </data>
   <data name="SearchRankDescription" xml:space="preserve">
-    <value>拖动调整类型优先级。同一类型按名称从 A 到 Z 排列。</value>
+    <value>应用来自 Windows 应用列表和开始菜单；独立程序指索引中的 EXE/COM；其他快捷方式指向文件或网页。拖动可调整类型优先级。</value>
   </data>
   <data name="SearchRankDocument" xml:space="preserve">
     <value>文档</value>
@@ -2032,13 +2149,22 @@
     <value>其他文件</value>
   </data>
   <data name="SearchRankProgram" xml:space="preserve">
-    <value>程序</value>
+    <value>应用</value>
+  </data>
+  <data name="SearchRankExecutable" xml:space="preserve">
+    <value>独立 EXE/COM 程序</value>
+  </data>
+  <data name="Search_StandaloneExecutables" xml:space="preserve">
+    <value>显示独立程序</value>
+  </data>
+  <data name="Search_StandaloneExecutablesHint" xml:space="preserve">
+    <value>在索引中单独搜索 EXE 和 COM 文件；关闭后保留索引。</value>
   </data>
   <data name="SearchRankSection" xml:space="preserve">
     <value>结果排序</value>
   </data>
   <data name="SearchRankShortcut" xml:space="preserve">
-    <value>快捷方式</value>
+    <value>其他快捷方式</value>
   </data>
   <data name="SearchRankVideo" xml:space="preserve">
     <value>视频</value>
@@ -2590,7 +2716,7 @@ Ctrl+T 新标签　　Ctrl+W 关闭标签　　Ctrl+L 路径　　Ctrl+F 筛选�
     <value>编辑云盘入口</value>
   </data>
   <data name="Sidebar_Eject" xml:space="preserve">
-    <value>弹出</value>
+    <value>安全弹出</value>
   </data>
   <data name="Sidebar_Expand" xml:space="preserve">
     <value>展开导航栏</value>

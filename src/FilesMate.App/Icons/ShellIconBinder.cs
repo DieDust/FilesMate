@@ -148,6 +148,13 @@ internal static class ShellIconBinder
 
     public static void BindPath(Image image, FontIcon fallback, string path, bool directory, int pixelSize)
     {
+        if (FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out var device))
+        {
+            var entry = new FileEntryCore(0, device.Name, 0, 0, 0,
+                directory ? FileAttributes.Directory : FileAttributes.Normal, directory ? EntryKind.Directory : EntryKind.File);
+            Bind(image, fallback, entry, path, pixelSize);
+            return;
+        }
         var rasterPixels = RasterizePixelSize(image, pixelSize);
         BindCore(
             image,

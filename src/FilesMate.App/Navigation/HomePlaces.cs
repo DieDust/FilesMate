@@ -75,13 +75,9 @@ public static class HomePlaces
         {
             foreach (var drive in DriveInfo.GetDrives())
             {
-                if (!drive.IsReady)
-                {
-                    continue;
-                }
-
                 try
                 {
+                    if (!drive.IsReady) continue;
                     var letter = drive.Name.TrimEnd('\\');
                     items.Add(new HomeDriveItem(
                         WindowsNavigationSource.DriveLabel(drive),

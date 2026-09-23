@@ -42,7 +42,10 @@ public sealed class UpdateInstallPolicyTests
             var separator = line.IndexOf('=');
             if (separator > 0) directives.Add(line[..separator].Trim(), line[(separator + 1)..].Trim());
         }
-        Assert.Equal("no", directives["CloseApplications"], ignoreCase: true);
+        // Inno Setup filters the files it checks for locks, not the names of
+        // processes it may close. Only our two executables should be checked.
+        Assert.Equal("yes", directives["CloseApplications"], ignoreCase: true);
+        Assert.Equal("FilesMate.App.exe,FilesMate.SearchHost.exe", directives["CloseApplicationsFilter"]);
         Assert.Equal("no", directives["RestartApplications"], ignoreCase: true);
     }
 }

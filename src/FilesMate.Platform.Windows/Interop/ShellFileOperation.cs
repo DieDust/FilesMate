@@ -10,6 +10,12 @@ internal static class ShellFileOperation
     [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = false)]
     internal static extern void SHCreateItemFromParsingName(string path, nint bindContext, in Guid iid, out IShellItem item);
 
+    [DllImport("shell32.dll", PreserveSig = false)]
+    internal static extern void SHGetIDListFromObject([MarshalAs(UnmanagedType.IUnknown)] object item, out nint pidl);
+
+    [DllImport("shell32.dll", PreserveSig = false)]
+    internal static extern void SHCreateItemFromIDList(nint pidl, in Guid iid, out IShellItem item);
+
     [ComImport, Guid("43826D1E-E718-42EE-BC55-A1E261C37BFE"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     internal interface IShellItem
     {
@@ -36,7 +42,7 @@ internal static class ShellFileOperation
         public void RenameItems(nint items, [MarshalAs(UnmanagedType.LPWStr)] string name);
         public void MoveItem(IShellItem item, IShellItem destination, [MarshalAs(UnmanagedType.LPWStr)] string name, IProgressSink sink);
         public void MoveItems(nint items, IShellItem destination);
-        public void CopyItem(IShellItem item, IShellItem destination, [MarshalAs(UnmanagedType.LPWStr)] string name, IProgressSink sink);
+        public void CopyItem(IShellItem item, IShellItem destination, [MarshalAs(UnmanagedType.LPWStr)] string? name, IProgressSink? sink);
         public void CopyItems(nint items, IShellItem destination);
         public void DeleteItem(IShellItem item, IProgressSink sink);
         public void DeleteItems(nint items);

@@ -70,7 +70,8 @@ public partial class PaletteWindow
 
     private void CheckPreviewFocus()
     {
-        if (_opening || _launching || _dragging || _contextOpen || _previewResize is not null || !IsVisible) return;
+        if (_opening || _launching || _dragging || _contextOpen || _previewResize is not null || !IsVisible
+            || RankingPanel.IsVisible && Environment.TickCount64 < _rankFocusGraceUntil) return;
         var foreground = Native.GetForegroundWindow();
         if (foreground == IntPtr.Zero) return;
         if (foreground == new WindowInteropHelper(this).Handle) return;

@@ -1,0 +1,5 @@
+{
+  "zh-CN": "安装向导新增简体中文，包含语言选择、安装步骤、安装前说明、桌面快捷方式和启动选项。延续 1.1.102 的固定预览修复。",
+  "en-US": "Added Simplified Chinese to the installer language selector and setup wizard, including the pre-installation information and app-specific options. Includes the pinned-preview fix from 1.1.102.",
+  "ja-JP": "インストーラーの言語選択とセットアップ画面に簡体字中国語を追加しました。インストール前の説明とアプリ固有の項目にも対応します。1.1.102 の固定プレビュー修正も含まれます。"
+}

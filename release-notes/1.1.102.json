@@ -1,0 +1,5 @@
+{
+  "zh-CN": "修复固定预览在关闭面板时被取消的问题。关闭面板会释放预览内容和文件监听；再次打开后恢复固定文件。切换标签页时，关闭状态也会保持。",
+  "en-US": "Fixed pinned previews being cleared when the preview pane closes. Closing the pane releases preview content and its file watcher; reopening it restores the pinned file. The hidden state also persists across tabs.",
+  "ja-JP": "プレビュー欄を閉じると固定が解除される問題を修正しました。閉じるとプレビュー内容とファイル監視を解放し、再度開くと固定したファイルを表示します。非表示の状態はタブを切り替えても維持されます。"
+}

@@ -72,14 +72,86 @@ public sealed class LauncherSearchTests
             Assert.Equal(all.Take(40), first.Hits);
             var apps = await provider.SearchAsync("match", default, SearchFilter.Apps);
             Assert.Equal(13, apps.Hits.Count);
-            Assert.All(apps.Hits, hit => Assert.NotNull(hit.Application));
-            Assert.Empty((await provider.SearchAsync("helper", default, SearchFilter.Apps)).Hits);
+            Assert.Equal(13, apps.Hits.Count(hit => hit.Application is not null));
+            Assert.Equal(@"C:\build\match-helper.exe", Assert.Single((await provider.SearchAsync("helper", default, SearchFilter.Executables)).Hits).Path);
+            Assert.Equal(2, (await provider.SearchAsync("match", default, SearchFilter.Executables)).Hits.Count);
         }
         finally { Directory.Delete(root, true); }
     }
 
     [Fact]
-    public void Ordinary_executables_have_file_priority() => Assert.Equal(SearchHitKind.Other, ApplicationCatalog.FileKind(@"C:\build\FilesMate.App.exe", false));
+    public void Indexed_executables_have_their_own_sortable_kind()
+    {
+        var rank = ApplicationCatalog.FileRank(SearchHitKinds.DefaultOrder, "history");
+        Assert.Equal(SearchHitKind.Executable, ApplicationCatalog.FileKind(@"C:\build\history.exe", false));
+        Assert.True(rank(@"C:\build\history.exe", false) < rank(@"C:\docs\history.pdf", false));
+    }
+
+    [Fact]
+    public async Task Registered_shortcut_precedes_more_relevant_indexed_executable()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "FilesMate-app-order-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            using (var connection = new SqliteConnection($"Data Source={Path.Combine(root, "search-index.db")};Pooling=False"))
+            {
+                connection.Open();
+                using var command = connection.CreateCommand();
+                command.CommandText = "CREATE TABLE file_name(name TEXT,path TEXT,is_dir TEXT);";
+                command.ExecuteNonQuery();
+                command.CommandText = "INSERT INTO file_name VALUES ('history.exe','C:\\portable\\history.exe','0');";
+                command.ExecuteNonQuery();
+            }
+
+            // The shortcut matches only through its target name. A raw executable
+            // matches directly, but it must stay below a registered application.
+            var provider = new LauncherSearchProvider(new Catalog([
+                new("study", "Study Hub", @"C:\Start Menu\Study.lnk", @"C:\apps\world-history-tool.exe")]), root);
+            var hits = (await provider.SearchAsync("history", default)).Hits;
+            Assert.Equal(2, hits.Count);
+            Assert.NotNull(hits[0].Application);
+            Assert.Equal(@"C:\portable\history.exe", hits[1].Path);
+            Assert.Single((await provider.SearchAsync("history", default, SearchFilter.Apps)).Hits);
+            Assert.Equal(@"C:\portable\history.exe", Assert.Single((await provider.SearchAsync("history", default, SearchFilter.Executables)).Hits).Path);
+
+            SearchRankingConfiguration.Save([SearchHitKind.Executable, SearchHitKind.Program], root);
+            Assert.Equal(@"C:\portable\history.exe", (await provider.SearchAsync("history", default)).Hits[0].Path);
+
+            SearchExecutableConfiguration.Save(false, root);
+            Assert.False(SearchExecutableConfiguration.Load(root));
+            Assert.Empty((await provider.SearchAsync("history", default, SearchFilter.Executables)).Hits);
+            Assert.Single((await provider.SearchAsync("history", default)).Hits);
+            Assert.Single((await provider.SearchAsync("history", default, SearchFilter.Apps)).Hits);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public async Task Standalone_executable_is_searchable_in_its_own_category_without_a_start_menu_entry()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "FilesMate-standalone-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            using (var connection = new SqliteConnection($"Data Source={Path.Combine(root, "search-index.db")};Pooling=False"))
+            {
+                connection.Open();
+                using var command = connection.CreateCommand();
+                command.CommandText = "CREATE TABLE file_name(name TEXT,path TEXT,is_dir TEXT);";
+                command.ExecuteNonQuery();
+                command.CommandText = "INSERT INTO file_name VALUES ('313历史学习室.exe','D:\\考研历史\\313历史学习室.exe','0')," +
+                    "('历史考研.md','D:\\历史考研.md','0'),('历史资料','D:\\历史资料','1');";
+                command.ExecuteNonQuery();
+            }
+            var provider = new LauncherSearchProvider(new Catalog([]), root);
+            Assert.Empty((await provider.SearchAsync("历史", default, SearchFilter.Apps)).Hits);
+            var executables = await provider.SearchAsync("历史", default, SearchFilter.Executables);
+            Assert.Equal(@"D:\考研历史\313历史学习室.exe", Assert.Single(executables.Hits).Path);
+            Assert.Equal("313历史学习室.exe", (await provider.SearchAsync("历史", default)).Hits[0].Name);
+        }
+        finally { Directory.Delete(root, true); }
+    }
 
     [Fact]
     public async Task Software_name_matches_precede_apps_using_the_same_host_executable()

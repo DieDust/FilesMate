@@ -86,6 +86,34 @@ public sealed partial class PreviewPane : UserControl
 
     public bool IsPreviewVisible { get; private set; }
     public event EventHandler? CloseRequested;
+    public event EventHandler? PinRequested;
+    public event EventHandler? RefreshPinRequested;
+
+    public void SetPinState(bool enabled, string? pinnedPath)
+    {
+        PinHeader.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
+        if (!enabled) return;
+
+        var pinned = !string.IsNullOrWhiteSpace(pinnedPath);
+        PinStatus.Text = pinned
+            ? StringTable.Format("Preview_PinnedStatus", Path.GetFileName(pinnedPath))
+            : StringTable.Get("Preview_FollowingSelection");
+        ToolTipService.SetToolTip(PinStatus, pinned ? pinnedPath : null);
+        PinButton.Content = StringTable.Get(pinned ? "Preview_Unpin" : "Preview_Pin");
+        PinButton.IsEnabled = pinned || _hasContent || LoadingRing.IsActive;
+        RefreshPinButton.Content = StringTable.Get("Preview_RefreshPinned");
+        RefreshPinButton.Visibility = pinned ? Visibility.Visible : Visibility.Collapsed;
+        if (!pinned) EmptyText.Text = StringTable.Get("PreviewEmpty");
+    }
+
+    public void ShowPinnedUnavailable()
+    {
+        CancelAndClear();
+        EmptyText.Text = StringTable.Get("Preview_PinnedUnavailable");
+    }
+
+    private void PinButton_Click(object sender, RoutedEventArgs e) => PinRequested?.Invoke(this, EventArgs.Empty);
+    private void RefreshPinButton_Click(object sender, RoutedEventArgs e) => RefreshPinRequested?.Invoke(this, EventArgs.Empty);
 
     public void UseAsCardContent()
     {
@@ -122,6 +150,7 @@ public sealed partial class PreviewPane : UserControl
         var token = _loadCts.Token;
         _hasContent = false;
         ShowLoading();
+        if (PinHeader.Visibility == Visibility.Visible) PinButton.IsEnabled = true;
         try
         {
             if (NativeOfficePreview.CanHandle(path))
@@ -140,6 +169,7 @@ public sealed partial class PreviewPane : UserControl
             if (token.IsCancellationRequested) return;
             _hasContent = _pdfContent is not null || TextHost.Visibility == Visibility.Visible || ImageContent.Visibility == Visibility.Visible || MediaPlayButton.Visibility == Visibility.Visible || MediaContent.Visibility == Visibility.Visible || DetailsText.Visibility == Visibility.Visible;
             ApplyPaneMode();
+            if (PinHeader.Visibility == Visibility.Visible) PinButton.IsEnabled = true;
         }
         catch (OperationCanceledException)
         {
@@ -163,6 +193,7 @@ public sealed partial class PreviewPane : UserControl
         _visibleTextLines.Clear();
         _textLines = [];
         DetailsText.Text = string.Empty;
+        _hasContent = false;
         ItemName.Text = string.Empty;
         ItemType.Text = string.Empty;
         ShellIconBinder.Clear(ItemIcon, ItemGlyph);
@@ -178,6 +209,8 @@ public sealed partial class PreviewPane : UserControl
         ImageContent.Visibility = Visibility.Collapsed;
         MediaContent.Visibility = Visibility.Collapsed;
         DetailsText.Visibility = Visibility.Collapsed;
+        if (PinHeader.Visibility == Visibility.Visible && RefreshPinButton.Visibility != Visibility.Visible)
+            PinButton.IsEnabled = false;
     }
 
     private void ShowLoading()
@@ -218,6 +251,18 @@ public sealed partial class PreviewPane : UserControl
         DetailsText.Visibility = Visibility.Collapsed;
         switch (result)
         {
+            case PreviewResult.Device device:
+                BindProperties(new PreviewResult.Properties(device.Path, device.Entry.Size ?? 0,
+                    device.Entry.Modified?.ToUniversalTime(), device.Entry.IsFolder ? System.IO.FileAttributes.Directory : System.IO.FileAttributes.Normal,
+                    IsDirectory: device.Entry.IsFolder));
+                if (device.Entry.Size is null) SizeValue.Text = "—";
+                if (device.Thumbnail is { } thumbnail)
+                {
+                    ImageContent.Source = ShellIconBinder.ToBitmap(thumbnail);
+                    ImageContent.Visibility = Visibility.Visible;
+                }
+                else ShowDetails(StringTable.Get("Device_PreviewHint"));
+                break;
             case PreviewResult.Text text:
                 if (MarkdownPreview.CanHandle(text.Path))
                 {

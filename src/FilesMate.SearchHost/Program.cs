@@ -93,6 +93,13 @@ public static class Program
         var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
         using var host = new SearchHost(app, profile, manager);
 #if FILESMATE_UI_TEST
+        if (Environment.GetEnvironmentVariable("FILESMATE_RANKING_SMOKE") == "1")
+        {
+            app.Dispatcher.BeginInvoke(new Action(async () => { await host.RunRankingSmokeAsync(); app.Shutdown(); }));
+            app.Run();
+            mutex.ReleaseMutex();
+            return;
+        }
         if (Environment.GetEnvironmentVariable("FILESMATE_ICON_SMOKE") == "1")
         {
             app.Dispatcher.BeginInvoke(new Action(async () => { await IconStyleSmoke.RunAsync(profile); app.Shutdown(); }));

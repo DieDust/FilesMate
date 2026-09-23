@@ -23,10 +23,10 @@ public sealed class AlphabetNavigationPolicyTests
     }
 
     [Theory]
-    [InlineData(400, 28, 1)]
-    [InlineData(399, 28, 2)]
+    [InlineData(624, 28, 1)]
+    [InlineData(623, 28, 2)]
     [InlineData(288, 28, 2)]
-    [InlineData(520, 28, 1)]
+    [InlineData(520, 28, 2)]
     public void Layout_uses_one_column_only_when_every_letter_remains_readable(double height, int labels, int expected)
     {
         Assert.Equal(expected, AlphabetNavigationPolicy.ColumnCount(height, labels));

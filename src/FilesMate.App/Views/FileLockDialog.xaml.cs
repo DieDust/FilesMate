@@ -111,6 +111,8 @@ public sealed partial class FileLockDialog : UserControl
     private IReadOnlyList<FileLockProcess> _processes = [];
     private IReadOnlyList<FileLockNode> _nodes = [];
     private bool _busy;
+    private bool _deviceEjectMode;
+    private Func<Task>? _retryEjectAsync;
 
     public FileLockDialog()
     {
@@ -152,6 +154,20 @@ public sealed partial class FileLockDialog : UserControl
 
     public Func<Task>? ReleasePreviewAsync { get; set; }
 
+    public void ConfigureForDeviceEject(Func<Task> retryEjectAsync)
+    {
+        ArgumentNullException.ThrowIfNull(retryEjectAsync);
+        _deviceEjectMode = true;
+        _retryEjectAsync = retryEjectAsync;
+        BrowseButton.Visibility = Visibility.Collapsed;
+        DeleteButton.Visibility = Visibility.Collapsed;
+        OtherButton.Visibility = Visibility.Collapsed;
+        UnlockLabel.Text = StringTable.Get("Device_EjectReleaseOwn");
+        RetryEjectButton.Content = StringTable.Get("Device_EjectRetry");
+        RetryEjectButton.Visibility = Visibility.Visible;
+        SyncButtons();
+    }
+
     public IReadOnlyList<string> TargetsToDelete()
     {
         var files = SelectedNodes()
@@ -182,6 +198,7 @@ public sealed partial class FileLockDialog : UserControl
 
     private void PathText_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        if (_deviceEjectMode) return;
         BeginPathEdit();
         e.Handled = true;
     }
@@ -244,7 +261,7 @@ public sealed partial class FileLockDialog : UserControl
 
     private async void Browse_Click(object sender, RoutedEventArgs e)
     {
-        if (_busy)
+        if (_busy || _deviceEjectMode)
         {
             return;
         }
@@ -285,9 +302,19 @@ public sealed partial class FileLockDialog : UserControl
         }
     }
 
+    private async void RetryEject_Click(object sender, RoutedEventArgs e)
+    {
+        if (_busy || _retryEjectAsync is null) return;
+        _busy = true;
+        SyncButtons();
+        try { await _retryEjectAsync().ConfigureAwait(true); }
+        catch (Exception error) { ShowError(error.Message); }
+        finally { _busy = false; SyncButtons(); }
+    }
+
     private void Delete_Click(object sender, RoutedEventArgs e)
     {
-        if (_busy || TargetsToDelete().Count == 0)
+        if (_deviceEjectMode || _busy || TargetsToDelete().Count == 0)
         {
             return;
         }
@@ -297,6 +324,7 @@ public sealed partial class FileLockDialog : UserControl
 
     private async void EndTask_Click(object sender, RoutedEventArgs e)
     {
+        if (_deviceEjectMode) return;
         var processes = SelectedNodes()
             .Select(node => node.Process)
             .Where(process => process.CanTerminate)
@@ -372,7 +400,7 @@ public sealed partial class FileLockDialog : UserControl
         LoadingRing.Visibility = Visibility.Collapsed;
         if (processes.Count == 0)
         {
-            EmptyText.Text = StringTable.Get("Lock_Empty");
+            EmptyText.Text = StringTable.Get(_deviceEjectMode ? "Device_EjectNoFileLocks" : "Lock_Empty");
             EmptyText.Visibility = Visibility.Visible;
             BindNodes([]);
             SyncButtons();
@@ -421,9 +449,10 @@ public sealed partial class FileLockDialog : UserControl
     {
         var selected = SelectedNodes();
         UnlockButton.IsEnabled = !_busy && ReleasePreviewAsync is not null;
-        DeleteButton.IsEnabled = !_busy && TargetsToDelete().Count > 0;
-        OtherButton.IsEnabled = !_busy && selected.Any(node => node.Process.CanTerminate);
+        DeleteButton.IsEnabled = !_deviceEjectMode && !_busy && TargetsToDelete().Count > 0;
+        OtherButton.IsEnabled = !_deviceEjectMode && !_busy && selected.Any(node => node.Process.CanTerminate);
         EndTaskItem.IsEnabled = OtherButton.IsEnabled;
+        RetryEjectButton.IsEnabled = !_busy && _retryEjectAsync is not null;
     }
 
     private IReadOnlyList<FileLockNode> SelectedNodes() =>

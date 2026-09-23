@@ -141,6 +141,13 @@
                 </StackPanel>
             </Button>
             <Button
+                x:Name="RetryEjectButton"
+                MinWidth="0"
+                Padding="12,6"
+                Click="RetryEject_Click"
+                Style="{StaticResource GlassButtonStyle}"
+                Visibility="Collapsed" />
+            <Button
                 x:Name="OtherButton"
                 MinWidth="0"
                 Padding="12,6"

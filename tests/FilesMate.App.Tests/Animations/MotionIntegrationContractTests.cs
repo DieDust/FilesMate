@@ -27,6 +27,8 @@ public sealed class MotionIntegrationContractTests
             ["AppearancePage.xaml.cs"] = [250],
             // Coalesce window placement writes after movement settles.
             ["MainWindow.xaml.cs"] = [400],
+            // Coalesce arrival/removal bursts from Windows device notifications.
+            ["MainWindow.Devices.cs"] = [700],
             // External Shell selection RPC has a bounded UI-dispatch wait;
             // it is not an animation duration.
             ["NavigatorPage.Shell.cs"] = [500],

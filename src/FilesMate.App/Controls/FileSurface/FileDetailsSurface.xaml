@@ -22,6 +22,8 @@
     <UserControl.Resources>
         <Style x:Key="AlphabetButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="MinWidth" Value="0" />
@@ -47,8 +49,10 @@
                                     </VisualState.Setters></VisualState>
                                 </VisualStateGroup>
                             </VisualStateManager.VisualStateGroups>
-                            <Border Background="{TemplateBinding Background}" CornerRadius="7" />
-                            <Border x:Name="HoverFill" Background="{ThemeResource FilesMate.Text.PrimaryBrush}" CornerRadius="7" Opacity="0" />
+                            <Border Margin="{TemplateBinding Padding}" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="7" />
+                            <Border x:Name="HoverFill" Margin="{TemplateBinding Padding}" Background="{ThemeResource FilesMate.Text.PrimaryBrush}"
+                                    CornerRadius="7" Opacity="0" />
                             <ContentPresenter x:Name="Label" Content="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"
                                               FontSize="{TemplateBinding FontSize}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Grid>
@@ -273,7 +277,7 @@
             Opacity="0.12"
             IsHitTestVisible="False"
             Visibility="Collapsed" />
-        <Grid x:Name="AlphabetOverlay" Grid.Row="1" Width="96" Background="Transparent" IsTabStop="True" HorizontalAlignment="Right" Visibility="Collapsed">
+        <Grid x:Name="AlphabetOverlay" Grid.Row="1" Width="220" IsTabStop="True" HorizontalAlignment="Right" Visibility="Collapsed">
             <Border x:Name="AlphabetTrack" Width="24" HorizontalAlignment="Right" Background="Transparent" CornerRadius="8">
                 <Grid Margin="0,8">
                     <Border x:Name="AlphabetRange" Width="12" VerticalAlignment="Top" CornerRadius="6"
@@ -285,6 +289,11 @@
             <Border x:Name="AlphabetLetters" Width="34" Margin="0,4,28,4" HorizontalAlignment="Right" CornerRadius="10"
                     Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource FilesMate.Divider.Brush}" BorderThickness="1" Visibility="Collapsed">
                 <Grid x:Name="AlphabetList" Margin="2" />
+            </Border>
+            <Border x:Name="AlphabetChoices" Width="120" Margin="0,0,62,0" HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Padding="4" CornerRadius="10" Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource FilesMate.Divider.Brush}" BorderThickness="1" Visibility="Collapsed">
+                <StackPanel x:Name="AlphabetChoiceList" />
             </Border>
             <Border x:Name="AlphabetBubble" MinWidth="48" Height="44" Padding="10,0" Margin="-52,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
                     CornerRadius="12" Background="{ThemeResource FilesMate.Selection.AccentBrush}" IsHitTestVisible="False" Visibility="Collapsed">

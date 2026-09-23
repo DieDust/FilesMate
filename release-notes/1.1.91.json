@@ -1,0 +1,5 @@
+{
+  "zh-CN": "修复新标签页打开子文件夹后无法返回来源目录的问题。便携设备使用统一的文件列表、地址栏、排序、多选、复制粘贴和预览界面，按目录的实际权限显示只读状态。补充外接设备的安全弹出入口，支持被 Windows 识别为固定磁盘的 USB 硬盘；设备被占用时说明失败，不强制移除。修复设备列表与缩略图并发读取时的对象释放问题。",
+  "en-US": "Fixed back navigation after opening a child folder in a new tab. Portable devices now use the shared file list, address bar, sorting, selection, copy/paste and preview UI, with read-only status based on each folder's actual permissions. Added safe removal for external devices, including USB hard drives reported as fixed disks. Failed removal reports that the device remains connected. Fixed a shared-object lifetime issue during concurrent device browsing and thumbnail loading.",
+  "ja-JP": "子フォルダーを新しいタブで開いた後、元のフォルダーに戻れない問題を修正しました。ポータブルデバイスでも共通のファイル一覧、アドレスバー、並べ替え、複数選択、コピー・貼り付け、プレビューを利用できます。読み取り専用の表示は各フォルダーの実際の権限に従います。固定ディスクとして認識される USB ハードディスクを含め、外部デバイスの安全な取り外しに対応しました。取り外しに失敗した場合は接続を維持して通知します。デバイスの閲覧とサムネイル読み込みを同時に行う際のオブジェクト解放の問題も修正しました。"
+}

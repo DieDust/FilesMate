@@ -12,6 +12,7 @@ public enum SearchHitKind
     Archive,
     Code,
     Other,
+    Executable,
 }
 
 public static class SearchHitKinds
@@ -25,26 +26,40 @@ public static class SearchHitKinds
         SearchHitKind[] previous = [SearchHitKind.Shortcut, SearchHitKind.Program, SearchHitKind.Document,
             SearchHitKind.Image, SearchHitKind.Video, SearchHitKind.Audio, SearchHitKind.Archive,
             SearchHitKind.Code, SearchHitKind.Other, SearchHitKind.Folder];
-        return saved is not null && (version < 2 && saved.SequenceEqual(legacy) || version < 3 && saved.SequenceEqual(previous))
-            ? DefaultOrder : SanitizeOrder(saved);
+        SearchHitKind[] lastDefault = [SearchHitKind.Program, SearchHitKind.Executable, SearchHitKind.Document,
+            SearchHitKind.Image, SearchHitKind.Video, SearchHitKind.Audio, SearchHitKind.Archive,
+            SearchHitKind.Code, SearchHitKind.Other, SearchHitKind.Shortcut, SearchHitKind.Folder];
+        if (saved is not null && (version < 2 && saved.SequenceEqual(legacy) || version < 3 && saved.SequenceEqual(previous)))
+            return DefaultOrder;
+        if (saved is not null && version < 5 && saved.SequenceEqual(lastDefault))
+            return DefaultOrder;
+        if (saved is not null && !saved.Contains(SearchHitKind.Executable))
+        {
+            var migrated = SanitizeOrder(saved).Where(kind => kind != SearchHitKind.Executable).ToList();
+            migrated.Insert(migrated.IndexOf(SearchHitKind.Program) + 1, SearchHitKind.Executable);
+            return migrated;
+        }
+        return SanitizeOrder(saved);
     }
     public static IReadOnlyList<SearchHitKind> DefaultOrder { get; } =
     [
         SearchHitKind.Program,
+        SearchHitKind.Executable,
+        SearchHitKind.Folder,
         SearchHitKind.Document,
         SearchHitKind.Image,
         SearchHitKind.Video,
         SearchHitKind.Audio,
         SearchHitKind.Archive,
         SearchHitKind.Code,
-        SearchHitKind.Other,
         SearchHitKind.Shortcut,
-        SearchHitKind.Folder,
+        SearchHitKind.Other,
     ];
 
     public static string TitleKey(SearchHitKind kind) => kind switch
     {
         SearchHitKind.Program => "SearchRankProgram",
+        SearchHitKind.Executable => "SearchRankExecutable",
         SearchHitKind.Shortcut => "SearchRankShortcut",
         SearchHitKind.Folder => "SearchRankFolder",
         SearchHitKind.Document => "SearchRankDocument",

@@ -17,7 +17,8 @@ internal static class FolderPreviewBinder
     public static void Bind(Grid host, Image cover, string? folderPath, int pixelSize)
     {
         Clear(host, cover);
-        if (string.IsNullOrWhiteSpace(folderPath) || pixelSize <= 0)
+        if (string.IsNullOrWhiteSpace(folderPath) || pixelSize <= 0
+            || FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(folderPath, out _))
             return;
 
         var state = new BindingState();

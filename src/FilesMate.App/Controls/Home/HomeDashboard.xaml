@@ -20,7 +20,7 @@
                 Padding="12,10"
                 CornerRadius="{StaticResource FilesMate.Corner.Card}"
                 Style="{StaticResource HomePlaceButtonStyle}"
-                Tag="{x:Bind Path}"
+                Tag="{x:Bind}"
                 AutomationProperties.Name="{x:Bind Label}">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <FontIcon
@@ -47,7 +47,7 @@
                 Padding="12,6"
                 CornerRadius="18"
                 Style="{StaticResource HomePlaceButtonStyle}"
-                Tag="{x:Bind Path}"
+                Tag="{x:Bind}"
                 AutomationProperties.Name="{x:Bind Label}">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <FontIcon
@@ -141,7 +141,7 @@
                             Padding="14,12"
                             CornerRadius="{StaticResource FilesMate.Corner.Card}"
                             Style="{StaticResource HomePlaceButtonStyle}"
-                            Tag="{x:Bind Path}"
+                            Tag="{x:Bind}"
                             AutomationProperties.Name="{x:Bind Label}">
                             <Grid ColumnSpacing="12">
                                 <Grid.ColumnDefinitions>
@@ -212,6 +212,9 @@
                     </DataTemplate>
                     </ItemsRepeater.ItemTemplate>
                     </ItemsRepeater>
+                <ItemsRepeater x:Name="DeviceHost" ItemTemplate="{StaticResource HomePlaceCard}">
+                    <ItemsRepeater.Layout><home:FillWrapLayout MinItemWidth="240" MinColumnSpacing="8" MinRowSpacing="8"/></ItemsRepeater.Layout>
+                </ItemsRepeater>
                 </StackPanel>
                 <StackPanel x:Name="CloudSection" Spacing="8">
                     <TextBlock

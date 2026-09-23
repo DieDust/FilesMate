@@ -19,6 +19,15 @@ public sealed partial class NavigatorPage
         }
         var path = vm.AddressText;
         var generation = vm.Navigation.CurrentGeneration;
+        if (vm.IsPortableDevice)
+        {
+            CancelFolderStatus(vm);
+            ChromeOf(vm).ZoomText = vm.IsLoading ? string.Empty : StringTable.Get(vm.CanReceiveFiles ? "Device_CanPaste" : "Device_ReadOnly");
+            Microsoft.UI.Xaml.Controls.ToolTipService.SetToolTip(ChromeOf(vm),
+                StringTable.Get(vm.CanReceiveFiles ? "Device_WritableHint" : "Device_ReadOnlyHint"));
+            return;
+        }
+        Microsoft.UI.Xaml.Controls.ToolTipService.SetToolTip(ChromeOf(vm), null);
         // A status label must not silently crawl an entire drive. Folder totals
         // follow the explicit preference; drive roots always use cheap capacity data.
         if (!App.ExplorerPreferences.ShowFolderSizes || DriveCapacity.IsVolumeRoot(path))

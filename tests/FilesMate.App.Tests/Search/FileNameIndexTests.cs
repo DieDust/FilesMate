@@ -6,6 +6,53 @@ namespace FilesMate.App.Tests.Search;
 public sealed class FileNameIndexTests
 {
     [Fact]
+    public async Task Rebuild_clears_only_empty_abandoned_wal_sidecars()
+    {
+        var root = Directory.CreateTempSubdirectory("FilesMate-stale-index-log-").FullName;
+        try
+        {
+            var file = Path.Combine(root, "sample.txt");
+            var database = Path.Combine(root, "index", "search-index.db");
+            File.WriteAllText(file, "test");
+            await using var index = new FileNameIndexService(database);
+            var settings = SearchIndexSettings.Sanitize([root], [], false, 1);
+            await index.RebuildAsync(settings);
+
+            File.WriteAllBytes(database + "-wal", []);
+            File.WriteAllBytes(database + "-shm", new byte[32768]);
+            await index.RebuildAsync(settings);
+            Assert.False(File.Exists(database + "-wal"));
+            Assert.False(File.Exists(database + "-shm"));
+            Assert.Contains(await index.SearchAsync("sample"), hit => hit.Name == "sample.txt");
+
+            File.WriteAllBytes(database + "-wal", [1, 2, 3]);
+            await Assert.ThrowsAsync<IOException>(() => index.RebuildAsync(settings));
+            Assert.Equal([1, 2, 3], File.ReadAllBytes(database + "-wal"));
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public async Task Standalone_executable_switch_updates_search_without_rebuilding_index()
+    {
+        var root = Directory.CreateTempSubdirectory("FilesMate-executable-switch-").FullName;
+        try
+        {
+            File.WriteAllText(Path.Combine(root, "history.exe"), "test");
+            File.WriteAllText(Path.Combine(root, "history.txt"), "test");
+            var enabled = true;
+            await using var index = new FileNameIndexService(Path.Combine(root, "index", "search-index.db"), () => enabled);
+            await index.RebuildAsync(SearchIndexSettings.Sanitize([root], [], false, 1));
+            Assert.Contains(await index.SearchAsync("history"), hit => hit.Name == "history.exe");
+            enabled = false;
+            var filtered = await index.SearchAsync("history");
+            Assert.Single(filtered);
+            Assert.Equal("history.txt", filtered[0].Name);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
     public void Path_rules_match_prefixes_and_folder_names()
     {
         string[] exclusions = [@"C:\Windows", "node_modules", "WinSxS"];
@@ -364,7 +411,7 @@ public sealed class FileNameIndexTests
         ];
 
         var sorted = SearchHitRanking.Sort(hits, SearchHitKinds.DefaultOrder, 80);
-        Assert.Equal(["alpha.exe", "zeta.exe", "notes.txt", "shot.png", "Pictures"], sorted.Select(hit => hit.Name));
+        Assert.Equal(["alpha.exe", "zeta.exe", "Pictures", "notes.txt", "shot.png"], sorted.Select(hit => hit.Name));
 
         var foldersFirst = SearchHitRanking.Sort(hits, [SearchHitKind.Folder, SearchHitKind.Program], 80);
         Assert.Equal("Pictures", foldersFirst[0].Name);
@@ -390,8 +437,8 @@ public sealed class FileNameIndexTests
     [Fact]
     public void Ranking_classifies_executables_and_common_types()
     {
-        Assert.Equal(SearchHitKind.Program, SearchHitRanking.Classify(@"C:\App.exe", false));
-        Assert.Equal(SearchHitKind.Program, SearchHitRanking.Classify(@"C:\tool.com", false));
+        Assert.Equal(SearchHitKind.Executable, SearchHitRanking.Classify(@"C:\App.exe", false));
+        Assert.Equal(SearchHitKind.Executable, SearchHitRanking.Classify(@"C:\tool.com", false));
         Assert.Equal(SearchHitKind.Shortcut, SearchHitRanking.Classify(@"C:\App.lnk", false));
         Assert.Equal(SearchHitKind.Folder, SearchHitRanking.Classify(@"C:\Docs", true));
         Assert.Equal(SearchHitKind.Document, SearchHitRanking.Classify(@"C:\a.txt", false));

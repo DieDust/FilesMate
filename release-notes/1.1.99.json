@@ -1,0 +1,5 @@
+{
+  "zh-CN": "统一搜索程序与文件管理器的结果排序界面：拖放和键盘调整顺序后自动保存，两端会同步显示排序和独立 EXE/COM 开关。修复设置页选中背景直角及 EXE 开关未能保存的问题。",
+  "en-US": "Unified result ranking in SearchHost and FilesMate. Reordering saves automatically, and both views refresh when ranking or standalone EXE/COM search changes. Fixed square selection highlighting and an executable toggle that failed to save.",
+  "ja-JP": "検索ホストとファイルマネージャーの結果順序設定を統一しました。並べ替えは自動保存され、順位と単独 EXE/COM の切り替えは両画面に反映されます。選択ハイライトの角と、切り替えが保存されない問題を修正しました。"
+}

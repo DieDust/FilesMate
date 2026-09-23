@@ -147,14 +147,15 @@ public static class WindowsNavigationSource
         {
             foreach (var drive in DriveInfo.GetDrives())
             {
-                if (!drive.IsReady && drive.DriveType is not DriveType.Network and not DriveType.Removable)
+                try
                 {
-                    continue;
+                    if (!drive.IsReady && drive.DriveType is not DriveType.Network and not DriveType.Removable)
+                        continue;
+                    var letter = drive.Name.TrimEnd('\\');
+                    var volume = DriveLabel(drive);
+                    Add(items, "drive:" + letter, $"{volume} ({letter})", DriveGlyph(drive.DriveType), drive.RootDirectory.FullName);
                 }
-
-                var letter = drive.Name.TrimEnd('\\');
-                var volume = DriveLabel(drive);
-                Add(items, "drive:" + letter, $"{volume} ({letter})", DriveGlyph(drive.DriveType), drive.RootDirectory.FullName);
+                catch (Exception error) when (error is IOException or UnauthorizedAccessException) { }
             }
         }
         catch (IOException)

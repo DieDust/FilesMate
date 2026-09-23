@@ -49,6 +49,34 @@ public sealed class EntryViewIndexTests
         Assert.Empty(EntryViewIndex.Build(store, EntrySort.Size, EntryFilter.None, NaturalStringComparer.Instance, 1).NameSections);
     }
 
+    [Fact]
+    public void Alphabet_can_reach_the_same_initial_in_folder_and_file_groups()
+    {
+        var store = Store(Dir("Alpha"), Dir("Beta"), File("Alpha.txt"), File("Beta.txt"));
+        var index = EntryViewIndex.Build(store, EntrySort.Name, EntryFilter.None, NaturalStringComparer.Instance, 1);
+        var navigation = new AlphabetNavigation(index.NameSections, index.Count);
+
+        Assert.Equal(["Alpha", "Beta", "Alpha.txt", "Beta.txt"], Names(store, index));
+        Assert.Equal(["A", "B", "A", "B"], index.NameSections.Select(section => section.Label));
+        Assert.True(navigation.HasBothKinds("A"));
+        Assert.Equal(0, navigation.Destination("A", row: 2, isDirectory: true));
+        Assert.Equal(2, navigation.Destination("A", row: 0, isDirectory: false));
+    }
+
+    [Fact]
+    public void Separate_latin_and_pinyin_folder_runs_are_one_kind()
+    {
+        var store = Store(Dir("Forest"), Dir("Gallery"), Dir("方便"));
+        var index = EntryViewIndex.Build(store, EntrySort.Name, EntryFilter.None, NaturalStringComparer.Instance, 1);
+        var navigation = new AlphabetNavigation(index.NameSections, index.Count);
+
+        Assert.Equal(["F", "G", "F"], index.NameSections.Select(section => section.Label));
+        Assert.Equal([true, true, true], index.NameSections.Select(section => section.IsDirectory));
+        Assert.False(navigation.HasBothKinds("F"));
+        Assert.Equal(0, navigation.Destination("F", row: 0));
+        Assert.Equal(2, navigation.Destination("F", row: 2));
+    }
+
     [Theory]
     [InlineData("文档10.md", "wendang10.md")]
     [InlineData("繁體.txt", "fanti.txt")]

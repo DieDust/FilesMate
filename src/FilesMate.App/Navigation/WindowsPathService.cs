@@ -1,6 +1,7 @@
 using System.IO;
 
 using FilesMate.Platform.Windows.Paths;
+using FilesMate.Platform.Windows.Shell;
 
 namespace FilesMate.App.Navigation;
 
@@ -10,6 +11,7 @@ public sealed class WindowsPathService : IPathService
 
     public string Normalize(string path)
     {
+        if (PortableDeviceLocation.TryParse(path, out var device)) return device.Uri;
         if (HomeLocation.IsHome(path))
         {
             return HomeLocation.Uri;
@@ -25,6 +27,7 @@ public sealed class WindowsPathService : IPathService
 
     public string? GetParent(string path)
     {
+        if (PortableDeviceLocation.TryParse(path, out var device)) return device.Parent?.Uri ?? HomeLocation.Uri;
         if (HomeLocation.IsHome(path) || TagLocation.IsTag(path))
         {
             return HomeLocation.IsHome(path) ? null : HomeLocation.Uri;
@@ -35,6 +38,8 @@ public sealed class WindowsPathService : IPathService
 
     public string Combine(string directory, string name)
     {
+        if (PortableDeviceLocation.TryParse(directory, out _))
+            throw new ArgumentException("Device children require their Shell identity.", nameof(name));
         if (HomeLocation.IsHome(directory))
         {
             throw new ArgumentException("Home has no child paths.", nameof(directory));
@@ -50,6 +55,9 @@ public sealed class WindowsPathService : IPathService
 
     public bool IsSamePath(string left, string right)
     {
+        if (PortableDeviceLocation.TryParse(left, out var a) || PortableDeviceLocation.TryParse(right, out _))
+            return a is not null && PortableDeviceLocation.TryParse(right, out var b)
+                && string.Equals(a.ParsingName, b.ParsingName, StringComparison.OrdinalIgnoreCase);
         if (HomeLocation.IsHome(left) || HomeLocation.IsHome(right))
         {
             return HomeLocation.IsHome(left) && HomeLocation.IsHome(right);

@@ -8,6 +8,7 @@ using FilesMate.Core.Directories;
 using FilesMate.Core.Entries;
 using FilesMate.Core.Navigation;
 using FilesMate.Platform.Windows.Directories;
+using FilesMate.Platform.Windows.Shell;
 
 namespace FilesMate.App.Navigation;
 
@@ -110,6 +111,10 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
     }
 
     public bool CanGoBack => _navigation.CanGoBack;
+
+    public bool IsPortableDevice => FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(AddressText, out _);
+    public bool CanReceiveFiles => !IsPortableDevice || _enumerator is PortableDeviceDirectoryEnumerator device
+        && device.CanReceiveFiles(AddressText, _navigation.CurrentGeneration);
 
     public bool CanGoForward => _navigation.CanGoForward;
 
@@ -267,6 +272,8 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
 
     public string FullPath(in FileEntryCore entry)
     {
+        if (IsPortableDevice && _enumerator is PortableDeviceDirectoryEnumerator device)
+            return device.Resolve(AddressText, _navigation.CurrentGeneration, entry.Id) ?? string.Empty;
         if (Path.IsPathRooted(entry.Name))
         {
             return entry.Name;
@@ -360,6 +367,23 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         StatusText = message;
     }
 
+    public bool DisconnectVolume(uint removedLetters)
+    {
+        AssertUi();
+        var path = AddressText;
+        if (_disposed || path is not { Length: >= 3 } || path[1] != ':' || path[2] != '\\') return false;
+        var letter = char.ToUpperInvariant(path[0]) - 'A';
+        if (letter is < 0 or >= 26 || (removedLetters & (1u << letter)) == 0) return false;
+        // Invalidate the generation before draining the old read/watch task. Late
+        // notifications must not refill the view with entries from an unplugged disk.
+        _ = _navigation.ParkCurrentForRecovery();
+        ShowHome();
+        ItemCount = 0;
+        ErrorText = StringTable.Get("Device_Unavailable");
+        StatusText = ErrorText;
+        return true;
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (_disposed)
@@ -368,6 +392,7 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         }
 
         _disposed = true;
+        if (_enumerator is PortableDeviceDirectoryEnumerator device) device.Clear();
         // Release the large folder index even while cancellation is still draining.
         _viewIndex = null;
         _tagFilter = null;
@@ -708,7 +733,8 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
 
     private static bool CanWatch(string path)
     {
-        if (string.IsNullOrEmpty(path) || HomeLocation.IsHome(path) || TagLocation.IsTag(path))
+        if (string.IsNullOrEmpty(path) || HomeLocation.IsHome(path) || TagLocation.IsTag(path)
+            || PortableDeviceLocation.TryParse(path, out _))
         {
             return false;
         }

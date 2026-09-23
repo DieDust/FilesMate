@@ -49,6 +49,7 @@ public sealed partial class FileDetailsSurface
     private double _alphabetGrabOffset;
     private bool _alphabetHovered;
     private int _activeNameSection = -1;
+    private string? _alphabetChoiceLabel;
     private int _alphabetGridColumns;
     private DispatcherQueueTimer? _alphabetHideTimer;
 
@@ -61,7 +62,16 @@ public sealed partial class FileDetailsSurface
             var button = new Button { Content = label, Style = (Style)Resources["AlphabetButtonStyle"] };
             AutomationProperties.SetName(button, label);
             AutomationProperties.SetAutomationId(button, "Alphabet_" + label);
-            button.Click += (_, _) => JumpLetter(label);
+            button.PointerEntered += (_, _) =>
+            {
+                if (_alphabet.HasBothKinds(label)) ShowAlphabetChoices(label);
+                else HideAlphabetChoices();
+            };
+            button.Click += (_, _) =>
+            {
+                if (_alphabet.HasBothKinds(label)) ShowAlphabetChoices(label, focusFirst: true);
+                else JumpLetter(label);
+            };
             _alphabetButtons.Add(label, button);
             AlphabetList.Children.Add(button);
         }
@@ -93,7 +103,7 @@ public sealed partial class FileDetailsSurface
         };
         AlphabetTrack.PointerCaptureLost += (_, _) => { _alphabetPointer = null; ScheduleAlphabetHide(); };
         AlphabetOverlay.PointerEntered += (_, _) => { _alphabetHovered = true; ShowAlphabet(); };
-        AlphabetOverlay.PointerExited += (_, _) => { _alphabetHovered = false; ScheduleAlphabetHide(); };
+        AlphabetOverlay.PointerExited += (_, _) => { _alphabetHovered = false; HideAlphabetChoices(); ScheduleAlphabetHide(); };
         AlphabetOverlay.PointerPressed += (_, e) => e.Handled = true;
         AlphabetOverlay.RightTapped += (_, e) => e.Handled = true;
         AlphabetOverlay.PointerWheelChanged += (_, e) =>
@@ -114,11 +124,13 @@ public sealed partial class FileDetailsSurface
                 var next = e.Key switch { Windows.System.VirtualKey.Home => 0, Windows.System.VirtualKey.End => AlphabetNavigation.Labels.Count - 1, _ => labelIndex + step };
                 while (next >= 0 && next < AlphabetNavigation.Labels.Count && !_alphabet.Contains(AlphabetNavigation.Labels[next]))
                     next += e.Key == Windows.System.VirtualKey.End ? -1 : step;
-                if (next >= 0 && next < AlphabetNavigation.Labels.Count) JumpLetter(AlphabetNavigation.Labels[next]);
+                if (next >= 0 && next < AlphabetNavigation.Labels.Count)
+                    JumpLetter(AlphabetNavigation.Labels[next], e.Key is Windows.System.VirtualKey.Home or Windows.System.VirtualKey.End,
+                        e.Key == Windows.System.VirtualKey.End);
                 e.Handled = true;
             }
         };
-        AlphabetList.SizeChanged += (_, _) => AlignAlphabetBubble();
+        AlphabetList.SizeChanged += (_, _) => { AlignAlphabetBubble(); AlignAlphabetChoices(); };
         AlphabetTrack.SizeChanged += (_, _) => { LayoutAlphabet(); UpdateAlphabetPosition(false); };
         Unloaded += (_, _) => { HideAlphabet(); _alphabetHideTimer?.Stop(); };
     }
@@ -140,8 +152,11 @@ public sealed partial class FileDetailsSurface
         foreach (var (label, button) in _alphabetButtons)
         {
             button.IsEnabled = _alphabet.Contains(label);
-            button.ClearValue(Control.BackgroundProperty);
-            button.ClearValue(Control.ForegroundProperty);
+            var hint = _alphabet.HasBothKinds(label) ? string.Format(Loc.Get("Alphabet_MultipleHint"), label) : label;
+            button.Content = label;
+            AutomationProperties.SetName(button, hint);
+            ToolTipService.SetToolTip(button, null);
+            RestoreAlphabetButtonVisual(label);
         }
         UpdateAlphabetTailSpace();
         LayoutAlphabet();
@@ -162,13 +177,18 @@ public sealed partial class FileDetailsSurface
     private void LayoutAlphabet()
     {
         var columns = AlphabetNavigationPolicy.ColumnCount(AlphabetTrack.ActualHeight, AlphabetNavigation.Labels.Count);
+        var rows = (AlphabetNavigation.Labels.Count + columns - 1) / columns;
+        var cellHeight = Math.Max(0, AlphabetTrack.ActualHeight - AlphabetNavigationPolicy.VerticalPadding) / rows;
+        var verticalInset = Math.Clamp((cellHeight - 18) / 2, 0, 5);
+        foreach (var button in _alphabetButtons.Values)
+            button.Padding = new Thickness(3, verticalInset, 3, verticalInset);
         if (columns == _alphabetGridColumns) return;
         _alphabetGridColumns = columns;
         AlphabetLetters.Width = columns == 1 ? 34 : 60;
-        AlphabetOverlay.Width = columns == 1 ? 80 : 96;
+        AlphabetOverlay.Width = columns == 1 ? 220 : 246;
+        AlphabetChoices.Margin = new Thickness(0, AlphabetChoices.Margin.Top, columns == 1 ? 62 : 88, 0);
         AlphabetList.RowDefinitions.Clear();
         AlphabetList.ColumnDefinitions.Clear();
-        var rows = (AlphabetNavigation.Labels.Count + columns - 1) / columns;
         for (var i = 0; i < rows; i++) AlphabetList.RowDefinitions.Add(new() { Height = new GridLength(1, GridUnitType.Star) });
         for (var i = 0; i < columns; i++) AlphabetList.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         for (var i = 0; i < AlphabetNavigation.Labels.Count; i++)
@@ -177,6 +197,7 @@ public sealed partial class FileDetailsSurface
             Grid.SetRow(button, i % rows);
             Grid.SetColumn(button, i / rows);
         }
+        AlignAlphabetChoices();
     }
 
     private void ShowAlphabet()
@@ -194,6 +215,7 @@ public sealed partial class FileDetailsSurface
     private void ScheduleAlphabetHide()
     {
         if (_alphabetPointer is not null || _alphabetHovered) return;
+        HideAlphabetChoices();
         AlphabetRange.Visibility = Visibility.Collapsed;
         if (_alphabetHideTimer is null)
         {
@@ -211,6 +233,7 @@ public sealed partial class FileDetailsSurface
         _alphabetPointer = null;
         AlphabetTrack.ReleasePointerCaptures();
         _alphabetHideTimer?.Stop();
+        HideAlphabetChoices();
         AlphabetLetters.Visibility = AlphabetBubble.Visibility = AlphabetRange.Visibility = Visibility.Collapsed;
     }
 
@@ -227,14 +250,76 @@ public sealed partial class FileDetailsSurface
         UpdateAlphabetAt(offset, true);
     }
 
-    private void JumpLetter(string label)
+    private void JumpLetter(string label, bool boundary = false, bool last = false)
     {
         var row = _alphabet.FirstVisibleIndex(Scroller.VerticalOffset, ItemHeight(), Columns());
-        var section = _alphabet.Destination(label, row);
+        var section = boundary ? _alphabet.BoundaryDestination(label, last) : _alphabet.Destination(label, row);
+        JumpAlphabetSection(section);
+    }
+
+    private void JumpAlphabetSection(int section)
+    {
         if (section < 0) return;
+        HideAlphabetChoices();
         UpdateAlphabetTailSpace();
         Scroller.UpdateLayout();
-        ScrollAlphabetTo(_alphabet.OffsetForItem(_nameSections[section].FirstIndex, ItemHeight(), Columns()));
+        var offset = _alphabet.OffsetForItem(_nameSections[section].FirstIndex, ItemHeight(), Columns());
+        ScrollAlphabetTo(offset);
+    }
+
+    private void ShowAlphabetChoices(string label, bool focusFirst = false)
+    {
+        if (!_alphabet.HasBothKinds(label))
+        {
+            HideAlphabetChoices();
+            return;
+        }
+        ShowAlphabet();
+        if (_alphabetChoiceLabel != label || AlphabetChoices.Visibility != Visibility.Visible)
+        {
+            _alphabetChoiceLabel = label;
+            AlphabetChoiceList.Children.Clear();
+            foreach (var isDirectory in new[] { true, false })
+            {
+                var group = Loc.Get(isDirectory ? "Alphabet_FolderGroup" : "Alphabet_FileGroup");
+                var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+                content.Children.Add(new FontIcon { Glyph = isDirectory ? "\uE8B7" : "\uE8A5",
+                    FontFamily = new FontFamily("Segoe Fluent Icons"), FontSize = 14, Width = 18 });
+                content.Children.Add(new TextBlock { Text = group, FontSize = 12, VerticalAlignment = VerticalAlignment.Center });
+                var choice = new Button { Content = content, MinHeight = 32, HorizontalAlignment = HorizontalAlignment.Stretch,
+                    HorizontalContentAlignment = HorizontalAlignment.Left, Padding = new Thickness(8, 4, 8, 4),
+                    Style = (Style)Application.Current.Resources["QuietButtonStyle"] };
+                AutomationProperties.SetName(choice, label + " " + group);
+                choice.Click += (_, _) =>
+                {
+                    var row = _alphabet.FirstVisibleIndex(Scroller.VerticalOffset, ItemHeight(), Columns());
+                    JumpAlphabetSection(_alphabet.Destination(label, row, isDirectory));
+                };
+                AlphabetChoiceList.Children.Add(choice);
+            }
+            AlphabetChoices.Visibility = Visibility.Visible;
+            AlphabetChoices.UpdateLayout();
+            AlignAlphabetChoices();
+        }
+        AlphabetBubble.Visibility = Visibility.Collapsed;
+        if (focusFirst && AlphabetChoiceList.Children.FirstOrDefault() is Button first)
+            first.Focus(FocusState.Programmatic);
+    }
+
+    private void HideAlphabetChoices()
+    {
+        _alphabetChoiceLabel = null;
+        AlphabetChoices.Visibility = Visibility.Collapsed;
+    }
+
+    private void AlignAlphabetChoices()
+    {
+        if (AlphabetChoices.Visibility != Visibility.Visible || _alphabetChoiceLabel is null
+            || !_alphabetButtons.TryGetValue(_alphabetChoiceLabel, out var button) || button.ActualHeight <= 0) return;
+        var center = button.TransformToVisual(AlphabetOverlay).TransformPoint(new Windows.Foundation.Point(0, button.ActualHeight / 2));
+        var height = AlphabetChoices.ActualHeight;
+        var top = Math.Clamp(center.Y - height / 2, 4, Math.Max(4, AlphabetOverlay.ActualHeight - height - 4));
+        AlphabetChoices.Margin = new Thickness(0, top, _alphabetGridColumns == 1 ? 62 : 88, 0);
     }
 
     private void UpdateAlphabetPosition(bool showBubble) => UpdateAlphabetAt(Scroller.VerticalOffset, showBubble);
@@ -256,7 +341,8 @@ public sealed partial class FileDetailsSurface
         var end = track * range.End / Math.Max(1, _items.Count);
         AlphabetRange.Margin = new Thickness(0, start, 0, 0);
         AlphabetRange.Height = Math.Max(1, end - start);
-        AlphabetBubble.Visibility = showBubble ? Visibility.Visible : Visibility.Collapsed;
+        AlphabetBubble.Visibility = showBubble && AlphabetChoices.Visibility != Visibility.Visible
+            ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void AlignAlphabetBubble()
@@ -272,11 +358,7 @@ public sealed partial class FileDetailsSurface
         if (_activeNameSection != section)
         {
             if (_activeNameSection >= 0)
-            {
-                var previous = _alphabetButtons[_nameSections[_activeNameSection].Label];
-                previous.ClearValue(Control.BackgroundProperty);
-                previous.ClearValue(Control.ForegroundProperty);
-            }
+                RestoreAlphabetButtonVisual(_nameSections[_activeNameSection].Label);
             _activeNameSection = section;
             var button = _alphabetButtons[label];
             button.Background = (Brush)Application.Current.Resources["FilesMate.Selection.AccentBrush"];
@@ -284,5 +366,16 @@ public sealed partial class FileDetailsSurface
         }
         AlphabetBubbleText.Text = label;
         AlignAlphabetBubble();
+    }
+
+    private void RestoreAlphabetButtonVisual(string label)
+    {
+        var button = _alphabetButtons[label];
+        button.ClearValue(Control.BackgroundProperty);
+        button.ClearValue(Control.ForegroundProperty);
+        if (!_alphabet.HasBothKinds(label)) return;
+
+        // A small, separated fill signals that both folders and files are available.
+        button.Background = (Brush)Application.Current.Resources["FilesMate.Item.HoverBrush"];
     }
 }

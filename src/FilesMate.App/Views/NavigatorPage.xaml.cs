@@ -82,6 +82,9 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             if (_previewHost is not null) return _previewHost;
             _previewHost = new PreviewPane();
             _previewHost.CloseRequested += (_, _) => SetPreviewVisible(false);
+            _previewHost.PinRequested += (_, _) => TogglePinnedPreview();
+            _previewHost.RefreshPinRequested += (_, _) => _ = RefreshPinnedPreviewAsync();
+            _previewHost.SetPinState(true, _pinnedPreviewPath);
             if (App.PreviewService is { } service) _previewHost.Attach(service);
             PreviewContainer.Content = _previewHost;
             return _previewHost;
@@ -90,6 +93,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private bool _lastShowHiddenFiles;
     private bool _lastShowFolderSizes;
     private string? _startupPath;
+    private NavigationHistoryState? _initialHistory;
     private string? _pendingSelectPath;
     private PaneViewModel? _pendingSelectPane;
     private bool _pendingCreatedItemRename;
@@ -106,11 +110,14 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private readonly HashSet<string> _openingFiles = new(StringComparer.OrdinalIgnoreCase);
     private TaskCompletionSource<bool>? _lockOverlayClosed;
 
-    public NavigatorPage(string? initialPath = null, string? selectPath = null)
+    public NavigatorPage(string? initialPath = null, string? selectPath = null, NavigationHistoryState? history = null)
     {
+        _initialHistory = history;
         ViewModel = CreatePaneViewModel();
         _leftVm = ViewModel;
         InitializeComponent();
+        Omni.SearchDeviceFolder = SearchCurrentDeviceFolder;
+        App.DevicesChanged += DevicesChanged;
         Favorites.CurrentFolder = () => ViewModel.Navigation.CurrentPath;
         Favorites.OpenRequested += Favorites_OpenRequested;
         ShellRoot.AddHandler(
@@ -235,6 +242,8 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         CancelFolderStatusRequests();
         _shellWindow.Dispose();
         _tagLoadCts.Cancel();
+        StopPinnedPreviewWatcher();
+        _loadedPreviewPath = null;
         _previewHost?.CancelAndClear();
     }
 
@@ -265,6 +274,8 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         }
 
         _disposed = true;
+        StopPinnedPreviewWatcher();
+        _pinnedPreviewPath = null;
         CancelFolderStatusRequests();
         _shellWindow.Dispose();
         ShelfCard.Visibility = Visibility.Collapsed;
@@ -276,6 +287,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         App.ExplorerPreferencesChanged -= ExplorerPreferencesChanged;
         App.FeaturesChanged -= NavigationFeaturesChanged;
         Clipboard.ContentChanged -= Clipboard_ContentChanged;
+        App.DevicesChanged -= DevicesChanged;
         _leftVm.PropertyChanged -= ViewModel_PropertyChanged;
         App.FolderCoversChanged -= FolderCoversChanged;
         App.FolderCustomizations.ViewSettingsChanged -= FolderViewScopeChanged;
@@ -399,11 +411,23 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         if (startPath is { Length: > 0 })
         {
             _startupPath = null;
-            ScheduleNavigation(() => ViewModel.Navigate(startPath));
+            ScheduleNavigation(() =>
+            {
+                ViewModel.Navigate(startPath);
+                if (_initialHistory is { } history) { ViewModel.RestoreNavigationHistory(history); _initialHistory = null; }
+            });
         }
 
         HookWidthStates();
         UpdateShellWindow();
+        if (_pinnedPreviewPath is { } pinnedPath)
+        {
+            if (_previewVisible)
+            {
+                StartPinnedPreviewWatcher(pinnedPath);
+                _ = RefreshPinnedPreviewAsync(pinnedPath);
+            }
+        }
         StartupClock.Mark("FirstFrame");
         StartupClock.ExportIfProfile();
 #if FILESMATE_UI_TEST
@@ -734,7 +758,8 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         }
 
         var normalized = AddressPath.Normalize(draft, ViewModel.AddressText);
-        if (Directory.Exists(normalized) || File.Exists(normalized))
+        if (Directory.Exists(normalized) || File.Exists(normalized)
+            || FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(normalized, out _))
         {
             return normalized;
         }
@@ -756,7 +781,8 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             catch (Exception error) { ViewModel.ReportUserError(error.Message); }
             return;
         }
-        if (HomeLocation.IsHome(path) || TagLocation.IsTag(path) || Directory.Exists(path))
+        if (HomeLocation.IsHome(path) || TagLocation.IsTag(path) || Directory.Exists(path)
+            || FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out _))
         {
             ScheduleNavigation(() => ViewModel.Navigate(path));
             return;
@@ -793,11 +819,13 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         Omni.DismissCrumbFolders();
     }
 
-    private void Places_PlaceChosen(object? sender, string path) =>
+    private void Places_PlaceChosen(object? sender, string path)
+    {
         ScheduleNavigation(() => ViewModel.Navigate(path));
+    }
 
     private void Sidebar_OpenInNewTabRequested(object? sender, string path) =>
-        App.CurrentWindow?.OpenFolderInNewTab(path);
+        App.WindowForElement(this)?.OpenFolderInNewTab(path, ViewModel.Navigation.HistoryForNewTab(path));
 
     private void Sidebar_OpenInNewWindowRequested(object? sender, string path) =>
         App.CurrentWindow?.OpenFolderInNewWindow(path);
@@ -805,8 +833,17 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private void Sidebar_WhoLocksRequested(object? sender, string path) =>
         _ = _fileActions.ShowWhoLocksAsync([path]);
 
-    private void Omni_SearchChosen(object? sender, string path) =>
+    private void Omni_SearchChosen(object? sender, string path)
+    {
+        if (FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out _)
+            && ViewModel.Store is { } store)
+        {
+            var entry = store.Snapshot().FirstOrDefault(e => ViewModel.FullPath(e) == path);
+            if (entry.Name is not null) FileSurface_OpenRequested(ActiveSurface, entry);
+            return;
+        }
         OpenLaunchTarget(LaunchPath.Parse(["/open", path]));
+    }
 
     private void Omni_ModeCanceled(object? sender, EventArgs e)
     {
@@ -869,7 +906,8 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private void Sidebar_PinnedLocationsChanged(object? sender, EventArgs e)
     {
         SyncCommandBar();
-        Sidebar.SelectPath(ViewModel.AddressText);
+        Sidebar.SelectPath(FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(ViewModel.AddressText, out var device)
+            ? (device with { Segments = [] }).Uri : ViewModel.AddressText);
         _homeDashboard?.Reload();
     }
 
@@ -947,7 +985,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         var path = ViewModel.FullPath(entry);
         if (entry.Kind == EntryKind.Directory && App.ExplorerPreferences.OpenFoldersInNewTab)
         {
-            App.CurrentWindow?.OpenFolderInNewTab(path);
+            App.WindowForElement(this)?.OpenFolderInNewTab(path, ViewModel.Navigation.HistoryForNewTab(path));
             return;
         }
 
@@ -1044,7 +1082,8 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         }
 
         ActivateFromSurface(sender as FileDetailsSurface);
-        App.CurrentWindow?.OpenFolderInNewTab(ViewModel.FullPath(entry));
+        var path = ViewModel.FullPath(entry);
+        App.WindowForElement(this)?.OpenFolderInNewTab(path, ViewModel.Navigation.HistoryForNewTab(path));
     }
 
     private bool _selectionPreviewRequested;
@@ -1060,7 +1099,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "selection-test.log"), $"{DateTime.Now:HH:mm:ss} Selection {e.GetType().Name} preview={_previewVisible}\n");
 #endif
         _selectionPreviewRequested = e is not ContextSelectionChangedEventArgs;
-        if (!_selectionPreviewRequested)
+        if (!_selectionPreviewRequested && _pinnedPreviewPath is null)
         {
             _previewHost?.CancelAndClear();
             _loadedPreviewPath = null;
@@ -1123,9 +1162,13 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private void SyncCommandBar()
     {
         var clipboard = PaneFileActions.ClipboardHasFiles();
+        FileSurface.IsPortableDevice = _leftVm.IsPortableDevice;
+        FileSurface.IsFolderWritable = !HomeLocation.IsHome(_leftVm.AddressText) && _leftVm.CanReceiveFiles;
         FileSurface.ClipboardHasFiles = clipboard;
         if (_rightSurface is not null)
         {
+            _rightSurface.IsPortableDevice = _rightVm?.IsPortableDevice == true;
+            _rightSurface.IsFolderWritable = _rightVm?.CanReceiveFiles == true;
             _rightSurface.ClipboardHasFiles = clipboard;
         }
 
@@ -1133,10 +1176,10 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         Commands.ApplyContext(CommandContext.ForToolbar(
             home ? 0 : ActiveSurface.Selection.Count,
             ActiveSurface.PrimaryIsDirectory(),
-            isFolderWritable: !home,
+            isFolderWritable: !home && ViewModel.CanReceiveFiles,
             clipboardHasFiles: clipboard,
             canRefresh: ActiveSurface.CanRefresh,
-            shareAvailable: !home && App.ShareService is not null));
+            shareAvailable: !home && App.ShareService is not null) with { IsPortableDevice = ViewModel.IsPortableDevice });
     }
 
     private void Commands_CopyPathClicked(object sender, RoutedEventArgs e) => CopySelectedPaths();
@@ -1145,6 +1188,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private void RunFileCommand(AppCommandId id)
     {
+        if (ViewModel.IsPortableDevice && !CommandCatalog.CanExecute(id, DeviceCommandContext())) return;
         if (id == AppCommandId.SearchCommands) { _ = ShowCommandPaletteAsync(); return; }
         if (id == AppCommandId.SelectSameType) { ActiveSurface.SelectSameType(); return; }
         if (id == AppCommandId.InvertSelection) { ActiveSurface.InvertSelection(); return; }
@@ -1185,7 +1229,8 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         if (id == AppCommandId.OpenInNewWindow)
         {
             var path = PrimarySelectedPath();
-            if (!string.IsNullOrWhiteSpace(path) && Directory.Exists(path))
+            if (!string.IsNullOrWhiteSpace(path) && (Directory.Exists(path)
+                || FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out _)))
             {
                 App.CurrentWindow?.OpenFolderInNewWindow(path);
             }
@@ -1279,7 +1324,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     public async Task VacateFoldersAsync(IReadOnlyList<string> paths)
     {
-        _previewHost?.CancelAndClear();
+        if (PinnedPreviewUsesAny(paths)) ResetPinnedPreview();
         FileSurface.CancelFolderSizeWalks();
         _rightSurface?.CancelFolderSizeWalks();
         await VacatePaneAsync(_leftVm, paths).ConfigureAwait(true);
@@ -1287,6 +1332,19 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         {
             await VacatePaneAsync(_rightVm, paths).ConfigureAwait(true);
         }
+    }
+
+    internal void DeviceVolumesRemoved(uint mask)
+    {
+        if (_disposed) return;
+        var changed = _leftVm.DisconnectVolume(mask);
+        changed |= _rightVm?.DisconnectVolume(mask) == true;
+        if (!changed) return;
+        CancelFolderStatusRequests();
+        ResetPinnedPreview();
+        _previewHost?.CancelAndClear();
+        FileSurface.CancelFolderSizeWalks();
+        _rightSurface?.CancelFolderSizeWalks();
     }
 
     public async Task ShowLockOverlayAsync(FrameworkElement content)
@@ -1326,11 +1384,21 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         string? target = null;
         foreach (var path in paths)
         {
-            if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
+            // Matching a tab to a path is lexical. Probing a disconnected drive
+            // here can block the UI before its directory handles are released.
+            if (string.IsNullOrWhiteSpace(path))
             {
                 continue;
             }
 
+            if (FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(current, out var device)
+                && FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out var root)
+                && string.Equals(device.Root, root.Root, StringComparison.OrdinalIgnoreCase))
+            {
+                vm.Navigate(HomeLocation.Uri);
+                await vm.WhenFolderReleased.ConfigureAwait(true);
+                return;
+            }
             if (FileLockPath.Matches(current, path, directory: true))
             {
                 target = path;
@@ -1346,7 +1414,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         var parent = Path.GetDirectoryName(target.TrimEnd('\\', '/'));
         if (string.IsNullOrWhiteSpace(parent) || FileLockPath.Matches(parent, target, directory: true))
         {
-            return;
+            parent = HomeLocation.Uri;
         }
 
         vm.Navigate(parent);
@@ -1379,6 +1447,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private IReadOnlyList<TagDefinition> ResolveTags(PaneViewModel vm, FileEntryCore entry)
     {
+        if (vm.IsPortableDevice) return [];
         var store = App.MetadataStore;
         var provider = App.FileIdentityProvider;
         if (store is null || provider is null)
@@ -1731,6 +1800,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private void OpenTerminalAt(string path)
     {
+        if (FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out _)) return;
         try { FilesMate.Platform.Windows.Shell.TerminalLaunch.Open(path); }
         catch (Exception error) { ViewModel.ReportUserError(error.Message); }
     }
@@ -1830,6 +1900,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private void SetPreviewVisible(bool visible)
     {
         if (visible) CloseQuickPreview();
+        if (!visible) StopPinnedPreviewWatcher();
         _previewVisible = visible;
         Commands.SetPreviewActive(visible);
         if (visible) PreviewHost.SetVisible(true);
@@ -1847,13 +1918,22 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         }
         else
         {
-            _ = LoadSelectedPreviewAsync();
+            if (_pinnedPreviewPath is { } pinnedPath)
+            {
+                if (IsLoaded)
+                {
+                    StartPinnedPreviewWatcher(pinnedPath);
+                    _ = RefreshPinnedPreviewAsync(pinnedPath);
+                }
+            }
+            else _ = LoadSelectedPreviewAsync();
         }
+        if (_pinnedPreviewPath is not null) PinnedPreviewVisibilityChanged?.Invoke(visible);
     }
 
     private async Task LoadSelectedPreviewAsync()
     {
-        var path = PrimarySelectedPath();
+        var path = _pinnedPreviewPath ?? PrimarySelectedPath();
         if (string.IsNullOrWhiteSpace(path))
         {
             if (_loadedPreviewPath is not null)
@@ -1880,6 +1960,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private void CopySelectedPaths(bool quoted = false)
     {
+        if (ViewModel.IsPortableDevice) return;
         var lines = SelectedPaths();
         if (lines.Count == 0)
         {
@@ -1908,7 +1989,9 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         {
             // Shell extensions, security scanning and elevation can delay activation.
             // Keep that wait on an STA worker so the navigator continues painting.
-            await ShellOperationWorker.RunAsync(() =>
+            if (FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out var device))
+                await FilesMate.Platform.Windows.Shell.PortableDeviceService.OpenFileAsync(device, CancellationToken.None);
+            else await ShellOperationWorker.RunAsync(() =>
             {
                 FilesMate.Platform.Windows.Processes.DetachedProcess.Open(path);
             });
@@ -1970,6 +2053,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             {
                 surface.Bind(vm.Store, vm.ViewIndex, vm.Navigation.CurrentGeneration);
                 surface.SetSort(vm.Sort);
+                ScheduleChrome();
                 TryApplyPendingSelection(vm);
             }
         }
@@ -2078,7 +2162,8 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         ResetTagLoads();
         _tagCatalogProbe = null;
         Omni.ApplyCommittedPath(ViewModel.AddressText);
-        Sidebar.SelectPath(ViewModel.AddressText);
+        Sidebar.SelectPath(FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(ViewModel.AddressText, out var device)
+            ? (device with { Segments = [] }).Uri : ViewModel.AddressText);
         ApplyTabCaption(ViewModel.AddressText);
         if (RecentFolderStore.NormalizePath(ViewModel.AddressText) is not null)
         {
@@ -2510,11 +2595,13 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         new(
             new DispatcherQueueUiDispatcher(UiDispatcherQueue.GetForCurrentThread()),
             new WindowsPathService(),
-            new TaggedDirectoryEnumerator(
+            new PortableDeviceDirectoryEnumerator(new TaggedDirectoryEnumerator(
                 new WindowsDirectoryEnumerator(),
                 async (id, ct) => App.MetadataStore is null
                     ? []
                     : await App.MetadataStore.ListPathsForTagAsync(id, ct).ConfigureAwait(false)),
+                FilesMate.Platform.Windows.Shell.PortableDeviceService.ReadFolderAsync,
+                FilesMate.Platform.Windows.Shell.PortableDeviceService.GetFolderCapabilitiesAsync),
             WindowsNameComparer.Instance,
             new WindowsDirectoryWatcher());
 

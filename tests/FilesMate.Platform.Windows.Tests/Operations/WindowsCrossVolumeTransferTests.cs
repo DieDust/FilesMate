@@ -5,6 +5,20 @@ namespace FilesMate.Platform.Windows.Tests.Operations;
 
 public sealed class WindowsCrossVolumeTransferTests : IDisposable
 {
+    [Fact]
+    public async Task Failed_copy_callback_does_not_publish_a_partial_move_or_remove_source()
+    {
+        var source = NewSource(8L * 1024 * 1024, false);
+        var target = Path.Combine(_targetRoot, "interrupted.bin");
+        var result = await WindowsFileTransfer.RunAsync(new StreamedMoveOperations(), [new(source, target)], true,
+            byteProgress: new InlineProgress(_ => throw new IOException("Simulated device I/O failure")));
+        Assert.Single(result.Errors);
+        Assert.Empty(result.Completed);
+        Assert.Null(result.Undo);
+        Assert.Equal(8L * 1024 * 1024, new FileInfo(source).Length);
+        Assert.False(File.Exists(target));
+        Assert.Empty(Directory.GetFileSystemEntries(_targetRoot));
+    }
     private readonly string _sourceRoot = Directory.CreateTempSubdirectory("FilesMate-cross-volume-").FullName;
     private readonly string _targetRoot = Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory,
         "FilesMate-cross-volume-" + Guid.NewGuid().ToString("N"))).FullName;

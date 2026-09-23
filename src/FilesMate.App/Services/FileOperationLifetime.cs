@@ -18,6 +18,19 @@ public static class FileOperationLifetime
         return new Lease();
     }
 
+    // Checking IsBusy and acquiring a lease separately leaves a race with
+    // background work. Safe removal must reserve the idle state atomically.
+    public static IDisposable? TryBeginWhenIdle()
+    {
+        lock (Sync)
+        {
+            if (_active != 0) return null;
+            _idle = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            _active = 1;
+            return new Lease();
+        }
+    }
+
     public static Task WhenIdleAsync()
     {
         lock (Sync) return _idle?.Task ?? Task.CompletedTask;

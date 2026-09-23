@@ -48,11 +48,11 @@ internal static class IconBitmapConverter
         }
     }
 
-    private static IconBitmap? FromBitmap(nint hbm)
+    internal static IconBitmap? FromBitmap(nint hbm)
     {
         if (Gdi32.GetObjectW(hbm, System.Runtime.InteropServices.Marshal.SizeOf<BITMAP>(), out var bmp) == 0
             || bmp.bmWidth <= 0
-            || bmp.bmHeight <= 0)
+            || bmp.bmHeight <= 0 || bmp.bmWidth > 2048 || bmp.bmHeight > 2048)
         {
             return null;
         }

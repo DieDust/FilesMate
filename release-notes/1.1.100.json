@@ -1,0 +1,5 @@
+{
+  "zh-CN": "预览面板新增固定当前文件和手动刷新。固定后可以继续浏览其他文件；本地文件变化时预览会自动更新，文件消失时会清除旧内容。关闭面板会释放监听资源。",
+  "en-US": "Added pin and refresh controls to the preview pane. A pinned file stays in view while you browse other files. Local changes refresh the preview, missing files clear stale content, and closing the pane releases its watcher.",
+  "ja-JP": "プレビューに固定と更新の操作を追加しました。ほかのファイルを閲覧しても固定したファイルを表示し続けます。ローカルファイルの変更時は表示を更新し、ファイルがなくなった場合は古い内容を消去します。ペインを閉じると監視を解除します。"
+}

@@ -67,6 +67,8 @@ public sealed partial class MainWindow : Window
     private bool _tabDragging;
     private bool _overTabTail;
     private bool _handledTabDrop;
+    private string? _pinnedPreviewPath;
+    private bool _pinnedPreviewVisible;
     private static TabViewItem? DraggedTab;
     private static MainWindow? DragSource;
     private readonly WindowPlacementService _windowPlacement = new(Program.SettingsPath(WindowPlacementService.DefaultFilePath));
@@ -105,6 +107,7 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         InitializeTabMemory();
         InitializeShellCompatibility();
+        InitializeDevices();
         ApplyShortcuts();
         App.ShortcutsChanged += App_ShortcutsChanged;
 
@@ -129,6 +132,7 @@ public sealed partial class MainWindow : Window
         SynchronizeTitleBarTheme();
 
         AppWindow.SetIcon("Assets/Branding/FilesMate.ico");
+        InstallTitleBarMenuHook();
         if (AppWindow.Presenter is OverlappedPresenter presenter)
         {
             presenter.PreferredMinimumWidth = hostTearOut ? 640 : 1024;
@@ -150,12 +154,22 @@ public sealed partial class MainWindow : Window
         {
             InitializeTabs(launch, restartSession);
 #if FILESMATE_UI_TEST
+            if (Environment.GetEnvironmentVariable("FILESMATE_RANKING_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunRankingSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_EJECT_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunEjectSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_DEVICE_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunDeviceSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_INDEX_STORAGE_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunIndexStorageSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_ARCHIVE_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunArchiveSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_REVIEW_PREVIEW_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunReviewPreviewSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_PINNED_PREVIEW_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunPinnedPreviewSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_TITLEBAR_MENU_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunTitleBarMenuSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_LANGUAGE_RESTART_SMOKE") == "1"
                 || Environment.GetCommandLineArgs().Contains("--language-restart-smoke"))
                 DispatcherQueue.TryEnqueue(async () => await RunLanguageRestartSmokeAsync());
@@ -895,7 +909,7 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void AddNavigatorTab(string? path, string? selectPath = null)
+    private void AddNavigatorTab(string? path, string? selectPath = null, NavigationHistoryState? history = null)
     {
         if (string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(selectPath))
         {
@@ -903,7 +917,7 @@ public sealed partial class MainWindow : Window
         }
 
         var start = NavigatorPage.ResolveInitialPath(path);
-        var tab = new NavigatorTabContent(start, selectPath, CreateLoadingContent());
+        var tab = new NavigatorTabContent(start, selectPath, CreateLoadingContent()) { InitialHistory = history };
         var item = new TabViewItem
         {
             Tag = tab,
@@ -932,7 +946,9 @@ public sealed partial class MainWindow : Window
 
             try
             {
-                var page = new NavigatorPage(tab.RequestedPath, tab.SelectPath);
+                var page = new NavigatorPage(tab.RequestedPath, tab.SelectPath, tab.InitialHistory);
+                page.PinnedPreviewChanged += Navigator_PinnedPreviewChanged;
+                page.PinnedPreviewVisibilityChanged += Navigator_PinnedPreviewVisibilityChanged;
                 if (!Tabs.TabItems.Contains(item) || !tab.Load.TryComplete() || tab.IsDisposed)
                 {
                     _ = DisposeNavigatorAsync(page);
@@ -1208,6 +1224,9 @@ public sealed partial class MainWindow : Window
     {
         if (_windowClosed) return;
         _windowClosed = true;
+        _deviceRefreshTimer?.Stop();
+        _deviceSubscription?.Dispose();
+        _deviceSubscription = null;
         AppWindow.Changed -= AppWindow_Changed;
         _placementSaveTimer?.Stop();
         _tabMemoryTimer?.Stop();
@@ -1236,6 +1255,7 @@ public sealed partial class MainWindow : Window
             }
         }
 
+        RemoveTitleBarMenuHook();
         _glassScene.Dispose();
         _shellHost?.Dispose();
         _shellHost = null;
@@ -1245,6 +1265,8 @@ public sealed partial class MainWindow : Window
     {
         try
         {
+            page.PinnedPreviewChanged -= Navigator_PinnedPreviewChanged;
+            page.PinnedPreviewVisibilityChanged -= Navigator_PinnedPreviewVisibilityChanged;
             var retiredResources = page.CaptureRetiredResources();
             await page.DisposeAsync();
             ScheduleTabResourceRelease(retiredResources);
@@ -1340,7 +1362,7 @@ public sealed partial class MainWindow : Window
         SettingsHost.RequestedTheme = root.ActualTheme;
     }
 
-    public void OpenFolderInNewTab(string path) => AddNavigatorTab(path);
+    public void OpenFolderInNewTab(string path, NavigationHistoryState? history = null) => AddNavigatorTab(path, history: history);
 
     public void OpenFolderInNewWindow(string path)
     {
@@ -1500,7 +1522,16 @@ public sealed partial class MainWindow : Window
         }
 
         TabHost.Content = content;
+        if (content is NavigatorPage previewPage) previewPage.ApplyPinnedPreviewFromWindow(_pinnedPreviewPath, _pinnedPreviewVisible);
     }
+
+    private void Navigator_PinnedPreviewChanged(string? path)
+    {
+        _pinnedPreviewPath = path;
+        _pinnedPreviewVisible = path is not null;
+    }
+
+    private void Navigator_PinnedPreviewVisibilityChanged(bool visible) => _pinnedPreviewVisible = visible;
 
     private void RefreshClosable()
     {
@@ -1957,6 +1988,7 @@ public sealed partial class MainWindow : Window
 
         public NavigatorPage? Navigator { get; set; }
         public ClosedTabState? RestoreState { get; set; }
+        public NavigationHistoryState? InitialHistory { get; set; }
         public bool IsHibernated { get; set; }
         public bool KeepAlive { get; set; }
         public bool WasSelected { get; set; }

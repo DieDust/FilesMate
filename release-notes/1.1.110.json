@@ -1,0 +1,5 @@
+{
+  "zh-CN": "优化字母定位栏的间距：双类别提示改为留白更充分的轻色块，移除密集边框；较矮窗口自动切换双列，点击区域保持完整。",
+  "en-US": "Improved spacing in the alphabet rail. Dual-kind letters use separated subtle fills without crowded outlines, shorter windows switch to two columns, and the full letter cell remains clickable.",
+  "ja-JP": "アルファベットナビゲーションの間隔を改善しました。フォルダーとファイルの両方がある文字を余白のある淡い背景で示し、密集した枠線を削除しました。高さの低いウィンドウでは2列に切り替え、文字のセル全体をクリックできます。"
+}

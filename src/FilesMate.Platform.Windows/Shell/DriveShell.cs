@@ -28,9 +28,12 @@ public static class DriveShell
     public static ProcessStartInfo EjectStartInfo(string root)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(root);
+        var letter = DriveLetter(root);
+        if (letter is null || !string.Equals(root.TrimEnd('\\'), letter + ":", StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException("A drive root is required.", nameof(root));
         return new ProcessStartInfo
         {
-            FileName = root,
+            FileName = letter + ":\\",
             Verb = "eject",
             UseShellExecute = true,
         };
@@ -43,6 +46,8 @@ public static class DriveShell
     public static void DisconnectLetter(string root) => Start(DisconnectLetterStartInfo(root));
 
     public static void Eject(string root) => Start(EjectStartInfo(root));
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    public static Task EjectAsync(string root) => ShellLocation.OnSta(() => { Eject(root); return true; });
 
     public static string? DriveLetter(string? root)
     {

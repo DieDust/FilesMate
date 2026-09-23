@@ -190,6 +190,15 @@
   <data name="Alphabet_AccessibleName" xml:space="preserve">
     <value>先頭文字で移動</value>
   </data>
+  <data name="Alphabet_FileGroup" xml:space="preserve">
+    <value>ファイル</value>
+  </data>
+  <data name="Alphabet_FolderGroup" xml:space="preserve">
+    <value>フォルダー</value>
+  </data>
+  <data name="Alphabet_MultipleHint" xml:space="preserve">
+    <value>{0}：フォルダーまたはファイルを選択</value>
+  </data>
   <data name="Alphabet_QuickNavigation" xml:space="preserve">
     <value>アルファベットナビゲーション</value>
   </data>
@@ -756,6 +765,102 @@
   </data>
   <data name="DetailsView" xml:space="preserve">
     <value>詳細表示</value>
+  </data>
+  <data name="Device_BrowseHint" xml:space="preserve">
+    <value>デバイスが Windows に公開しているファイルを表示します。必要に応じてロックを解除し、アクセスを許可してください。</value>
+  </data>
+  <data name="Device_CanPaste" xml:space="preserve">
+    <value>デバイス · コピー・貼り付け可能</value>
+  </data>
+  <data name="Device_ClipboardReady" xml:space="preserve">
+    <value>コピーしました。コピー先のフォルダーを開いて貼り付けてください。</value>
+  </data>
+  <data name="Device_CopyCancelled" xml:space="preserve">
+    <value>コピーをキャンセルしました。完了：{0} 件、未完了またはスキップ：{1} 件。元のファイルは保持されています。</value>
+  </data>
+  <data name="Device_CopyCompleted" xml:space="preserve">
+    <value>{0} 個の項目をコピーしました。</value>
+  </data>
+  <data name="Device_CopyIncomplete" xml:space="preserve">
+    <value>完了：{0} 件、未完了またはスキップ：{1} 件。接続と空き容量を確認してください。元のファイルは保持されています。</value>
+  </data>
+  <data name="Device_CopyOnly" xml:space="preserve">
+    <value>デバイスとの転送には「コピー」を使用してください。切り取りと移動には対応していません。</value>
+  </data>
+  <data name="Device_CopyTo" xml:space="preserve">
+    <value>コピー先…</value>
+  </data>
+  <data name="Device_Copying" xml:space="preserve">
+    <value>ファイルをコピー中…</value>
+  </data>
+  <data name="Device_EjectBlockingInterface" xml:space="preserve">
+    <value>使用中のデバイス接続：{0}</value>
+  </data>
+  <data name="Device_EjectBusy" xml:space="preserve">
+    <value>FilesMate のファイル操作が完了していません。コピー、移動、圧縮・展開、名前の競合のウィンドウを確認し、操作を完了またはキャンセルしてから再試行してください。接続は維持してください。</value>
+  </data>
+  <data name="Device_EjectDebugging" xml:space="preserve">
+    <value>スマートフォンの USB デバッグ接続（ADB）が使用中です。接続中のデバッグ・画面ミラーリングアプリを終了するか、スマートフォンの開発者向けオプションで USB デバッグをオフにして再試行してください。オフにするとデバッグ接続が切断されます。取り外しが成功するまでケーブルを接続したままにしてください。</value>
+  </data>
+  <data name="Device_EjectDenied" xml:space="preserve">
+    <value>Windows が取り外しを拒否しました。使用中のファイルやアプリを閉じて再試行してください。接続は維持してください。</value>
+  </data>
+  <data name="Device_EjectShowBlockers" xml:space="preserve">
+    <value>ファイルの使用元を表示</value>
+  </data>
+  <data name="Device_EjectRetry" xml:space="preserve">
+    <value>安全な取り外しを再試行</value>
+  </data>
+  <data name="Device_EjectReleaseOwn" xml:space="preserve">
+    <value>FilesMate のプレビューを解放</value>
+  </data>
+  <data name="Device_EjectNoFileLocks" xml:space="preserve">
+    <value>このドライブで開かれているファイルは見つかりませんでした。ドライバー、システムサービス、デバイス接続が使用中の可能性があります。接続を維持し、関連アプリを閉じてから再試行してください。</value>
+  </data>
+  <data name="Device_EjectPreparing" xml:space="preserve">
+    <value>取り外しを準備しています。デバイスのフォルダーとプレビューを解放中…</value>
+  </data>
+  <data name="Device_EjectRemoving" xml:space="preserve">
+    <value>Windows による安全な取り外しを待っています。結果が表示されるまで接続を維持してください。</value>
+  </data>
+  <data name="Device_EjectSuccess" xml:space="preserve">
+    <value>デバイスを安全に取り外しました。接続を解除できます。</value>
+  </data>
+  <data name="Device_EjectUnavailable" xml:space="preserve">
+    <value>デバイスが切断されているか、ここでの安全な取り外しに対応していません。</value>
+  </data>
+  <data name="Device_Empty" xml:space="preserve">
+    <value>表示できる項目がありません。ファイルが見つからない場合は、ロックを解除してこのコンピューターのアクセスを許可し、更新してください。</value>
+  </data>
+  <data name="Device_InvalidClipboard" xml:space="preserve">
+    <value>貼り付けできません。FilesMate のデバイスタブからファイルをコピーして再試行してください。</value>
+  </data>
+  <data name="Device_Loading" xml:space="preserve">
+    <value>デバイスを読み込み中…</value>
+  </data>
+  <data name="Device_OpenFailed" xml:space="preserve">
+    <value>デバイス内のファイルを開けません。接続を確認して再試行してください。</value>
+  </data>
+  <data name="Device_PreviewHint" xml:space="preserve">
+    <value>このデバイス項目のプレビューはありません。ダブルクリックすると Windows で開きます。</value>
+  </data>
+  <data name="Device_ReadOnly" xml:space="preserve">
+    <value>デバイス · 読み取り専用</value>
+  </data>
+  <data name="Device_ReadOnlyHint" xml:space="preserve">
+    <value>このフォルダーからパソコンへコピーできますが、書き込みは許可されていません。項目をコピーし、パソコン内のフォルダーに貼り付けてください。</value>
+  </data>
+  <data name="Device_SearchCurrentFolder" xml:space="preserve">
+    <value>現在のデバイスフォルダー：{0} 件</value>
+  </data>
+  <data name="Device_TransferFailed" xml:space="preserve">
+    <value>コピーできませんでした。接続、アクセス権、空き容量を確認して再試行してください。</value>
+  </data>
+  <data name="Device_Unavailable" xml:space="preserve">
+    <value>デバイスが切断、ロックされているか、応答していません。再接続またはロック解除後に更新してください。</value>
+  </data>
+  <data name="Device_WritableHint" xml:space="preserve">
+    <value>貼り付けやドラッグでファイルをコピーできます。転送完了まで接続を維持してください。</value>
   </data>
   <data name="DiagnosticsCopied" xml:space="preserve">
     <value>診断情報をコピーしました</value>
@@ -1512,6 +1617,18 @@
   <data name="PreviewInfoTab" xml:space="preserve">
     <value>情報</value>
   </data>
+  <data name="Preview_FollowingSelection" xml:space="preserve"><value>選択項目に追従</value></data>
+  <data name="Preview_PinnedStatus" xml:space="preserve"><value>このウィンドウで固定：{0}</value></data>
+  <data name="TitleBar_Restore" xml:space="preserve"><value>元に戻す</value></data>
+  <data name="TitleBar_Move" xml:space="preserve"><value>移動</value></data>
+  <data name="TitleBar_Size" xml:space="preserve"><value>サイズ変更</value></data>
+  <data name="TitleBar_Minimize" xml:space="preserve"><value>最小化</value></data>
+  <data name="TitleBar_Maximize" xml:space="preserve"><value>最大化</value></data>
+  <data name="TitleBar_Close" xml:space="preserve"><value>ウィンドウを閉じる</value></data>
+  <data name="Preview_Pin" xml:space="preserve"><value>固定</value></data>
+  <data name="Preview_Unpin" xml:space="preserve"><value>固定解除</value></data>
+  <data name="Preview_RefreshPinned" xml:space="preserve"><value>更新</value></data>
+  <data name="Preview_PinnedUnavailable" xml:space="preserve"><value>固定した項目にアクセスできません。更新するか固定を解除してください。</value></data>
   <data name="PreviewMediaError" xml:space="preserve">
     <value>この形式は再生できません。メディアプレーヤーで開いてください。</value>
   </data>
@@ -1885,7 +2002,7 @@
     <value>順序を変更</value>
   </data>
   <data name="ResultOrder_Hint" xml:space="preserve">
-    <value>上にある種類を優先して表示します。変更はファイルマネージャーと共有されます。</value>
+    <value>ドラッグして結果の種類を並べ替えます。単独の EXE/COM はその行で表示を切り替えます。設定はファイルマネージャーと共有されます。</value>
   </data>
   <data name="ResultOrder_SharedHint" xml:space="preserve">
     <value>ファイルマネージャーと共通の設定です</value>
@@ -2017,7 +2134,7 @@
     <value>コード</value>
   </data>
   <data name="SearchRankDescription" xml:space="preserve">
-    <value>ドラッグして種類ごとの表示順を変更できます。同じ種類の項目は名前順に並びます。</value>
+    <value>アプリは Windows のアプリ一覧とスタートメニューから取得します。単独プログラムはインデックス内の EXE/COM、その他のショートカットはファイルや Web サイトへのリンクです。ドラッグして優先順位を変更できます。</value>
   </data>
   <data name="SearchRankDocument" xml:space="preserve">
     <value>文書</value>
@@ -2034,11 +2151,20 @@
   <data name="SearchRankProgram" xml:space="preserve">
     <value>アプリ</value>
   </data>
+  <data name="SearchRankExecutable" xml:space="preserve">
+    <value>単独の EXE/COM</value>
+  </data>
+  <data name="Search_StandaloneExecutables" xml:space="preserve">
+    <value>単独プログラムを表示</value>
+  </data>
+  <data name="Search_StandaloneExecutablesHint" xml:space="preserve">
+    <value>インデックス済みの EXE・COM をアプリのショートカットとは別に検索します。オフにしてもインデックスは保持されます。</value>
+  </data>
   <data name="SearchRankSection" xml:space="preserve">
     <value>検索結果の優先順位</value>
   </data>
   <data name="SearchRankShortcut" xml:space="preserve">
-    <value>ショートカット</value>
+    <value>その他のショートカット</value>
   </data>
   <data name="SearchRankVideo" xml:space="preserve">
     <value>動画</value>
@@ -2590,7 +2716,7 @@ Ctrl+T で新しいタブ。Ctrl+W でタブを閉じる。Ctrl+L でアドレ�
     <value>クラウドの項目を編集</value>
   </data>
   <data name="Sidebar_Eject" xml:space="preserve">
-    <value>取り出し</value>
+    <value>安全な取り外し</value>
   </data>
   <data name="Sidebar_Expand" xml:space="preserve">
     <value>ナビゲーションを展開</value>

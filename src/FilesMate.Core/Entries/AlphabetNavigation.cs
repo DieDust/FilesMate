@@ -1,6 +1,6 @@
 namespace FilesMate.Core.Entries;
 
-/// <summary>Maps the alphabet to actual sorted rows, independently of folder/language partitions.</summary>
+/// <summary>Maps the alphabet to actual sorted rows, including repeated folder and file runs.</summary>
 public sealed class AlphabetNavigation
 {
     public static IReadOnlyList<string> Labels { get; } = Array.AsReadOnly(
@@ -34,22 +34,48 @@ public sealed class AlphabetNavigation
 
     public bool Contains(string label) => _destinations.ContainsKey(label);
 
-    public int Destination(string label, int row)
+    public int Occurrences(string label) => _destinations.TryGetValue(label, out var candidates) ? candidates.Length : 0;
+
+    public IReadOnlyList<int> Destinations(string label) => _destinations.TryGetValue(label, out var candidates) ? candidates : [];
+
+    // A letter can have several runs within one kind when Latin and Chinese names
+    // are sorted separately. Only different kinds need a choice in the UI.
+    public bool HasBothKinds(string label)
+    {
+        if (!_destinations.TryGetValue(label, out var candidates)) return false;
+        var hasFolders = false;
+        var hasFiles = false;
+        foreach (var section in candidates)
+        {
+            if (_sections[section].IsDirectory) hasFolders = true;
+            else hasFiles = true;
+            if (hasFolders && hasFiles) return true;
+        }
+        return false;
+    }
+
+    public int BoundaryDestination(string label, bool last)
+        => _destinations.TryGetValue(label, out var candidates) ? (last ? candidates[^1] : candidates[0]) : -1;
+
+    public int Destination(string label, int row, bool? isDirectory = null)
     {
         if (!_destinations.TryGetValue(label, out var candidates)) return -1;
         var active = SectionAt(row);
-        if (active >= 0 && _sections[active].Label == label) return active;
-        var low = 0;
-        var high = candidates.Length;
-        while (low < high)
+        if (active >= 0 && _sections[active].Label == label
+            && (isDirectory is null || _sections[active].IsDirectory == isDirectory))
+            return active;
+
+        var nearest = -1;
+        var distance = long.MaxValue;
+        foreach (var section in candidates)
         {
-            var middle = (low + high) / 2;
-            if (_sections[candidates[middle]].FirstIndex < row) low = middle + 1; else high = middle;
+            if (isDirectory is not null && _sections[section].IsDirectory != isDirectory) continue;
+            var difference = Math.Abs((long)_sections[section].FirstIndex - row);
+            if (difference >= distance) continue;
+            nearest = section;
+            distance = difference;
         }
-        if (low == 0) return candidates[0];
-        if (low == candidates.Length) return candidates[^1];
-        return row - _sections[candidates[low - 1]].FirstIndex <= _sections[candidates[low]].FirstIndex - row
-            ? candidates[low - 1] : candidates[low];
+        return nearest;
     }
 
     // Derive the leading item from the actual row geometry, never from scroll percentage.

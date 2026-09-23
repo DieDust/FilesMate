@@ -14,7 +14,7 @@ public sealed class QuickPreviewWindow : Window
 {
     private readonly PreviewPane _pane = new();
     private readonly TextBlock _title = new() { TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center, FontSize = 16 };
-    private readonly PreviewService _service = new([new ImagePreviewProvider(), new TextPreviewProvider(), new PdfPreviewProvider(), new OfficePreviewProvider(), new MediaPreviewProvider(), new PropertiesPreviewProvider()]);
+    private readonly PreviewService _service = new([new DevicePreviewProvider(), new ImagePreviewProvider(), new TextPreviewProvider(), new PdfPreviewProvider(), new OfficePreviewProvider(), new MediaPreviewProvider(), new PropertiesPreviewProvider()]);
     private long _generation;
     private bool _closed;
     private bool _closing;
@@ -124,7 +124,7 @@ public sealed class QuickPreviewWindow : Window
     public async Task LoadAsync(string path)
     {
         if(_closed || string.Equals(_path,path,StringComparison.OrdinalIgnoreCase))return;
-        _path=path; Title=_title.Text=Path.GetFileName(path); ToolTipService.SetToolTip(_title,path);
+        _path=path; Title=_title.Text=FilesMate.App.Navigation.LocationCaption.Title(path); ToolTipService.SetToolTip(_title,Title);
         await _pane.LoadAsync(path,++_generation);
     }
 

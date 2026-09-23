@@ -6,9 +6,16 @@ public static class PathChildren
 {
     public const int Limit = 48;
 
-    public static Task<IReadOnlyList<PathSegment>> FoldersAsync(
-        string path, bool showHidden, CancellationToken cancellationToken = default) =>
-        Task.Run(() => Folders(path, showHidden, cancellationToken), cancellationToken);
+    public static async Task<IReadOnlyList<PathSegment>> FoldersAsync(
+        string path, bool showHidden, CancellationToken cancellationToken = default)
+    {
+        if (OperatingSystem.IsWindows() && FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out var device))
+        {
+            var children = await FilesMate.Platform.Windows.Shell.PortableDeviceService.ReadFolderAsync(device, cancellationToken).ConfigureAwait(false);
+            return children.Where(e => e.IsFolder).Take(Limit).Select(e => new PathSegment(e.Name, e.Location.Uri)).ToArray();
+        }
+        return await Task.Run(() => Folders(path, showHidden, cancellationToken), cancellationToken).ConfigureAwait(false);
+    }
 
     public static IReadOnlyList<PathSegment> Folders(
         string path, bool showHidden, CancellationToken cancellationToken = default)

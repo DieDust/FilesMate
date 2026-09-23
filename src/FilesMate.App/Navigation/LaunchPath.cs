@@ -242,6 +242,8 @@ public static class LaunchPath
         {
             return new LaunchTarget(ResolveFolder(trimmed), null);
         }
+        if (FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(trimmed, out var device))
+            return new LaunchTarget(device.Uri, null);
 
         var normalized = NormalizeExistingPath(trimmed);
         try

@@ -70,7 +70,8 @@ public sealed partial class FileRow : UserControl
     {
         if (Entry.Kind != EntryKind.Directory
             || !App.ExplorerPreferences.ShowFolderSizes
-            || string.IsNullOrEmpty(path)
+              || string.IsNullOrEmpty(path)
+              || FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out _)
             || (Entry.Attributes & (FileAttributes.ReparsePoint | FileAttributes.Offline)) != 0)
         {
             return;

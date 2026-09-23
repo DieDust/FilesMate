@@ -9,6 +9,7 @@ using FilesMate.App.Localization;
 using FilesMate.App.Models;
 using FilesMate.App.Navigation;
 using FilesMate.App.Services;
+using FilesMate.App.Views;
 using FilesMate.Core.Directories;
 using FilesMate.Core.Entries;
 using FilesMate.Core.Icons;
@@ -279,6 +280,7 @@ public sealed partial class FileDetailsSurface : UserControl
     public bool ClipboardHasFiles { get; set; }
 
     public bool IsFolderWritable { get; set; } = true;
+    public bool IsPortableDevice { get; set; }
 
     public SelectionModel Selection => _selection;
     public bool IsMarqueeSelecting => _dragging;
@@ -1137,8 +1139,11 @@ public sealed partial class FileDetailsSurface : UserControl
                 return;
             }
 
-            _dragStorageItems = await ResolveStorageItemsAsync(_dragSourcePaths);
-            _dragPreview = await CreateDragPreviewAsync(_dragSourcePaths);
+            if (!IsPortableDevice)
+            {
+                _dragStorageItems = await ResolveStorageItemsAsync(_dragSourcePaths);
+                _dragPreview = await CreateDragPreviewAsync(_dragSourcePaths);
+            }
             await StartDragAsync(pointer);
         }
         catch (OperationCanceledException)
@@ -1191,6 +1196,16 @@ public sealed partial class FileDetailsSurface : UserControl
     private void OnDragStarting(UIElement sender, DragStartingEventArgs e)
     {
         if (e.Data.Properties.ContainsKey(ColumnDragFormat)) return;
+        if (IsPortableDevice)
+        {
+            DeviceTransferUI.SetDragItems(e.Data, _dragSourcePaths.Select(path =>
+            {
+                FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out var location);
+                return location;
+            }));
+            e.AllowedOperations = DataPackageOperation.Copy;
+            return;
+        }
         try
         {
             if (_dragStorageItems.Count > 0)
@@ -1231,7 +1246,7 @@ public sealed partial class FileDetailsSurface : UserControl
     {
         e.DragUIOverride.IsGlyphVisible = false;
         e.DragUIOverride.IsCaptionVisible = true;
-        if (!e.DataView.Contains(StandardDataFormats.StorageItems))
+        if (!DeviceTransferUI.HasFiles(e.DataView))
         {
             e.AcceptedOperation = DataPackageOperation.None;
             ClearDropTarget();
@@ -1244,6 +1259,17 @@ public sealed partial class FileDetailsSurface : UserControl
         var overFolder = overItem && _items.TryGetEntry(candidate, out var entry) && entry.Kind == EntryKind.Directory;
         _dropTargetViewIndex = overFolder ? candidate : -1;
         var destination = overFolder ? ResolveDropTargetDirectory() : ResolveFolder?.Invoke();
+        if (IsPortableDevice || e.DataView.Contains(DeviceTransferUI.ClipboardFormat))
+        {
+            e.AcceptedOperation = (!overItem || overFolder) && !string.IsNullOrWhiteSpace(destination)
+                && IsFolderWritable && (IsPortableDevice || Path.IsPathFullyQualified(destination)) && !e.Modifiers.HasFlag(DragDropModifiers.Shift)
+                ? DataPackageOperation.Copy : DataPackageOperation.None;
+            UpdateFolderHover(e.AcceptedOperation != DataPackageOperation.None && overFolder ? destination : null);
+            e.DragUIOverride.Caption = StringTable.Get("Drag_CopyTo");
+            RefreshRealizedSelection();
+            e.Handled = true;
+            return;
+        }
         var operation = FileDropPolicy.ResolveOperation(
             FileDropRequest.SourcePaths(e.DataView), destination, !overItem || overFolder,
             e.Modifiers.HasFlag(DragDropModifiers.Control), e.Modifiers.HasFlag(DragDropModifiers.Shift));
@@ -1262,7 +1288,7 @@ public sealed partial class FileDetailsSurface : UserControl
     private async void OnDrop(object sender, DragEventArgs e)
     {
         CancelFolderHover();
-        if (!e.DataView.Contains(StandardDataFormats.StorageItems))
+        if (!DeviceTransferUI.HasFiles(e.DataView))
         {
             return;
         }
@@ -1274,6 +1300,13 @@ public sealed partial class FileDetailsSurface : UserControl
             CancelFolderHover();
             if (e.AcceptedOperation == DataPackageOperation.None) return;
             var destination = ResolveDropTargetDirectory() ?? ResolveFolder?.Invoke();
+            if (IsPortableDevice || e.DataView.Contains(DeviceTransferUI.ClipboardFormat))
+            {
+                var devicePaths = await DeviceTransferUI.ReadItemsAsync(e.DataView);
+                if (devicePaths.Length > 0 && DropRequested is { } deviceDrop)
+                    await deviceDrop(new FileDropRequest(devicePaths, destination, DataPackageOperation.Copy));
+                return;
+            }
             var items = await e.DataView.GetStorageItemsAsync();
             var paths = items
                 .Select(item => item.Path)
@@ -1801,10 +1834,10 @@ public sealed partial class FileDetailsSurface : UserControl
             TagsAvailable: true,
             BatchRenameAvailable: true,
             ShareAvailable: App.ShareService is not null,
-            FolderPath: ExistingFolder(ResolveFolder?.Invoke()),
+            FolderPath: IsPortableDevice ? ResolveFolder?.Invoke() : ExistingFolder(ResolveFolder?.Invoke()),
             PrimaryIsArchive: !PrimaryIsDirectory() && FileTypeIconCatalog.IsArchivePath(primaryPath),
             SelectionIsArchive: archives,
-            OtherPanePath: OtherPanePath?.Invoke()));
+            OtherPanePath: OtherPanePath?.Invoke(), IsPortableDevice: IsPortableDevice));
         if (layout.Primary.Count == 0 && layout.Items.Count == 0)
         {
             return;
@@ -1843,6 +1876,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private bool TryShowShellContextMenu(bool background, Point position)
     {
+        if (IsPortableDevice) return false;
         if (App.CurrentWindow is null || XamlRoot is null)
         {
             return false;

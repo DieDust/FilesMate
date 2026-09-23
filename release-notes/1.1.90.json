@@ -1,0 +1,5 @@
+{
+  "zh-CN": "补全便携设备文件复制：可多选文件或文件夹，复制到电脑，在 FilesMate 标签页之间复制、粘贴和拖放。支持写入的手机目录可接收电脑文件，只读目录会说明访问限制。传输进度、取消和同名冲突由 Windows 处理，源文件会保留；设备断开、跳过或复制失败会如实提示。设备传输期间关闭主程序会等待操作结束。",
+  "en-US": "Added file copying for portable devices. Select files or folders, copy them to your computer, or copy, paste and drag between FilesMate tabs. Writable phone folders can receive files; read-only folders explain their access limits. Windows handles progress, cancellation and name conflicts. Source files are kept, and interrupted, skipped or failed copies are reported. Closing FilesMate waits for an active device transfer to finish.",
+  "ja-JP": "ポータブルデバイスのファイルコピーに対応しました。ファイルやフォルダーを複数選択してパソコンへコピーし、FilesMate のタブ間でコピー、貼り付け、ドラッグを行えます。書き込み可能なスマートフォンのフォルダーへファイルを送信でき、読み取り専用のフォルダーには制限を表示します。進行状況、キャンセル、同名項目の処理は Windows が担当します。元のファイルは保持され、中断、スキップ、失敗を通知します。転送中に FilesMate を閉じると、処理の終了を待ちます。"
+}

@@ -1,0 +1,5 @@
+{
+  "zh-CN": "安全弹出设备时立即显示准备和处理进度，随后在同一窗口显示 Windows 的弹出结果。避免重复点击被误报为未完成的文件操作；结果显示后及时释放忙碌状态。传输期间仍会阻止弹出，失败时保留设备连接并提示处理步骤。",
+  "en-US": "Safe removal now shows preparation and Windows removal progress immediately, followed by the result in the same dialog. Repeated clicks no longer report the removal itself as unfinished file work. Operation state is released before displaying the result. Active transfers still block removal; failures keep the device connected and explain the next steps.",
+  "ja-JP": "安全な取り外しの準備と Windows の処理状況をすぐに表示し、同じウィンドウに結果を表示します。連続クリックによるファイル操作中の誤表示を防ぎ、結果表示前に処理中の状態を解除します。転送中は引き続き取り外しを防止し、失敗した場合は接続を維持して対処方法を案内します。"
+}

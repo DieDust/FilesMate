@@ -15,6 +15,26 @@ public sealed class SearchIndexConfigurationTests : IDisposable
     private SearchIndexSettings Initial => SearchIndexSettings.Sanitize([_root], ["excluded"], false, databaseDirectory: _root);
 
     [Fact]
+    public async Task Ranking_and_executable_toggle_share_one_snapshot_and_notify_the_other_surface()
+    {
+        await Store.SaveAsync(Initial);
+        var changed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var watcher = new SearchRankingPreferencesWatcher(SettingsPath, () => changed.TrySetResult());
+
+        SearchRankingConfiguration.Save([SearchHitKind.Image, SearchHitKind.Program], _root);
+        await changed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        SearchExecutableConfiguration.Save(false, _root);
+        await Store.SaveAsync(Initial with { MaxDepth = 7 });
+
+        var preferences = SearchRankingConfiguration.LoadPreferences(_root);
+        Assert.Equal(SearchHitKind.Image, preferences.RankOrder[0]);
+        Assert.False(preferences.IncludeStandaloneExecutables);
+        Assert.Equal(preferences.RankOrder.ToArray(), Store.Load().RankOrder.ToArray());
+        Assert.False(SearchExecutableConfiguration.Load(_root));
+        Assert.Equal(7, Store.Load().MaxDepth);
+    }
+
+    [Fact]
     public async Task Stale_page_save_preserves_relocated_directory_host_ranking_and_unknown_fields()
     {
         var stale = Initial;

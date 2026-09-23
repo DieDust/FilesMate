@@ -1,0 +1,5 @@
+{
+  "zh-CN": "新增便携设备浏览：iPad 等设备可从侧栏和主页进入 FilesMate 标签页，浏览设备向 Windows 开放的文件夹，并通过系统打开选中的文件。设备插拔后自动刷新列表，设备失联时停止读取并清除过期内容。修复弹出盘符根目录时未释放文件夹占用的问题，弹出操作在后台交由 Windows 处理；文件操作进行中会提示等待。跨盘移动在删除源文件前再次确认目标文件。便携设备页面暂不提供写入、删除和文件传输。写入过程中请勿直接拔出设备。",
+  "en-US": "Portable devices such as iPad now appear in the sidebar and home page. Browse folders exposed to Windows in FilesMate tabs and open selected files through the system. Device lists refresh after connection changes; disconnected views stop reading and clear stale entries. Eject now releases folder handles at drive roots and delegates to Windows on a worker, with a wait message while file operations are active. Cross-volume moves recheck the published destination before removing the source. Portable-device browsing does not yet support writing, deletion or file transfers. Avoid unplugging devices during writes.",
+  "ja-JP": "iPad などのポータブルデバイスをサイドバーとホームに表示し、Windows に公開されているフォルダーを FilesMate のタブ内で閲覧できます。選択したファイルはシステム経由で開きます。接続状態が変わると一覧を更新し、切断時は読み込みを停止して古い項目を消去します。取り出し時にドライブ直下のフォルダーも解放し、Windows の処理をバックグラウンドで呼び出します。ファイル操作中は完了を待つよう案内します。ドライブ間の移動では元ファイルの削除前に保存先を再確認します。ポータブルデバイスへの書き込み、削除、転送にはまだ対応していません。書き込み中にデバイスを抜かないでください。"
+}

@@ -23,6 +23,10 @@ public interface IApplicationCatalog
 
 public static class ApplicationCatalog
 {
+    // Keep each result kind in its own rank band so relevance never crosses
+    // the user-configured order of registered apps and indexed executables.
+    public const int RankStride = 8;
+
     public static IReadOnlyList<ApplicationEntry> Normalize(IEnumerable<ApplicationEntry> entries) => entries
         .Where(entry => !string.IsNullOrWhiteSpace(entry.Name) && !string.IsNullOrWhiteSpace(entry.LaunchPath) && !Maintenance(entry))
         .OrderByDescending(entry => entry.IsFilesMate)
@@ -42,14 +46,20 @@ public static class ApplicationCatalog
 
     public static SearchHitKind FileKind(string path, bool directory)
     {
-        var kind = SearchHitRanking.Classify(path, directory, recognizeApplicationShortcuts: false);
-        return kind == SearchHitKind.Program ? SearchHitKind.Other : kind;
+        return SearchHitRanking.Classify(path, directory, recognizeApplicationShortcuts: false);
     }
+
+    public static bool IsIndexedExecutable(string path, bool directory) => !directory &&
+        Path.GetExtension(path).ToLowerInvariant() is ".exe" or ".com";
 
     public static Func<string, bool, int> FileRank(IEnumerable<SearchHitKind> order, string query)
     {
         var priorities = SearchHitKinds.SanitizeOrder(order).Select((kind, index) => (kind, index)).ToDictionary(pair => pair.kind, pair => pair.index);
-        return (path, directory) => priorities[FileKind(path, directory)] * 8 + NameIndexReader.Relevance(Path.GetFileName(path), query);
+        return (path, directory) =>
+        {
+            var kind = FileKind(path, directory);
+            return priorities[kind] * RankStride + NameIndexReader.Relevance(Path.GetFileName(path), query);
+        };
     }
 }
 
@@ -73,7 +83,7 @@ public sealed class LauncherSearchProvider(IApplicationCatalog applications, str
         var appHits = ApplicationCatalog.Normalize(catalog).Where(entry => !HiddenSearchResults.Contains(hidden, entry.ToHit()) && NameIndexReader.Matches(entry.SearchText, terms))
             .Select(entry => entry.ToHit()).ToArray();
         var order = SearchRankingConfiguration.Load(profile);
-        var appRank = order.ToList().IndexOf(SearchHitKind.Program) * 8;
+        var appRank = order.ToList().IndexOf(SearchHitKind.Program) * ApplicationCatalog.RankStride;
         var fileRank = ApplicationCatalog.FileRank(order, query);
         int ApplicationRelevance(NameHit hit) => NameIndexReader.Matches(hit.Name, terms)
             ? NameIndexReader.Relevance(hit.Name, query)
@@ -83,14 +93,14 @@ public sealed class LauncherSearchProvider(IApplicationCatalog applications, str
             .ThenBy(hit => hit.Name.Length).ThenBy(hit => hit.Name, StringComparer.OrdinalIgnoreCase).ThenBy(hit => hit.Path, StringComparer.Ordinal);
         if (filter == SearchFilter.Apps)
         {
-            var page = Sort(appHits).Skip(offset).Take(limit + 1).ToArray();
-            return new(page.Take(limit).ToArray(), page.Length > limit);
+            var apps = Sort(appHits).Skip(offset).Take(limit + 1).ToArray();
+            return new(apps.Take(limit).ToArray(), apps.Length > limit);
         }
         // At most all matching apps can precede the requested file offset.
         // Keep that overlap so both default and custom group orders page correctly.
         var fileOffset = Math.Max(0, offset - appHits.Length);
         GlobalSearchResponse response;
-        try { response = await _files.SearchAsync(query, cancellationToken, SearchFilter.All, limit + appHits.Length + 1, fileOffset).ConfigureAwait(false); }
+        try { response = await _files.SearchAsync(query, cancellationToken, filter, limit + appHits.Length + 1, fileOffset).ConfigureAwait(false); }
         catch (Exception error) when (error is IOException or Microsoft.Data.Sqlite.SqliteException or UnauthorizedAccessException)
         { response = new([], false, "文件索引暂时不可用，仍可搜索应用。"); }
         var combined = Sort(appHits.Concat(response.Hits)).Skip(offset - fileOffset).Take(limit + 1).ToArray();

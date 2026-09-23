@@ -4,6 +4,17 @@ namespace FilesMate.App.Tests.Navigation;
 
 public sealed class SidebarContextMenuTests
 {
+    [Fact]
+    public void Portable_devices_do_not_offer_filesystem_mutations()
+    {
+        var device = new FilesMate.Platform.Windows.Shell.PortableDeviceLocation(
+            FilesMate.Platform.Windows.Shell.PortableDeviceLocation.ComputerPrefix + @"\\?\usb#test#"
+            + FilesMate.Platform.Windows.Shell.PortableDeviceLocation.InterfaceId, "iPad", []);
+        Assert.Equal([SidebarContextAction.OpenInNewTab, SidebarContextAction.OpenInNewWindow],
+            SidebarContextMenu.For(new NavigationItem("device:test", device.Name, "\uE8EA", device.Uri)));
+        Assert.Equal(device.Uri, LaunchPath.Parse(["FilesMate.App.exe", device.Uri]).Folder);
+        Assert.Equal(device.Uri, LaunchPath.Parse(["FilesMate.App.exe", "/open", device.Uri]).Folder);
+    }
     [Theory]
     [InlineData("cloud:OneDrive")]
     [InlineData("cloud:WpsCloud")]

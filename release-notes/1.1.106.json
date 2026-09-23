@@ -1,0 +1,5 @@
+{
+  "zh-CN": "修复字母快速定位在文件夹与文件中出现同一字母时无法到达另一处的问题。重复点击带小点的字母可切换位置，悬停可查看提示。安装向导会沿用并显示原有安装位置，手动升级遇到 FilesMate 占用文件时会提示关闭程序。",
+  "en-US": "Fixed alphabet navigation when the same initial appears in both folder and file groups. Click a dotted letter again to move to its next occurrence; hover for guidance. Setup retains and shows the previous installation directory and prompts when FilesMate is using files during a manual upgrade.",
+  "ja-JP": "フォルダーとファイルの両方に同じ頭文字がある場合の移動を修正しました。点の付いた文字を再度クリックすると次の位置へ移動し、ホバーで説明を表示します。セットアップは以前のインストール先を表示して維持し、手動更新中に FilesMate がファイルを使用している場合は終了を案内します。"
+}

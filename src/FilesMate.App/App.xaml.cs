@@ -15,6 +15,7 @@ using FilesMate.Core.Operations;
 using FilesMate.Platform.Windows.Associations;
 using FilesMate.Platform.Windows.Metadata;
 using FilesMate.Platform.Windows.Shell;
+using FilesMate.Search;
 
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
@@ -79,6 +80,8 @@ public partial class App : Application
     public static event EventHandler? TagsChanged;
 
     public static event EventHandler? PinnedLocationsChanged;
+    internal static event EventHandler? DevicesChanged;
+    internal static void NotifyDevicesChanged() => DevicesChanged?.Invoke(null, EventArgs.Empty);
 
     public static ExplorerPreferences ExplorerPreferences { get; private set; } = ExplorerPreferences.Default;
 
@@ -170,7 +173,8 @@ public partial class App : Application
         StartSystemThemeWatcher();
         MetadataStore = new SqliteFileMetadataStore(SqliteFileMetadataStore.DefaultFilePath);
         SearchIndexSettingsStore = new SearchIndexSettingsService(Program.SettingsPath(SearchIndexSettingsService.DefaultFilePath));
-        SearchIndex = new FileNameIndexService(SearchIndexSettingsStore.Load().ResolveDatabasePath());
+        SearchIndex = new FileNameIndexService(SearchIndexSettingsStore.Load().ResolveDatabasePath(),
+            () => SearchExecutableConfiguration.Load(Path.GetDirectoryName(SearchIndexSettingsStore.FilePath)));
         ShortcutSettingsStore = new ShortcutSettingsService(ShortcutSettingsService.DefaultFilePath);
         Shortcuts = ShortcutSettingsStore.Load();
         ExplorerPreferencesStore = new ExplorerPreferencesService(Program.SettingsPath(ExplorerPreferencesService.DefaultFilePath));
@@ -192,6 +196,7 @@ public partial class App : Application
         FileIdentityProvider = new WindowsFileIdentityProvider();
         PreviewService = new PreviewService(
         [
+            new DevicePreviewProvider(),
             new ImagePreviewProvider(),
             new TextPreviewProvider(),
             new PdfPreviewProvider(),
@@ -789,7 +794,8 @@ public partial class App : Application
                         await store.UpdateDatabaseDirectoryAsync(Path.GetDirectoryName(path)!, token).ConfigureAwait(false);
                         settingsCommitted = true;
                     }));
-                SearchIndex = await Task.Run(() => new FileNameIndexService(newPath));
+                SearchIndex = await Task.Run(() => new FileNameIndexService(newPath,
+                    () => SearchExecutableConfiguration.Load(Path.GetDirectoryName(store.FilePath))));
                 return result;
             }
             catch
@@ -797,7 +803,8 @@ public partial class App : Application
                 // A failed settings read defaults its path. Recovery must use the known
                 // transaction state, including when malformed settings caused the failure.
                 var activePath = settingsCommitted ? newPath : oldPath;
-                SearchIndex = await Task.Run(() => new FileNameIndexService(activePath));
+                SearchIndex = await Task.Run(() => new FileNameIndexService(activePath,
+                    () => SearchExecutableConfiguration.Load(Path.GetDirectoryName(store.FilePath))));
                 throw;
             }
         }

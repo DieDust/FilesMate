@@ -1,0 +1,5 @@
+{
+  "zh-CN": "修复升级安装沿用旧开发构建目录的问题。旧安装位置若指向 FilesMate 的源码输出目录，安装向导会改用正常的用户安装目录；普通自定义安装位置继续保留。安装向导支持简体中文，固定预览关闭后仍可恢复。",
+  "en-US": "Fixed upgrades reusing a FilesMate development build directory as the installation destination. Normal custom install locations remain unchanged. Includes Simplified Chinese setup and the pinned-preview restoration fix.",
+  "ja-JP": "旧バージョンの開発用ビルドフォルダーをインストール先として再利用する問題を修正しました。通常のカスタムインストール先は維持します。簡体字中国語のセットアップと固定プレビューの復元修正も含まれます。"
+}

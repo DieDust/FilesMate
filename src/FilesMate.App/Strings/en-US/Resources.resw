@@ -190,6 +190,15 @@
   <data name="Alphabet_AccessibleName" xml:space="preserve">
     <value>Jump by first letter</value>
   </data>
+  <data name="Alphabet_FileGroup" xml:space="preserve">
+    <value>Files</value>
+  </data>
+  <data name="Alphabet_FolderGroup" xml:space="preserve">
+    <value>Folders</value>
+  </data>
+  <data name="Alphabet_MultipleHint" xml:space="preserve">
+    <value>{0}: choose a folder or file group</value>
+  </data>
   <data name="Alphabet_QuickNavigation" xml:space="preserve">
     <value>Alphabet navigation</value>
   </data>
@@ -756,6 +765,102 @@
   </data>
   <data name="DetailsView" xml:space="preserve">
     <value>Details view</value>
+  </data>
+  <data name="Device_BrowseHint" xml:space="preserve">
+    <value>Browse files shared by this device. Unlock it and allow access if prompted.</value>
+  </data>
+  <data name="Device_CanPaste" xml:space="preserve">
+    <value>Device · Copy and paste</value>
+  </data>
+  <data name="Device_ClipboardReady" xml:space="preserve">
+    <value>Ready to copy. Open a destination folder and paste.</value>
+  </data>
+  <data name="Device_CopyCancelled" xml:space="preserve">
+    <value>Copy cancelled. Completed: {0}; incomplete or skipped: {1}. Source files were kept.</value>
+  </data>
+  <data name="Device_CopyCompleted" xml:space="preserve">
+    <value>Copied {0} items.</value>
+  </data>
+  <data name="Device_CopyIncomplete" xml:space="preserve">
+    <value>Completed: {0}; incomplete or skipped: {1}. Check the device connection and destination space. Source files were kept.</value>
+  </data>
+  <data name="Device_CopyOnly" xml:space="preserve">
+    <value>Use Copy for device transfers. Cut and move are not available here.</value>
+  </data>
+  <data name="Device_CopyTo" xml:space="preserve">
+    <value>Copy to…</value>
+  </data>
+  <data name="Device_Copying" xml:space="preserve">
+    <value>Copying files…</value>
+  </data>
+  <data name="Device_EjectBlockingInterface" xml:space="preserve">
+    <value>Device connection in use: {0}</value>
+  </data>
+  <data name="Device_EjectBusy" xml:space="preserve">
+    <value>FilesMate has unfinished file operations. Check any copy, move, archive or conflict windows. Finish or cancel those operations, then try ejecting again. Keep the device connected.</value>
+  </data>
+  <data name="Device_EjectDebugging" xml:space="preserve">
+    <value>The phone's USB debugging connection (ADB) is still in use. Close the debugging or mirroring app, or turn off USB debugging in the phone's Developer options, then try ejecting again. Turning it off disconnects debugging sessions. Keep the cable connected until removal succeeds.</value>
+  </data>
+  <data name="Device_EjectDenied" xml:space="preserve">
+    <value>Windows could not eject this device. Close files and programs using it, then try again. Keep the device connected.</value>
+  </data>
+  <data name="Device_EjectShowBlockers" xml:space="preserve">
+    <value>Show file users</value>
+  </data>
+  <data name="Device_EjectRetry" xml:space="preserve">
+    <value>Retry safe eject</value>
+  </data>
+  <data name="Device_EjectReleaseOwn" xml:space="preserve">
+    <value>Release FilesMate previews</value>
+  </data>
+  <data name="Device_EjectNoFileLocks" xml:space="preserve">
+    <value>No open file handles were found on this drive. A driver, system service or device interface may still be using it. Keep it connected and retry after closing related apps.</value>
+  </data>
+  <data name="Device_EjectPreparing" xml:space="preserve">
+    <value>Preparing to eject. Releasing open device folders and previews…</value>
+  </data>
+  <data name="Device_EjectRemoving" xml:space="preserve">
+    <value>Waiting for Windows to safely eject the device. Keep it connected until the result appears.</value>
+  </data>
+  <data name="Device_EjectSuccess" xml:space="preserve">
+    <value>The device was safely ejected. You can unplug it now.</value>
+  </data>
+  <data name="Device_EjectUnavailable" xml:space="preserve">
+    <value>This device is disconnected or does not support safe removal here.</value>
+  </data>
+  <data name="Device_Empty" xml:space="preserve">
+    <value>No items are available. If files are missing, unlock the device and allow this computer to access it, then refresh.</value>
+  </data>
+  <data name="Device_InvalidClipboard" xml:space="preserve">
+    <value>These items cannot be pasted here. Copy the device files from a FilesMate device tab and try again.</value>
+  </data>
+  <data name="Device_Loading" xml:space="preserve">
+    <value>Reading device…</value>
+  </data>
+  <data name="Device_OpenFailed" xml:space="preserve">
+    <value>Could not open this device file. Check the connection and try again.</value>
+  </data>
+  <data name="Device_PreviewHint" xml:space="preserve">
+    <value>A preview is not available for this device item. Double-click it to open it with Windows.</value>
+  </data>
+  <data name="Device_ReadOnly" xml:space="preserve">
+    <value>Device · Read only</value>
+  </data>
+  <data name="Device_ReadOnlyHint" xml:space="preserve">
+    <value>This device folder allows copying files out, but does not accept files. Copy the selected items and paste them into a folder on your computer.</value>
+  </data>
+  <data name="Device_SearchCurrentFolder" xml:space="preserve">
+    <value>Current device folder: {0} matches</value>
+  </data>
+  <data name="Device_TransferFailed" xml:space="preserve">
+    <value>Could not copy the files. Check the connection, access permission and available space, then try again.</value>
+  </data>
+  <data name="Device_Unavailable" xml:space="preserve">
+    <value>The device is disconnected, locked, or not responding. Reconnect or unlock it, then refresh.</value>
+  </data>
+  <data name="Device_WritableHint" xml:space="preserve">
+    <value>Copy files here with Paste or drag and drop. Keep the device connected until the transfer finishes.</value>
   </data>
   <data name="DiagnosticsCopied" xml:space="preserve">
     <value>Diagnostics copied</value>
@@ -1512,6 +1617,18 @@ Items: {1}</value>
   <data name="PreviewInfoTab" xml:space="preserve">
     <value>Information</value>
   </data>
+  <data name="Preview_FollowingSelection" xml:space="preserve"><value>Following selection</value></data>
+  <data name="Preview_PinnedStatus" xml:space="preserve"><value>Pinned in this window: {0}</value></data>
+  <data name="TitleBar_Restore" xml:space="preserve"><value>Restore</value></data>
+  <data name="TitleBar_Move" xml:space="preserve"><value>Move</value></data>
+  <data name="TitleBar_Size" xml:space="preserve"><value>Size</value></data>
+  <data name="TitleBar_Minimize" xml:space="preserve"><value>Minimize</value></data>
+  <data name="TitleBar_Maximize" xml:space="preserve"><value>Maximize</value></data>
+  <data name="TitleBar_Close" xml:space="preserve"><value>Close window</value></data>
+  <data name="Preview_Pin" xml:space="preserve"><value>Pin</value></data>
+  <data name="Preview_Unpin" xml:space="preserve"><value>Unpin</value></data>
+  <data name="Preview_RefreshPinned" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Preview_PinnedUnavailable" xml:space="preserve"><value>The pinned item is no longer available. Refresh or unpin it.</value></data>
   <data name="PreviewMediaError" xml:space="preserve">
     <value>Cannot play this format here. Open the file in your media player.</value>
   </data>
@@ -1885,7 +2002,7 @@ Modified: {1}</value>
     <value>Reorder</value>
   </data>
   <data name="ResultOrder_Hint" xml:space="preserve">
-    <value>Types at the top appear first. Changes sync with the file manager.</value>
+    <value>Drag to rank result types. Turn standalone EXE/COM results on or off in their row. Changes sync with the file manager.</value>
   </data>
   <data name="ResultOrder_SharedHint" xml:space="preserve">
     <value>Shared with the file manager</value>
@@ -2017,7 +2134,7 @@ Modified: {1}</value>
     <value>Code</value>
   </data>
   <data name="SearchRankDescription" xml:space="preserve">
-    <value>Drag to choose which kinds appear first. Names of the same kind sort A to Z.</value>
+    <value>Apps come from the Windows app list and Start menu; standalone programs are indexed EXE/COM files; other shortcuts link to files or websites. Drag to set the priority of each type.</value>
   </data>
   <data name="SearchRankDocument" xml:space="preserve">
     <value>Documents</value>
@@ -2032,13 +2149,22 @@ Modified: {1}</value>
     <value>Other files</value>
   </data>
   <data name="SearchRankProgram" xml:space="preserve">
-    <value>Programs</value>
+    <value>Apps</value>
+  </data>
+  <data name="SearchRankExecutable" xml:space="preserve">
+    <value>Standalone EXE/COM</value>
+  </data>
+  <data name="Search_StandaloneExecutables" xml:space="preserve">
+    <value>Show standalone executables</value>
+  </data>
+  <data name="Search_StandaloneExecutablesHint" xml:space="preserve">
+    <value>Search indexed EXE and COM files separately from app shortcuts. Turning this off keeps the index intact.</value>
   </data>
   <data name="SearchRankSection" xml:space="preserve">
     <value>Result order</value>
   </data>
   <data name="SearchRankShortcut" xml:space="preserve">
-    <value>Shortcuts</value>
+    <value>Other shortcuts</value>
   </data>
   <data name="SearchRankVideo" xml:space="preserve">
     <value>Videos</value>
@@ -2590,7 +2716,7 @@ Ctrl+T new tab. Ctrl+W closes a tab. Ctrl+L path. Ctrl+F filter. F5 refresh. Ctr
     <value>Edit cloud entry</value>
   </data>
   <data name="Sidebar_Eject" xml:space="preserve">
-    <value>Eject</value>
+    <value>Safely eject</value>
   </data>
   <data name="Sidebar_Expand" xml:space="preserve">
     <value>Expand navigation</value>

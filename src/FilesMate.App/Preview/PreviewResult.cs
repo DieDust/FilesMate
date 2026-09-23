@@ -13,6 +13,8 @@ public enum PreviewKind
 
 public abstract record PreviewResult(string Path, PreviewKind Kind)
 {
+    public sealed record Device(string FilePath, FilesMate.Platform.Windows.Shell.PortableDeviceEntry Entry, FilesMate.Core.Icons.IconBitmap? Thumbnail)
+        : PreviewResult(FilePath, Thumbnail is null ? PreviewKind.Properties : PreviewKind.Image);
     public sealed record Unsupported(string FilePath, string Reason)
         : PreviewResult(FilePath, PreviewKind.Unsupported);
 

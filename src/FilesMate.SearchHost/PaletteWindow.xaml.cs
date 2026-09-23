@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -22,6 +23,7 @@ namespace FilesMate.SearchHost;
 public partial class PaletteWindow : Window
 {
     private readonly System.Collections.ObjectModel.ObservableCollection<RankOption> _rankItems = new();
+    private readonly SearchRankingPreferencesWatcher _rankWatcher;
     private readonly SearchHost _host;
     private readonly IGlobalSearchProvider _provider;
     private readonly SemaphoreSlim _queryGate = new(1, 1);
@@ -50,6 +52,10 @@ public partial class PaletteWindow : Window
         _provider = provider;
         InitializeComponent();
         RankingItems.ItemsSource = _rankItems;
+        _rankWatcher = new SearchRankingPreferencesWatcher(Path.Combine(host.Profile, "search-index.json"),
+            () => Dispatcher.BeginInvoke(new Action(RefreshSharedRanking), DispatcherPriority.Background));
+        Activated += (_, _) => RefreshSharedRanking();
+        Closed += (_, _) => _rankWatcher.Dispose();
         Results.ItemsSource = _rows;
         foreach (var panel in new FrameworkElement[] { SettingsPanel, RankingPanel, CategoriesPanel, HiddenResultsPanel })
             panel.IsVisibleChanged += (_, _) => AnimateSection(panel);
@@ -107,6 +113,7 @@ public partial class PaletteWindow : Window
         if (IsVisible)
         {
             if (settings) ShowSettings(true, notice);
+            RefreshSharedRanking();
             Activate();
             QueueVisibleIcons();
             Native.SetForegroundWindow(new WindowInteropHelper(this).Handle);
@@ -506,6 +513,7 @@ public partial class PaletteWindow : Window
     private void ShowSettings(bool show, string notice)
     {
         if (show) CancelSearch();
+        RenderCategoryButtons();
         HiddenResultsPanel.Visibility = Visibility.Collapsed;
         RankingPanel.Visibility = Visibility.Collapsed;
         CategoriesPanel.Visibility = Visibility.Collapsed;
@@ -525,30 +533,54 @@ public partial class PaletteWindow : Window
     }
     private void Ranking_Click(object sender, RoutedEventArgs e)
     {
-        _rankItems.Clear();
-        foreach (var kind in SearchRankingConfiguration.Load(_host.Profile)) _rankItems.Add(new(kind));
+        LoadRanking(SearchRankingConfiguration.LoadPreferences(_host.Profile));
         SettingsPanel.Visibility = Visibility.Collapsed;
         RankingPanel.Visibility = Visibility.Visible;
         RankingStatus.Text = "";
+    }
+    private void LoadRanking(SearchRankingPreferences preferences)
+    {
+        _rankItems.Clear();
+        foreach (var kind in preferences.RankOrder) _rankItems.Add(new(kind, preferences.IncludeStandaloneExecutables));
+    }
+    private void RefreshSharedRanking()
+    {
+        if (!RankingPanel.IsVisible || _dragging || _pressedRank is not null) return;
+        var preferences = SearchRankingConfiguration.LoadPreferences(_host.Profile);
+        if (_rankItems.Select(item => item.Kind).SequenceEqual(preferences.RankOrder)
+            && _rankItems.FirstOrDefault(item => item.Kind == SearchHitKind.Executable)?.ExecutablesEnabled == preferences.IncludeStandaloneExecutables) return;
+        LoadRanking(preferences);
+    }
+    private void RankExecutable_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!_ready || !RankingPanel.IsVisible || sender is not ToggleButton { DataContext: RankOption { Kind: SearchHitKind.Executable } } toggle ||
+            toggle.IsChecked == SearchExecutableConfiguration.Load(_host.Profile)) return;
+        try
+        {
+            SearchExecutableConfiguration.Save(toggle.IsChecked == true, _host.Profile);
+            RenderCategoryButtons();
+            RankingStatus.Text = Loc.Get("SavedAutomatically");
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        {
+            toggle.IsChecked = SearchExecutableConfiguration.Load(_host.Profile);
+            RankingStatus.Text = Loc.Get("Order_SaveFailed") + error.Message;
+        }
     }
     private void RankingBack_Click(object sender, RoutedEventArgs e)
     { RankingPanel.Visibility = Visibility.Collapsed; SettingsPanel.Visibility = Visibility.Visible; }
     private void RankingReset_Click(object sender, RoutedEventArgs e)
     {
         _rankItems.Clear();
-        foreach (var kind in SearchHitKinds.DefaultOrder) _rankItems.Add(new(kind));
+        var executablesEnabled = SearchRankingConfiguration.LoadPreferences(_host.Profile).IncludeStandaloneExecutables;
+        foreach (var kind in SearchHitKinds.DefaultOrder) _rankItems.Add(new(kind, executablesEnabled));
         SaveRanking();
     }
-    private void RankUp_Click(object sender, RoutedEventArgs e) => MoveRank(sender, -1);
-    private void RankDown_Click(object sender, RoutedEventArgs e) => MoveRank(sender, 1);
-    private void MoveRank(object sender, int direction)
+    private void MoveRank(RankOption item, int direction)
     {
-        if (sender is FrameworkElement { DataContext: RankOption item })
-        {
-            var index = _rankItems.IndexOf(item);
-            var next = index + direction;
-            if (index >= 0 && next >= 0 && next < _rankItems.Count) { _rankItems.Move(index, next); SaveRanking(); }
-        }
+        var index = _rankItems.IndexOf(item);
+        var next = index + direction;
+        if (index >= 0 && next >= 0 && next < _rankItems.Count) { _rankItems.Move(index, next); SaveRanking(); }
     }
     private void SaveRanking()
     {
@@ -559,8 +591,7 @@ public partial class PaletteWindow : Window
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
         {
-            _rankItems.Clear();
-            foreach (var kind in SearchRankingConfiguration.Load(_host.Profile)) _rankItems.Add(new(kind));
+            LoadRanking(SearchRankingConfiguration.LoadPreferences(_host.Profile));
             RankingStatus.Text = Loc.Get("Order_SaveFailed") + error.Message;
         }
     }
@@ -614,11 +645,13 @@ public partial class PaletteWindow : Window
     }
 }
 
-internal sealed record RankOption(SearchHitKind Kind)
+internal sealed record RankOption(SearchHitKind Kind, bool InitialEnabled)
 {
+    public bool ExecutablesEnabled { get; set; } = InitialEnabled;
+    public Visibility ExecutableToggleVisibility => Kind == SearchHitKind.Executable ? Visibility.Visible : Visibility.Collapsed;
     public string Title => Kind switch
     {
-        SearchHitKind.Shortcut => Loc.Get("SearchRankShortcut"), SearchHitKind.Program => Loc.Get("Application"), SearchHitKind.Folder => Loc.Get("Type_Folder"),
+        SearchHitKind.Shortcut => Loc.Get("SearchRankShortcut"), SearchHitKind.Program => Loc.Get("SearchRankProgram"), SearchHitKind.Executable => Loc.Get("SearchRankExecutable"), SearchHitKind.Folder => Loc.Get("Type_Folder"),
         SearchHitKind.Document => Loc.Get("Documents"), SearchHitKind.Image => Loc.Get("Pictures"), SearchHitKind.Video => Loc.Get("Videos"),
         SearchHitKind.Audio => Loc.Get("Audio"), SearchHitKind.Archive => Loc.Get("SearchRankArchive"), SearchHitKind.Code => Loc.Get("SearchRankCode"), _ => Loc.Get("SearchRankOther"),
     };

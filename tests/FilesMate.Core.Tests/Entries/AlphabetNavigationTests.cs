@@ -5,7 +5,7 @@ namespace FilesMate.Core.Tests.Entries;
 public sealed class AlphabetNavigationTests
 {
     [Fact]
-    public void Fixed_alphabet_uses_closest_real_run_without_language_prefixes()
+    public void Fixed_alphabet_uses_closest_run_without_cycling()
     {
         var navigation = new AlphabetNavigation([new("A", 0, true), new("C", 5, true), new("A", 80, false), new("C", 100, false)], 160);
         Assert.Equal(28, AlphabetNavigation.Labels.Count);
@@ -13,7 +13,32 @@ public sealed class AlphabetNavigationTests
         Assert.Equal(1, navigation.Destination("C", 2));
         Assert.Equal(3, navigation.Destination("C", 95));
         Assert.Equal(1, navigation.Destination("C", 70));
+        Assert.Equal(3, navigation.Destination("C", 120));
+        Assert.True(navigation.HasBothKinds("C"));
+        Assert.Equal(1, navigation.Destination("C", 120, isDirectory: true));
+        Assert.Equal(3, navigation.Destination("C", 2, isDirectory: false));
+        Assert.Equal(2, navigation.Occurrences("A"));
+        Assert.Equal([0, 2], navigation.Destinations("A"));
+        Assert.Empty(navigation.Destinations("Z"));
+        Assert.Equal(0, navigation.Occurrences("Z"));
+        Assert.Equal(0, navigation.BoundaryDestination("A", last: false));
+        Assert.Equal(2, navigation.BoundaryDestination("A", last: true));
         Assert.Equal(-1, navigation.Destination("Z", 95));
+        Assert.Equal(-1, navigation.Destination("Z", 95, isDirectory: true));
+    }
+
+    [Fact]
+    public void Same_letter_in_two_folder_runs_does_not_need_a_choice()
+    {
+        var navigation = new AlphabetNavigation([new("F", 0, true), new("G", 10, true),
+            new("F", 20, true), new("Z", 30, false)], 40);
+
+        Assert.Equal(2, navigation.Occurrences("F"));
+        Assert.False(navigation.HasBothKinds("F"));
+        Assert.Equal(0, navigation.Destination("F", 3));
+        Assert.Equal(2, navigation.Destination("F", 19));
+        Assert.Equal(2, navigation.Destination("F", 25));
+        Assert.Equal(-1, navigation.Destination("F", 25, isDirectory: false));
     }
 
     [Fact]

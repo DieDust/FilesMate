@@ -23,6 +23,9 @@ public partial class PaletteWindow
     private SearchRow? _pressedRow;
     private SearchRow? _pressedApplication;
     private RankOption? _pressedRank;
+    private bool _rankDropAccepted;
+    private long _rankFocusGraceUntil;
+    private long _lastRankAutoScroll;
     private bool _collapseSelectionOnUp;
     private ContextMenu? _resultMenu;
 
@@ -33,6 +36,16 @@ public partial class PaletteWindow
             var child = VisualTreeHelper.GetChild(parent, i);
             if (child is T match) return match;
             if (FindChild<T>(child) is { } nested) return nested;
+        }
+        return null;
+    }
+    private static Border? FindRankRow(DependencyObject parent)
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+            if (child is Border { Name: "RankingRow" } row) return row;
+            if (FindRankRow(child) is { } nested) return nested;
         }
         return null;
     }
@@ -159,30 +172,89 @@ public partial class PaletteWindow
     {
         _pressedRank = null;
         if (Ancestor<ButtonBase>(e.OriginalSource as DependencyObject) is not null) return;
-        if (sender is FrameworkElement { DataContext: RankOption rank }) { _pressedRank = rank; _dragStart = e.GetPosition(RankingPanel); }
+        if (sender is Border { DataContext: RankOption rank } row)
+        {
+            _pressedRank = rank;
+            _dragStart = e.GetPosition(RankingScroll);
+            row.Focus();
+            row.CaptureMouse();
+        }
+    }
+    private void Rank_MouseUp(object sender, MouseButtonEventArgs e)
+    {
+        _pressedRank = null;
+        if (sender is UIElement { IsMouseCaptured: true } row) row.ReleaseMouseCapture();
+    }
+    private void Rank_LostCapture(object sender, MouseEventArgs e) => _pressedRank = null;
+    private void Rank_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (sender is not Border { DataContext: RankOption rank } || Keyboard.Modifiers != ModifierKeys.Alt
+            || e.Key is not (Key.Up or Key.Down)) return;
+        e.Handled = true;
+        MoveRank(rank, e.Key == Key.Up ? -1 : 1);
     }
     private void Rank_MouseMove(object sender, MouseEventArgs e)
     {
         if (_dragging || _pressedRank is not { } rank || e.LeftButton != MouseButtonState.Pressed) return;
-        var delta = e.GetPosition(RankingPanel) - _dragStart;
+        var delta = e.GetPosition(RankingScroll) - _dragStart;
         if (Math.Abs(delta.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(delta.Y) < SystemParameters.MinimumVerticalDragDistance) return;
         _pressedRank = null;
+        if (sender is UIElement { IsMouseCaptured: true } row) row.ReleaseMouseCapture();
         _dragging = true;
+        _rankDropAccepted = false;
         try { DragDrop.DoDragDrop((DependencyObject)sender, new DataObject(typeof(RankOption), rank), DragDropEffects.Move); }
-        finally { _dragging = false; ClearRankDropIndicator(); if (!IsActive) Dismiss(); }
+        catch (ExternalException error) { RankingStatus.Text = Loc.Get("Order_SaveFailed") + error.Message; }
+        finally
+        {
+            _dragging = false;
+            ClearRankDropIndicator();
+            if (_rankDropAccepted)
+            {
+                _rankFocusGraceUntil = Environment.TickCount64 + 350;
+                Dispatcher.BeginInvoke(new Action(() => { if (IsVisible && RankingPanel.IsVisible) Activate(); }), DispatcherPriority.Background);
+                RefreshSharedRanking();
+            }
+            else if (!IsActive) Dismiss();
+        }
     }
     private void Rank_DragOver(object sender, DragEventArgs e)
     {
         if (!e.Data.GetDataPresent(typeof(RankOption))) { e.Effects = DragDropEffects.None; return; }
+        if (!TryRankDropPosition(sender, e, out var row, out var after)) { e.Effects = DragDropEffects.None; return; }
         e.Effects = DragDropEffects.Move;
         e.Handled = true;
-        if (sender is Border border) ShowRankDropIndicator(border, e.GetPosition(border).Y >= border.ActualHeight / 2);
-        if (Ancestor<ScrollViewer>((DependencyObject)sender) is { } scroll)
+        ShowRankDropIndicator(row, after);
+        if (Environment.TickCount64 - _lastRankAutoScroll >= 80)
         {
-            var y = e.GetPosition(scroll).Y;
-            if (y < 28) scroll.LineUp();
-            else if (y > scroll.ActualHeight - 28) scroll.LineDown();
+            var y = e.GetPosition(RankingScroll).Y;
+            if (y < 28) RankingScroll.LineUp();
+            else if (y > RankingScroll.ActualHeight - 28) RankingScroll.LineDown();
+            _lastRankAutoScroll = Environment.TickCount64;
         }
+    }
+    private bool TryRankDropPosition(object sender, DragEventArgs e, out Border row, out bool after)
+    {
+        if (sender is Border { DataContext: RankOption } direct)
+        {
+            row = direct;
+            after = e.GetPosition(direct).Y >= direct.ActualHeight / 2;
+            return true;
+        }
+        var y = e.GetPosition(RankingScroll).Y;
+        Border? last = null;
+        for (var index = 0; index < _rankItems.Count; index++)
+        {
+            if (RankingItems.ItemContainerGenerator.ContainerFromIndex(index) is not DependencyObject container
+                || FindRankRow(container) is not { } candidate) continue;
+            last = candidate;
+            if (y >= candidate.TranslatePoint(new Point(0, candidate.ActualHeight / 2), RankingScroll).Y) continue;
+            row = candidate;
+            after = false;
+            return true;
+        }
+        row = last!;
+        after = true;
+        return last is not null;
     }
     private Border? _rankDropIndicator;
     private void ShowRankDropIndicator(Border row, bool after)
@@ -202,10 +274,12 @@ public partial class PaletteWindow
     private void Rank_DragLeave(object sender, DragEventArgs e) => ClearRankDropIndicator();
     private void Rank_Drop(object sender, DragEventArgs e)
     {
-        Rank_DragLeave(sender, e);
-        if (e.Data.GetData(typeof(RankOption)) is not RankOption from || sender is not FrameworkElement { DataContext: RankOption to } element) return;
+        var hasTarget = TryRankDropPosition(sender, e, out var row, out var after);
+        ClearRankDropIndicator();
+        if (!hasTarget || e.Data.GetData(typeof(RankOption)) is not RankOption from || row.DataContext is not RankOption to) return;
+        _rankDropAccepted = true;
         var source = _rankItems.IndexOf(from);
-        var destination = _rankItems.IndexOf(to) + (e.GetPosition(element).Y >= element.ActualHeight / 2 ? 1 : 0);
+        var destination = _rankItems.IndexOf(to) + (after ? 1 : 0);
         if (source < destination) destination--;
         if (source >= 0 && destination >= 0 && destination < _rankItems.Count && source != destination)
         { _rankItems.Move(source, destination); SaveRanking(); }
