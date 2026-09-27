@@ -59,7 +59,10 @@ public sealed class NavigationReentrancyContractTests
         Assert.True(start >= 0 && end > start);
         var handler = navigator[start..end];
         Assert.Contains("var path = ViewModel.FullPath(entry);", handler, StringComparison.Ordinal);
-        Assert.Contains("ScheduleNavigation(() => ViewModel.Navigate(path));", handler, StringComparison.Ordinal);
+        Assert.Contains("OpenFolderFromUser(path);", handler, StringComparison.Ordinal);
+        var openStart = navigator.IndexOf("internal void OpenFolderFromUser", StringComparison.Ordinal);
+        var openEnd = navigator.IndexOf("private void Sidebar_OpenInNewTabRequested", openStart, StringComparison.Ordinal);
+        Assert.Contains("ScheduleNavigation(() => ViewModel.Navigate(path));", navigator[openStart..openEnd], StringComparison.Ordinal);
         Assert.DoesNotContain("ScheduleNavigation(() => ViewModel.Open", handler, StringComparison.Ordinal);
     }
 

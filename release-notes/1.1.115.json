@@ -1,0 +1,5 @@
+{
+  "zh-CN": "收藏功能改进：使用树形目录选择收藏分组，支持嵌套分组和就地新建分组；收藏星标随当前文件夹更新，可直接编辑名称、移动分组或移除收藏。统一收藏打开方式与标签页设置，减少切换时的收藏栏闪烁。改进跨窗口标签页拖放与分离、插入位置提示和空文件夹布局。优化收藏菜单加载及紧凑对话框，长分组列表可滚动浏览。保留与压缩软件的拖放兼容改进。",
+  "en-US": "Improved favorites with a hierarchical folder picker, nested groups, and inline group creation. The bookmark star now follows the current folder and supports editing, moving, and removing favorites. Favorite navigation follows tab-opening settings, with less bar flicker when switching tabs. Improved cross-window tab dragging, detaching, insertion indicators, and empty-folder layout. Refined favorite menu loading and compact dialogs; long group lists remain scrollable. Includes archive-app drag-and-drop compatibility improvements.",
+  "ja-JP": "お気に入りの保存先をツリー形式で選べるようになり、入れ子のグループとその場でのグループ作成に対応しました。現在のフォルダーに合わせて星の状態が更新され、名前の編集、グループの変更、削除ができます。お気に入りを開く動作をタブ設定に統一し、切り替え時のちらつきを軽減しました。ウィンドウ間のタブ移動・切り離し、挿入位置の表示、空フォルダーの表示を改善しました。メニューの読み込みとダイアログを調整し、長いグループ一覧もスクロールできます。圧縮ソフトとのドラッグ＆ドロップ互換性の改善も含まれます。"
+}

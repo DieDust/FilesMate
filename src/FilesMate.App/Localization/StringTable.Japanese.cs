@@ -84,7 +84,7 @@ public static partial class StringTable
         ["TabStateTitle"] = "タブごとの移動履歴",
         ["TabStateDescription"] = "各タブは場所、履歴、並べ替え、表示方法を個別に保持します。",
         ["OpenFoldersNewTabTitle"] = "フォルダーを新しいタブで開く",
-        ["OpenFoldersNewTabDescription"] = "フォルダーをダブルクリックすると、現在のタブを置き換えずに新しいタブで開きます。",
+        ["OpenFoldersNewTabDescription"] = "ファイル一覧、お気に入り、サイドバー、ホームからフォルダーを新しいタブで開きます。戻る、進む、上へ、アドレスバーは現在のタブで移動します。",
         ["RestoreLastSessionTitle"] = "前回のタブを復元",
         ["RestoreLastSessionDescription"] = "FilesMate の起動時に、前回開いていたタブとフォルダーを復元します。",
         ["OpenInExistingWindowTitle"] = "既存のウィンドウを使用",

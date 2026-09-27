@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:loc="using:FilesMate.App.Localization"
     xmlns:glass="using:FilesMate.App.Controls.Glass"
+    xmlns:favorites="using:FilesMate.App.Controls.Favorites"
     xmlns:input="using:FilesMate.App.Input"
     Title="FilesMate">
     <Window.SystemBackdrop>
@@ -84,7 +85,7 @@
                     AllowDrop="True"
                     AllowDropTabs="True"
                     CanDragTabs="True"
-                    CanReorderTabs="True"
+                    CanReorderTabs="False"
                     CanTearOutTabs="False"
                     Style="{StaticResource FilesMateTabViewStyle}"
                     TabWidthMode="SizeToContent"
@@ -97,6 +98,7 @@
                     TabDragStarting="Tabs_TabDragStarting"
                     TabDragCompleted="Tabs_TabDragCompleted"
                     TabDroppedOutside="Tabs_TabDroppedOutside"
+                    DragLeave="Tabs_DragLeave"
                     TabStripDragOver="Tabs_TabStripDragOver"
                     TabStripDrop="Tabs_TabStripDrop">
                     <TabView.Resources>
@@ -154,11 +156,7 @@
                             <Border
                                 x:Name="TabDragRegion"
                                 Grid.Column="1"
-                                AllowDrop="True"
-                                Background="Transparent"
-                                DragOver="TabStripTail_DragOver"
-                                DragLeave="TabStripTail_DragLeave"
-                                Drop="TabStripTail_Drop" />
+                                Background="Transparent" />
                         </Grid>
                     </TabView.TabStripFooter>
                 </TabView>
@@ -167,6 +165,11 @@
                     Grid.Column="4"
                     Width="0"
                     Background="Transparent" />
+                <Border x:Name="TabInsertionMarker" Grid.ColumnSpan="5"
+                    Width="2" Height="40" CornerRadius="1" Opacity="0.8"
+                    HorizontalAlignment="Left" VerticalAlignment="Center"
+                    Background="{ThemeResource SystemControlHighlightAccentBrush}"
+                    IsHitTestVisible="False" Visibility="Collapsed" />
             </Grid>
         </glass:LiquidGlassSurface>
 
@@ -185,6 +188,11 @@
                 <TransitionCollection />
             </ContentControl.ContentTransitions>
         </ContentControl>
+
+        <!-- Keep the favorites chrome mounted while navigator tabs change. -->
+        <favorites:FavoritesBar x:Name="WindowFavorites" Grid.RowSpan="2"
+            HorizontalAlignment="Left" VerticalAlignment="Top" Height="36"
+            Visibility="Collapsed" />
 
         <Grid
             x:Name="SettingsOverlay"

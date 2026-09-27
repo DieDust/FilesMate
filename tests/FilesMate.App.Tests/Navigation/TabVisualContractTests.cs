@@ -74,14 +74,18 @@ public sealed class TabVisualContractTests
         Assert.Contains("Key=\"T\"", xaml, StringComparison.Ordinal);
         Assert.Contains("Key=\"W\"", xaml, StringComparison.Ordinal);
         Assert.Contains("Modifiers=\"Control\"", xaml, StringComparison.Ordinal);
-        Assert.Contains("CanReorderTabs=\"True\"", xaml, StringComparison.Ordinal);
+        // Reordering and window merging use the same explicit insertion rule.
+        Assert.Contains("CanReorderTabs=\"False\"", xaml, StringComparison.Ordinal);
         Assert.Contains("CanDragTabs=\"True\"", xaml, StringComparison.Ordinal);
         Assert.Contains("AllowDropTabs=\"True\"", xaml, StringComparison.Ordinal);
         Assert.Contains("CanTearOutTabs=\"False\"", xaml, StringComparison.Ordinal);
         Assert.DoesNotContain("CanTearOutTabs=\"True\"", xaml, StringComparison.Ordinal);
         Assert.Contains("TabDroppedOutside", xaml, StringComparison.Ordinal);
         Assert.Contains("TabDragStarting", xaml, StringComparison.Ordinal);
-        Assert.Contains("TabStripTail_Drop", xaml, StringComparison.Ordinal);
+        var drag = XDocument.Parse(xaml).Descendants().Single(element =>
+            (string?)element.Attribute(XName.Get("Name", "http://schemas.microsoft.com/winfx/2006/xaml")) == "TabDragRegion");
+        Assert.Null(drag.Attribute("AllowDrop"));
+        Assert.Null(drag.Attribute("Drop"));
         Assert.Contains("AllowDrop=\"True\"", xaml, StringComparison.Ordinal);
         Assert.Contains("IsAddTabButtonVisible", xaml, StringComparison.Ordinal);
         var newTabButton = xaml.IndexOf("x:Name=\"NewTabButton\"", StringComparison.Ordinal);
@@ -185,7 +189,7 @@ public sealed class TabVisualContractTests
         Assert.Contains("_tabDragging", code, StringComparison.Ordinal);
         Assert.Contains("TabDroppedOutside", code, StringComparison.Ordinal);
         Assert.Contains("TearOutToNewWindow", code, StringComparison.Ordinal);
-        Assert.Contains("MoveTabToEnd", code, StringComparison.Ordinal);
+        Assert.Contains("TryGetTabInsertion", code, StringComparison.Ordinal);
         Assert.Contains("ContextFlyout", code, StringComparison.Ordinal);
         Assert.Contains("StringTable.Get(labelKey)", code, StringComparison.Ordinal);
         Assert.Contains("Tab_CloseOthers", code, StringComparison.Ordinal);

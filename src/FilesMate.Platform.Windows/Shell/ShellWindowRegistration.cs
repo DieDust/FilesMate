@@ -14,7 +14,8 @@ public sealed class ShellWindowRegistration : IDisposable
     private string? _folder;
 
     public void Navigate(nint window, string? folder, Action<string> select,
-        nint viewWindow = 0, Func<IReadOnlyList<string>>? selectedPaths = null)
+        nint viewWindow = 0, Func<IReadOnlyList<string>>? selectedPaths = null,
+        Func<int, int, string?>? externalDropTarget = null)
     {
         if (string.Equals(_folder, folder, StringComparison.OrdinalIgnoreCase)) return;
         Dispose();
@@ -32,7 +33,7 @@ public sealed class ShellWindowRegistration : IDisposable
             _registry = (IShellWindowRegistry)Activator.CreateInstance(
                 Type.GetTypeFromCLSID(new Guid("9BA05972-F6A8-11CF-A442-00A0C90A8F39"), true)!)!;
             _document = new ShellSelectionDocument(window, folder, select, viewWindow, selectedPaths);
-            _browser = new ShellBrowserAutomation(window, _document);
+            _browser = new ShellBrowserAutomation(window, _document, externalDropTarget);
             // SWC_BROWSER is what the shell searches for. RegisterPending is required
             // even when the HWND exists: it completes an outstanding shell launch.
             _registry.RegisterPending(unchecked((int)GetCurrentThreadId()), ref location, ref root, 1, out var pending);
@@ -140,7 +141,8 @@ public sealed partial class ShellSelectionDocument(nint window, string folder, A
 }
 
 [SupportedOSPlatform("windows"), ComVisible(true), ClassInterface(ClassInterfaceType.None)]
-public sealed class ShellBrowserAutomation(nint window, ShellSelectionDocument document) : IShellBrowserAutomation, IShellServiceProvider
+public sealed class ShellBrowserAutomation(nint window, ShellSelectionDocument document,
+    Func<int, int, string?>? externalDropTarget) : IShellBrowserAutomation, IShellServiceProvider
 {
     private const int NotImplemented = unchecked((int)0x80004001);
     private readonly SelectionShellBrowser _shellBrowser = new(window, document);
@@ -181,11 +183,31 @@ public sealed class ShellBrowserAutomation(nint window, ShellSelectionDocument d
     public int Quit() { return NotImplemented; }
     public int ClientToWindow(ref int width, ref int height) { return NotImplemented; }
     public int PutProperty(string name, object value) { return NotImplemented; }
-    public int GetProperty(string name, out object value) { value = null!; return NotImplemented; }
+    public int GetProperty(string name, out object value)
+    {
+        value = null!;
+        if (!string.Equals(name, "FilesMate.DropTargetPath", StringComparison.Ordinal)) return NotImplemented;
+        try
+        {
+            if (!GetCursorPos(out var point)) return 1;
+            var path = externalDropTarget?.Invoke(point.X, point.Y);
+            if (string.IsNullOrWhiteSpace(path)) return 1;
+            value = path;
+            return 0;
+        }
+        catch (Exception error) { return Marshal.GetHRForException(error); }
+    }
     public int get_Name(out nint value) { value = 0; return NotImplemented; }
     public int get_HWND(out nint value) { value = window; return 0; }
     public int get_FullName(out nint value) { value = 0; return NotImplemented; }
     public int get_Path(out nint value) { value = 0; return NotImplemented; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativePoint { public int X; public int Y; }
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetCursorPos(out NativePoint point);
     public int get_Visible(out short value) { value = 0; return NotImplemented; }
     public int put_Visible(short value) { return NotImplemented; }
     public int get_StatusBar(out short value) { value = 0; return NotImplemented; }

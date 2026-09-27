@@ -118,8 +118,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         InitializeComponent();
         Omni.SearchDeviceFolder = SearchCurrentDeviceFolder;
         App.DevicesChanged += DevicesChanged;
-        Favorites.CurrentFolder = () => ViewModel.Navigation.CurrentPath;
-        Favorites.OpenRequested += Favorites_OpenRequested;
+        FavoritesSlot.Visibility = App.Features.FavoritesBarEnabled ? Visibility.Visible : Visibility.Collapsed;
         ShellRoot.AddHandler(
             UIElement.PointerPressedEvent,
             new PointerEventHandler(ShellRoot_PointerPressed),
@@ -501,7 +500,12 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private bool _paneUserToggled;
 
     private void NavigationFeaturesChanged(object? sender, EventArgs e) =>
-        DispatcherQueue.TryEnqueue(() => { if (!_disposed) ApplyPaneOpen(null); });
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_disposed) return;
+            FavoritesSlot.Visibility = App.Features.FavoritesBarEnabled ? Visibility.Visible : Visibility.Collapsed;
+            ApplyPaneOpen(null);
+        });
 
     private void ApplyPaneOpen(string? stateName)
     {
@@ -821,14 +825,24 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private void Places_PlaceChosen(object? sender, string path)
     {
-        ScheduleNavigation(() => ViewModel.Navigate(path));
+        OpenFolderFromUser(path);
+    }
+
+    // Folder-opening entry points share the preference; back/up/address navigation
+    // deliberately stays in the current pane and retains its history.
+    internal void OpenFolderFromUser(string path)
+    {
+        if (App.ExplorerPreferences.OpenFoldersInNewTab && App.WindowForElement(this) is { } window)
+            window.OpenFolderInNewTab(path, ViewModel.Navigation.HistoryForNewTab(path));
+        else
+            ScheduleNavigation(() => ViewModel.Navigate(path));
     }
 
     private void Sidebar_OpenInNewTabRequested(object? sender, string path) =>
         App.WindowForElement(this)?.OpenFolderInNewTab(path, ViewModel.Navigation.HistoryForNewTab(path));
 
     private void Sidebar_OpenInNewWindowRequested(object? sender, string path) =>
-        App.CurrentWindow?.OpenFolderInNewWindow(path);
+        App.WindowForElement(this)?.OpenFolderInNewWindow(path);
 
     private void Sidebar_WhoLocksRequested(object? sender, string path) =>
         _ = _fileActions.ShowWhoLocksAsync([path]);
@@ -983,15 +997,9 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     {
         ActivateFromSurface(sender as FileDetailsSurface);
         var path = ViewModel.FullPath(entry);
-        if (entry.Kind == EntryKind.Directory && App.ExplorerPreferences.OpenFoldersInNewTab)
-        {
-            App.WindowForElement(this)?.OpenFolderInNewTab(path, ViewModel.Navigation.HistoryForNewTab(path));
-            return;
-        }
-
         if (entry.Kind == EntryKind.Directory)
         {
-            ScheduleNavigation(() => ViewModel.Navigate(path));
+            OpenFolderFromUser(path);
             return;
         }
 
@@ -1276,10 +1284,10 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         catch (Exception error) { ViewModel.ReportUserError(error.Message); }
     }
 
-    private void Favorites_OpenRequested(object? sender, FavoriteEntry entry)
+    internal void OpenFavorite(FavoriteEntry entry)
     {
         if (entry.Path is not { } path) return;
-        if (entry.IsDirectory) ScheduleNavigation(() => ViewModel.Navigate(path));
+        if (entry.IsDirectory) OpenFolderFromUser(path);
         else ViewModel_OpenFileRequested(this, path);
     }
 
@@ -2213,6 +2221,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private void SyncChrome()
     {
+        App.WindowForElement(this)?.UpdateFavoritesPlacement(this);
         Omni.CanGoBack = ViewModel.CanGoBack;
         Omni.CanGoForward = ViewModel.CanGoForward;
         Omni.CanGoUp = ViewModel.CanGoUp;
@@ -2265,6 +2274,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private void UpdateEmptyHint(PaneViewModel vm)
     {
         var chrome = ChromeOf(vm);
+        chrome.ContentTopInset = SurfaceOf(vm).LayoutKind == FileLayoutKind.Details ? FileColumnLayout.RowHeight : 0;
         chrome.ErrorText = vm.ErrorText;
         chrome.IsLoading = vm.IsLoading;
         chrome.ItemCount = vm.ItemCount;

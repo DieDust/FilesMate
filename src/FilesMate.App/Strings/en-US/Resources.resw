@@ -973,6 +973,18 @@
   <data name="Favorites_DuplicateTarget" xml:space="preserve">
     <value>The target group already contains this file. No favorites were moved.</value>
   </data>
+  <data name="Favorites_Edit" xml:space="preserve">
+    <value>Edit favorite</value>
+  </data>
+  <data name="Favorites_EditFolder" xml:space="preserve">
+    <value>Folder saved — edit or remove favorite</value>
+  </data>
+  <data name="Favorites_NewSubgroup" xml:space="preserve">
+    <value>New subgroup</value>
+  </data>
+  <data name="Favorites_GroupCycle" xml:space="preserve">
+    <value>A group cannot be moved into itself or one of its subgroups.</value>
+  </data>
   <data name="Favorites_Group" xml:space="preserve">
     <value>Favorites group</value>
   </data>
@@ -1056,6 +1068,9 @@
   </data>
   <data name="Favorites_Remove" xml:space="preserve">
     <value>Remove favorite</value>
+  </data>
+  <data name="Favorites_RemoveFolderCopies" xml:space="preserve">
+    <value>This folder is saved in multiple groups. Remove favorite removes all its bookmarks; the folder is kept.</value>
   </data>
   <data name="Favorites_RemoveGroup" xml:space="preserve">
     <value>Remove favorites group</value>
@@ -1559,7 +1574,7 @@ Destination folder:
     <value>Open a folder first.</value>
   </data>
   <data name="OpenFoldersNewTabDescription" xml:space="preserve">
-    <value>Double-clicking a folder opens it in a separate tab instead of replacing this one.</value>
+    <value>Open folders from the file list, favorites, sidebar and Home in a new tab. Back, Forward, Up and the address bar stay in the current tab.</value>
   </data>
   <data name="OpenFoldersNewTabTitle" xml:space="preserve">
     <value>Open folders in a new tab</value>

@@ -183,7 +183,9 @@
                                 UpClicked="Toolbar_UpClicked" />
                         </Grid>
 
-                        <favorites:FavoritesBar x:Name="Favorites" Grid.Row="1" />
+                        <Border x:Name="FavoritesSlot" Grid.Row="1" Height="36"
+                            Loaded="FavoritesSlot_LayoutUpdated" SizeChanged="FavoritesSlot_LayoutUpdated"
+                            LayoutUpdated="FavoritesSlot_LayoutUpdated" />
                         <Grid
                             x:Name="CommandBarRow"
                             Grid.Row="2"

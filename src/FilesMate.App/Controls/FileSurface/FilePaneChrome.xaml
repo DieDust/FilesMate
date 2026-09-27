@@ -35,13 +35,15 @@
                     VerticalAlignment="Stretch"
                     VerticalContentAlignment="Stretch" />
                 <info:LoadingPresenter x:Name="LoadingHost" VerticalAlignment="Top" />
-                <info:InfoStateView
-                    x:Name="Info"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    PrimaryClicked="Info_PrimaryClicked"
-                    SecondaryClicked="Info_SecondaryClicked"
-                    Visibility="Collapsed" />
+                <Grid x:Name="InfoViewport" SizeChanged="InfoViewport_SizeChanged">
+                    <info:InfoStateView
+                        x:Name="Info"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        PrimaryClicked="Info_PrimaryClicked"
+                        SecondaryClicked="Info_SecondaryClicked"
+                        Visibility="Collapsed" />
+                </Grid>
             </Grid>
         </Border>
         <status:FileStatusBar

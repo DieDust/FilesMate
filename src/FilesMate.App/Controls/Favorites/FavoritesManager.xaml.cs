@@ -22,6 +22,7 @@ public sealed partial class FavoritesManager : UserControl
     private readonly Dictionary<string, ImageSource> _icons = new(StringComparer.Ordinal);
     private string? _groupId;
     private string? _editingId;
+    private string? _editingParentId;
     private bool _refreshing;
     private bool _busy;
     private bool _confirmRemoval;
@@ -37,7 +38,10 @@ public sealed partial class FavoritesManager : UserControl
         CloseRequested?.Invoke(this, EventArgs.Empty);
     }
 
-    public sealed record GroupRow(string? Id, string Name, int Count);
+    public sealed record GroupRow(string? Id, string Name, int Count, int Depth = 0, string? Breadcrumb = null)
+    {
+        public Thickness Indent => new(Math.Min(Depth, 5) * 12, 0, 0, 0);
+    }
     public sealed record EntryRow(FavoriteEntry Entry, string Detail, ImageSource Icon)
     {
         public string Name => Entry.Name;
@@ -53,8 +57,8 @@ public sealed partial class FavoritesManager : UserControl
         Unloaded += (_, _) => App.Favorites.Changed -= StoreChanged;
         SizeChanged += (_, _) =>
         {
-            GroupsColumn.Width = new GridLength(ActualWidth < 650 ? 140 : 190);
-            Layout.ColumnSpacing = ActualWidth < 650 ? 10 : 20;
+            GroupsColumn.Width = new GridLength(ActualWidth < 650 ? 170 : 220);
+            Layout.ColumnSpacing = ActualWidth < 650 ? 10 : 16;
         };
     }
 
@@ -72,7 +76,11 @@ public sealed partial class FavoritesManager : UserControl
             image.Source = row.Icon;
             image.Visibility = Visibility.Visible;
         }
-        else ShellIconBinder.BindPath(image, fallback, row.Entry.Path!, row.Entry.IsDirectory, 28);
+        else
+        {
+            image.Source = FavoritesBar.CachedIconSource(row.Entry, 28, image.XamlRoot);
+            image.Visibility = Visibility.Visible;
+        }
     }
 
     private void Refresh()
@@ -87,9 +95,11 @@ public sealed partial class FavoritesManager : UserControl
             if (_groupId is not null && !all.Any(entry => entry.IsGroup && entry.Id == _groupId)) _groupId = null;
             var counts = all.Where(entry => entry.GroupId is not null).GroupBy(entry => entry.GroupId!).ToDictionary(group => group.Key, group => group.Count());
             var groups = new[] { new GroupRow(null, Loc.Get("Favorites_Bar"), all.Count(entry => entry.GroupId is null)) }
-                .Concat(all.Where(entry => entry.IsGroup).Select(entry => new GroupRow(entry.Id, entry.Name, counts.GetValueOrDefault(entry.Id)))).ToArray();
+                .Concat(App.Favorites.GroupsInTreeOrder().Select(group => new GroupRow(group.Entry.Id, group.Entry.Name,
+                    counts.GetValueOrDefault(group.Entry.Id), group.Depth, group.Breadcrumb))).ToArray();
             Groups.ItemsSource = groups;
             Groups.SelectedItem = groups.First(group => group.Id == _groupId);
+            LocationText.Text = ((GroupRow)Groups.SelectedItem).Breadcrumb ?? Loc.Get("Favorites_Bar");
             var keyword = Search.Text.Trim();
             _rows.Clear();
             foreach (var entry in all.Where(entry => entry.GroupId == _groupId && (keyword.Length == 0 || entry.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) || (entry.Path?.Contains(keyword, StringComparison.OrdinalIgnoreCase) ?? false))))
@@ -142,16 +152,15 @@ public sealed partial class FavoritesManager : UserControl
 
     private void ShowMoveMenu(FrameworkElement anchor, string[] ids)
     {
-        var menu = new MenuFlyout();
-        var includesGroup = App.Favorites.Entries.Any(entry => entry.IsGroup && ids.Contains(entry.Id));
+        var menu = FavoritesBar.CreateMenu();
         void Add(string name, string? group)
         {
-            var item = new MenuFlyoutItem { Text = name, IsEnabled = !includesGroup || group is null };
+            var item = new MenuFlyoutItem { Text = name, IsEnabled = App.Favorites.CanMoveTo(ids, group) };
             item.Click += async (_, _) => await ChangeAsync(() => App.Favorites.MoveManyAsync(ids, group));
             menu.Items.Add(item);
         }
         Add(Loc.Get("Favorites_Bar"), null);
-        foreach (var group in App.Favorites.Entries.Where(entry => entry.IsGroup)) Add(group.Name, group.Id);
+        foreach (var group in App.Favorites.GroupsInTreeOrder()) Add(group.Breadcrumb, group.Entry.Id);
         menu.ShowAt(anchor, new FlyoutShowOptions { Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft });
     }
     private void Move_Click(object sender, RoutedEventArgs e) => ShowMoveMenu(MoveButton, SelectedIds());
@@ -170,16 +179,17 @@ public sealed partial class FavoritesManager : UserControl
         await ChangeAsync(() => App.Favorites.RemoveManyAsync(ids));
     }
 
-    private void BeginNameEdit(FavoriteEntry? entry)
+    private void BeginNameEdit(FavoriteEntry? entry, string? parentId = null)
     {
         _editingId = entry?.Id;
+        _editingParentId = entry?.GroupId ?? parentId;
         NameEditor.Text = entry?.Name ?? "";
         NameEditor.PlaceholderText = entry is null ? Loc.Get("NewGroupName") : Loc.Get("Favorites_Name");
         Editor.Visibility = Visibility.Visible;
         NameEditor.Focus(FocusState.Programmatic);
         NameEditor.SelectAll();
     }
-    private void NewGroup_Click(object sender, RoutedEventArgs e) => BeginNameEdit(null);
+    private void NewGroup_Click(object sender, RoutedEventArgs e) => BeginNameEdit(null, _groupId);
     private void CancelName_Click(object sender, RoutedEventArgs e) => Editor.Visibility = Visibility.Collapsed;
     private async void SaveName_Click(object sender, RoutedEventArgs e) => await SaveNameAsync();
     private async Task SaveNameAsync()
@@ -188,7 +198,7 @@ public sealed partial class FavoritesManager : UserControl
         var id = _editingId;
         await ChangeAsync(async () =>
         {
-            if (id is null) await App.Favorites.CreateGroupAsync(name); else await App.Favorites.RenameAsync(id, name);
+            if (id is null) await App.Favorites.CreateGroupAsync(name, _editingParentId); else await App.Favorites.RenameAsync(id, name);
             Editor.Visibility = Visibility.Collapsed;
         });
     }
@@ -211,13 +221,14 @@ public sealed partial class FavoritesManager : UserControl
         if (sender is not ListViewItem { Tag: EntryRow row } container) return;
         e.Handled = true;
         if (!Entries.SelectedItems.Contains(row)) { Entries.SelectedItems.Clear(); Entries.SelectedItems.Add(row); }
-        var menu = new MenuFlyout();
+        var menu = FavoritesBar.CreateMenu();
         void Add(string label, Action action, bool enabled = true)
         {
             var item = new MenuFlyoutItem { Text = label, IsEnabled = enabled };
             item.Click += (_, _) => action(); menu.Items.Add(item);
         }
         Add(row.Entry.IsGroup ? Loc.Get("OpenGroup") : Loc.Get("Command_Open"), () => Open(row.Entry), Entries.SelectedItems.Count == 1);
+        if (row.Entry.IsGroup) Add(Loc.Get("Favorites_NewSubgroup"), () => { Open(row.Entry); BeginNameEdit(null, row.Entry.Id); }, Entries.SelectedItems.Count == 1);
         Add(Loc.Get("RenameMenu"), () => BeginNameEdit(row.Entry), Entries.SelectedItems.Count == 1);
         Add(Loc.Get("MoveToMenu"), () => ShowMoveMenu(MoveButton, SelectedIds()));
         Add(Loc.Get("Home_MoveUp"), async () => await ChangeAsync(() => App.Favorites.ReorderAsync(row.Entry.Id, -1)), Entries.SelectedItems.Count == 1);
@@ -301,7 +312,10 @@ public sealed partial class FavoritesManager : UserControl
         var entry = App.Favorites.Entries.FirstOrDefault(entry => entry.Id == group.Id);
         if (entry is null) return;
         e.Handled = true;
-        var menu = new MenuFlyout();
+        var menu = FavoritesBar.CreateMenu();
+        var create = new MenuFlyoutItem { Text = Loc.Get("Favorites_NewSubgroup") };
+        create.Click += (_, _) => { Open(entry); BeginNameEdit(null, entry.Id); };
+        menu.Items.Add(create);
         var rename = new MenuFlyoutItem { Text = Loc.Get("RenameGroupMenu") };
         rename.Click += (_, _) => BeginNameEdit(entry);
         menu.Items.Add(rename);
@@ -311,10 +325,13 @@ public sealed partial class FavoritesManager : UserControl
         var down = new MenuFlyoutItem { Text = Loc.Get("Home_MoveDown") };
         down.Click += async (_, _) => await ChangeAsync(() => App.Favorites.ReorderAsync(entry.Id, 1));
         menu.Items.Add(down);
+        var move = new MenuFlyoutItem { Text = Loc.Get("MoveToMenu") };
+        move.Click += (_, _) => ShowMoveMenu(MoveButton, [entry.Id]);
+        menu.Items.Add(move);
         var remove = new MenuFlyoutItem { Text = Loc.Get("RemoveGroup") };
         remove.Click += async (_, _) =>
         {
-            _groupId = null; Search.Text = ""; Refresh();
+            _groupId = entry.GroupId; Search.Text = ""; Refresh();
             Entries.SelectedItems.Clear();
             if (_rows.FirstOrDefault(row => row.Entry.Id == entry.Id) is { } row) Entries.SelectedItems.Add(row);
             await RemoveSelectedAsync();

@@ -272,6 +272,31 @@ public sealed partial class FileDetailsSurface : UserControl
 
     public Func<FileDropRequest, Task>? DropRequested { get; set; }
 
+    // A virtual-file drag is owned by the source application, so WinUI may not
+    // surface it as StorageItems in OnDragOver. Resolve its destination from the
+    // same hit test used for ordinary FilesMate drops.
+    internal string? ExternalDropDestinationAt(Point rootPoint)
+    {
+        if (!IsLoaded || Visibility != Visibility.Visible || IsPortableDevice || !IsFolderWritable)
+            return null;
+
+        var origin = Scroller.TransformToVisual(null).TransformPoint(new Point(0, 0));
+        var x = rootPoint.X - origin.X;
+        var y = rootPoint.Y - origin.Y;
+        if (x < 0 || y < 0 || x >= Scroller.ActualWidth || y >= Scroller.ActualHeight)
+            return null;
+
+        var index = ViewIndexFromPoint(x, y + Scroller.VerticalOffset);
+        string? path;
+        if (index >= 0 && _items.TryGetEntry(index, out var entry))
+        {
+            if (entry.Kind != EntryKind.Directory) return null;
+            path = ResolvePath?.Invoke(entry);
+        }
+        else path = ResolveFolder?.Invoke();
+        return !string.IsNullOrWhiteSpace(path) && Directory.Exists(path) ? path : null;
+    }
+
     public event EventHandler? PresentationChanged;
 
     public event EventHandler<AppCommandId>? CommandRequested;
@@ -542,6 +567,8 @@ public sealed partial class FileDetailsSurface : UserControl
         ApplySortGlyph(SizeSortGlyph, sort, EntrySortColumn.Size);
     }
 
+    public event EventHandler? ViewportLayoutChanged;
+
     public void SetLayout(FileLayoutKind kind)
     {
         if (_layoutReady && _layout == kind)
@@ -555,6 +582,7 @@ public sealed partial class FileDetailsSurface : UserControl
         var grid = kind == FileLayoutKind.Grid;
         HeaderRow.Height = grid ? new GridLength(0) : new GridLength(FileColumnLayout.RowHeight);
         DetailsHeader.Visibility = grid ? Visibility.Collapsed : Visibility.Visible;
+        ViewportLayoutChanged?.Invoke(this, EventArgs.Empty);
         Scroller.HorizontalScrollBarVisibility = grid ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto;
         ApplyDetailsColumns(persist: false);
         if (grid)
@@ -1233,6 +1261,7 @@ public sealed partial class FileDetailsSurface : UserControl
     private void OnDropCompleted(UIElement sender, DropCompletedEventArgs e)
     {
         CancelFolderHover();
+        ClearDropTarget();
         _externalDragStarted = false;
         _dragSourcePaths = [];
         _dragStorageItems = [];

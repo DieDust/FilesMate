@@ -65,7 +65,6 @@ public sealed partial class MainWindow : Window
     private bool? _appliedSolidBackground;
     private readonly bool _hostTearOut;
     private bool _tabDragging;
-    private bool _overTabTail;
     private bool _handledTabDrop;
     private string? _pinnedPreviewPath;
     private bool _pinnedPreviewVisible;
@@ -105,6 +104,7 @@ public sealed partial class MainWindow : Window
         _pageFactory = pageFactory ?? throw new ArgumentNullException(nameof(pageFactory));
         _hostTearOut = hostTearOut;
         InitializeComponent();
+        InitializeFavoritesBar();
         InitializeTabMemory();
         InitializeShellCompatibility();
         InitializeDevices();
@@ -154,6 +154,12 @@ public sealed partial class MainWindow : Window
         {
             InitializeTabs(launch, restartSession);
 #if FILESMATE_UI_TEST
+            if (Environment.GetEnvironmentVariable("FILESMATE_FAVORITE_GROUPS_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunFavoriteGroupsSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_FAVORITE_STAR_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunFavoriteStarSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_TAB_LINK_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunTabLinkSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_RANKING_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunRankingSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_EJECT_SMOKE") == "1")
@@ -627,99 +633,78 @@ public sealed partial class MainWindow : Window
 
     private void Tabs_TabDragStarting(TabView sender, TabViewTabDragStartingEventArgs args)
     {
-        _tabDragging = true;
-        _overTabTail = false;
+        // The item DragStarting event identifies the actual container under the
+        // pointer. With pages hosted separately, TabView's data-item lookup can
+        // resolve another container, especially after reordering.
+        _dragOperationTab = null;
         _handledTabDrop = false;
-        DraggedTab = args.Tab;
-        DragSource = this;
-        args.Data.RequestedOperation = DataPackageOperation.Move;
-        UpdateNonClientRegions();
+        args.Cancel = FileOperationLifetime.IsBusy;
     }
 
     private void Tabs_TabDragCompleted(TabView sender, TabViewTabDragCompletedEventArgs args)
     {
+        var tab = _dragOperationTab ?? args.Tab;
+        CompleteTabTransfer(tab, args.DropResult);
+        _tabTransferReceipt?.Dispose();
+        _tabTransferReceipt = null;
+        _tabDragBitmap?.Dispose();
+        _tabDragBitmap = null;
         _tabDragging = false;
-        _overTabTail = false;
-        if (ReferenceEquals(DraggedTab, args.Tab))
+        HideTabInsertion();
+        if (ReferenceEquals(DraggedTab, tab))
         {
             DraggedTab = null;
             DragSource = null;
         }
 
-        _handledTabDrop = false;
+        // WinUI raises TabDroppedOutside after this event for a None result.
+        // Keep its drop/cancel context until the next drag starts.
+        if (args.DropResult != DataPackageOperation.None) _dragOperationTab = null;
         UpdateNonClientRegions();
         ShowSelectedPage();
     }
 
     private void Tabs_TabDroppedOutside(TabView sender, TabViewTabDroppedOutsideEventArgs args)
     {
-        if (_handledTabDrop)
-        {
-            return;
-        }
-
-        if (_overTabTail)
-        {
-            MoveTabToEnd(args.Tab);
-            return;
-        }
-
-        TearOutToNewWindow(args.Tab);
+        var tab = _dragOperationTab;
+        _dragOperationTab = null;
+        if (!_handledTabDrop && tab is not null && !IsTabDragCanceled())
+            TearOutToNewWindow(tab, positionAtPointer: true);
     }
 
     private void Tabs_TabStripDragOver(object sender, DragEventArgs e)
     {
-        if (DraggedTab is null || DragSource is null || ReferenceEquals(DragSource, this))
+        if (!e.DataView.Contains(TabTransferPayload.Format))
         {
             return;
         }
 
-        AcceptTabDrag(e);
+        if (TryGetTabInsertion(e.GetPosition(Tabs), out _, out var markerX))
+        {
+            ShowTabInsertion(markerX);
+            AcceptTabDrag(e);
+        }
+        else
+        {
+            HideTabInsertion();
+            e.AcceptedOperation = DataPackageOperation.None;
+            e.Handled = true;
+        }
     }
 
-    private void Tabs_TabStripDrop(object sender, DragEventArgs e)
+    private async void Tabs_TabStripDrop(object sender, DragEventArgs e)
     {
-        if (DraggedTab is not { } tab || DragSource is not { } source || ReferenceEquals(source, this))
-        {
-            return;
-        }
-
-        _handledTabDrop = true;
-        var index = TabInsertIndex(e);
-        source.DetachTab(tab);
-        AttachTab(tab, index);
-        if (source.Tabs.TabItems.Count == 0)
-        {
-            _ = source.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, source.CloseIfEmpty);
-        }
+        if (TryGetTabInsertion(e.GetPosition(Tabs), out var index, out _))
+            await ReceiveTabDropAsync(e, index);
+        else { e.AcceptedOperation = DataPackageOperation.None; e.Handled = true; }
+        HideTabInsertion();
     }
 
-    private void TabStripTail_DragOver(object sender, DragEventArgs e)
-    {
-        if (DraggedTab is null)
-        {
-            return;
-        }
-
-        _overTabTail = true;
-        AcceptTabDrag(e);
-    }
-
-    private void TabStripTail_DragLeave(object sender, DragEventArgs e) => _overTabTail = false;
-
-    private void TabStripTail_Drop(object sender, DragEventArgs e)
-    {
-        if (DraggedTab is not { } tab)
-        {
-            return;
-        }
-
-        MoveTabToEnd(tab);
-    }
+    private void Tabs_DragLeave(object sender, DragEventArgs e) => HideTabInsertion();
 
     private void TabHost_DragOver(object sender, DragEventArgs e)
     {
-        if (DraggedTab is null)
+        if (DraggedTab is null || !ReferenceEquals(DragSource, this) || !e.DataView.Contains(TabTransferPayload.Format))
         {
             return;
         }
@@ -729,12 +714,12 @@ public sealed partial class MainWindow : Window
 
     private void TabHost_Drop(object sender, DragEventArgs e)
     {
-        if (DraggedTab is not { } tab)
+        if (DraggedTab is not { } tab || !ReferenceEquals(DragSource, this) || !e.DataView.Contains(TabTransferPayload.Format))
         {
             return;
         }
 
-        TearOutToNewWindow(tab);
+        TearOutToNewWindow(tab, positionAtPointer: true);
     }
 
     private static void AcceptTabDrag(DragEventArgs e)
@@ -745,23 +730,14 @@ public sealed partial class MainWindow : Window
         e.Handled = true;
     }
 
-    private void MoveTabToEnd(TabViewItem tab)
+    private bool TryGetTabInsertion(Point position, out int index, out double markerX)
     {
-        _handledTabDrop = true;
-        var index = Tabs.TabItems.IndexOf(tab);
-        if (index < 0 || index == Tabs.TabItems.Count - 1)
-        {
-            return;
-        }
-
-        Tabs.TabItems.Remove(tab);
-        Tabs.TabItems.Add(tab);
-        Tabs.SelectedItem = tab;
-    }
-
-    private int TabInsertIndex(DragEventArgs e)
-    {
-        var position = e.GetPosition(Tabs);
+        index = -1; markerX = 0;
+        var list = FindDescendant<ListView>(Tabs, static _ => true);
+        if (list is null) return false;
+        var viewport = list.TransformToVisual(Tabs)
+            .TransformBounds(new Rect(0, 0, list.ActualWidth, list.ActualHeight));
+        if (!viewport.Contains(position)) return false;
         for (var i = 0; i < Tabs.TabItems.Count; i++)
         {
             if (Tabs.TabItems[i] is not FrameworkElement item)
@@ -771,28 +747,40 @@ public sealed partial class MainWindow : Window
 
             var bounds = item.TransformToVisual(Tabs)
                 .TransformBounds(new Rect(0, 0, item.ActualWidth, item.ActualHeight));
-            if (position.X < bounds.X + (bounds.Width / 2))
+            if (bounds.Contains(position))
             {
-                return i;
+                var before = position.X < bounds.X + bounds.Width / 2;
+                index = before ? i : i + 1;
+                markerX = Math.Clamp(before ? bounds.Left : bounds.Right, viewport.Left, viewport.Right);
+                return true;
             }
         }
 
-        return Tabs.TabItems.Count;
+        return false;
     }
 
-    private void TearOutToNewWindow(TabViewItem tab)
+    private void TearOutToNewWindow(TabViewItem tab, bool positionAtPointer = false)
     {
-        if (_handledTabDrop || !Tabs.TabItems.Contains(tab))
+        if ((positionAtPointer && _handledTabDrop) || !Tabs.TabItems.Contains(tab))
         {
             return;
         }
 
         _handledTabDrop = true;
+        // A single-tab tear-out is already a window: preserve its live contents.
+        if (positionAtPointer && Tabs.TabItems.Count == 1)
+        {
+            PositionTornOutWindow(this, tab);
+            return;
+        }
         var window = new MainWindow(_pageFactory, new LaunchTarget(null, null), hostTearOut: true);
         App.TrackWindow(window);
-        DetachTab(tab);
-        window.AttachTab(tab);
+        window.AppWindow.Resize(AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Maximized }
+            ? new(_normalPlacement.Width, _normalPlacement.Height) : AppWindow.Size);
+        try { window.MoveTabFrom(this, tab, 0); }
+        catch { window.Close(); _handledTabDrop = false; throw; }
         ApplyHostAppearance(window);
+        if (positionAtPointer) PositionTornOutWindow(window, tab);
         window.Activate();
         if (Tabs.TabItems.Count == 0)
         {
@@ -810,10 +798,7 @@ public sealed partial class MainWindow : Window
 
     private void CloseIfEmpty()
     {
-        if (Tabs.TabItems.Count == 0)
-        {
-            RequestCloseAfterFileWork();
-        }
+        if (Tabs.TabItems.Count == 0) CloseEmptyWindowWhenIdle();
     }
 
     private bool _closeAfterFileWork;
@@ -829,6 +814,7 @@ public sealed partial class MainWindow : Window
 
     private void DetachTab(TabViewItem tab)
     {
+        UnwireTransferredTab(tab);
         if (tab.Tag is NavigatorTabContent navigator && ReferenceEquals(TabHost.Content, navigator.Content))
         {
             TabHost.Content = null;
@@ -861,6 +847,11 @@ public sealed partial class MainWindow : Window
         }
 
         ApplyTabItemStyle(tab);
+        if (tab.Tag is NavigatorTabContent { Navigator: { } page })
+        {
+            page.PinnedPreviewChanged += Navigator_PinnedPreviewChanged;
+            page.PinnedPreviewVisibilityChanged += Navigator_PinnedPreviewVisibilityChanged;
+        }
         Tabs.SelectedItem = tab;
         RefreshClosable();
         ShowSelectedPage();
@@ -1242,6 +1233,13 @@ public sealed partial class MainWindow : Window
         { App.LogFailure("SaveWindowOnClose", error); }
 
         App.ShortcutsChanged -= App_ShortcutsChanged;
+        App.FeaturesChanged -= WindowFavorites_FeaturesChanged;
+        _tabTransferReceipt?.Dispose();
+        _tabTransferReceipt = null;
+        _tabDragBitmap?.Dispose();
+        _tabDragBitmap = null;
+        if (ReferenceEquals(DragSource, this)) { DraggedTab = null; DragSource = null; }
+        _dragOperationTab = null;
         foreach (var raw in Tabs.TabItems)
         {
             if (raw is TabViewItem { Tag: NavigatorTabContent tab } item)
@@ -1522,6 +1520,8 @@ public sealed partial class MainWindow : Window
         }
 
         TabHost.Content = content;
+        if (content is NavigatorPage favoritesPage) UpdateFavoritesPlacement(favoritesPage);
+        else WindowFavorites.Visibility = Visibility.Collapsed;
         if (content is NavigatorPage previewPage) previewPage.ApplyPinnedPreviewFromWindow(_pinnedPreviewPath, _pinnedPreviewVisible);
     }
 
@@ -1574,10 +1574,6 @@ public sealed partial class MainWindow : Window
         AddNonClientRect(passthrough, FindDescendant<ListView>(Tabs, static _ => true), scale);
         AddNonClientRect(passthrough, NewTabButton, scale);
         AddTabStripPassthrough(passthrough, scale);
-        if (_tabDragging)
-        {
-            AddNonClientRect(passthrough, TabDragRegion, scale);
-        }
         var source = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
         if (_shellHost is not null)
         {
@@ -1708,6 +1704,10 @@ public sealed partial class MainWindow : Window
 
     private void ApplyTabItemStyle(TabViewItem item)
     {
+        item.DragStarting -= Tab_DragStarting;
+        item.DragStarting += Tab_DragStarting;
+        item.DragEnter -= Tab_DragEnter;
+        item.DragEnter += Tab_DragEnter;
         ConfigureFileTabHover(item);
         item.RequestedTheme = Tabs.RequestedTheme == ElementTheme.Default
             ? (Tabs.ActualTheme == ElementTheme.Dark ? ElementTheme.Dark : ElementTheme.Light)

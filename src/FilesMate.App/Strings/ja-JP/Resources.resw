@@ -973,6 +973,18 @@
   <data name="Favorites_DuplicateTarget" xml:space="preserve">
     <value>移動先のグループに同じファイルが存在します。お気に入りは移動していません。</value>
   </data>
+  <data name="Favorites_Edit" xml:space="preserve">
+    <value>お気に入りを編集</value>
+  </data>
+  <data name="Favorites_EditFolder" xml:space="preserve">
+    <value>お気に入りに登録済み — 編集または削除</value>
+  </data>
+  <data name="Favorites_NewSubgroup" xml:space="preserve">
+    <value>子グループを作成</value>
+  </data>
+  <data name="Favorites_GroupCycle" xml:space="preserve">
+    <value>グループを自身またはその子グループに移動することはできません。</value>
+  </data>
   <data name="Favorites_Group" xml:space="preserve">
     <value>お気に入りグループ</value>
   </data>
@@ -1056,6 +1068,9 @@
   </data>
   <data name="Favorites_Remove" xml:space="preserve">
     <value>お気に入りから削除</value>
+  </data>
+  <data name="Favorites_RemoveFolderCopies" xml:space="preserve">
+    <value>このフォルダーは複数のグループに登録されています。削除するとすべての登録が解除されますが、元のフォルダーは残ります。</value>
   </data>
   <data name="Favorites_RemoveGroup" xml:space="preserve">
     <value>お気に入りグループを削除</value>
@@ -1559,7 +1574,7 @@
     <value>先にフォルダーを開いてください。</value>
   </data>
   <data name="OpenFoldersNewTabDescription" xml:space="preserve">
-    <value>フォルダーをダブルクリックすると、現在のタブを置き換えずに新しいタブで開きます。</value>
+    <value>ファイル一覧、お気に入り、サイドバー、ホームからフォルダーを新しいタブで開きます。戻る、進む、上へ、アドレスバーは現在のタブで移動します。</value>
   </data>
   <data name="OpenFoldersNewTabTitle" xml:space="preserve">
     <value>フォルダーを新しいタブで開く</value>

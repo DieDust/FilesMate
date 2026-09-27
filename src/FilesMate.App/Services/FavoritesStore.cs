@@ -8,6 +8,8 @@ public sealed record FavoriteEntry(string Id, string Name, string? Path, bool Is
     public bool IsGroup => Path is null;
 }
 
+public sealed record FavoriteGroup(FavoriteEntry Entry, int Depth, string Breadcrumb);
+
 /// <summary>References only: never enumerates, decodes or watches the bookmarked files.</summary>
 public sealed class FavoritesStore
 {
@@ -58,12 +60,11 @@ public sealed class FavoritesStore
     /// <summary>The quick-save button reuses an existing bookmark, including one in a group.</summary>
     public async Task<FavoriteEntry> SaveFolderAsync(string folder)
     {
-        if (!System.IO.Path.IsPathFullyQualified(folder)) throw new InvalidOperationException(Loc.Get("OpenFolderFirst"));
-        var path = System.IO.Path.TrimEndingDirectorySeparator(System.IO.Path.GetFullPath(folder));
+        var path = FolderKey(folder) ?? throw new InvalidOperationException(Loc.Get("OpenFolderFirst"));
         FavoriteEntry? saved = null;
         await ChangeAsync(entries =>
         {
-            saved = entries.FirstOrDefault(entry => string.Equals(entry.Path, path, StringComparison.OrdinalIgnoreCase));
+            saved = entries.FirstOrDefault(entry => MatchesFolder(entry, path));
             if (saved is not null) return;
             var name = System.IO.Path.GetFileName(path);
             if (string.IsNullOrEmpty(name)) name = path;
@@ -73,8 +74,87 @@ public sealed class FavoritesStore
         return saved!;
     }
 
-    public Task CreateGroupAsync(string name) => ChangeAsync(entries =>
-        entries.Add(new(Guid.NewGuid().ToString("N"), CleanName(name), null, true)));
+    public IReadOnlyList<FavoriteEntry> FindFolders(string? folder)
+    {
+        var path = FolderKey(folder);
+        return path is null ? [] : _entries.Where(entry => MatchesFolder(entry, path)).ToArray();
+    }
+
+    // The star represents the folder across all groups. Removing it must not
+    // leave a second reference behind and immediately light the star again.
+    public Task RemoveFolderAsync(string folder)
+    {
+        var path = FolderKey(folder) ?? throw new InvalidOperationException(Loc.Get("OpenFolderFirst"));
+        return ChangeAsync(entries => entries.RemoveAll(entry => MatchesFolder(entry, path)));
+    }
+
+    public Task UpdateAsync(string id, string name, string? groupId) => ChangeAsync(entries =>
+    {
+        RequireGroup(entries, groupId);
+        var index = entries.FindIndex(entry => entry.Id == id);
+        if (index < 0) throw new InvalidOperationException(Loc.Get("Favorites_MissingItem"));
+        var entry = entries[index];
+        if (entry.IsGroup) throw new InvalidOperationException(Loc.Get("Favorites_GroupAtRoot"));
+        if (entries.Any(other => other.Id != id && other.GroupId == groupId
+            && string.Equals(FolderKey(other.Path), FolderKey(entry.Path), StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException(Loc.Get("Favorites_AlreadyInGroup"));
+        entries[index] = entry with { Name = CleanName(name), GroupId = groupId };
+    });
+
+    internal static string? FolderKey(string? folder)
+    {
+        try
+        {
+            return string.IsNullOrWhiteSpace(folder) || !System.IO.Path.IsPathFullyQualified(folder) ? null
+                : System.IO.Path.TrimEndingDirectorySeparator(System.IO.Path.GetFullPath(folder));
+        }
+        catch (Exception error) when (error is ArgumentException or NotSupportedException or System.Security.SecurityException)
+        { return null; }
+    }
+
+    private static bool MatchesFolder(FavoriteEntry entry, string path) => entry.IsDirectory && !entry.IsGroup
+        && string.Equals(FolderKey(entry.Path), path, StringComparison.OrdinalIgnoreCase);
+
+    public async Task<FavoriteEntry> CreateGroupAsync(string name, string? parentId = null)
+    {
+        var group = new FavoriteEntry(Guid.NewGuid().ToString("N"), CleanName(name), null, true, parentId);
+        await ChangeAsync(entries =>
+        {
+            RequireGroup(entries, parentId);
+            entries.Add(group);
+        });
+        return group;
+    }
+
+    public IReadOnlyList<FavoriteGroup> GroupsInTreeOrder()
+    {
+        var children = _entries.Where(entry => entry.IsGroup).ToLookup(entry => entry.GroupId ?? "");
+        var pending = new Stack<FavoriteGroup>(children[""].Reverse().Select(entry => new FavoriteGroup(entry, 0, entry.Name)));
+        var groups = new List<FavoriteGroup>();
+        while (pending.TryPop(out var group))
+        {
+            groups.Add(group);
+            foreach (var child in children[group.Entry.Id].Reverse())
+            {
+                var breadcrumb = group.Breadcrumb + " / " + child.Name;
+                // Keep destination menus bounded even for deeply nested imported data.
+                if (breadcrumb.Length > 240) breadcrumb = "…" + breadcrumb[^220..];
+                pending.Push(new(child, group.Depth + 1, breadcrumb));
+            }
+        }
+        return groups;
+    }
+
+    public bool CanMoveTo(IEnumerable<string> ids, string? groupId)
+    {
+        var selected = ids.ToHashSet(StringComparer.Ordinal);
+        var entries = _entries.ToDictionary(entry => entry.Id);
+        if (selected.Count == 0 || selected.Any(id => !entries.ContainsKey(id))) return false;
+        if (groupId is not null && (!entries.TryGetValue(groupId, out var group) || !group.IsGroup)) return false;
+        for (var parent = groupId; parent is not null; parent = entries[parent].GroupId)
+            if (selected.Contains(parent)) return false;
+        return true;
+    }
 
     public Task RenameAsync(string id, string name) => ChangeAsync(entries =>
     {
@@ -82,12 +162,20 @@ public sealed class FavoritesStore
         if (index >= 0) entries[index] = entries[index] with { Name = CleanName(name) };
     });
 
-    public Task RemoveAsync(string id) => ChangeAsync(entries => entries.RemoveAll(entry => entry.Id == id || entry.GroupId == id));
+    public Task RemoveAsync(string id) => RemoveManyAsync([id]);
 
     public Task RemoveManyAsync(IEnumerable<string> ids)
     {
         var selected = ids.ToHashSet(StringComparer.Ordinal);
-        return ChangeAsync(entries => entries.RemoveAll(entry => selected.Contains(entry.Id) || (entry.GroupId is { } parent && selected.Contains(parent))));
+        return ChangeAsync(entries =>
+        {
+            var children = entries.ToLookup(entry => entry.GroupId ?? "");
+            var pending = new Queue<string>(selected);
+            while (pending.TryDequeue(out var parent))
+                foreach (var child in children[parent])
+                    if (selected.Add(child.Id)) pending.Enqueue(child.Id);
+            entries.RemoveAll(entry => selected.Contains(entry.Id));
+        });
     }
 
     public Task MoveManyAsync(IEnumerable<string> ids, string? groupId)
@@ -98,12 +186,16 @@ public sealed class FavoritesStore
             RequireGroup(entries, groupId);
             var moving = entries.Where(entry => selected.Contains(entry.Id)).ToArray();
             if (moving.Length != selected.Count) throw new InvalidOperationException(Loc.Get("Favorites_MissingItems"));
-            if (groupId is not null && moving.Any(entry => entry.IsGroup)) throw new InvalidOperationException(Loc.Get("Favorites_GroupAtRoot"));
-            var paths = entries.Where(entry => entry.GroupId == groupId && !selected.Contains(entry.Id) && entry.Path is not null)
+            RequireMoveTarget(entries, selected, groupId);
+            var byId = entries.ToDictionary(entry => entry.Id);
+            // Moving a parent and a selected descendant preserves the subtree.
+            moving = moving.Where(entry => !HasSelectedAncestor(entry, selected, byId)).ToArray();
+            var roots = moving.Select(entry => entry.Id).ToHashSet(StringComparer.Ordinal);
+            var paths = entries.Where(entry => entry.GroupId == groupId && !roots.Contains(entry.Id) && entry.Path is not null)
                 .Select(entry => entry.Path!).ToHashSet(StringComparer.OrdinalIgnoreCase);
             foreach (var entry in moving)
                 if (entry.Path is { } path && !paths.Add(path)) throw new InvalidOperationException(Loc.Get("Favorites_DuplicateTarget"));
-            entries.RemoveAll(entry => selected.Contains(entry.Id));
+            entries.RemoveAll(entry => roots.Contains(entry.Id));
             entries.AddRange(moving.Select(entry => entry with { GroupId = groupId }));
         });
     }
@@ -122,7 +214,7 @@ public sealed class FavoritesStore
     {
         RequireGroup(entries, groupId);
         var entry = entries.FirstOrDefault(entry => entry.Id == id) ?? throw new InvalidOperationException(Loc.Get("Favorites_MissingItem"));
-        if (entry.IsGroup && groupId is not null) throw new InvalidOperationException(Loc.Get("Favorites_GroupAtRoot"));
+        RequireMoveTarget(entries, new HashSet<string> { id }, groupId);
         if (id == beforeId) return;
         if (entries.Any(other => other.Id != id && other.GroupId == groupId && entry.Path is not null && string.Equals(other.Path, entry.Path, StringComparison.OrdinalIgnoreCase)))
             throw new InvalidOperationException(Loc.Get("Favorites_AlreadyInGroup"));
@@ -150,6 +242,7 @@ public sealed class FavoritesStore
             var next = _entries.ToList();
             edit(next);
             Validate(next);
+            if (_entries.SequenceEqual(next)) return;
             Directory.CreateDirectory(System.IO.Path.GetDirectoryName(_path)!);
             var temporary = _path + ".tmp";
             try
@@ -173,6 +266,20 @@ public sealed class FavoritesStore
             throw new InvalidOperationException(Loc.Get("Favorites_MissingGroup"));
     }
 
+    private static bool HasSelectedAncestor(FavoriteEntry entry, HashSet<string> selected, Dictionary<string, FavoriteEntry> entries)
+    {
+        for (var parent = entry.GroupId; parent is not null; parent = entries[parent].GroupId)
+            if (selected.Contains(parent)) return true;
+        return false;
+    }
+
+    private static void RequireMoveTarget(List<FavoriteEntry> entries, HashSet<string> selected, string? groupId)
+    {
+        var byId = entries.ToDictionary(entry => entry.Id);
+        for (var parent = groupId; parent is not null; parent = byId[parent].GroupId)
+            if (selected.Contains(parent)) throw new InvalidOperationException(Loc.Get("Favorites_GroupCycle"));
+    }
+
     private static void Validate(List<FavoriteEntry> entries)
     {
         if (entries.Count > Capacity) throw new InvalidOperationException(Loc.Format("Favorites_Capacity", Capacity));
@@ -181,9 +288,17 @@ public sealed class FavoritesStore
         {
             if (entry is null || string.IsNullOrEmpty(entry.Id) || !ids.Add(entry.Id)) throw new InvalidOperationException(Loc.Get("Favorites_InvalidId"));
             CleanName(entry.Name);
-            if (entry.IsGroup && entry.GroupId is not null) throw new InvalidOperationException(Loc.Get("Favorites_InvalidNesting"));
             if (!entry.IsGroup && !System.IO.Path.IsPathFullyQualified(entry.Path!)) throw new InvalidOperationException(Loc.Get("Favorites_InvalidPath"));
         }
         foreach (var entry in entries) RequireGroup(entries, entry.GroupId);
+        var byId = entries.ToDictionary(entry => entry.Id);
+        var verified = new HashSet<string>();
+        foreach (var group in entries.Where(entry => entry.IsGroup))
+        {
+            var chain = new HashSet<string>();
+            for (string? id = group.Id; id is not null && !verified.Contains(id); id = byId[id].GroupId)
+                if (!chain.Add(id)) throw new InvalidOperationException(Loc.Get("Favorites_GroupCycle"));
+            verified.UnionWith(chain);
+        }
     }
 }

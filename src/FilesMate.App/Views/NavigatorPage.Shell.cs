@@ -2,6 +2,7 @@ using FilesMate.App.Navigation;
 using FilesMate.Platform.Windows.Shell;
 using FilesMate.Platform.Windows.Associations;
 using System.Runtime.InteropServices;
+using Windows.Foundation;
 
 namespace FilesMate.App.Views;
 
@@ -54,11 +55,45 @@ public sealed partial class NavigatorPage
                     _selectAttempts = 0;
                     TryApplyPendingSelection(ViewModel);
                 });
-            }, window.ShellViewHandle, window.ShellViewHandle == 0 ? null : ReadShellSelection);
+            }, window.ShellViewHandle, window.ShellViewHandle == 0 ? null : ReadShellSelection,
+                (x, y) => ReadExternalDropTarget(window.NativeHandle, x, y));
         }
         catch (COMException error)
         {
             App.AppendCrashRecord("ShellWindowRegistration", error);
         }
     }
+
+    private string? ReadExternalDropTarget(nint window, int screenX, int screenY)
+    {
+        string? Resolve()
+        {
+            if (_disposed || !IsLoaded) return null;
+            var point = new NativePoint { X = screenX, Y = screenY };
+            if (!ScreenToClient(window, ref point)) return null;
+            var scale = XamlRoot?.RasterizationScale ?? 1;
+            var rootPoint = new Point(point.X / scale, point.Y / scale);
+            return _rightSurface?.ExternalDropDestinationAt(rootPoint)
+                ?? FileSurface.ExternalDropDestinationAt(rootPoint);
+        }
+
+        if (DispatcherQueue.HasThreadAccess) return Resolve();
+        var reply = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (!DispatcherQueue.TryEnqueue(() =>
+        {
+            if (reply.Task.IsCompleted) return;
+            try { reply.TrySetResult(Resolve()); }
+            catch (Exception error) { reply.TrySetException(error); }
+        })) return null;
+        if (reply.Task.Wait(TimeSpan.FromMilliseconds(500))) return reply.Task.GetAwaiter().GetResult();
+        reply.TrySetResult(null);
+        return null;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativePoint { public int X; public int Y; }
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ScreenToClient(nint window, ref NativePoint point);
 }

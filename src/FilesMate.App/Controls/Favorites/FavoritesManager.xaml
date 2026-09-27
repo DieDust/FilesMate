@@ -36,7 +36,7 @@
             </Setter>
         </Style>
         <DataTemplate x:Key="GroupTemplate">
-            <Grid Padding="4,8" MinHeight="54" ColumnSpacing="10">
+            <Grid Padding="4,6" MinHeight="40" ColumnSpacing="8" Margin="{Binding Indent}" ToolTipService.ToolTip="{Binding Breadcrumb}">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <Image Width="20" Height="20" Source="ms-appx:///Assets/FileIcons/bookmark-group.svg"/>
                 <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
@@ -44,7 +44,7 @@
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="EntryTemplate">
-            <Grid Padding="6,8" MinHeight="54" ColumnSpacing="12">
+            <Grid Padding="6,6" MinHeight="46" ColumnSpacing="10">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="32"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                 <Image Source="{Binding Icon}" Width="28" Height="28" Loaded="EntryIcon_Loaded" DataContextChanged="EntryIcon_DataContextChanged"/>
                 <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
@@ -79,11 +79,12 @@
             </Button>
         </Grid>
         <Grid Grid.Row="1" Grid.Column="1" ColumnSpacing="6">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <TextBlock x:Name="SelectionCount" VerticalAlignment="Center" FontSize="12" Opacity="0.65"/>
-            <Button Grid.Column="1" Content="{loc:LocalizedText Key=Command_SelectAll}" Height="32" VerticalAlignment="Center" Click="SelectAll_Click"/>
-            <Button x:Name="MoveButton" Grid.Column="2" Content="{loc:LocalizedText Key=MoveToMenu}" Height="32" VerticalAlignment="Center" Click="Move_Click" IsEnabled="False"/>
-            <Button x:Name="RemoveButton" Grid.Column="3" Content="{loc:LocalizedText Key=Remove}" Height="32" VerticalAlignment="Center" Click="Remove_Click" IsEnabled="False"/>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <TextBlock x:Name="LocationText" VerticalAlignment="Center" FontSize="12" TextTrimming="CharacterEllipsis"/>
+            <TextBlock x:Name="SelectionCount" Grid.Column="1" VerticalAlignment="Center" FontSize="12" Opacity="0.65"/>
+            <Button Grid.Column="2" Content="{loc:LocalizedText Key=Command_SelectAll}" Height="32" VerticalAlignment="Center" Click="SelectAll_Click"/>
+            <Button x:Name="MoveButton" Grid.Column="3" Content="{loc:LocalizedText Key=MoveToMenu}" Height="32" VerticalAlignment="Center" Click="Move_Click" IsEnabled="False"/>
+            <Button x:Name="RemoveButton" Grid.Column="4" Content="{loc:LocalizedText Key=Remove}" Height="32" VerticalAlignment="Center" Click="Remove_Click" IsEnabled="False"/>
         </Grid>
         <ListView x:Name="Groups" Grid.Row="2" ItemTemplate="{StaticResource GroupTemplate}" SelectionMode="Single"
             ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollMode="Enabled" ScrollViewer.HorizontalScrollMode="Disabled"

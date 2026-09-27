@@ -49,6 +49,11 @@ public sealed partial class NavigatorPage
 
     private void ConfigureConvenienceSurface(FileDetailsSurface surface, bool right)
     {
+        surface.ViewportLayoutChanged += (_, _) =>
+        {
+            var chrome = right ? _rightChrome : PaneChrome;
+            if (chrome is not null) chrome.ContentTopInset = surface.LayoutKind == FileLayoutKind.Details ? FileColumnLayout.RowHeight : 0;
+        };
         surface.OtherPanePath = () => OtherPaneDestination(right);
         surface.RenameRequested = _fileActions.RenamePathAsync;
         surface.QuickPreviewRequested += (_, _) =>

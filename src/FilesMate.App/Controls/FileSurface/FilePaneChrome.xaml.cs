@@ -142,6 +142,20 @@ public sealed partial class FilePaneChrome : UserControl
 
     public event RoutedEventHandler? GoUpRequested;
 
+    private double _contentTopInset;
+    public double ContentTopInset
+    {
+        get => _contentTopInset;
+        set { if (_contentTopInset != value) { _contentTopInset = value; ApplyChrome(); } }
+    }
+
+    private void InfoViewport_SizeChanged(object sender, SizeChangedEventArgs e) => UpdateInfoClip();
+
+    private void UpdateInfoClip() => InfoViewport.Clip = _presentation.Kind == FilePaneKind.Empty
+        ? new Microsoft.UI.Xaml.Media.RectangleGeometry
+        { Rect = new Windows.Foundation.Rect(0, 0, InfoViewport.ActualWidth, InfoViewport.ActualHeight) }
+        : null;
+
     public UIElement? Body
     {
         get => (UIElement?)GetValue(BodyProperty);
@@ -280,6 +294,10 @@ public sealed partial class FilePaneChrome : UserControl
         // Collapsing it loses keyboard focus and removes the background drop target.
         BodyPresenter.Opacity = _presentation.ShowList || _presentation.Kind == FilePaneKind.Empty ? 1 : 0;
         Info.Visibility = _presentation.ShowInfo ? Visibility.Visible : Visibility.Collapsed;
+        InfoViewport.Margin = new Thickness(0, _presentation.Kind == FilePaneKind.Empty ? ContentTopInset : 0, 0, 0);
+        UpdateInfoClip();
+        InfoViewport.IsHitTestVisible = !string.IsNullOrEmpty(_presentation.PrimaryAction)
+            || !string.IsNullOrEmpty(_presentation.SecondaryAction);
         Info.IsHitTestVisible = !string.IsNullOrEmpty(_presentation.PrimaryAction)
             || !string.IsNullOrEmpty(_presentation.SecondaryAction);
         if (_presentation.ShowInfo)
@@ -289,7 +307,8 @@ public sealed partial class FilePaneChrome : UserControl
                 _presentation.Title,
                 _presentation.Body,
                 _presentation.PrimaryAction,
-                _presentation.SecondaryAction);
+                _presentation.SecondaryAction,
+                compactWhenSmall: _presentation.Kind == FilePaneKind.Empty);
         }
 
         StatusBar.Visibility = ShowStatusBar ? Visibility.Visible : Visibility.Collapsed;

@@ -973,6 +973,18 @@
   <data name="Favorites_DuplicateTarget" xml:space="preserve">
     <value>目标分组已有同一文件，未移动任何收藏。</value>
   </data>
+  <data name="Favorites_Edit" xml:space="preserve">
+    <value>编辑收藏</value>
+  </data>
+  <data name="Favorites_EditFolder" xml:space="preserve">
+    <value>已收藏此文件夹，点击编辑或取消收藏</value>
+  </data>
+  <data name="Favorites_NewSubgroup" xml:space="preserve">
+    <value>新建子分组</value>
+  </data>
+  <data name="Favorites_GroupCycle" xml:space="preserve">
+    <value>不能将分组移入自身或它的子分组。</value>
+  </data>
   <data name="Favorites_Group" xml:space="preserve">
     <value>收藏分组</value>
   </data>
@@ -1056,6 +1068,9 @@
   </data>
   <data name="Favorites_Remove" xml:space="preserve">
     <value>移除收藏</value>
+  </data>
+  <data name="Favorites_RemoveFolderCopies" xml:space="preserve">
+    <value>此文件夹在多个分组中有收藏。移除收藏会取消这些收藏，原文件夹不受影响。</value>
   </data>
   <data name="Favorites_RemoveGroup" xml:space="preserve">
     <value>移除收藏分组</value>
@@ -1559,7 +1574,7 @@
     <value>请先打开一个文件夹。</value>
   </data>
   <data name="OpenFoldersNewTabDescription" xml:space="preserve">
-    <value>双击文件夹时在单独的标签页打开，不替换当前标签页。</value>
+    <value>从文件列表、收藏夹、侧栏和主页打开文件夹时使用新标签页。返回、前进、上一级和地址栏仍在当前标签页导航。</value>
   </data>
   <data name="OpenFoldersNewTabTitle" xml:space="preserve">
     <value>在新标签页中打开文件夹</value>

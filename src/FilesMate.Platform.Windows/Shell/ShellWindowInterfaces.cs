@@ -34,7 +34,8 @@ public interface IShellBrowserAutomation
     [PreserveSig] public int Quit();
     [PreserveSig] public int ClientToWindow(ref int width, ref int height);
     [PreserveSig] public int PutProperty([MarshalAs(UnmanagedType.BStr)] string name, [MarshalAs(UnmanagedType.Struct)] object value);
-    [PreserveSig] public int GetProperty([MarshalAs(UnmanagedType.BStr)] string name, out object value);
+    [PreserveSig] public int GetProperty([MarshalAs(UnmanagedType.BStr)] string name,
+        [MarshalAs(UnmanagedType.Struct)] out object value);
     [PreserveSig] public int get_Name(out nint value);
     [PreserveSig] public int get_HWND(out nint value);
     [PreserveSig] public int get_FullName(out nint value);
