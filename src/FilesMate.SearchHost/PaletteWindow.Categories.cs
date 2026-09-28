@@ -3,6 +3,9 @@ using FilesMate.Search;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace FilesMate.SearchHost;
 
@@ -11,6 +14,12 @@ public partial class PaletteWindow
     private List<SearchCategory> _categories = [];
     private string _categoryId = "All";
     private bool _buildingCategories;
+    private bool _categoryRevealQueued;
+    private readonly LinearGradientBrush _categoryEdgeMask = new()
+    {
+        StartPoint = new Point(0, 0), EndPoint = new Point(1, 0),
+        GradientStops = [new(Colors.Black, 0), new(Colors.Black, .05), new(Colors.Black, .95), new(Colors.Black, 1)]
+    };
     private readonly System.Windows.Threading.DispatcherTimer _categoryEditTimer = new() { Interval = TimeSpan.FromMilliseconds(500) };
     private Action? _categoryCommit;
 
@@ -44,15 +53,20 @@ public partial class PaletteWindow
             ?? _categories.First(c => c.Visible && (executablesEnabled || c.Builtin != SearchFilter.Executables));
         _categoryId = selected.Id;
         _filter = selected.Builtin ?? SearchFilter.All;
-        foreach (var category in _categories.Where(c => c.Visible && (executablesEnabled || c.Builtin != SearchFilter.Executables)))
+        var visible = _categories.Where(c => c.Visible && (executablesEnabled || c.Builtin != SearchFilter.Executables)).ToList();
+        foreach (var category in visible)
         {
-            var button = new RadioButton { Content = CategoryLabel(category), Tag = category, GroupName = "Filter", Style = (Style)FindResource("Segment"),
-                FontSize = 12, Padding = new Thickness(10, 5, 10, 5), IsChecked = category.Id == _categoryId,
-                ToolTip = category.Builtin is null ? string.Join(", ", category.Extensions) : CategoryLabel(category) };
+            var label = category.Builtin == SearchFilter.Executables ? Loc.Get("Category_Programs") : CategoryLabel(category);
+            var button = new RadioButton { Tag = category, GroupName = "Filter", Style = (Style)FindResource("SearchCategoryTab"),
+                FontSize = 12, Padding = new Thickness(8, 7, 8, 7), IsChecked = category.Id == _categoryId,
+                Content = new TextBlock { Text = label, MaxWidth = 120, TextTrimming = TextTrimming.CharacterEllipsis },
+                ToolTip = category.Builtin is null ? category.Name + "\n" + string.Join(", ", category.Extensions) : CategoryLabel(category) };
+            System.Windows.Automation.AutomationProperties.SetName(button, CategoryLabel(category));
             button.Checked += Category_Changed;
             CategoryButtons.Children.Add(button);
         }
         _buildingCategories = false;
+        QueueSelectedCategoryVisibility();
     }
     private void Category_Changed(object sender, RoutedEventArgs e)
     {
@@ -61,7 +75,62 @@ public partial class PaletteWindow
         _filter = category.Builtin ?? SearchFilter.All;
         _offset = 0; _hasMore = false;
         Search();
-        QueryBox.Focus();
+        QueueSelectedCategoryVisibility();
+        if (InputManager.Current.MostRecentInputDevice is MouseDevice) QueryBox.Focus();
+    }
+    private void CategoryStrip_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (!_ready || _buildingCategories || !e.WidthChanged) return;
+        UpdateCategoryScrollButtons();
+        QueueSelectedCategoryVisibility();
+    }
+    private void CategoryScroll_Changed(object sender, ScrollChangedEventArgs e)
+    {
+        if (!_ready || _buildingCategories) return;
+        UpdateCategoryScrollButtons();
+        if (e.ExtentWidthChange != 0 || e.ViewportWidthChange != 0) QueueSelectedCategoryVisibility();
+    }
+    private void UpdateCategoryScrollButtons()
+    {
+        // Compare against the entire strip so showing the arrows cannot create
+        // an overflow that keeps them visible after all categories fit again.
+        var overflow = CategoryButtons.ActualWidth > CategoryStrip.ActualWidth + 1;
+        CategoryPreviousButton.Visibility = CategoryNextButton.Visibility = overflow ? Visibility.Visible : Visibility.Collapsed;
+        CategoryPreviousButton.IsEnabled = CategoryScroll.HorizontalOffset > 1;
+        CategoryNextButton.IsEnabled = CategoryScroll.HorizontalOffset < CategoryScroll.ScrollableWidth - 1;
+        var fade = Math.Min(.1, 10 / Math.Max(1, CategoryScroll.ViewportWidth));
+        _categoryEdgeMask.GradientStops[0].Color = CategoryPreviousButton.IsEnabled ? Colors.Transparent : Colors.Black;
+        _categoryEdgeMask.GradientStops[1].Offset = fade;
+        _categoryEdgeMask.GradientStops[2].Offset = 1 - fade;
+        _categoryEdgeMask.GradientStops[3].Color = CategoryNextButton.IsEnabled ? Colors.Transparent : Colors.Black;
+        CategoryScroll.OpacityMask = overflow ? _categoryEdgeMask : null;
+    }
+    private void QueueSelectedCategoryVisibility()
+    {
+        if (_categoryRevealQueued) return;
+        _categoryRevealQueued = true;
+        Dispatcher.BeginInvoke(() =>
+        {
+            _categoryRevealQueued = false;
+            if (!CategoryScroll.IsVisible || CategoryScroll.ViewportWidth <= 0) return;
+            var selected = CategoryButtons.Children.OfType<RadioButton>().FirstOrDefault(b => b.IsChecked == true);
+            if (selected is null) return;
+            var left = selected.TranslatePoint(new Point(), CategoryButtons).X;
+            var right = left + selected.ActualWidth;
+            if (left < CategoryScroll.HorizontalOffset) CategoryScroll.ScrollToHorizontalOffset(Math.Max(0, left - 4));
+            else if (right > CategoryScroll.HorizontalOffset + CategoryScroll.ViewportWidth)
+                CategoryScroll.ScrollToHorizontalOffset(right - CategoryScroll.ViewportWidth + 4);
+        }, DispatcherPriority.Loaded);
+    }
+    private void CategoryPrevious_Click(object sender, RoutedEventArgs e)
+        => CategoryScroll.ScrollToHorizontalOffset(CategoryScroll.HorizontalOffset - Math.Max(80, CategoryScroll.ViewportWidth * .7));
+    private void CategoryNext_Click(object sender, RoutedEventArgs e)
+        => CategoryScroll.ScrollToHorizontalOffset(CategoryScroll.HorizontalOffset + Math.Max(80, CategoryScroll.ViewportWidth * .7));
+    private void CategoryScroll_MouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (CategoryScroll.ScrollableWidth <= 0) return;
+        CategoryScroll.ScrollToHorizontalOffset(CategoryScroll.HorizontalOffset - e.Delta / 120d * 96);
+        e.Handled = true;
     }
     private void Categories_Open(object sender, RoutedEventArgs e)
     {

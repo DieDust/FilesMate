@@ -21,6 +21,17 @@ public sealed class TabTransferPayloadTests
     }
 
     [Fact]
+    public void Transfer_restores_a_third_pane_and_rejects_an_orphan_third_pane()
+    {
+        var payload = Fixture();
+        payload = payload with { State = payload.State with { Third = payload.State.Left with { Path = @"F:\media" }, ThirdActive = true, RightActive = false } };
+        var restored = Assert.IsType<TabTransferPayload>(TabTransferPayload.Parse(payload.Serialize()));
+        Assert.Equal(payload.Serialize(), restored.Serialize());
+        Assert.Null(TabTransferPayload.Parse((payload with { State = payload.State with { Right = null } }).Serialize()));
+        Assert.Null(TabTransferPayload.Parse((payload with { State = payload.State with { Third = null } }).Serialize()));
+    }
+
+    [Fact]
     public void Unsupported_or_incomplete_external_data_is_rejected()
     {
         var payload = Fixture();

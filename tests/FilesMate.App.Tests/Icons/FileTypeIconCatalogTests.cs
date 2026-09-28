@@ -90,6 +90,15 @@ public sealed class FileTypeIconCatalogTests
     [InlineData("bundle.tar")]
     [InlineData("payload.iso")]
     [InlineData("split.001")]
+    [InlineData("妹妹可爱.7z.001删删删")]
+    [InlineData("妹妹可爱.7z.002删删删")]
+    [InlineData("bundle.7z.120删")]
+    [InlineData("bundle.zipabc")]
+    [InlineData("bundle.ZIP.002删除后缀")]
+    [InlineData("bundle.part02.rar删删删")]
+    [InlineData("bundle.r99删")]
+    [InlineData("bundle.z42删")]
+    [InlineData("split.100")]
     public void CompactMate_extractable_files_are_archives(string path)
     {
         Assert.True(FileTypeIconCatalog.IsArchivePath(path));
@@ -98,6 +107,10 @@ public sealed class FileTypeIconCatalogTests
     [Theory]
     [InlineData("notes.txt")]
     [InlineData("Program.cs")]
+    [InlineData("bundle.zip.txt")]
+    [InlineData("bundle.7z.exe")]
+    [InlineData("bundle.rar.lnk")]
+    [InlineData(@"D:\folder.zip\notes.txt")]
     [InlineData(null)]
     [InlineData("")]
     public void Ordinary_files_are_not_archives(string? path)

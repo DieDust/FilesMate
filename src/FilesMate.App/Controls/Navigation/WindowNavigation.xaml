@@ -1,0 +1,16 @@
+<UserControl x:Class="FilesMate.App.Controls.Navigation.WindowNavigation"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:nav="using:FilesMate.App.Controls.Navigation"
+    xmlns:glass="using:FilesMate.App.Controls.Glass"
+    xmlns:panes="using:FilesMate.App.Controls.Panes">
+    <glass:LiquidGlassSurface Background="{ThemeResource FilesMate.Sidebar.BackgroundBrush}"
+        BorderBrush="{ThemeResource FilesMate.Shell.SeparatorBrush}" BorderThickness="0,0,1,0"
+        CornerRadius="0" Shadow="{x:Null}" SurfaceKind="Sidebar" Style="{StaticResource FilesMate.LiquidGlassSurfaceStyle}">
+        <Grid>
+            <nav:NavigationSidebar x:Name="Navigation"/>
+            <panes:SplitThumb x:Name="ResizeThumb" Width="6" HorizontalAlignment="Right" Background="Transparent"
+                PointerPressed="Resize_Pressed" PointerMoved="Resize_Moved" PointerReleased="Resize_Released" PointerCaptureLost="Resize_Lost"/>
+        </Grid>
+    </glass:LiquidGlassSurface>
+</UserControl>

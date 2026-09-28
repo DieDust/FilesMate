@@ -77,8 +77,9 @@ public sealed class ShellLayerContractTests
         Assert.Contains("FilesMate.LiquidGlassSurfaceStyle", window, StringComparison.Ordinal);
 
         var navigator = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "NavigatorPage.xaml"));
-        Assert.Contains("x:Name=\"SidebarHost\"", navigator, StringComparison.Ordinal);
-        Assert.Contains("SurfaceKind=\"Sidebar\"", navigator, StringComparison.Ordinal);
+        var navigation = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Controls", "Navigation", "WindowNavigation.xaml"));
+        Assert.Contains("WindowNavigation", window, StringComparison.Ordinal);
+        Assert.Contains("SurfaceKind=\"Sidebar\"", navigation, StringComparison.Ordinal);
         Assert.Contains("x:Name=\"CommandBarCard\"", navigator, StringComparison.Ordinal);
         Assert.Contains("SurfaceKind=\"Command\"", navigator, StringComparison.Ordinal);
 

@@ -20,6 +20,9 @@ public sealed partial class MainWindow
 
     private static TabTransferPayload CreateTabTransfer(TabViewItem tab)
     {
+        if (tab.Tag is Views.SearchResultsPage search)
+            return new(1, Environment.ProcessId, Guid.NewGuid(), new(new(search.Request.Location,
+                new FolderViewSettings(true, 2, Core.Entries.EntrySort.Name), 0)));
         var content = (NavigatorTabContent)tab.Tag;
         var state = content.RestoreState ?? content.Navigator?.CaptureClosedTab()
             ?? new ClosedTabState(new(content.RequestedPath ?? HomeLocation.Uri,
@@ -90,6 +93,17 @@ public sealed partial class MainWindow
     {
         if (payload.SourceProcessId == Environment.ProcessId || _lastReceivedTabTransfer == payload.Id) return false;
         var state = payload.State;
+        if (FilesMate.Search.SearchPageRequest.TryParse(state.Left.Path, out var search))
+        {
+            OpenSearchPage(search);
+            var searchTab = (TabViewItem)Tabs.SelectedItem;
+            var from = Tabs.TabItems.IndexOf(searchTab);
+            Tabs.TabItems.RemoveAt(from);
+            Tabs.TabItems.Insert(Math.Clamp(index, 0, Tabs.TabItems.Count), searchTab);
+            Tabs.SelectedItem = searchTab;
+            _lastReceivedTabTransfer = payload.Id;
+            return true;
+        }
         var content = new NavigatorTabContent(state.Left.Path, null, CreateLoadingContent()) { RestoreState = state };
         var tab = new TabViewItem { Tag = content, IconSource = TabIcon(LocationCaption.Glyph(state.Left.Path)) };
         ApplyHeader(tab, LocationCaption.Title(state.Left.Path));
@@ -108,6 +122,7 @@ public sealed partial class MainWindow
         if (_tabTransferReceipt?.WaitOne(0) != true) return;
         DetachTab(tab);
         var page = (tab.Tag as NavigatorTabContent)?.TakeNavigatorForDisposal();
+        if (tab.Tag is Views.SearchResultsPage search) search.Dispose();
         tab.Tag = null;
         if (page is not null) _ = DisposeNavigatorAsync(page);
         _ = DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, CloseIfEmpty);
@@ -119,7 +134,7 @@ public sealed partial class MainWindow
         tab.DragEnter -= Tab_DragEnter;
         tab.DragOver -= FileTab_DragOver;
         tab.DragLeave -= FileTab_DragLeave;
-        tab.Drop -= FileTab_DragLeave;
+        tab.Drop -= FileTab_Drop;
         tab.Unloaded -= FileTab_Unloaded;
         if (tab.ContextFlyout is MenuFlyout flyout) flyout.Opening -= TabFlyout_Opening;
         if (tab.Tag is NavigatorTabContent { Navigator: { } page })
@@ -144,7 +159,7 @@ public sealed partial class MainWindow
     private async void Tab_DragStarting(UIElement sender, DragStartingEventArgs e)
     {
         if (sender is not TabViewItem tab || e.Cancel) return;
-        if (FileOperationLifetime.IsBusy || tab.Tag is not NavigatorTabContent
+        if (FileOperationLifetime.IsBusy || tab.Tag is not NavigatorTabContent and not Views.SearchResultsPage
             || tab.Tag is NavigatorTabContent { Navigator.CanInstallUpdate: false })
         { e.Cancel = true; return; }
         try

@@ -33,7 +33,7 @@ internal static class PaletteAppearance
                 document.RootElement.TryGetProperty("transparencyPercent", out var value) && value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out var percent) ? percent : null;
             bool? bundled = document.RootElement.ValueKind == JsonValueKind.Object &&
                 document.RootElement.TryGetProperty("useBundledFileIcons", out var icons) && icons.ValueKind is JsonValueKind.True or JsonValueKind.False ? icons.GetBoolean() : null;
-            return AppearanceSettings.Sanitize(Read("theme"), Read("backdrop"), null, null, Read("reduceMotion"), Read("glassEffect"), Read("accent"), Read("customAccent"), Read("shellStyle"), transparency, bundled);
+            return AppearanceSettings.Sanitize(Read("theme"), Read("backdrop"), null, null, Read("reduceMotion"), Read("glassEffect"), Read("accent"), Read("customAccent"), transparency, bundled);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException) { return AppearanceSettings.Default; }
     }
@@ -51,8 +51,9 @@ internal static class PaletteAppearance
         {
             resources["Surface"] = SystemColors.WindowBrush;
             resources["MenuSurface"] = SystemColors.WindowBrush;
-            resources["GlassSurface"] = SystemColors.WindowBrush;
-            foreach (var key in new[] { "Ink", "Muted", "Line", "Accent" }) resources[key] = SystemColors.WindowTextBrush;
+            resources["GlassSurface"] = resources["PaletteCanvas"] = resources["ResultSurface"] = SystemColors.WindowBrush;
+            resources["PillSurface"] = SystemColors.ControlBrush;
+            foreach (var key in new[] { "Ink", "Muted", "Line", "Outline", "Accent" }) resources[key] = SystemColors.WindowTextBrush;
             resources["Selected"] = SystemColors.HighlightBrush;
             resources["Hover"] = SystemColors.ControlBrush;
             resources["CloseHover"] = resources["ClosePressed"] = SystemColors.HighlightBrush;
@@ -68,8 +69,8 @@ internal static class PaletteAppearance
         var theme = document.Descendants().First(element => element.Name.LocalName == "ResourceDictionary" && (string?)element.Attribute(x + "Key") == (dark ? "Dark" : "Light"));
         var mappings = new Dictionary<string, string>
         {
-            ["Surface"] = "FilesMate.SearchPanel.BackgroundBrush", ["Ink"] = "FilesMate.Text.PrimaryBrush",
-            ["Muted"] = "FilesMate.Text.SecondaryBrush", ["Line"] = "FilesMate.Divider.Brush",
+            ["Surface"] = "FilesMate.SearchPanel.BackgroundBrush", ["ResultSurface"] = "FilesMate.FileContent.BackgroundBrush", ["Ink"] = "FilesMate.Text.PrimaryBrush",
+            ["Muted"] = "FilesMate.Text.SecondaryBrush", ["Line"] = "FilesMate.Divider.Brush", ["Outline"] = "FilesMate.Floating.OutlineBrush",
             ["Selected"] = "FilesMate.Item.SelectedBrush", ["Hover"] = "FilesMate.Item.HoverBrush",
             ["CloseHover"] = "FilesMate.Close.HoverBrush", ["ClosePressed"] = "FilesMate.Close.PressedBrush",
         };
@@ -78,23 +79,26 @@ internal static class PaletteAppearance
             var value = theme.Elements().First(element => (string?)element.Attribute(x + "Key") == token).Attribute("Color")!.Value;
             resources[key] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(value));
         }
-        var menuColor = dark ? "#353B43" : "#FAFBFD";
+        var menuColor = AccentPalette.ToHex(SurfacePalette.Floating(dark));
         resources["MenuSurface"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(menuColor));
         resources["Surface"] = resources["MenuSurface"];
+        var canvasColor = (Color)ColorConverter.ConvertFromString(AccentPalette.ToHex(dark ? SurfacePalette.Foundation(true) : SurfacePalette.Floating(false)));
+        resources["PaletteCanvas"] = new SolidColorBrush(canvasColor);
+        if (!dark) resources["ResultSurface"] = Brushes.Transparent;
+        resources["PillSurface"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(AccentPalette.ToHex(SurfacePalette.Card(dark))));
         var accent = AccentPalette.Resolve(settings.Accent, settings.CustomAccent, dark);
         resources["Accent"] = new SolidColorBrush(Color.FromArgb(255, (byte)(accent >> 16), (byte)(accent >> 8), (byte)accent));
-        if (settings.Accent != AccentKind.Default)
-            resources["Selected"] = new SolidColorBrush(Color.FromArgb(dark ? (byte)0x47 : (byte)0x24, (byte)(accent >> 16), (byte)(accent >> 8), (byte)accent));
+        resources["Selected"] = new SolidColorBrush(Color.FromArgb(SurfacePalette.SelectionAlpha(dark), (byte)(accent >> 16), (byte)(accent >> 8), (byte)accent));
         resources["CloseInk"] = Brushes.White;
         resources["SelectedInk"] = resources["Ink"];
         resources["SelectedMuted"] = resources["Muted"];
         if (UseGlass(settings))
         {
             // Native desktop acrylic supplies blur; this is the shared neutral tint above it.
-            var color = (Color)ColorConverter.ConvertFromString(menuColor);
+            var color = canvasColor;
             color.A = (byte)Math.Round(255 * FilesMate.App.Animations.GlassMaterialPolicy.FloatingCoverage(1 - settings.EffectiveTransparencyPercent / 100d));
             resources["GlassSurface"] = new SolidColorBrush(color);
         }
-        else resources["GlassSurface"] = resources["Surface"];
+        else resources["GlassSurface"] = resources["PaletteCanvas"];
     }
 }

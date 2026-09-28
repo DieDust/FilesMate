@@ -26,31 +26,71 @@ internal static class ArchiveOperationUI
         host.Unloaded += Unloaded;
         try
         {
-            // Discovery and shell launch can involve registry, disk and antivirus I/O.
-            var launched = false;
+            if (verb == CompactMateVerb.Open)
+            {
+                await ShellOperationWorker.RunAsync(() => CompactMateSession.Launch(verb, sources, new CurrentUserRegistry()));
+                return null;
+            }
+            var compress = verb is CompactMateVerb.CompressZip or CompactMateVerb.Compress7z or CompactMateVerb.CompressNew;
+            var preferences = new ArchivePreferencesStore(Program.SettingsPath(ArchivePreferencesStore.DefaultPath));
+            IReadOnlyList<ArchiveSet>? sets = null;
+            ArchiveRoute? route = null;
             await ShellOperationWorker.RunAsync(() =>
             {
                 cancellation.Token.ThrowIfCancellationRequested();
-                launched = CompactMateSession.TryLaunch(verb, sources, new CurrentUserRegistry());
+                var preference = preferences.Load();
+                route = ArchiveRouting.Choose(preference, verb, sources, decorated: false);
+                // CompactMate owns its own format/volume validation, including paths
+                // outside the local-drive scope of the bundled engine.
+                if (route.Provider == ArchiveProvider.CompactMate) return;
+                if (!compress) sets = ArchiveSetResolver.Resolve(sources, cancellation.Token);
+                route = ArchiveRouting.Choose(preference, verb,
+                    sets?.Select(set => set.PrimaryPath).ToArray() ?? sources,
+                    sets?.Any(set => set.HasDecoratedNames) ?? false);
             });
-            if (launched)
-                return null;
             cancellation.Token.ThrowIfCancellationRequested();
-            return await RunBuiltInAsync(host, verb, sources, currentFolder, operations, cancellation.Token);
+            if (route!.Provider == ArchiveProvider.BuiltIn)
+                return await RunBuiltInAsync(host, verb, sources, currentFolder, operations, cancellation.Token,
+                    route.UsedFallback ? StringTable.Get("Archive_FallbackHint") : null);
+            if (route.Provider == ArchiveProvider.CompactMate)
+            {
+                await ShellOperationWorker.RunAsync(() =>
+                {
+                    cancellation.Token.ThrowIfCancellationRequested();
+                    var launch = CompactMateHost.Create(route.Executable!, verb, sources);
+                    FilesMate.Platform.Windows.Processes.DetachedProcess.Open(launch.FileName, launch.Arguments, Path.GetDirectoryName(launch.FileName));
+                });
+                return null;
+            }
+            var destination = currentFolder ?? Path.GetDirectoryName(sources[0]);
+            if (verb == CompactMateVerb.ExtractToOther) destination = await PickFolderAsync(host);
+            if (destination is null) return null;
+            var externalSources = sets?.Select(set => set.PrimaryPath).ToArray() ?? sources;
+            if (verb == CompactMateVerb.ExtractToFolder && route.Provider != ArchiveProvider.Bandizip)
+                destination = Path.Combine(destination, sets![0].Name);
+            var name = sources.Length == 1 ? Path.GetFileNameWithoutExtension(sources[0]) : StringTable.Get("Archive_DefaultName");
+            name += verb == CompactMateVerb.Compress7z ? ".7z" : ".zip";
+            var command = ArchiveRouting.Create(route, verb, externalSources, destination, name);
+            await ShellOperationWorker.RunAsync(() =>
+            {
+                cancellation.Token.ThrowIfCancellationRequested();
+                FilesMate.Platform.Windows.Processes.DetachedProcess.Start(command.Executable, command.Arguments);
+            });
+            return null;
         }
+        catch (ArchiveOperationException error)
+        { throw new IOException(StringTable.Get("Archive_Error" + error.ErrorCode), error); }
         finally { host.Unloaded -= Unloaded; }
     }
 
     internal static async Task<FileTransferResult?> RunBuiltInAsync(FrameworkElement host, CompactMateVerb verb,
         IReadOnlyList<string> sources, string? currentFolder, ILocalFileOperations operations,
-        CancellationToken token = default)
+        CancellationToken token = default, string? providerHint = null)
     {
         if (sources.Count == 0) return null;
-        if (verb is CompactMateVerb.Compress7z or CompactMateVerb.Open)
+        if (verb is CompactMateVerb.Open)
             throw new IOException(StringTable.Get("Archive_ExternalOnly"));
-        var compress = verb is CompactMateVerb.CompressZip or CompactMateVerb.CompressNew;
-        if (!compress && sources.Any(path => !Path.GetExtension(path).Equals(".zip", StringComparison.OrdinalIgnoreCase)))
-            throw new IOException(StringTable.Get("Archive_Unsupported"));
+        var compress = verb is CompactMateVerb.CompressZip or CompactMateVerb.Compress7z or CompactMateVerb.CompressNew;
         var destination = currentFolder ?? Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(sources[0]));
         if (string.IsNullOrEmpty(destination)) throw new IOException(StringTable.Get("Error_NoFolder"));
         using var lifetime = FileOperationLifetime.Begin();
@@ -67,7 +107,7 @@ internal static class ArchiveOperationUI
                 var stem = Path.GetFileNameWithoutExtension(archiveName);
                 if (!string.IsNullOrEmpty(stem)) archiveName = stem;
             }
-            archiveName += ".zip";
+            archiveName += verb == CompactMateVerb.Compress7z ? ".7z" : ".zip";
             if (verb == CompactMateVerb.CompressNew)
             {
                 var choice = await ChooseArchiveAsync(host, archiveName, destination, cancellation.Token);
@@ -80,7 +120,9 @@ internal static class ArchiveOperationUI
                 if (destination is null) return null;
             }
             cancellation.Token.ThrowIfCancellationRequested();
-            var progressDialog = new ArchiveProgressDialog(host, compress, cancellation);
+            if (verb == CompactMateVerb.SmartExtract)
+                providerHint = string.Join("\n", new[] { providerHint, StringTable.Get("Archive_SmartBuiltinHint") }.Where(hint => hint is not null));
+            var progressDialog = new ArchiveProgressDialog(host, compress, cancellation, providerHint);
             try
             {
                 await progressDialog.ShowAsync();
@@ -88,7 +130,7 @@ internal static class ArchiveOperationUI
                     archiveName: archiveName, createSubfolder: verb == CompactMateVerb.ExtractToFolder,
                     resolveConflict: progressDialog.ResolveAsync,
                     progress: new Progress<ArchiveProgress>(progressDialog.Report), token: cancellation.Token,
-                    smartExtract: verb == CompactMateVerb.SmartExtract);
+                    smartExtract: verb == CompactMateVerb.SmartExtract, requestPassword: progressDialog.RequestPasswordAsync);
             }
             catch (ArchiveOperationException error)
             {
@@ -146,8 +188,8 @@ internal static class ArchiveOperationUI
             try
             {
                 var value = name.Text.Trim();
-                if (!value.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) value += ".zip";
-                if (value.Equals(".zip", StringComparison.OrdinalIgnoreCase)) throw new IOException();
+                if (!value.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) && !value.EndsWith(".7z", StringComparison.OrdinalIgnoreCase)) value += ".zip";
+                if (value.Equals(".zip", StringComparison.OrdinalIgnoreCase) || value.Equals(".7z", StringComparison.OrdinalIgnoreCase)) throw new IOException();
                 archiveName = FileNameRules.Validate(value);
             }
             catch (IOException) { args.Cancel = true; error.Text = StringTable.Get("Archive_NameInvalid"); error.Visibility = Visibility.Visible; }
@@ -171,11 +213,12 @@ internal static class ArchiveOperationUI
         private bool _hiding;
         private bool _finished;
 
-        public ArchiveProgressDialog(FrameworkElement host, bool compress, CancellationTokenSource cancellation)
+        public ArchiveProgressDialog(FrameworkElement host, bool compress, CancellationTokenSource cancellation, string? hint = null)
         {
             _host = host; _cancellation = cancellation;
             var content = new StackPanel { Spacing = 12, MinWidth = 300 };
             content.Children.Add(_current); content.Children.Add(_bar); content.Children.Add(_summary);
+            if (hint is not null) content.Children.Add(new TextBlock { Text = hint, TextWrapping = TextWrapping.Wrap, MaxWidth = 420, FontSize = 12 });
             _dialog = new ContentDialog { Title = StringTable.Get(compress ? "Archive_TitleCompress" : "Archive_TitleExtract"),
                 Content = content, CloseButtonText = StringTable.Get("Archive_Cancel"), XamlRoot = host.XamlRoot };
             ContentDialogTheme.Apply(_dialog, host);
@@ -241,6 +284,37 @@ internal static class ArchiveOperationUI
                 }
                 catch (Exception error) { completion.TrySetException(error); }
             })) completion.TrySetResult(new(FileConflictAction.Cancel));
+            return await completion.Task;
+        }
+
+        public async Task<string?> RequestPasswordAsync(string path, bool retry, CancellationToken token)
+        {
+            var completion = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var registration = token.Register(() => completion.TrySetCanceled(token));
+            if (!_host.DispatcherQueue.TryEnqueue(async () =>
+            {
+                if (completion.Task.IsCompleted) return;
+                try
+                {
+                    await PauseAsync();
+                    var password = new PasswordBox { Header = Path.GetFileName(path), MaxWidth = 420 };
+                    var content = new StackPanel { Spacing = 12 };
+                    if (retry) content.Children.Add(new TextBlock { Text = StringTable.Get("Archive_PasswordRetry"), TextWrapping = TextWrapping.Wrap, MaxWidth = 420 });
+                    content.Children.Add(password);
+                    var dialog = new ContentDialog { Title = StringTable.Get("Archive_Password"), Content = content,
+                        PrimaryButtonText = StringTable.Get("Confirm"), CloseButtonText = StringTable.Get("Cancel"),
+                        DefaultButton = ContentDialogButton.Primary, XamlRoot = _host.XamlRoot };
+                    ContentDialogTheme.Apply(dialog, _host);
+                    using var cancel = token.Register(() => _host.DispatcherQueue.TryEnqueue(dialog.Hide));
+                    token.ThrowIfCancellationRequested();
+                    var answer = await dialog.ShowAsync();
+                    var value = answer == ContentDialogResult.Primary ? password.Password : null;
+                    password.Password = "";
+                    if (value is not null && !token.IsCancellationRequested && _host.IsLoaded) await ShowAsync();
+                    completion.TrySetResult(value);
+                }
+                catch (Exception error) { completion.TrySetException(error); }
+            })) completion.TrySetCanceled();
             return await completion.Task;
         }
 

@@ -1,4 +1,4 @@
-namespace FilesMate.App.Localization;
+﻿namespace FilesMate.App.Localization;
 
 public static partial class StringTable
 {
@@ -214,10 +214,6 @@ public static partial class StringTable
         ["ThemeLight"] = "ライト",
         ["ThemeDark"] = "ダーク",
         ["Backdrop"] = "背景",
-        ["ShellStyle"] = "インターフェイスのスタイル",
-        ["ShellStyleDescription"] = "一体型は連続した背景、階層型は色調の違いで領域を分けます。変更はすぐに反映されます。",
-        ["ShellLayered"] = "階層型",
-        ["ShellUnified"] = "一体型",
         ["BackdropDescription"] = "アクリルと Mica はデスクトップの色を背景に反映します。単色は不透明な背景です。",
         ["BackdropAcrylic"] = "アクリル",
         ["BackdropMica"] = "Mica",

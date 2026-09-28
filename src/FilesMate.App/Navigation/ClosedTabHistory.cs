@@ -1,10 +1,12 @@
-using FilesMate.App.Services;
+﻿using FilesMate.App.Services;
 
 namespace FilesMate.App.Navigation;
 
 public sealed record ClosedPaneState(string Path, FolderViewSettings View, double ScrollOffset,
     string[]? SelectedNames = null, string FilterQuery = "", NavigationHistoryState? History = null);
-public sealed record ClosedTabState(ClosedPaneState Left, ClosedPaneState? Right = null, bool RightActive = false, bool PreviewVisible = false);
+public sealed record ClosedTabState(ClosedPaneState Left, ClosedPaneState? Right = null, bool RightActive = false, bool PreviewVisible = false, ClosedPaneState? Third = null, bool ThirdActive = false,
+    FilesMate.App.Models.PaneArrangement PaneArrangement = FilesMate.App.Models.PaneArrangement.Columns,
+    double SplitRatio = .5, double InnerSplitRatio = .5);
 
 public sealed class ClosedTabHistory
 {

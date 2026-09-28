@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <Compile Remove="Models\SearchHitKind.cs;Models\HomeSearchHit.cs;Services\SearchHitRanking.cs;Icons\FileTypeIconCatalog.cs" />
+    <Compile Include="..\FilesMate.SearchHost\WindowsApplicationCatalog.cs" Link="Search\WindowsApplicationCatalog.cs" />
   </ItemGroup>
   <PropertyGroup>
     <OutputType>WinExe</OutputType>

@@ -2,6 +2,11 @@ using FilesMate.App.Services;
 
 namespace FilesMate.App.Tests.Services;
 
+// Shelf transfers in other collections also use this process-wide lifetime.
+// Assertions about the idle state need to run without those operations in flight.
+[CollectionDefinition("File operation lifetime", DisableParallelization = true)]
+public sealed class FileOperationLifetimeCollection { }
+
 [Collection("File operation lifetime")]
 public sealed class FileOperationLifetimeTests
 {

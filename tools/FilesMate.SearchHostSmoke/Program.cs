@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -14,6 +14,7 @@ internal static class Smoke
     [STAThread]
     private static int Main(string[] args)
     {
+        if (args.Length is 2 or 3 && args[0] == "--spotlight-only") return SpotlightSmoke.Run(args[1], args.Length == 3 ? args[2] : "zh-CN");
         if (args.Length == 2 && args[0] == "--polish-only") return ProductPolishSmoke.Run(args[1]);
         if (args.Length == 2 && args[0] == "--preview-scroll-only") return ProductPolishSmoke.Run(args[1], previewOnly: true);
         if (args.Length > 0 && args[0] == "--media-only")
@@ -164,9 +165,9 @@ internal static class Smoke
                     }
                     Invoke("Categories_Back");
                     Invoke("Settings_Click");
-                    var buttons = (WrapPanel)window.FindName("CategoryButtons");
-                    Assert(!buttons.Children.OfType<RadioButton>().Any(b => Equals(b.Content, "应用")), "Hidden category still appears");
-                    buttons.Children.OfType<RadioButton>().Single(b => Equals(b.Content, "日志文档")).IsChecked = true;
+                    var buttons = (Panel)window.FindName("CategoryButtons");
+                    Assert(!buttons.Children.OfType<RadioButton>().Any(b => ((SearchCategory)b.Tag).Builtin == SearchFilter.Apps), "Hidden category still appears");
+                    buttons.Children.OfType<RadioButton>().Single(b => ((SearchCategory)b.Tag).Id == custom.Id).IsChecked = true;
                     await Task.Delay(600);
                     Assert(results.Items.Count > 0 && results.Items.OfType<FilesMate.SearchHost.SearchRow>().All(r => r.Path.EndsWith(".txt")), "Custom category did not filter results");
                     File.WriteAllText(Path.Combine(profile, "result.json"), "{\"Passed\":true,\"Add\":true,\"AutoSave\":true,\"Order\":true,\"Visibility\":true,\"Filtering\":true}");

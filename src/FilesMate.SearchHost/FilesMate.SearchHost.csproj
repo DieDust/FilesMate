@@ -36,6 +36,7 @@
     <Compile Include="..\FilesMate.App\Preview\MarkdownPreview.cs;..\FilesMate.App\Preview\Providers\PdfPreviewProvider.cs" Link="Preview\%(Filename)%(Extension)" />
     <Compile Include="..\FilesMate.App\Icons\ShellThumbnailService.cs;..\FilesMate.App\Services\VividThumbnailCache.cs" Link="Preview\%(Filename)%(Extension)" />
     <Compile Include="..\FilesMate.App\Models\AccentPalette.cs" Link="Models\AccentPalette.cs" />
+    <Compile Include="..\FilesMate.App\Models\SurfacePalette.cs" Link="Models\SurfacePalette.cs" />
     <Compile Include="..\FilesMate.App\Commands\AppCommand.cs;..\FilesMate.App\Commands\CommandContext.cs;..\FilesMate.App\Commands\CommandCatalog.cs" Link="Commands\%(Filename)%(Extension)" />
     <Compile Include="..\FilesMate.App\Controls\Menus\FileContextMenuBuilder.cs" Link="Commands\FileContextMenuBuilder.cs" />
     <Compile Include="..\FilesMate.App\Services\CompactMateSession.cs" Link="Commands\CompactMateSession.cs" />

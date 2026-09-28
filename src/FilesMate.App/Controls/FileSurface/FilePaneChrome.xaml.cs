@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 using FilesMate.App.Navigation;
 
@@ -12,6 +12,13 @@ namespace FilesMate.App.Controls.FileSurface;
 [ContentProperty(Name = nameof(Body))]
 public sealed partial class FilePaneChrome : UserControl
 {
+    private bool _middlePane;
+    public bool IsMiddlePane
+    {
+        get => _middlePane;
+        set { _middlePane = value; ApplyPaneShape(); }
+    }
+
     public static readonly DependencyProperty BodyProperty = DependencyProperty.Register(
         nameof(Body),
         typeof(UIElement),
@@ -76,31 +83,33 @@ public sealed partial class FilePaneChrome : UserControl
         nameof(StatusText),
         typeof(string),
         typeof(FilePaneChrome),
-        new PropertyMetadata(string.Empty, OnChromeChanged));
+        new PropertyMetadata(string.Empty, OnStatusChanged));
 
     public static readonly DependencyProperty SelectionTextProperty = DependencyProperty.Register(
         nameof(SelectionText),
         typeof(string),
         typeof(FilePaneChrome),
-        new PropertyMetadata(string.Empty, OnChromeChanged));
+        new PropertyMetadata(string.Empty, OnStatusChanged));
 
     public static readonly DependencyProperty SizeTextProperty = DependencyProperty.Register(
         nameof(SizeText),
         typeof(string),
         typeof(FilePaneChrome),
-        new PropertyMetadata(string.Empty, OnChromeChanged));
+        new PropertyMetadata(string.Empty, OnStatusChanged));
 
     public static readonly DependencyProperty ZoomTextProperty = DependencyProperty.Register(
         nameof(ZoomText),
         typeof(string),
         typeof(FilePaneChrome),
-        new PropertyMetadata(string.Empty, OnChromeChanged));
+        new PropertyMetadata(string.Empty, OnStatusChanged));
 
-    public static readonly DependencyProperty ShowStatusBarProperty = DependencyProperty.Register(
-        nameof(ShowStatusBar),
-        typeof(bool),
-        typeof(FilePaneChrome),
-        new PropertyMetadata(true, OnChromeChanged));
+    // Cache metadata for each pane; the navigator displays only the active pane's status.
+    public event EventHandler? StatusChanged;
+
+    private static void OnStatusChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
+    {
+        if (sender is FilePaneChrome chrome) chrome.StatusChanged?.Invoke(chrome, EventArgs.Empty);
+    }
 
     private readonly FilePanePresentation _presentation = new();
     private readonly Stopwatch _loadingWatch = new();
@@ -240,12 +249,6 @@ public sealed partial class FilePaneChrome : UserControl
         set => SetValue(ZoomTextProperty, value);
     }
 
-    public bool ShowStatusBar
-    {
-        get => (bool)GetValue(ShowStatusBarProperty);
-        set => SetValue(ShowStatusBarProperty, value);
-    }
-
     private static void OnBodyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is FilePaneChrome chrome && chrome.BodyPresenter is not null)
@@ -264,7 +267,7 @@ public sealed partial class FilePaneChrome : UserControl
 
     private void ApplyChrome()
     {
-        if (Root is null || PaneCard is null || InactiveOverlay is null || LoadingHost is null || Info is null || StatusBar is null)
+        if (Root is null || PaneCard is null || InactiveOverlay is null || LoadingHost is null || Info is null)
         {
             return;
         }
@@ -311,34 +314,20 @@ public sealed partial class FilePaneChrome : UserControl
                 compactWhenSmall: _presentation.Kind == FilePaneKind.Empty);
         }
 
-        StatusBar.Visibility = ShowStatusBar ? Visibility.Visible : Visibility.Collapsed;
-        StatusBar.Apply(StatusText, SelectionText, ZoomText, SizeText);
+    }
+
+    internal void SetFolderCaption(string path)
+    {
+        var name = System.IO.Path.GetFileName(System.IO.Path.TrimEndingDirectorySeparator(path));
+        PaneCaption.Text = string.IsNullOrEmpty(name) ? path : name;
+        ToolTipService.SetToolTip(PaneCaptionHost, path);
     }
 
     private void ApplyPaneShape()
     {
-        var radius = CardCornerRadius();
-        if (!IsDualPane)
-        {
-            PaneCard.Margin = new Thickness(8, 0, 8, 8);
-            PaneCard.CornerRadius = radius;
-            InactiveOverlay.CornerRadius = radius;
-            return;
-        }
-
-        if (IsTrailingPane)
-        {
-            PaneCard.Margin = new Thickness(0, 0, 8, 8);
-            var trailing = new CornerRadius(0, radius.TopRight, radius.BottomRight, 0);
-            PaneCard.CornerRadius = trailing;
-            InactiveOverlay.CornerRadius = trailing;
-            return;
-        }
-
-        PaneCard.Margin = new Thickness(8, 0, 0, 8);
-        var leading = new CornerRadius(radius.TopLeft, 0, 0, radius.BottomLeft);
-        PaneCard.CornerRadius = leading;
-        InactiveOverlay.CornerRadius = leading;
+        PaneCaptionHost.Visibility = IsDualPane ? Visibility.Visible : Visibility.Collapsed;
+        PaneCard.Margin = new Thickness(8, 0, 8, 8);
+        PaneCard.CornerRadius = InactiveOverlay.CornerRadius = CardCornerRadius();
     }
 
     private static CornerRadius CardCornerRadius() =>

@@ -1,7 +1,7 @@
 <div align="center">
   <img src="src/FilesMate.App/Assets/Branding/FilesMate.svg" width="88" alt="FilesMate logo" />
   <h1>FilesMate</h1>
-  <p>A Windows file manager with tabs, dual panes, file previews and global search.</p>
+  <p>A Windows file manager with tabs, flexible pane layouts, file previews and global search.</p>
   <p><b>English</b> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.ja.md">日本語</a></p>
   <p><a href="https://github.com/DieDust/FilesMate/releases">Download</a> · <a href="#features">Features</a> · <a href="#community">Community</a> · <a href="CONTRIBUTING.md">Contribute</a></p>
   <p><img src="https://img.shields.io/badge/Windows_11-x64-0078D4" alt="Windows 11 x64" /> <img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache 2.0" /> <img src="https://img.shields.io/badge/status-preview-orange" alt="Preview software" /></p>
@@ -9,7 +9,7 @@
 
 ![FilesMate dark workspace with tabs, breadcrumb navigation and file details](docs/images/workspace-dark.png)
 
-Browse two folders side by side, keep common locations in favorites, and collect files in the shelf before moving them. Preview documents and media as you browse, check names before a batch rename, and use global search after closing the main window.
+Browse folders in two or three panes, keep common locations in favorites, and collect files in the shelf before moving them. Preview documents and media as you browse, check names before a batch rename, and use global search after closing the main window.
 
 ## Download and get started
 
@@ -21,25 +21,29 @@ Already installed? Open **Settings → About → Check for updates**. Updates us
 
 ## Features
 
-### ZIP compression and extraction
+### Compression and extraction
 
-Archive commands use **CompactMate** when it is installed. Without it, FilesMate provides built-in ZIP creation and extraction with progress, cancellation, and replace, skip or keep-both choices. Extract into the current folder, a named subfolder, or another location. The file shelf can also create ZIP archives from selected items.
+Create ZIP or 7z archives with the bundled engine, or select an installed archive app in Settings. Automatic selection tries CompactMate, Bandizip, 7-Zip, and WinRAR for supported commands before using the built-in engine. Extraction includes progress, cancellation, and replace, skip or keep-both choices.
 
-Built-in support covers ordinary ZIP files on local drives. Encrypted archives and other formats require a compatible archive app. See [archive behavior and limits](docs/archive-support.md).
+The built-in engine also handles supported encrypted archives and multi-volume sets, with password prompts when needed. See [tested formats, behavior and limits](docs/archive-support.md).
 
-### Tabs and dual panes
+### Tabs and flexible pane layouts
 
-Keep folders open in tabs, or turn on **Dual pane** to work with two folders side by side. Copy or move a selection to the other pane, reopen a closed tab with `Ctrl+Shift+T`, and restore your tabs at startup. Idle-tab hibernation is configurable.
+Keep folders open in tabs, or choose a two- or three-pane layout. The compact picker offers horizontal, vertical, and asymmetric arrangements; select the active layout again to return to a single pane. Reopen a closed tab with `Ctrl+Shift+T` and restore tabs at startup. Idle-tab hibernation is configurable.
 
 ![Two folders open side by side](docs/images/dual-pane.png)
+
+![Three folders in a layout with a large left pane](docs/images/three-pane.png)
 
 ### Independent global search
 
 With background search enabled, press **Alt+Space** by default to search indexed filenames and applications. Filter by type, preview supported files, or jump to their folder. The search process can stay open when you close the file manager; its shortcut, residency and login startup are configurable.
 
-Search covers **filenames and applications**. You choose the index scope; the file manager builds and refreshes the index.
+Search covers **filenames and applications**. Categories appear directly in a scrollable row, and **View more** opens a full search tab with location, type, size, date, and advanced filters. You choose the index scope; the file manager builds and refreshes the index.
 
 ![Global search showing matching project files](docs/images/global-search.png)
+
+![Search results with location, type, size and date filters](docs/images/search-page.png)
 
 ### Media thumbnails, folder covers and previews
 
@@ -55,33 +59,27 @@ Use **Alt+P** for the side preview, or **Space** for quick preview. Inspect text
 
 Keep frequently used files and folders in the **favorites bar** below the address bar. Drag items into it, save the current folder with the star, and collect related locations into groups. Reorder favorites, rename their labels, or organize them in the favorites manager. These are references: removing a favorite does not delete its file. Enable the bar in the first-run guide or Settings.
 
-![Favorites bar with a Projects group expanded](docs/images/favorites.png)
-
 ### Jump through large folders by first letter
 
 Enable **Alphabet navigation** and sort by name to jump directly to a letter instead of scrolling through a long list. Move over the right-hand navigation area to reveal the letters, then choose one; the letter indicator confirms your position.
 
 The feature is **off by default**, available in the first-run guide and **Settings → Files & folders → Alphabet navigation**. When enabled, it stays hidden below **20 items** and in **dual-pane mode** by default, leaving space for files. Both conditions are configurable.
 
-![Alphabet navigation jumping to files beginning with P](docs/images/alphabet-navigation.png)
-
 ### File shelf
 
 Gather files from different folders into the **file shelf**, then copy or move the selected items to a destination. The shelf stores references to the originals; collecting them does not create duplicate file copies. Removing a shelf reference does not delete the original.
 
-![File shelf holding references from several folders](docs/images/file-shelf.png)
-
 ### Batch rename with a before-and-after view
 
 Select several items and press **F2**. Choose a naming rule, inspect original and proposed names in a compact table, and check reported issues before applying. Extensions are preserved by default. Supported rename operations can be undone with **Ctrl+Z**.
-
-![Batch rename with find-and-replace and name previews](docs/images/batch-rename.png)
 
 ### Appearance and workspace settings
 
 Choose light, dark or system theme; adjust glass transparency, accent color and layered or unified surfaces. Use FilesMate icons or Windows file-association icons. Customize home sections, bookmarks, tags and folder views. **English, Simplified Chinese and Japanese** are included; changing the language automatically restarts the app after transfers finish and restores tabs.
 
 ![FilesMate light theme](docs/images/workspace-light.png)
+
+![Appearance settings in the refreshed dark theme](docs/images/appearance.png)
 
 <details>
 <summary>More everyday tools</summary>

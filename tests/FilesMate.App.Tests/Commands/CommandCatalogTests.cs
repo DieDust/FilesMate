@@ -98,6 +98,7 @@ public sealed class CommandCatalogTests
                 AppCommandId.OpenWith,
                 AppCommandId.OpenInTerminal,
                 AppCommandId.OpenInCompactMate,
+                AppCommandId.OpenInArchiveApp,
                 AppCommandId.Properties,
                 AppCommandId.WhoLocks,
                 AppCommandId.PinToSidebar,

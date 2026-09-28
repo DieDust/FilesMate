@@ -96,7 +96,7 @@ public sealed class HomeDashboardTests
         Assert.Contains("TagLocation.IsTag", surface, StringComparison.Ordinal);
         Assert.Contains("InvokePlaceAction", surface, StringComparison.Ordinal);
         Assert.Contains("PlaceActionRequested", surface, StringComparison.Ordinal);
-        Assert.Contains("WhoLocksRequested", page, StringComparison.Ordinal);
+        Assert.Contains("WhoLocksRequested", File.ReadAllText(Path.Combine(FilesMate.App.Tests.DesignSystem.ThemeXaml.AppRoot, "MainWindow.Navigation.cs")), StringComparison.Ordinal);
         Assert.DoesNotContain("HomeDashboard.Visibility", surface, StringComparison.Ordinal);
         Assert.DoesNotContain("HomePlaces.Drives()", File.ReadAllText(Path.Combine(
             FilesMate.App.Tests.DesignSystem.ThemeXaml.AppRoot,

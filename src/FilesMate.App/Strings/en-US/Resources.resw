@@ -223,8 +223,26 @@
   <data name="Applying" xml:space="preserve">
     <value>Applying…</value>
   </data>
+  <data name="Archive_360" xml:space="preserve">
+    <value>360 Zip</value>
+  </data>
+  <data name="Archive_AutoDetect" xml:space="preserve">
+    <value>Detect automatically</value>
+  </data>
+  <data name="Archive_AutoHint" xml:space="preserve">
+    <value>Try CompactMate, Bandizip, 7-Zip and WinRAR in order. Use the built-in engine when none supports the operation.</value>
+  </data>
+  <data name="Archive_Automatic" xml:space="preserve">
+    <value>Automatic</value>
+  </data>
+  <data name="Archive_BrowseApp" xml:space="preserve">
+    <value>Choose program…</value>
+  </data>
+  <data name="Archive_BuiltIn" xml:space="preserve">
+    <value>FileMate built-in</value>
+  </data>
   <data name="Archive_BuiltinHint" xml:space="preserve">
-    <value>Built-in support handles ordinary ZIP archives. Encrypted ZIPs and other formats need CompactMate or another archive app.</value>
+    <value>Create ZIP and 7z; extract ZIP, 7z, RAR and TAR archives, including supported encrypted and split archives. No other app is required.</value>
   </data>
   <data name="Archive_Cancel" xml:space="preserve">
     <value>Cancel</value>
@@ -241,14 +259,23 @@
   <data name="Archive_ChooseDestination" xml:space="preserve">
     <value>Choose a destination folder</value>
   </data>
+  <data name="Archive_CompactMateHint" xml:space="preserve">
+    <value>Use CompactMate's batch extraction, password library and recursive extraction when installed.</value>
+  </data>
+  <data name="Archive_CompatibleHint" xml:space="preserve">
+    <value>Choose a GUI worker compatible with 7zG.exe. Console tools and unsupported operations use the built-in engine.</value>
+  </data>
   <data name="Archive_Completed" xml:space="preserve">
     <value>Completed: {0}</value>
   </data>
   <data name="Archive_CreateZip" xml:space="preserve">
-    <value>Create ZIP</value>
+    <value>Create archive</value>
   </data>
   <data name="Archive_DefaultName" xml:space="preserve">
     <value>Archive</value>
+  </data>
+  <data name="Archive_Detecting" xml:space="preserve">
+    <value>Finding app…</value>
   </data>
   <data name="Archive_ErrorArchiveTooLarge" xml:space="preserve">
     <value>The expanded content exceeds the built-in limit of 64 GiB.</value>
@@ -271,8 +298,14 @@
   <data name="Archive_ErrorMetadataTooLarge" xml:space="preserve">
     <value>The archive's directory information exceeds the built-in limit of 64 MiB.</value>
   </data>
+  <data name="Archive_ErrorMissingVolume" xml:space="preserve">
+    <value>A volume is missing or incomplete. Place all volumes together and try again.</value>
+  </data>
   <data name="Archive_ErrorOperationFailed" xml:space="preserve">
     <value>The operation could not be completed. Check file permissions and available disk space, then try again.</value>
+  </data>
+  <data name="Archive_ErrorPasswordRequired" xml:space="preserve">
+    <value>A password is required, or the password or encrypted content could not be verified.</value>
   </data>
   <data name="Archive_ErrorSecurityMetadataUnavailable" xml:space="preserve">
     <value>The file's internet-origin marker could not be read or preserved safely. Use a local drive that supports this marker, or extract with CompactMate.</value>
@@ -287,7 +320,10 @@
     <value>This operation includes a symbolic link or redirected folder. Choose regular files and folders.</value>
   </data>
   <data name="Archive_ErrorUnsupportedEntry" xml:space="preserve">
-    <value>The archive contains encrypted data or an unsupported entry. Open it with a compatible archive app.</value>
+    <value>This format or compression method is not supported by the built-in engine. Use Open with archive app or the system menu.</value>
+  </data>
+  <data name="Archive_ExternalHint" xml:space="preserve">
+    <value>Use this app for supported operations. Renamed volumes and unsupported operations use the built-in engine.</value>
   </data>
   <data name="Archive_ExternalOnly" xml:space="preserve">
     <value>Requires CompactMate</value>
@@ -295,23 +331,65 @@
   <data name="Archive_Failed" xml:space="preserve">
     <value>Operation failed: {0}</value>
   </data>
+  <data name="Archive_FallbackHint" xml:space="preserve">
+    <value>The preferred app is unavailable or does not support this operation. Using FileMate's built-in engine.</value>
+  </data>
   <data name="Archive_FolderPicker" xml:space="preserve">
     <value>Choose folder…</value>
+  </data>
+  <data name="Archive_HaoZip" xml:space="preserve">
+    <value>2345 HaoZip</value>
   </data>
   <data name="Archive_InvalidSelection" xml:space="preserve">
     <value>Select at least one existing file or folder.</value>
   </data>
   <data name="Archive_NameInvalid" xml:space="preserve">
-    <value>Enter a valid ZIP filename without a folder path.</value>
+    <value>Enter a valid ZIP or 7z filename without a folder path.</value>
   </data>
   <data name="Archive_NameLabel" xml:space="preserve">
     <value>Archive name</value>
   </data>
+  <data name="Archive_NotInstalled" xml:space="preserve">
+    <value>App not found. You can specify a portable copy; otherwise the built-in engine will be used.</value>
+  </data>
+  <data name="Archive_OpenOnlyHint" xml:space="preserve">
+    <value>Available in Open with archive app. Direct compression and extraction use the built-in engine; use the system menu for this app's own commands.</value>
+  </data>
+  <data name="Archive_OpenWithApp" xml:space="preserve">
+    <value>Open with archive app…</value>
+  </data>
+  <data name="Archive_OtherApp" xml:space="preserve">
+    <value>Other app (open only)</value>
+  </data>
   <data name="Archive_OutputLabel" xml:space="preserve">
     <value>Save to</value>
   </data>
+  <data name="Archive_Password" xml:space="preserve">
+    <value>Archive password</value>
+  </data>
+  <data name="Archive_PasswordRetry" xml:space="preserve">
+    <value>The password did not work, or the encrypted content is damaged. Try another password.</value>
+  </data>
+  <data name="Archive_Preferred" xml:space="preserve">
+    <value>Preferred archive app</value>
+  </data>
+  <data name="Archive_PreferredHint" xml:space="preserve">
+    <value>Choose how FileMate handles compression and extraction.</value>
+  </data>
   <data name="Archive_Progress" xml:space="preserve">
     <value>{0} / {1} items · {2} / {3} MB</value>
+  </data>
+  <data name="Archive_Settings" xml:space="preserve">
+    <value>Archive apps</value>
+  </data>
+  <data name="Archive_SevenZipCompatible" xml:space="preserve">
+    <value>7-Zip compatible app</value>
+  </data>
+  <data name="Archive_SmartBuiltinHint" xml:space="preserve">
+    <value>Built-in smart extraction chooses a tidy destination folder. Recursive extraction and password libraries require CompactMate.</value>
+  </data>
+  <data name="Archive_SystemOpenWith" xml:space="preserve">
+    <value>System Open with…</value>
   </data>
   <data name="Archive_TemporaryFilesRemain" xml:space="preserve">
     <value>Some temporary files could not be removed. Location: {0}</value>
@@ -324,6 +402,9 @@
   </data>
   <data name="Archive_Unsupported" xml:space="preserve">
     <value>This archive format needs CompactMate or another compatible archive app.</value>
+  </data>
+  <data name="Archive_WinRARHint" xml:space="preserve">
+    <value>Open archives and extract a single archive with WinRAR. Compression, batch and renamed-volume operations use the built-in engine.</value>
   </data>
   <data name="Attribute_Archive" xml:space="preserve">
     <value>Archive</value>
@@ -471,6 +552,15 @@
   </data>
   <data name="Category_NameRequired" xml:space="preserve">
     <value>Enter a category name.</value>
+  </data>
+  <data name="Category_Programs" xml:space="preserve">
+    <value>Programs</value>
+  </data>
+  <data name="Category_ScrollNext" xml:space="preserve">
+    <value>Scroll categories right</value>
+  </data>
+  <data name="Category_ScrollPrevious" xml:space="preserve">
+    <value>Scroll categories left</value>
   </data>
   <data name="Category_Show" xml:space="preserve">
     <value>Show this category</value>
@@ -805,23 +895,23 @@
   <data name="Device_EjectDenied" xml:space="preserve">
     <value>Windows could not eject this device. Close files and programs using it, then try again. Keep the device connected.</value>
   </data>
-  <data name="Device_EjectShowBlockers" xml:space="preserve">
-    <value>Show file users</value>
-  </data>
-  <data name="Device_EjectRetry" xml:space="preserve">
-    <value>Retry safe eject</value>
-  </data>
-  <data name="Device_EjectReleaseOwn" xml:space="preserve">
-    <value>Release FilesMate previews</value>
-  </data>
   <data name="Device_EjectNoFileLocks" xml:space="preserve">
     <value>No open file handles were found on this drive. A driver, system service or device interface may still be using it. Keep it connected and retry after closing related apps.</value>
   </data>
   <data name="Device_EjectPreparing" xml:space="preserve">
     <value>Preparing to eject. Releasing open device folders and previews…</value>
   </data>
+  <data name="Device_EjectReleaseOwn" xml:space="preserve">
+    <value>Release FilesMate previews</value>
+  </data>
   <data name="Device_EjectRemoving" xml:space="preserve">
     <value>Waiting for Windows to safely eject the device. Keep it connected until the result appears.</value>
+  </data>
+  <data name="Device_EjectRetry" xml:space="preserve">
+    <value>Retry safe eject</value>
+  </data>
+  <data name="Device_EjectShowBlockers" xml:space="preserve">
+    <value>Show file users</value>
   </data>
   <data name="Device_EjectSuccess" xml:space="preserve">
     <value>The device was safely ejected. You can unplug it now.</value>
@@ -979,17 +1069,14 @@
   <data name="Favorites_EditFolder" xml:space="preserve">
     <value>Folder saved — edit or remove favorite</value>
   </data>
-  <data name="Favorites_NewSubgroup" xml:space="preserve">
-    <value>New subgroup</value>
-  </data>
-  <data name="Favorites_GroupCycle" xml:space="preserve">
-    <value>A group cannot be moved into itself or one of its subgroups.</value>
-  </data>
   <data name="Favorites_Group" xml:space="preserve">
     <value>Favorites group</value>
   </data>
   <data name="Favorites_GroupAtRoot" xml:space="preserve">
     <value>Groups can only be placed on the favorites bar.</value>
+  </data>
+  <data name="Favorites_GroupCycle" xml:space="preserve">
+    <value>A group cannot be moved into itself or one of its subgroups.</value>
   </data>
   <data name="Favorites_GroupDrop" xml:space="preserve">
     <value>Drop files to add them to this group</value>
@@ -1056,6 +1143,9 @@
   </data>
   <data name="Favorites_NewGroupMenu" xml:space="preserve">
     <value>New favorites group…</value>
+  </data>
+  <data name="Favorites_NewSubgroup" xml:space="preserve">
+    <value>New subgroup</value>
   </data>
   <data name="Favorites_NoMatch" xml:space="preserve">
     <value>No matching favorites</value>
@@ -1603,6 +1693,36 @@ Destination folder:
   <data name="PageLoadError_Title" xml:space="preserve">
     <value>This page couldn't open</value>
   </data>
+  <data name="Pane_Arrangement" xml:space="preserve">
+    <value>Choose pane arrangement</value>
+  </data>
+  <data name="Pane_BottomFocus" xml:space="preserve">
+    <value>Main pane below</value>
+  </data>
+  <data name="Pane_Columns" xml:space="preserve">
+    <value>Three columns</value>
+  </data>
+  <data name="Pane_LeftFocus" xml:space="preserve">
+    <value>Main pane left</value>
+  </data>
+  <data name="Pane_NextDual" xml:space="preserve">
+    <value>Switch to two panes</value>
+  </data>
+  <data name="Pane_NextSingle" xml:space="preserve">
+    <value>Switch to one pane</value>
+  </data>
+  <data name="Pane_NextTriple" xml:space="preserve">
+    <value>Switch to three panes</value>
+  </data>
+  <data name="Pane_RightFocus" xml:space="preserve">
+    <value>Main pane right</value>
+  </data>
+  <data name="Pane_Rows" xml:space="preserve">
+    <value>Three rows</value>
+  </data>
+  <data name="Pane_TopFocus" xml:space="preserve">
+    <value>Main pane above</value>
+  </data>
   <data name="ParentFolder" xml:space="preserve">
     <value>Parent folder</value>
   </data>
@@ -1632,18 +1752,6 @@ Items: {1}</value>
   <data name="PreviewInfoTab" xml:space="preserve">
     <value>Information</value>
   </data>
-  <data name="Preview_FollowingSelection" xml:space="preserve"><value>Following selection</value></data>
-  <data name="Preview_PinnedStatus" xml:space="preserve"><value>Pinned in this window: {0}</value></data>
-  <data name="TitleBar_Restore" xml:space="preserve"><value>Restore</value></data>
-  <data name="TitleBar_Move" xml:space="preserve"><value>Move</value></data>
-  <data name="TitleBar_Size" xml:space="preserve"><value>Size</value></data>
-  <data name="TitleBar_Minimize" xml:space="preserve"><value>Minimize</value></data>
-  <data name="TitleBar_Maximize" xml:space="preserve"><value>Maximize</value></data>
-  <data name="TitleBar_Close" xml:space="preserve"><value>Close window</value></data>
-  <data name="Preview_Pin" xml:space="preserve"><value>Pin</value></data>
-  <data name="Preview_Unpin" xml:space="preserve"><value>Unpin</value></data>
-  <data name="Preview_RefreshPinned" xml:space="preserve"><value>Refresh</value></data>
-  <data name="Preview_PinnedUnavailable" xml:space="preserve"><value>The pinned item is no longer available. Refresh or unpin it.</value></data>
   <data name="PreviewMediaError" xml:space="preserve">
     <value>Cannot play this format here. Open the file in your media player.</value>
   </data>
@@ -1717,6 +1825,9 @@ Modified: {1}</value>
   <data name="Preview_EmptyText" xml:space="preserve">
     <value>Empty text document</value>
   </data>
+  <data name="Preview_FollowingSelection" xml:space="preserve">
+    <value>Following selection</value>
+  </data>
   <data name="Preview_Hidden" xml:space="preserve">
     <value>Hidden</value>
   </data>
@@ -1765,11 +1876,23 @@ Modified: {1}</value>
   <data name="Preview_PieChart" xml:space="preserve">
     <value>Pie chart preview</value>
   </data>
+  <data name="Preview_Pin" xml:space="preserve">
+    <value>Pin</value>
+  </data>
+  <data name="Preview_PinnedStatus" xml:space="preserve">
+    <value>Pinned in this window: {0}</value>
+  </data>
+  <data name="Preview_PinnedUnavailable" xml:space="preserve">
+    <value>The pinned item is no longer available. Refresh or unpin it.</value>
+  </data>
   <data name="Preview_ReadFailed" xml:space="preserve">
     <value>Could not read this file right now</value>
   </data>
   <data name="Preview_ReadOnly" xml:space="preserve">
     <value>Read-only</value>
+  </data>
+  <data name="Preview_RefreshPinned" xml:space="preserve">
+    <value>Refresh</value>
   </data>
   <data name="Preview_ResizeBottom" xml:space="preserve">
     <value>Resize preview from bottom</value>
@@ -1836,6 +1959,9 @@ Modified: {1}</value>
   </data>
   <data name="Preview_UnavailableShort" xml:space="preserve">
     <value>Cannot preview this document. Open the file to view it.</value>
+  </data>
+  <data name="Preview_Unpin" xml:space="preserve">
+    <value>Unpin</value>
   </data>
   <data name="Preview_WebViewFailed" xml:space="preserve">
     <value>Could not initialize preview. Reopen it or check WebView2.</value>
@@ -2121,6 +2247,257 @@ Modified: {1}</value>
   <data name="SearchOperationFailed" xml:space="preserve">
     <value>Could not complete the operation: {0}</value>
   </data>
+  <data name="SearchPage_Advanced" xml:space="preserve">
+    <value>Advanced filters</value>
+  </data>
+  <data name="SearchPage_AllLocations" xml:space="preserve">
+    <value>All indexed locations</value>
+  </data>
+  <data name="SearchPage_AllTypes" xml:space="preserve">
+    <value>All types</value>
+  </data>
+  <data name="SearchPage_AnyDate" xml:space="preserve">
+    <value>Any time</value>
+  </data>
+  <data name="SearchPage_AnySize" xml:space="preserve">
+    <value>Any size</value>
+  </data>
+  <data name="SearchPage_Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="SearchPage_Browse" xml:space="preserve">
+    <value>Choose folder…</value>
+  </data>
+  <data name="SearchPage_ByPath" xml:space="preserve">
+    <value>By location</value>
+  </data>
+  <data name="SearchPage_Cancelled" xml:space="preserve">
+    <value>Search stopped. Edit the conditions to search again.</value>
+  </data>
+  <data name="SearchPage_Case" xml:space="preserve">
+    <value>Match case</value>
+  </data>
+  <data name="SearchPage_Category" xml:space="preserve">
+    <value>Result category</value>
+  </data>
+  <data name="SearchPage_Count" xml:space="preserve">
+    <value>Results {0}–{1}{2} · 200 per page</value>
+  </data>
+  <data name="SearchPage_CustomDates" xml:space="preserve">
+    <value>Choose dates…</value>
+  </data>
+  <data name="SearchPage_CustomSize" xml:space="preserve">
+    <value>Custom range</value>
+  </data>
+  <data name="SearchPage_DateOrder" xml:space="preserve">
+    <value>The end date cannot be before the start date.</value>
+  </data>
+  <data name="SearchPage_DateRange" xml:space="preserve">
+    <value>Enter only a start date and an end date.</value>
+  </data>
+  <data name="SearchPage_EndDate" xml:space="preserve">
+    <value>End date</value>
+  </data>
+  <data name="SearchPage_Examples" xml:space="preserve">
+    <value>Space: AND; |: OR; !: exclude; quotes: phrase.
+*.pdf · ext:pdf;docx · file: · folder: · path:Projects · parent:D:\Projects
+size:&gt;100mb · size:10mb..50mb
+dm:today · dm:7days · dm:2026-01-01..2026-12-31
+
+Regex mode uses the entire query as a regular expression. Filters still apply. File content is not searched. Size and date reflect the latest index.</value>
+  </data>
+  <data name="SearchPage_ExcludeNeedsTerm" xml:space="preserve">
+    <value>Enter a name or condition after !.</value>
+  </data>
+  <data name="SearchPage_Extensions" xml:space="preserve">
+    <value>Extensions</value>
+  </data>
+  <data name="SearchPage_Filters" xml:space="preserve">
+    <value>Filters</value>
+  </data>
+  <data name="SearchPage_Formats" xml:space="preserve">
+    <value>File formats</value>
+  </data>
+  <data name="SearchPage_Help" xml:space="preserve">
+    <value>Search syntax</value>
+  </data>
+  <data name="SearchPage_Index" xml:space="preserve">
+    <value>Index settings</value>
+  </data>
+  <data name="SearchPage_IndexMissing" xml:space="preserve">
+    <value>No file index yet. Choose locations in Index settings and build an index.</value>
+  </data>
+  <data name="SearchPage_InvalidDate" xml:space="preserve">
+    <value>Date examples: today, 7days, 2026-01-01..2026-12-31.</value>
+  </data>
+  <data name="SearchPage_InvalidRegex" xml:space="preserve">
+    <value>Invalid regex, or unsupported lookaround, backtracking or backreferences.</value>
+  </data>
+  <data name="SearchPage_InvalidScope" xml:space="preserve">
+    <value>Enter a full folder path, such as D:\Projects.</value>
+  </data>
+  <data name="SearchPage_InvalidSize" xml:space="preserve">
+    <value>Size examples: &gt;100mb, 10mb..50mb, &lt;=1gb.</value>
+  </data>
+  <data name="SearchPage_Largest" xml:space="preserve">
+    <value>Largest first</value>
+  </data>
+  <data name="SearchPage_Last30Days" xml:space="preserve">
+    <value>Last 30 days</value>
+  </data>
+  <data name="SearchPage_Last7Days" xml:space="preserve">
+    <value>Last 7 days</value>
+  </data>
+  <data name="SearchPage_Last90Days" xml:space="preserve">
+    <value>Last 90 days</value>
+  </data>
+  <data name="SearchPage_Loaded" xml:space="preserve">
+    <value>{0:N0} items loaded</value>
+  </data>
+  <data name="SearchPage_LoadingMore" xml:space="preserve">
+    <value>{0:N0} loaded · Loading more…</value>
+  </data>
+  <data name="SearchPage_Location" xml:space="preserve">
+    <value>Location</value>
+  </data>
+  <data name="SearchPage_MatchPath" xml:space="preserve">
+    <value>Match path</value>
+  </data>
+  <data name="SearchPage_MatchingOptions" xml:space="preserve">
+    <value>Matching options</value>
+  </data>
+  <data name="SearchPage_Maximum" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="SearchPage_MetadataMissing" xml:space="preserve">
+    <value>Refresh the index to show sizes and dates. Name search is still available.</value>
+  </data>
+  <data name="SearchPage_MetadataRequired" xml:space="preserve">
+    <value>This index has no size or date data. Refresh it in Index settings to use this condition.</value>
+  </data>
+  <data name="SearchPage_Minimum" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="SearchPage_Modified" xml:space="preserve">
+    <value>Modified</value>
+  </data>
+  <data name="SearchPage_More" xml:space="preserve">
+    <value>View more results</value>
+  </data>
+  <data name="SearchPage_MoreCompact" xml:space="preserve">
+    <value>View all</value>
+  </data>
+  <data name="SearchPage_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="SearchPage_NameAZ" xml:space="preserve">
+    <value>Name A → Z</value>
+  </data>
+  <data name="SearchPage_NameZA" xml:space="preserve">
+    <value>Name Z → A</value>
+  </data>
+  <data name="SearchPage_Newest" xml:space="preserve">
+    <value>Newest first</value>
+  </data>
+  <data name="SearchPage_Next" xml:space="preserve">
+    <value>Next 200 results</value>
+  </data>
+  <data name="SearchPage_NoLimit" xml:space="preserve">
+    <value>Any</value>
+  </data>
+  <data name="SearchPage_NoResults" xml:space="preserve">
+    <value>No matching items. Try fewer conditions or check the indexed locations.</value>
+  </data>
+  <data name="SearchPage_OrNeedsTerms" xml:space="preserve">
+    <value>Enter a condition on both sides of |.</value>
+  </data>
+  <data name="SearchPage_Previous" xml:space="preserve">
+    <value>Previous 200 results</value>
+  </data>
+  <data name="SearchPage_Priority" xml:space="preserve">
+    <value>Type priority</value>
+  </data>
+  <data name="SearchPage_QueryHint" xml:space="preserve">
+    <value>Name or query, e.g. report ext:pdf</value>
+  </data>
+  <data name="SearchPage_QueryTooLong" xml:space="preserve">
+    <value>Keep the search query within 2048 characters.</value>
+  </data>
+  <data name="SearchPage_RefreshAfterOperation" xml:space="preserve">
+    <value>Results updated. New or renamed files appear after the index refreshes.</value>
+  </data>
+  <data name="SearchPage_Regex" xml:space="preserve">
+    <value>Regex</value>
+  </data>
+  <data name="SearchPage_Reset" xml:space="preserve">
+    <value>Clear filters</value>
+  </data>
+  <data name="SearchPage_Reveal" xml:space="preserve">
+    <value>Open file location</value>
+  </data>
+  <data name="SearchPage_Scope" xml:space="preserve">
+    <value>Folder scope</value>
+  </data>
+  <data name="SearchPage_Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="SearchPage_Selected" xml:space="preserve">
+    <value>{0} items selected</value>
+  </data>
+  <data name="SearchPage_Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="SearchPage_SizeOrder" xml:space="preserve">
+    <value>The minimum size cannot exceed the maximum.</value>
+  </data>
+  <data name="SearchPage_SizeTooLarge" xml:space="preserve">
+    <value>The size exceeds the supported range.</value>
+  </data>
+  <data name="SearchPage_Sort" xml:space="preserve">
+    <value>Sort results</value>
+  </data>
+  <data name="SearchPage_SortLargest" xml:space="preserve">
+    <value>Largest first</value>
+  </data>
+  <data name="SearchPage_SortNewest" xml:space="preserve">
+    <value>Newest first</value>
+  </data>
+  <data name="SearchPage_SortPriority" xml:space="preserve">
+    <value>Type priority</value>
+  </data>
+  <data name="SearchPage_StartDate" xml:space="preserve">
+    <value>Start date</value>
+  </data>
+  <data name="SearchPage_Stop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="SearchPage_TimedOut" xml:space="preserve">
+    <value>Search timed out. Narrow the scope or add a filename keyword.</value>
+  </data>
+  <data name="SearchPage_Title" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="SearchPage_Today" xml:space="preserve">
+    <value>Today</value>
+  </data>
+  <data name="SearchPage_Total" xml:space="preserve">
+    <value>{0:N0} items</value>
+  </data>
+  <data name="SearchPage_TotalLoaded" xml:space="preserve">
+    <value>{0:N0} items · {1:N0} loaded</value>
+  </data>
+  <data name="SearchPage_UnclosedQuote" xml:space="preserve">
+    <value>Close the quotation marks around the phrase.</value>
+  </data>
+  <data name="SearchPage_Unit" xml:space="preserve">
+    <value>Size unit</value>
+  </data>
+  <data name="SearchPage_UnsupportedCondition" xml:space="preserve">
+    <value>Unsupported condition. Use ext:, file:, folder:, path:, parent:, size: or dm:.</value>
+  </data>
+  <data name="SearchPage_Yesterday" xml:space="preserve">
+    <value>Yesterday</value>
+  </data>
   <data name="SearchParallel" xml:space="preserve">
     <value>Scan drives together</value>
   </data>
@@ -2154,6 +2531,9 @@ Modified: {1}</value>
   <data name="SearchRankDocument" xml:space="preserve">
     <value>Documents</value>
   </data>
+  <data name="SearchRankExecutable" xml:space="preserve">
+    <value>Standalone EXE/COM</value>
+  </data>
   <data name="SearchRankFolder" xml:space="preserve">
     <value>Folders</value>
   </data>
@@ -2165,15 +2545,6 @@ Modified: {1}</value>
   </data>
   <data name="SearchRankProgram" xml:space="preserve">
     <value>Apps</value>
-  </data>
-  <data name="SearchRankExecutable" xml:space="preserve">
-    <value>Standalone EXE/COM</value>
-  </data>
-  <data name="Search_StandaloneExecutables" xml:space="preserve">
-    <value>Show standalone executables</value>
-  </data>
-  <data name="Search_StandaloneExecutablesHint" xml:space="preserve">
-    <value>Search indexed EXE and COM files separately from app shortcuts. Turning this off keeps the index intact.</value>
   </data>
   <data name="SearchRankSection" xml:space="preserve">
     <value>Result order</value>
@@ -2397,6 +2768,12 @@ Modified: {1}</value>
   <data name="Search_StaleFiles" xml:space="preserve">
     <value>Some files were moved or deleted. Search again.</value>
   </data>
+  <data name="Search_StandaloneExecutables" xml:space="preserve">
+    <value>Show standalone executables</value>
+  </data>
+  <data name="Search_StandaloneExecutablesHint" xml:space="preserve">
+    <value>Search indexed EXE and COM files separately from app shortcuts. Turning this off keeps the index intact.</value>
+  </data>
   <data name="Search_StartAtLogin" xml:space="preserve">
     <value>Start global search at sign-in</value>
   </data>
@@ -2559,20 +2936,11 @@ Modified: {1}</value>
   <data name="Shelf_Remove" xml:space="preserve">
     <value>Remove selected references</value>
   </data>
+  <data name="Shelf_Short" xml:space="preserve">
+    <value>Shelf</value>
+  </data>
   <data name="Shelf_Title" xml:space="preserve">
     <value>File shelf</value>
-  </data>
-  <data name="ShellLayered" xml:space="preserve">
-    <value>Layered</value>
-  </data>
-  <data name="ShellStyle" xml:space="preserve">
-    <value>Interface style</value>
-  </data>
-  <data name="ShellStyleDescription" xml:space="preserve">
-    <value>Unified keeps the original continuous surface; Layered separates regions with subtle tones. Changes apply immediately.</value>
-  </data>
-  <data name="ShellUnified" xml:space="preserve">
-    <value>Unified</value>
   </data>
   <data name="Shortcut_Change" xml:space="preserve">
     <value>Change shortcut</value>
@@ -3000,6 +3368,24 @@ Sleeping — select to restore</value>
   </data>
   <data name="ThemeSystem" xml:space="preserve">
     <value>System</value>
+  </data>
+  <data name="TitleBar_Close" xml:space="preserve">
+    <value>Close window</value>
+  </data>
+  <data name="TitleBar_Maximize" xml:space="preserve">
+    <value>Maximize</value>
+  </data>
+  <data name="TitleBar_Minimize" xml:space="preserve">
+    <value>Minimize</value>
+  </data>
+  <data name="TitleBar_Move" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="TitleBar_Restore" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="TitleBar_Size" xml:space="preserve">
+    <value>Size</value>
   </data>
   <data name="Toolbar" xml:space="preserve">
     <value>Toolbar</value>

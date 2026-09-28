@@ -6,6 +6,7 @@
     xmlns:loc="using:FilesMate.App.Localization"
     xmlns:glass="using:FilesMate.App.Controls.Glass"
     xmlns:favorites="using:FilesMate.App.Controls.Favorites"
+    xmlns:nav="using:FilesMate.App.Controls.Navigation"
     xmlns:input="using:FilesMate.App.Input"
     Title="FilesMate">
     <Window.SystemBackdrop>
@@ -173,9 +174,12 @@
             </Grid>
         </glass:LiquidGlassSurface>
 
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <nav:WindowNavigation x:Name="WindowNavigation"/>
         <ContentControl
             x:Name="TabHost"
-            Grid.Row="1"
+            Grid.Column="1"
             AllowDrop="True"
             Background="Transparent"
             HorizontalAlignment="Stretch"
@@ -189,6 +193,8 @@
             </ContentControl.ContentTransitions>
         </ContentControl>
 
+        </Grid>
+
         <!-- Keep the favorites chrome mounted while navigator tabs change. -->
         <favorites:FavoritesBar x:Name="WindowFavorites" Grid.RowSpan="2"
             HorizontalAlignment="Left" VerticalAlignment="Top" Height="36"
@@ -200,25 +206,26 @@
             Canvas.ZIndex="100"
             Background="{ThemeResource FilesMate.SettingsOverlay.ScrimBrush}"
             Visibility="Collapsed">
-            <!-- Keep the material's antialiased edge outside the content clip.
-                 Clipping coincident rounded outlines repeatedly leaves a fringe. -->
-            <Grid
+            <!-- One outline and one inset clip: all material/content layers share
+                 the same edge instead of accumulating antialiasing at the corners. -->
+            <Border
                 x:Name="SettingsPanel"
                 MaxWidth="1180"
                 MaxHeight="780"
                 Margin="28"
+                BorderThickness="1"
+                BorderBrush="{ThemeResource FilesMate.Floating.OutlineBrush}"
+                CornerRadius="16"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch">
-                <glass:FrostedBackdrop
-                    x:Name="SettingsBackdrop"
-                    Visibility="{Binding Visibility, ElementName=SettingsOverlay}"
-                    CornerRadius="16"
-                    IsHitTestVisible="False" />
-                <Border
-                    Background="{ThemeResource FilesMate.LiquidGlass.TopSheenBrush}"
-                    CornerRadius="16"
-                    IsHitTestVisible="False" />
-                <Grid x:Name="SettingsContentClip" Margin="1" CornerRadius="15">
+                <Grid x:Name="SettingsContentClip" CornerRadius="15">
+                    <glass:FrostedBackdrop
+                        x:Name="SettingsBackdrop"
+                        Visibility="{Binding Visibility, ElementName=SettingsOverlay}"
+                        IsHitTestVisible="False" />
+                    <Border
+                        Background="{ThemeResource FilesMate.LiquidGlass.TopSheenBrush}"
+                        IsHitTestVisible="False" />
                     <ContentControl
                         x:Name="SettingsHost"
                         HorizontalAlignment="Stretch"
@@ -228,12 +235,7 @@
                         Background="Transparent"
                         Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}" />
                 </Grid>
-                <Border
-                    BorderBrush="{ThemeResource FilesMate.Card.BorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="16"
-                    IsHitTestVisible="False" />
-            </Grid>
+            </Border>
         </Grid>
     </input:ShellRoot>
 </Window>

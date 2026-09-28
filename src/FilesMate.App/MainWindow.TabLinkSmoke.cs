@@ -124,8 +124,12 @@ public sealed partial class MainWindow
             Require(!Tabs.TabItems.Contains(tabA), "Acknowledged move retained the source");
             _tabTransferReceipt.Dispose(); _tabTransferReceipt = null;
             results["ReceiptAndMoveRequiredToRemoveSource"] = true;
+            // Removing the acknowledged source invalidates the TabView layout.
+            // Hit-test the settled headers, just as a subsequent pointer event does.
+            await Task.Delay(250);
             foreach (var window in new[] { this, other })
             {
+                ((FrameworkElement)window.Content).UpdateLayout();
                 window.UpdateNonClientRegions();
                 var first = (TabViewItem)window.Tabs.TabItems[0];
                 var bounds = first.TransformToVisual(window.Tabs).TransformBounds(new Rect(0, 0, first.ActualWidth, first.ActualHeight));

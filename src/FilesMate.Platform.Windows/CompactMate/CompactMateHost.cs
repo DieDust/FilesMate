@@ -13,8 +13,10 @@ public static class CompactMateHost
     public const string AppPathKey =
         @"Software\Microsoft\Windows\CurrentVersion\App Paths\CompactMate.exe";
 
+    public const string InstallKey = @"Software\CompactMate";
+
     public static bool TryFind(IUserRegistry registry, out string executable) =>
-        TryFind(registry, extraCandidates: null, out executable);
+        TryFind(registry, extraCandidates: MachineExecutables(), out executable);
 
     public static bool TryFind(
         IUserRegistry registry,
@@ -130,9 +132,12 @@ public static class CompactMateHost
         foreach (var path in yieldUnique(
             [
                 ParseExecutable(registry.GetDefaultValue(ArchiveOpenCommandKey)),
-                ParseExecutable(registry.GetDefaultValue(AppPathKey)),
+                registry.GetDefaultValue(AppPathKey)?.Trim().Trim('"'),
                 registry.GetValue(AppPathKey, "Path") is string dir && !string.IsNullOrWhiteSpace(dir)
                     ? Path.Combine(dir, "CompactMate.exe")
+                    : null,
+                registry.GetValue(InstallKey, "InstallDir") is string install && !string.IsNullOrWhiteSpace(install)
+                    ? Path.Combine(install, "CompactMate.exe")
                     : null,
             ]))
         {
@@ -156,6 +161,19 @@ public static class CompactMateHost
         {
             yield return path;
         }
+    }
+
+    private static IEnumerable<string> MachineExecutables()
+    {
+        if (!OperatingSystem.IsWindows()) yield break;
+        // The per-machine installer registers App Paths even when the user has
+        // not chosen CompactMate as their default archive opener.
+        using var appPath = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(AppPathKey);
+        if (appPath?.GetValue(null) is string executable && !string.IsNullOrWhiteSpace(executable))
+            yield return executable.Trim().Trim('"');
+        using var installation = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(InstallKey);
+        if (installation?.GetValue("InstallDir") is string directory && !string.IsNullOrWhiteSpace(directory))
+            yield return Path.Combine(directory, "CompactMate.exe");
     }
 
     private static IEnumerable<string> NearbyExecutables()

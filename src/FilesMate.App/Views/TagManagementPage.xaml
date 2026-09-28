@@ -33,10 +33,11 @@
             </Button>
         </Grid>
         <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
-            <Grid MinHeight="96">
+            <Grid>
                 <StackPanel x:Name="TagRows" />
                 <TextBlock
                     x:Name="EmptyText"
+                    MinHeight="56"
                     Margin="20"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"

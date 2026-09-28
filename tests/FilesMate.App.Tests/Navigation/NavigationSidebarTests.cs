@@ -149,7 +149,7 @@ public sealed class NavigationSidebarTests
         Assert.Contains("HorizontalScrollMode=\"Disabled\"", xaml, StringComparison.Ordinal);
         Assert.Contains("BoolToHorizontalAlignmentConverter", xaml, StringComparison.Ordinal);
 
-        var page = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "NavigatorPage.xaml"));
+        var page = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Controls", "Navigation", "WindowNavigation.xaml"));
         Assert.Contains("NavigationSidebar", page, StringComparison.Ordinal);
         Assert.DoesNotContain("PlacesSidebar", page, StringComparison.Ordinal);
         Assert.Contains("Settings", File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "SettingsPage.xaml")), StringComparison.Ordinal);

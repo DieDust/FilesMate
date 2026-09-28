@@ -55,7 +55,7 @@ public sealed partial class FileRow : UserControl
         NameText.Text = content.Name;
         ToolTipService.SetToolTip(NameText, entry.Name);
         ModifiedText.Text = content.Modified;
-        TypeText.Text = content.Type;
+        BindFileType(entry, content.Type);
         SizeText.Text = content.Size;
         UpdateExtraCells();
         Glyph.Glyph = FileRowFormatter.Glyph(entry);
@@ -64,6 +64,17 @@ public sealed partial class FileRow : UserControl
         _selected = content.IsSelected;
         UpdateState(animate: false);
         RequestFolderSize(path, cancellationToken);
+    }
+
+    private void BindFileType(in FileEntryCore entry, string description)
+    {
+        var appearance = FileTypeAppearance.For(entry.Name, entry.Kind == EntryKind.Directory);
+        var badge = !string.IsNullOrEmpty(appearance.Extension);
+        TypeText.Text = badge ? appearance.Extension : description;
+        TypeCell.Style = (Style)Application.Current.Resources[$"FilesMate.Type.{appearance.Tone}Style"];
+        TypeText.Style = (Style)Application.Current.Resources[$"FilesMate.Type.{appearance.Tone}TextStyle"];
+        ToolTipService.SetToolTip(TypeCell, description);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(TypeCell, description);
     }
 
     private void RequestFolderSize(string? path, CancellationToken cancellationToken)
@@ -137,6 +148,7 @@ public sealed partial class FileRow : UserControl
 
     public void ApplyColumns(DetailsColumn[] columns)
     {
+        TypeCell.Width = Math.Min(68, Math.Max(0, (columns.FirstOrDefault(c => c.Id == DetailsColumnId.Type)?.Width ?? 84) - 16));
         if (ReferenceEquals(_columns, columns)) return;
         var sameLayout = _columns?.Length == columns.Length;
         if (sameLayout)
@@ -169,21 +181,22 @@ public sealed partial class FileRow : UserControl
             }
             else
             {
-                TextBlock cell;
+                FrameworkElement cell;
                 switch (column.Id)
                 {
                     case DetailsColumnId.Modified: cell = ModifiedText; break;
-                    case DetailsColumnId.Type: cell = TypeText; break;
+                    case DetailsColumnId.Type: cell = TypeCell; break;
                     case DetailsColumnId.Size: cell = SizeText; break;
                     default:
-                        if (!_extraCells.TryGetValue(column.Id, out cell!))
+                        if (!_extraCells.TryGetValue(column.Id, out var extra))
                         {
                             if (!column.Visible) continue;
-                            cell = new TextBlock { Padding = new Thickness(8, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center,
-                                TextTrimming = TextTrimming.CharacterEllipsis, Style = ModifiedText.Style, Foreground = ModifiedText.Foreground };
-                            _extraCells.Add(column.Id, cell);
-                            Root.Children.Add(cell);
+                            extra = new TextBlock { Padding = new Thickness(8, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center,
+                                TextTrimming = TextTrimming.CharacterEllipsis, Style = (Style)Application.Current.Resources["FilesMate.DetailsMetadataTextStyle"] };
+                            _extraCells.Add(column.Id, extra);
+                            Root.Children.Add(extra);
                         }
+                        cell = extra;
                         break;
                 }
                 Grid.SetColumn(cell, position);
@@ -193,6 +206,7 @@ public sealed partial class FileRow : UserControl
             _columnSlots[column.Id] = position;
         }
         Grid.SetColumnSpan(Fill, Root.ColumnDefinitions.Count);
+        Grid.SetColumnSpan(Stripe, Root.ColumnDefinitions.Count);
         Width = FileColumnLayout.RowWidth(columns.Where(c => c.Visible).Sum(c => c.Width), 0, 0, 0);
         HorizontalAlignment = HorizontalAlignment.Left;
         UpdateExtraCells();
@@ -292,6 +306,9 @@ public sealed partial class FileRow : UserControl
         ToolTipService.SetToolTip(NameText, null);
         ModifiedText.Text = string.Empty;
         TypeText.Text = string.Empty;
+        TypeCell.Style = null;
+        ToolTipService.SetToolTip(TypeCell, null);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(TypeCell, "");
         SizeText.Text = string.Empty;
         TagHost.Children.Clear();
         Glyph.Glyph = "\uE8A5";
@@ -341,6 +358,9 @@ public sealed partial class FileRow : UserControl
             _dropTarget);
         var useTransitions = animate && App.Motion.Resolve(MotionDurations.Hover) > TimeSpan.Zero;
         VisualStateManager.GoToState(this, state, useTransitions);
+        Stripe.Visibility = ViewIndex >= 0 && (ViewIndex & 1) != 0
+            && state is FileRowVisualStates.Normal or FileRowVisualStates.Focused
+            ? Visibility.Visible : Visibility.Collapsed;
         if (state != FileRowVisualStates.Dragging)
         {
             Opacity = _hidden ? HiddenOpacity() : 1;

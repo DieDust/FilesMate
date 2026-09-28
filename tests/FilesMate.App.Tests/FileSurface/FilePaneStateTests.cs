@@ -72,14 +72,16 @@ public sealed class FilePaneStateTests
     }
 
     [Fact]
-    public void Chrome_hosts_status_info_and_delayed_loading_controls()
+    public void Chrome_hosts_info_and_delayed_loading_while_navigator_hosts_shared_status()
     {
         var chrome = File.ReadAllText(Path.Combine(
             ThemeXaml.AppRoot,
             "Controls",
             "FileSurface",
             "FilePaneChrome.xaml"));
-        Assert.Contains("FileStatusBar", chrome, StringComparison.Ordinal);
+        Assert.DoesNotContain("FileStatusBar", chrome, StringComparison.Ordinal);
+        var navigator = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "NavigatorPage.xaml"));
+        Assert.Contains("FileStatusBar", navigator, StringComparison.Ordinal);
         Assert.Contains("InfoStateView", chrome, StringComparison.Ordinal);
         Assert.Contains("LoadingPresenter", chrome, StringComparison.Ordinal);
         Assert.Contains("x:Name=\"BodyPresenter\"", chrome, StringComparison.Ordinal);
@@ -92,7 +94,7 @@ public sealed class FilePaneStateTests
         var status = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Controls", "Status", "FileStatusBar.xaml"));
         Assert.Contains("TextTrimming=\"CharacterEllipsis\"", status, StringComparison.Ordinal);
         Assert.Contains("FilesMate.Control.Height.StatusBar", status, StringComparison.Ordinal);
-        Assert.Contains("x:Name=\"SizeBlock\"", status, StringComparison.Ordinal);
+        Assert.Contains("TextWrapping=\"NoWrap\"", status, StringComparison.Ordinal);
 
         var delay = File.ReadAllText(Path.Combine(
             ThemeXaml.AppRoot,

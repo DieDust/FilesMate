@@ -31,10 +31,6 @@ public sealed class NavigatorResponsiveContractTests
         {
             var targets = SetterTargets(state);
             Assert.True(
-                targets.Any(target => target.Contains("ShellSplit", StringComparison.Ordinal)
-                    || target.Contains("Sidebar", StringComparison.Ordinal)),
-                $"{name} must change sidebar presentation.");
-            Assert.True(
                 targets.Any(target => target.Contains("Omni", StringComparison.Ordinal)
                     || target.Contains("Omnibar", StringComparison.Ordinal)
                     || target.Contains("Filter", StringComparison.Ordinal)),
@@ -50,14 +46,16 @@ public sealed class NavigatorResponsiveContractTests
     public void Shell_keeps_responsive_connected_regions_with_a_defined_file_surface()
     {
         var page = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "NavigatorPage.xaml"));
+        var navigation = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Controls", "Navigation", "WindowNavigation.xaml"));
         Assert.Contains("FilePaneChrome", page, StringComparison.Ordinal);
         Assert.Contains("x:Name=\"ContentChrome\"", page, StringComparison.Ordinal);
         Assert.Contains("Background=\"Transparent\"", page, StringComparison.Ordinal);
-        Assert.Contains("FilesMate.Sidebar.BackgroundBrush", page, StringComparison.Ordinal);
+        Assert.Contains("FilesMate.Sidebar.BackgroundBrush", navigation, StringComparison.Ordinal);
         Assert.Contains("FilesMate.CommandBar.BackgroundBrush", page, StringComparison.Ordinal);
-        Assert.Contains("FilesMate.Shell.SeparatorBrush", page, StringComparison.Ordinal);
+        Assert.Contains("FilesMate.Shell.SeparatorBrush", navigation, StringComparison.Ordinal);
         Assert.Contains("AdaptiveTrigger", page, StringComparison.Ordinal);
-        Assert.Contains("x:Name=\"ShellSplit\"", page, StringComparison.Ordinal);
+        Assert.DoesNotContain("<SplitView", page, StringComparison.Ordinal);
+        Assert.Contains("WindowNavigation", File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "MainWindow.xaml")), StringComparison.Ordinal);
         Assert.Contains("x:Name=\"CommandBarCard\"", page, StringComparison.Ordinal);
         Assert.DoesNotContain("FilesMate.Pane.Gutter", page, StringComparison.Ordinal);
         Assert.DoesNotContain("FilesMate.Corner.Card", page, StringComparison.Ordinal);
@@ -67,7 +65,7 @@ public sealed class NavigatorResponsiveContractTests
         Assert.DoesNotContain("Target=\"PaneToggle.Visibility\"", page, StringComparison.Ordinal);
         Assert.DoesNotContain("ShellSplit.DisplayMode\" Value=\"Overlay\"", page, StringComparison.Ordinal);
         Assert.DoesNotContain("CompactInline", page, StringComparison.Ordinal);
-        Assert.Contains("x:Name=\"PaneResizeThumb\"", page, StringComparison.Ordinal);
+        Assert.Contains("x:Name=\"ResizeThumb\"", navigation, StringComparison.Ordinal);
         Assert.Contains("x:Name=\"PreviewResizeThumb\"", page, StringComparison.Ordinal);
         Assert.Contains("x:Name=\"PreviewSplitterColumn\"", page, StringComparison.Ordinal);
 
@@ -78,11 +76,11 @@ public sealed class NavigatorResponsiveContractTests
             "FilePaneChrome.xaml"));
         Assert.Contains("FilesMate.FileArea.BackgroundBrush", chrome, StringComparison.Ordinal);
         Assert.Contains("FilesMate.FileArea.InactiveBackgroundBrush", chrome, StringComparison.Ordinal);
-        Assert.Contains("FilesMate.Control.Height.StatusBar", chrome, StringComparison.Ordinal);
         Assert.Contains("x:Name=\"BodyPresenter\"", chrome, StringComparison.Ordinal);
         Assert.Contains("LoadingPresenter", chrome, StringComparison.Ordinal);
         Assert.Contains("InfoStateView", chrome, StringComparison.Ordinal);
-        Assert.Contains("FileStatusBar", chrome, StringComparison.Ordinal);
+        Assert.DoesNotContain("FileStatusBar", chrome, StringComparison.Ordinal);
+        Assert.Contains("FileStatusBar", page, StringComparison.Ordinal);
         Assert.Contains("FilesMate.Corner.Card", chrome, StringComparison.Ordinal);
         Assert.Contains("x:Name=\"PaneCard\"", chrome, StringComparison.Ordinal);
         Assert.Contains("BorderThickness=\"1\"", chrome, StringComparison.Ordinal);
@@ -106,10 +104,12 @@ public sealed class NavigatorResponsiveContractTests
         Assert.Contains("SchedulePaneOpen", pageCode, StringComparison.Ordinal);
         Assert.Contains("TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, ApplyPendingPaneOpen)", pageCode, StringComparison.Ordinal);
         Assert.Contains("ApplyPaneOpen", pageCode, StringComparison.Ordinal);
-        Assert.Contains("ApplySidebarWidth", pageCode, StringComparison.Ordinal);
-        Assert.Contains("width < 720", pageCode, StringComparison.Ordinal);
-        Assert.Contains("ShellSplit.IsPaneOpen = !App.Features.SidebarCollapsed", pageCode, StringComparison.Ordinal);
-        Assert.Contains("PaneResize_PointerMoved", pageCode, StringComparison.Ordinal);
+        var sidebarCode = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Controls", "Navigation", "WindowNavigation.xaml.cs"));
+        Assert.Contains("windowWidth >= 720", sidebarCode, StringComparison.Ordinal);
+        Assert.Contains("!App.Features.SidebarCollapsed", sidebarCode, StringComparison.Ordinal);
+        Assert.Contains("Resize_Moved", sidebarCode, StringComparison.Ordinal);
+        Assert.DoesNotContain("Reload", sidebarCode, StringComparison.Ordinal);
+        Assert.DoesNotContain("Navigate(", sidebarCode, StringComparison.Ordinal);
         Assert.Contains("ApplyPreviewWidth", pageCode, StringComparison.Ordinal);
         Assert.Contains("PreviewResize_PointerMoved", pageCode, StringComparison.Ordinal);
 

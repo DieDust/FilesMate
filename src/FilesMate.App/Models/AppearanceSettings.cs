@@ -1,4 +1,4 @@
-namespace FilesMate.App.Models;
+﻿namespace FilesMate.App.Models;
 
 public enum AppThemeKind
 {
@@ -28,12 +28,6 @@ public enum GlassEffectMode
     Immersive,
 }
 
-public enum ShellStyleKind
-{
-    Layered,
-    Unified,
-}
-
 public sealed record AppearanceSettings(
     AppThemeKind Theme,
     BackdropKind Backdrop,
@@ -43,7 +37,6 @@ public sealed record AppearanceSettings(
     GlassEffectMode GlassEffect,
     AccentKind Accent = AccentKind.Default,
     string? CustomAccent = null,
-    ShellStyleKind ShellStyle = ShellStyleKind.Layered,
     int? TransparencyPercent = null,
     bool UseBundledFileIcons = true)
 {
@@ -73,7 +66,6 @@ public sealed record AppearanceSettings(
         string? glassEffect = null,
         string? accent = null,
         string? customAccent = null,
-        string? shellStyle = null,
         int? transparencyPercent = null,
         bool? useBundledFileIcons = null) =>
         new(
@@ -85,7 +77,6 @@ public sealed record AppearanceSettings(
             Parse(glassEffect, GlassEffectMode.Balanced),
             Parse(accent, AccentKind.Default),
             AccentPalette.TryParse(customAccent, out var parsed) ? AccentPalette.ToHex(parsed) : null,
-            Parse(shellStyle, ShellStyleKind.Layered),
             transparencyPercent is { } percent ? Math.Clamp(percent, 0, 100) : null,
             useBundledFileIcons ?? true);
 

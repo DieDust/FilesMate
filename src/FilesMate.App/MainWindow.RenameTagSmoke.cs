@@ -1,4 +1,4 @@
-#if FILESMATE_UI_TEST
+﻿#if FILESMATE_UI_TEST
 using FilesMate.App.Commands;
 using FilesMate.App.Controls.Menus;
 using FilesMate.App.Controls.Tags;
@@ -133,10 +133,6 @@ public sealed partial class MainWindow
                 await Task.Delay(450);
                 await Capture((UIElement)Content, $"theme-settings-{theme}.png");
                 CloseSettings();
-                await App.AppearanceViewModel.SetShellStyleAsync(ShellStyleKind.Unified);
-                await Task.Delay(250);
-                await Capture((UIElement)Content, $"theme-unified-{theme}.png");
-                await App.AppearanceViewModel.SetShellStyleAsync(ShellStyleKind.Layered);
             }
             File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "rename-tag-results.json"), JsonSerializer.Serialize(results, new JsonSerializerOptions { WriteIndented = true }));
         }

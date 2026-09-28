@@ -28,6 +28,7 @@ public sealed partial class NavigatorPage
             if (_disposed) return;
             _ = RestoreFolderViewAsync(_leftVm);
             if (_rightVm is not null) _ = RestoreFolderViewAsync(_rightVm);
+            if (_thirdVm is not null) _ = RestoreFolderViewAsync(_thirdVm);
         });
     }
 
@@ -97,6 +98,7 @@ public sealed partial class NavigatorPage
         if (_disposed) return;
         FileSurface.RebindVisibleEntries();
         _rightSurface?.RebindVisibleEntries();
+        _thirdSurface?.RebindVisibleEntries();
     }
 
     private async Task RunCustomizationCommandAsync(AppCommandId id)

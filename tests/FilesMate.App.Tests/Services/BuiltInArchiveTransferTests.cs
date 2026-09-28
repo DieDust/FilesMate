@@ -10,6 +10,63 @@ namespace FilesMate.App.Tests.Services;
 
 public sealed class BuiltInArchiveTransferTests : IDisposable
 {
+    [Fact]
+    public async Task Password_retry_and_cancellation_never_publish_failed_attempts()
+    {
+        var archive = Path.Combine(AppContext.BaseDirectory, "ArchiveFixtures", "Zip.deflate.WinzipAES.zip");
+        var target = Folder("password-retry");
+        var prompts = 0;
+        var result = await BuiltInArchiveTransfer.RunAsync(_operations, [archive], target, compress: false,
+            requestPassword: (_, retry, _) =>
+            {
+                Assert.Empty(Directory.EnumerateFiles(target));
+                Assert.Equal(prompts > 0, retry);
+                return Task.FromResult<string?>(++prompts == 1 ? "wrong" : "test");
+            });
+        Assert.Equal(2, prompts);
+        Assert.Empty(result.Errors);
+        Assert.False(result.Cancelled);
+        Assert.NotEmpty(result.Completed);
+        Assert.NotNull(result.Undo);
+        AssertNoStaging(target);
+
+        var cancelledTarget = Folder("password-cancel");
+        var cancelled = await BuiltInArchiveTransfer.RunAsync(_operations, [archive], cancelledTarget, compress: false,
+            requestPassword: (_, _, _) => Task.FromResult<string?>(null));
+        Assert.True(cancelled.Cancelled);
+        Assert.Empty(cancelled.Completed);
+        Assert.Empty(Directory.EnumerateFileSystemEntries(cancelledTarget));
+    }
+
+    [Fact]
+    public async Task Built_in_seven_zip_creation_and_extraction_use_normal_undo()
+    {
+        var file = Write("source/中文.txt", "independent 7z support");
+        var target = Folder("sevenzip");
+        var created = await BuiltInArchiveTransfer.RunAsync(_operations, [file], target, compress: true, archiveName: "资料.7z");
+        Assert.Empty(created.Errors);
+        Assert.NotNull(created.Undo);
+        var output = Folder("sevenzip-output");
+        var extracted = await BuiltInArchiveTransfer.RunAsync(_operations, [Path.Combine(target, "资料.7z")], output, compress: false);
+        Assert.Empty(extracted.Errors);
+        Assert.Equal("independent 7z support", File.ReadAllText(Path.Combine(output, "中文.txt")));
+        Assert.Equal(FileUndoKind.Copied, extracted.Undo?.Kind);
+        AssertNoStaging(target);
+        AssertNoStaging(output);
+    }
+
+    [Fact]
+    public async Task Decorated_zip_extracts_without_external_provider_and_keeps_source_name()
+    {
+        var archive = Zip("source/资料.zip删删删", ("hello.txt", "fallback works"));
+        var target = Folder("decorated-output");
+        var result = await BuiltInArchiveTransfer.RunAsync(_operations, [archive], target, compress: false, createSubfolder: true);
+        Assert.Empty(result.Errors);
+        Assert.Equal("fallback works", File.ReadAllText(Path.Combine(target, "资料", "hello.txt")));
+        Assert.True(File.Exists(archive));
+        AssertNoStaging(target);
+    }
+
     private readonly string _root = Path.Combine(Path.GetTempPath(), "FilesMate.ArchiveTransfer", Guid.NewGuid().ToString("N"));
     private readonly ReplacementBackupBudget _budget = new(1024 * 1024, 1024 * 1024);
     private readonly List<FileUndoRecord> _history = [];

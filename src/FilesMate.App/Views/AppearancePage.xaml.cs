@@ -1,4 +1,4 @@
-using FilesMate.App.Localization;
+﻿using FilesMate.App.Localization;
 using FilesMate.App.Models;
 using FilesMate.App.ViewModels;
 
@@ -24,6 +24,7 @@ public sealed partial class AppearancePage : UserControl
         InitializeComponent();
         ApplyStrings();
         BuildAccentSwatches();
+        ActualThemeChanged += (_, _) => PaintAccentSwatches(_viewModel?.Current.Accent ?? AccentKind.Default);
         _viewModel = App.AppearanceViewModel;
         if (_viewModel is null)
         {
@@ -60,11 +61,6 @@ public sealed partial class AppearancePage : UserControl
         FileIconsToggle.OnContent = StringTable.Get("On");
         FileIconsToggle.OffContent = StringTable.Get("Off");
         AutomationProperties.SetName(FileIconsToggle, StringTable.Get("UseBundledFileIcons"));
-        ShellStyleCard.Title = StringTable.Get("ShellStyle");
-        ShellStyleCard.Description = StringTable.Get("ShellStyleDescription");
-        ShellLayeredItem.Content = StringTable.Get("ShellLayered");
-        ShellUnifiedItem.Content = StringTable.Get("ShellUnified");
-        AutomationProperties.SetName(ShellStyleBox, StringTable.Get("ShellStyle"));
         GlassHeader.Text = StringTable.Get("GlassSection");
         BackdropCard.Title = StringTable.Get("Backdrop");
         BackdropCard.Description = StringTable.Get("BackdropDescription");
@@ -112,11 +108,6 @@ public sealed partial class AppearancePage : UserControl
     private async void ThemeDark_Click(object sender, RoutedEventArgs e) =>
         await ApplyAsync(() => _viewModel!.SetThemeAsync(AppThemeKind.Dark));
 
-    private async void ShellStyleBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_syncing || _viewModel is null || ShellStyleBox.SelectedItem is not ComboBoxItem item) return;
-        await _viewModel.SetShellStyleAsync(item.Tag as string == "Unified" ? ShellStyleKind.Unified : ShellStyleKind.Layered);
-    }
 
     private async void BackdropBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -246,7 +237,6 @@ public sealed partial class AppearancePage : UserControl
         _syncing = true;
         var settings = _viewModel.Current;
         SelectTheme(settings.Theme);
-        SelectCombo(ShellStyleBox, settings.ShellStyle.ToString());
         SelectCombo(BackdropBox, settings.Backdrop.ToString());
         StatusBarToggle.IsOn = settings.ShowStatusBar;
         FileIconsToggle.IsOn = settings.UseBundledFileIcons;
@@ -348,6 +338,11 @@ public sealed partial class AppearancePage : UserControl
         {
             foreach (var button in panel.Children.OfType<Button>())
             {
+                if (button.Tag is AccentKind accent && button.Background is SolidColorBrush brush)
+                {
+                    var value = AccentPalette.Resolve(accent, null, ActualTheme == ElementTheme.Dark);
+                    brush.Color = Color.FromArgb(255, (byte)(value >> 16), (byte)(value >> 8), (byte)value);
+                }
                 var isSelected = button.Tag is AccentKind kind && kind == selected;
                 button.BorderThickness = new Thickness(isSelected ? 3 : 2);
                 button.BorderBrush = Theme(isSelected ? "FilesMate.Glass.AccentBrush" : "FilesMate.Glass.BorderBrush");

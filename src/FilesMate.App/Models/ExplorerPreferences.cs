@@ -1,4 +1,4 @@
-namespace FilesMate.App.Models;
+﻿namespace FilesMate.App.Models;
 
 /// <summary>
 /// Preferences that change file browsing behavior rather than window chrome.
@@ -25,8 +25,12 @@ public sealed record ExplorerPreferences(
     bool ShowAlphabetNavigation = false,
     TabMemoryMode TabMemory = TabMemoryMode.Balanced,
     int AlphabetNavigationMinimumItemCount = 20,
-    bool ShowAlphabetNavigationInDualPane = false)
+    bool ShowAlphabetNavigationInDualPane = false,
+    int PaneCount = 0,
+    PaneArrangement PaneArrangement = PaneArrangement.Columns)
 {
+    public int EffectivePaneCount => DualPane ? (PaneCount == 3 ? 3 : 2) : 1;
+
     public const double SidebarWidthMin = 52;
     public const double SidebarWidthMax = 360;
     public const double SidebarCompactWidth = 120;
@@ -83,7 +87,9 @@ public sealed record ExplorerPreferences(
         bool? showAlphabetNavigation = null,
         string? tabMemory = null,
         int? alphabetNavigationMinimumItemCount = null,
-        bool? showAlphabetNavigationInDualPane = null) =>
+        bool? showAlphabetNavigationInDualPane = null,
+        int? paneCount = null,
+        string? paneArrangement = null) =>
         new(
             showHiddenFiles ?? Default.ShowHiddenFiles,
             confirmPermanentDelete ?? Default.ConfirmPermanentDelete,
@@ -106,7 +112,9 @@ public sealed record ExplorerPreferences(
             showAlphabetNavigation ?? Default.ShowAlphabetNavigation,
             Parse(tabMemory, Default.TabMemory),
             ClampAlphabetNavigationMinimumItemCount(alphabetNavigationMinimumItemCount ?? Default.AlphabetNavigationMinimumItemCount),
-            showAlphabetNavigationInDualPane ?? Default.ShowAlphabetNavigationInDualPane);
+            showAlphabetNavigationInDualPane ?? Default.ShowAlphabetNavigationInDualPane,
+            paneCount is >= 1 and <= 3 ? paneCount.Value : 0,
+            Parse(paneArrangement, PaneArrangement.Columns));
 
     public static double ClampDetailsName(double width) => Math.Clamp(width, 96, 560);
 

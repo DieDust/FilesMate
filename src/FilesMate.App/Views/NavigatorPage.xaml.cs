@@ -1,4 +1,4 @@
-using Loc = FilesMate.App.Localization.StringTable;
+﻿using Loc = FilesMate.App.Localization.StringTable;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -41,6 +41,13 @@ namespace FilesMate.App.Views;
 public sealed partial class NavigatorPage : Page, IAsyncDisposable
 {
     private readonly PaneViewModel _leftVm;
+    private int _paneCount = 1;
+    private bool _thirdActive, _thirdHomeOverlay;
+    private PaneViewModel? _thirdVm;
+    private FileDetailsSurface? _thirdSurface;
+    private FilePaneChrome? _thirdChrome;
+    private HomeDashboard? _thirdHome;
+    private Controls.Panes.WorkspaceSplitView? _trailingSplit;
     private PaneViewModel? _rightVm;
     private FileDetailsSurface? _rightSurface;
     private FilePaneChrome? _rightChrome;
@@ -100,7 +107,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private int _selectAttempts;
     private bool _homeOverlay;
     private bool _rightHomeOverlay;
-    private bool _paneResizing;
+
     private bool _previewResizing;
     private bool _chromeScheduled;
     private bool _selectionUiScheduled;
@@ -110,8 +117,12 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private readonly HashSet<string> _openingFiles = new(StringComparer.OrdinalIgnoreCase);
     private TaskCompletionSource<bool>? _lockOverlayClosed;
 
-    public NavigatorPage(string? initialPath = null, string? selectPath = null, NavigationHistoryState? history = null)
+    private readonly MainWindow _ownerWindow;
+    private Controls.Navigation.NavigationSidebar Sidebar => _ownerWindow.NavigationSidebar;
+
+    public NavigatorPage(MainWindow ownerWindow, string? initialPath = null, string? selectPath = null, NavigationHistoryState? history = null)
     {
+        _ownerWindow = ownerWindow;
         _initialHistory = history;
         ViewModel = CreatePaneViewModel();
         _leftVm = ViewModel;
@@ -123,8 +134,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             UIElement.PointerPressedEvent,
             new PointerEventHandler(ShellRoot_PointerPressed),
             handledEventsToo: true);
-        ApplySidebarWidth(App.ExplorerPreferences.SidebarWidth, save: false);
-        ShellSplit.IsPaneOpen = !App.Features.SidebarCollapsed;
+
         ApplyShortcuts();
         App.ShortcutsChanged += App_ShortcutsChanged;
         App.TagsChanged += App_TagsChanged;
@@ -176,14 +186,14 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         FileSurface.IsPinnedPath = path => WindowsNavigationSource.IsPinned(path, _pinnedLocations);
         FileSurface.PresentationChanged += (_, _) =>
         {
-            if (!_rightActive)
+            if (!_rightActive && !_thirdActive)
             {
                 RefreshLayoutChrome();
                 PersistFolderView(_leftVm);
             }
         };
         FileSurface.TerminalRequested += (_, path) => OpenTerminalAt(path);
-        ConfigureConvenienceSurface(FileSurface, false);
+        ConfigureConvenienceSurface(FileSurface, 0);
         FileSurface.CommandRequested += (_, id) =>
         {
             ActivateRight(false);
@@ -218,7 +228,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         {
             _startupPath = start;
             Omni.Text = start;
-            Sidebar.SelectPath(start);
+            SelectSidebarPath(start);
             if (HomeLocation.IsHome(start))
             {
                 ShowHomeSurface(_leftVm, bindFiles: false);
@@ -251,10 +261,11 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         if (IsLoaded) return;
         FileSurface.ReleaseInactiveVisuals();
         _rightSurface?.ReleaseInactiveVisuals();
+        _thirdSurface?.ReleaseInactiveVisuals();
     }
 
     internal WeakReference[] CaptureRetiredResources() =>
-        new[] { this, Content, FileSurface, _rightSurface }.OfType<object>()
+        new[] { this, Content, FileSurface, _rightSurface, _thirdSurface }.OfType<object>()
             // The XAML projection can disappear before its finalizable COM owner.
             // Follow that owner through finalization so native teardown is not
             // mistaken for complete merely because the Page weak reference died.
@@ -262,8 +273,8 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
                 ? new object[] { resource, native.NativeObject } : [resource])
             .Select(resource => new WeakReference(resource, trackResurrection: true)).ToArray();
 
-    internal bool IsMemoryReclamationBusy => !_disposed && (_leftVm.IsLoading || _rightVm?.IsLoading == true
-        || FileSurface.IsMemoryReclamationBusy || _rightSurface?.IsMemoryReclamationBusy == true);
+    internal bool IsMemoryReclamationBusy => !_disposed && (_leftVm.IsLoading || _rightVm?.IsLoading == true || _thirdVm?.IsLoading == true
+        || FileSurface.IsMemoryReclamationBusy || _rightSurface?.IsMemoryReclamationBusy == true || _thirdSurface?.IsMemoryReclamationBusy == true);
 
     public async ValueTask DisposeAsync()
     {
@@ -291,6 +302,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         App.FolderCoversChanged -= FolderCoversChanged;
         App.FolderCustomizations.ViewSettingsChanged -= FolderViewScopeChanged;
         _leftVm.OpenFileRequested -= ViewModel_OpenFileRequested;
+        if (_thirdVm is not null) { _thirdVm.PropertyChanged -= ViewModel_PropertyChanged; _thirdVm.OpenFileRequested -= ViewModel_OpenFileRequested; }
         if (_rightVm is not null)
         {
             _rightVm.PropertyChanged -= ViewModel_PropertyChanged;
@@ -303,13 +315,16 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         FileSurface.IsPinnedPath = null;
         FileSurface.ReleaseResources();
         _rightSurface?.ReleaseResources();
+        _thirdSurface?.ReleaseResources();
         _previewHost?.CancelAndClear();
         HideLockOverlay();
         _homeDashboard?.ReleaseResources();
         _rightHome?.ReleaseResources();
+        _thirdHome?.ReleaseResources();
         HomeContainer.Content = null;
         _homeDashboard = null;
         _rightHome = null;
+        _thirdHome = null;
 
         // This page will never be loaded again. Disconnect its native visual tree
         // and shortcuts now, instead of waiting for WinRT reference tracking.
@@ -320,6 +335,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         tagLoads.Cancel();
         _tagCatalogProbe = null;
         await _leftVm.DisposeAsync().ConfigureAwait(false);
+        if (_thirdVm is not null) await _thirdVm.DisposeAsync().ConfigureAwait(false);
         if (_rightVm is not null)
         {
             await _rightVm.DisposeAsync().ConfigureAwait(false);
@@ -332,15 +348,18 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     {
         _leftVm.RestoreSort(_leftVm.Sort with { MixChineseAndLatin = preferences.MixChineseAndLatin });
         if (_rightVm is not null) _rightVm.RestoreSort(_rightVm.Sort with { MixChineseAndLatin = preferences.MixChineseAndLatin });
+        if (_thirdVm is not null) _thirdVm.RestoreSort(_thirdVm.Sort with { MixChineseAndLatin = preferences.MixChineseAndLatin });
         // DefaultView is for new tabs. Column-width saves must not switch layout.
         FileSurface.RebindVisibleEntries();
         _rightSurface?.RebindVisibleEntries();
+        _thirdSurface?.RebindVisibleEntries();
 
         if (preferences.ShowHiddenFiles != _lastShowHiddenFiles)
         {
             _lastShowHiddenFiles = preferences.ShowHiddenFiles;
             _leftVm.Refresh();
             _rightVm?.Refresh();
+            _thirdVm?.Refresh();
         }
 
         if (preferences.ShowFolderSizes != _lastShowFolderSizes)
@@ -348,21 +367,20 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             _lastShowFolderSizes = preferences.ShowFolderSizes;
             _leftVm.RebuildViewIndex();
             _rightVm?.RebuildViewIndex();
+            _thirdVm?.RebuildViewIndex();
             UpdateFolderStatus(_leftVm);
             if (_rightVm is not null) UpdateFolderStatus(_rightVm);
+            if (_thirdVm is not null) UpdateFolderStatus(_thirdVm);
         }
 
-        if (!_paneResizing)
-        {
-            ApplySidebarWidth(preferences.SidebarWidth, save: false);
-        }
+        RefreshNavigationToggle();
 
         if (!_previewResizing && _previewVisible)
         {
             ApplyPreviewWidth(preferences.PreviewWidth, save: false);
         }
 
-        SetDualPane(preferences.DualPane, persist: false);
+        SetPaneCount(preferences.EffectivePaneCount, persist: false);
         ApplyAlphabetNavigationPolicy(preferences);
         Commands.SetFolderSizesActive(preferences.ShowFolderSizes);
     }
@@ -373,11 +391,8 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private void ApplyAppearance(AppearanceSettings settings)
     {
         CommandBarRow.Visibility = settings.ShowToolbar ? Visibility.Visible : Visibility.Collapsed;
-        PaneChrome.ShowStatusBar = settings.ShowStatusBar;
-        if (_rightChrome is not null)
-        {
-            _rightChrome.ShowStatusBar = settings.ShowStatusBar;
-        }
+        SharedStatusBar.Visibility = settings.ShowStatusBar ? Visibility.Visible : Visibility.Collapsed;
+        UpdateSharedStatus();
     }
 
     private bool _widthStatesHooked;
@@ -402,9 +417,10 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             FileSurface.SetLayout(ToFileLayout(App.ExplorerPreferences.DefaultView));
         }
 
-        SetDualPane(App.ExplorerPreferences.DualPane, persist: false);
+        SetPaneCount(App.ExplorerPreferences.EffectivePaneCount, persist: false);
         UpdateFolderStatus(_leftVm);
         if (_rightVm is not null) UpdateFolderStatus(_rightVm);
+        if (_thirdVm is not null) UpdateFolderStatus(_thirdVm);
         Commands.SetFolderSizesActive(App.ExplorerPreferences.ShowFolderSizes);
         var startPath = _startupPath;
         if (startPath is { Length: > 0 })
@@ -418,6 +434,8 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         }
 
         HookWidthStates();
+        RefreshNavigationToggle();
+        if (_startupPath is null) SelectSidebarPath(ViewModel.AddressText);
         UpdateShellWindow();
         if (_pinnedPreviewPath is { } pinnedPath)
         {
@@ -497,7 +515,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         ApplyPaneOpen(_pendingPaneState);
     }
 
-    private bool _paneUserToggled;
+
 
     private void NavigationFeaturesChanged(object? sender, EventArgs e) =>
         DispatcherQueue.TryEnqueue(() =>
@@ -507,97 +525,11 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             ApplyPaneOpen(null);
         });
 
-    private void ApplyPaneOpen(string? stateName)
+    private void ApplyPaneOpen(string? stateName) => RefreshNavigationToggle();
+    internal void RefreshNavigationToggle() => _ownerWindow.PaintNavigationToggle(PaneToggle, PaneToggleIcon);
+    private void SelectSidebarPath(string path)
     {
-        _ = stateName;
-        var width = XamlRoot?.Size.Width ?? 0;
-        if (width < 1)
-        {
-            width = ActualWidth;
-        }
-
-        // ponytail: AdaptiveTrigger Narrow matches MinWindowWidth 0, so skip close until the window has a real size.
-        var narrow = width >= 1 && width < 720;
-        var wantOpen = !App.Features.SidebarCollapsed && (!narrow || _paneUserToggled);
-        PaneToggle.Visibility = Visibility.Visible;
-        PaneToggleIcon.Glyph = wantOpen ? "\uE76B" : "\uE76C";
-        var label = wantOpen ? Loc.Get("Sidebar_Collapse") : Loc.Get("Sidebar_Expand");
-        AutomationProperties.SetName(PaneToggle, label);
-        ToolTipService.SetToolTip(PaneToggle, label);
-
-        if (ShellSplit.IsPaneOpen != wantOpen)
-        {
-            ShellSplit.IsPaneOpen = wantOpen;
-        }
-
-        ApplySidebarWidth(App.ExplorerPreferences.SidebarWidth, save: false);
-    }
-
-    private void ApplySidebarWidth(double width, bool save)
-    {
-        var clamped = ExplorerPreferences.ClampSidebarWidth(width);
-        ShellSplit.OpenPaneLength = clamped;
-        Sidebar.IsCompact = ExplorerPreferences.SidebarIsCompact(clamped);
-        if (save && Math.Abs(App.ExplorerPreferences.SidebarWidth - clamped) >= 1)
-        {
-            _ = App.SetExplorerPreferencesAsync(App.ExplorerPreferences with { SidebarWidth = clamped });
-        }
-    }
-
-    private void PaneResize_PointerEntered(object sender, PointerRoutedEventArgs e) =>
-        ProtectedCursor = DesktopCursors.SizeWestEast;
-
-    private void PaneResize_PointerExited(object sender, PointerRoutedEventArgs e)
-    {
-        if (!_paneResizing)
-        {
-            ProtectedCursor = null;
-        }
-    }
-
-    private void PaneResize_PointerPressed(object sender, PointerRoutedEventArgs e)
-    {
-        _paneResizing = true;
-        ProtectedCursor = DesktopCursors.SizeWestEast;
-        ((UIElement)sender).CapturePointer(e.Pointer);
-        e.Handled = true;
-    }
-
-    private void PaneResize_PointerMoved(object sender, PointerRoutedEventArgs e)
-    {
-        if (!_paneResizing)
-        {
-            return;
-        }
-
-        ApplySidebarWidth(e.GetCurrentPoint(ShellSplit).Position.X, save: false);
-        e.Handled = true;
-    }
-
-    private void PaneResize_PointerReleased(object sender, PointerRoutedEventArgs e)
-    {
-        if (!_paneResizing)
-        {
-            return;
-        }
-
-        _paneResizing = false;
-        ProtectedCursor = null;
-        ((UIElement)sender).ReleasePointerCapture(e.Pointer);
-        ApplySidebarWidth(ShellSplit.OpenPaneLength, save: true);
-        e.Handled = true;
-    }
-
-    private void PaneResize_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
-    {
-        if (!_paneResizing)
-        {
-            return;
-        }
-
-        _paneResizing = false;
-        ProtectedCursor = null;
-        ApplySidebarWidth(ShellSplit.OpenPaneLength, save: true);
+        if (IsLoaded) Sidebar.SelectPath(path);
     }
 
     private void ApplyPreviewWidth(double width, bool save)
@@ -844,7 +776,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private void Sidebar_OpenInNewWindowRequested(object? sender, string path) =>
         App.WindowForElement(this)?.OpenFolderInNewWindow(path);
 
-    private void Sidebar_WhoLocksRequested(object? sender, string path) =>
+    internal void Sidebar_WhoLocksRequested(object? sender, string path) =>
         _ = _fileActions.ShowWhoLocksAsync([path]);
 
     private void Omni_SearchChosen(object? sender, string path)
@@ -872,19 +804,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private void Address_CrumbClicked(object? sender, string path) =>
         ScheduleNavigation(() => ViewModel.Navigate(path));
 
-    private void PaneToggle_Click(object sender, RoutedEventArgs e)
-    {
-        _paneUserToggled = true;
-        try
-        {
-            App.SetSidebarCollapsed(ShellSplit.IsPaneOpen);
-            ApplyPaneOpen(null);
-        }
-        catch (Exception error)
-        {
-            App.LogFailure("Save navigation visibility", error);
-        }
-    }
+    private void PaneToggle_Click(object sender, RoutedEventArgs e) => _ownerWindow.ToggleNavigation();
 
     private void ClosePaneAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
@@ -907,20 +827,15 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             return;
         }
 
-        if (ShellSplit.DisplayMode == SplitViewDisplayMode.Overlay && ShellSplit.IsPaneOpen)
-        {
-            ShellSplit.IsPaneOpen = false;
-            args.Handled = true;
-        }
     }
 
     private void Sidebar_SettingsClicked(object? sender, EventArgs e) =>
         App.CurrentWindow?.OpenSettings();
 
-    private void Sidebar_PinnedLocationsChanged(object? sender, EventArgs e)
+    internal void Sidebar_PinnedLocationsChanged(object? sender, EventArgs e)
     {
         SyncCommandBar();
-        Sidebar.SelectPath(FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(ViewModel.AddressText, out var device)
+        SelectSidebarPath(FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(ViewModel.AddressText, out var device)
             ? (device with { Segments = [] }).Uri : ViewModel.AddressText);
         _homeDashboard?.Reload();
     }
@@ -940,8 +855,10 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         _tagCatalogProbe = null;
         FileSurface.RefreshRealizedTags();
         _rightSurface?.RefreshRealizedTags();
+        _thirdSurface?.RefreshRealizedTags();
         _homeDashboard?.Reload();
         _rightHome?.Reload();
+        _thirdHome?.Reload();
     }
 
     private void ApplyShortcuts()
@@ -970,15 +887,6 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         var gesture = App.Shortcuts[action];
         accelerator.Key = (VirtualKey)(int)gesture.Key;
         accelerator.Modifiers = (VirtualKeyModifiers)(int)gesture.Modifiers;
-    }
-
-    private void ShellSplit_PaneOpened(SplitView sender, object args)
-    {
-        Sidebar.Reload();
-        if (sender.DisplayMode == SplitViewDisplayMode.Overlay)
-        {
-            Sidebar.Focus(FocusState.Programmatic);
-        }
     }
 
     private void AddressEditAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
@@ -1099,7 +1007,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     {
         if (sender is FileDetailsSurface surface)
         {
-            var chrome = ReferenceEquals(surface, _rightSurface) ? _rightChrome! : PaneChrome;
+            var chrome = ReferenceEquals(surface, _thirdSurface) ? _thirdChrome! : ReferenceEquals(surface, _rightSurface) ? _rightChrome! : PaneChrome;
             var count = surface.Selection.Count;
             chrome.SelectionText = count > 0 ? StringTable.Format("Status_Selected", count) : string.Empty;
         }
@@ -1136,6 +1044,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         }
 
         UpdateSelectionStatus(FileSurface, PaneChrome);
+        if (_thirdSurface is not null && _thirdChrome is not null) UpdateSelectionStatus(_thirdSurface, _thirdChrome);
         if (_rightSurface is not null && _rightChrome is not null)
             UpdateSelectionStatus(_rightSurface, _rightChrome);
         if (ActiveSurface.IsMarqueeSelecting) return;
@@ -1173,6 +1082,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         FileSurface.IsPortableDevice = _leftVm.IsPortableDevice;
         FileSurface.IsFolderWritable = !HomeLocation.IsHome(_leftVm.AddressText) && _leftVm.CanReceiveFiles;
         FileSurface.ClipboardHasFiles = clipboard;
+        if (_thirdSurface is not null) { _thirdSurface.IsPortableDevice = _thirdVm?.IsPortableDevice == true; _thirdSurface.IsFolderWritable = _thirdVm?.CanReceiveFiles == true; _thirdSurface.ClipboardHasFiles = clipboard; }
         if (_rightSurface is not null)
         {
             _rightSurface.IsPortableDevice = _rightVm?.IsPortableDevice == true;
@@ -1270,7 +1180,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             }
 
             App.NotifyPinnedLocationsChanged();
-            Sidebar.SelectPath(path);
+            SelectSidebarPath(path);
             SyncCommandBar();
             return;
         }
@@ -1335,7 +1245,9 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         if (PinnedPreviewUsesAny(paths)) ResetPinnedPreview();
         FileSurface.CancelFolderSizeWalks();
         _rightSurface?.CancelFolderSizeWalks();
+        _thirdSurface?.CancelFolderSizeWalks();
         await VacatePaneAsync(_leftVm, paths).ConfigureAwait(true);
+        if (_thirdVm is not null) await VacatePaneAsync(_thirdVm, paths).ConfigureAwait(true);
         if (_rightVm is not null)
         {
             await VacatePaneAsync(_rightVm, paths).ConfigureAwait(true);
@@ -1347,12 +1259,14 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         if (_disposed) return;
         var changed = _leftVm.DisconnectVolume(mask);
         changed |= _rightVm?.DisconnectVolume(mask) == true;
+        changed |= _thirdVm?.DisconnectVolume(mask) == true;
         if (!changed) return;
         CancelFolderStatusRequests();
         ResetPinnedPreview();
         _previewHost?.CancelAndClear();
         FileSurface.CancelFolderSizeWalks();
         _rightSurface?.CancelFolderSizeWalks();
+        _thirdSurface?.CancelFolderSizeWalks();
     }
 
     public async Task ShowLockOverlayAsync(FrameworkElement content)
@@ -1433,6 +1347,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     {
         _leftVm.Refresh();
         _rightVm?.Refresh();
+        _thirdVm?.Refresh();
     }
 
     private Task HandleFileDropAsync(FileDropRequest request, PaneViewModel vm)
@@ -1452,6 +1367,8 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             ? TransferShelfDropAsync(request, destination, vm)
             : _fileActions.DropAsync(request.Paths, destination, request.Operation, request.AllowSameDirectoryCopy);
     }
+
+    internal Task ReceiveTabFileDropAsync(FileDropRequest request) => HandleFileDropAsync(request, ViewModel);
 
     private IReadOnlyList<TagDefinition> ResolveTags(PaneViewModel vm, FileEntryCore entry)
     {
@@ -1543,6 +1460,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
                 {
                     FileSurface.RefreshRealizedTags();
                     _rightSurface?.RefreshRealizedTags();
+                    _thirdSurface?.RefreshRealizedTags();
                 }
             });
         }
@@ -1596,6 +1514,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
                 FileSurface.RefreshRealizedTags(entryId);
                 _rightSurface?.RefreshRealizedTags(entryId);
+                _thirdSurface?.RefreshRealizedTags(entryId);
             });
         }
         catch (OperationCanceledException)
@@ -1667,6 +1586,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         _hasTagDefinitions = true;
         FileSurface.RefreshRealizedTags();
         _rightSurface?.RefreshRealizedTags();
+        _thirdSurface?.RefreshRealizedTags();
     }
 
     private void ResetTagLoads()
@@ -2170,7 +2090,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         ResetTagLoads();
         _tagCatalogProbe = null;
         Omni.ApplyCommittedPath(ViewModel.AddressText);
-        Sidebar.SelectPath(FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(ViewModel.AddressText, out var device)
+        SelectSidebarPath(FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(ViewModel.AddressText, out var device)
             ? (device with { Segments = [] }).Uri : ViewModel.AddressText);
         ApplyTabCaption(ViewModel.AddressText);
         if (RecentFolderStore.NormalizePath(ViewModel.AddressText) is not null)
@@ -2304,7 +2224,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         }
 
         var surface = SurfaceOf(vm);
-        var home = ReferenceEquals(vm, _rightVm) ? _rightHome : _homeDashboard;
+        var home = ReferenceEquals(vm, _thirdVm) ? _thirdHome : ReferenceEquals(vm, _rightVm) ? _rightHome : _homeDashboard;
         if (home is not null)
         {
             home.Visibility = Visibility.Collapsed;
@@ -2343,28 +2263,29 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     }
 
     private FileDetailsSurface ActiveSurface =>
-        _rightActive && _rightSurface is not null ? _rightSurface : FileSurface;
+        _thirdActive && _thirdSurface is not null ? _thirdSurface : _rightActive && _rightSurface is not null ? _rightSurface : FileSurface;
 
     private FilePaneChrome ActiveChrome =>
-        _rightActive && _rightChrome is not null ? _rightChrome : PaneChrome;
+        _thirdActive && _thirdChrome is not null ? _thirdChrome : _rightActive && _rightChrome is not null ? _rightChrome : PaneChrome;
 
     private HomeDashboard ActiveHome =>
-        _rightActive && _rightHome is not null ? _rightHome : HomeDashboard;
+        _thirdActive && _thirdHome is not null ? _thirdHome : _rightActive && _rightHome is not null ? _rightHome : HomeDashboard;
 
     private FileDetailsSurface SurfaceOf(PaneViewModel vm) =>
-        ReferenceEquals(vm, _rightVm) && _rightSurface is not null ? _rightSurface : FileSurface;
+        ReferenceEquals(vm, _thirdVm) && _thirdSurface is not null ? _thirdSurface : ReferenceEquals(vm, _rightVm) && _rightSurface is not null ? _rightSurface : FileSurface;
 
     private FilePaneChrome ChromeOf(PaneViewModel vm) =>
-        ReferenceEquals(vm, _rightVm) && _rightChrome is not null ? _rightChrome : PaneChrome;
+        ReferenceEquals(vm, _thirdVm) && _thirdChrome is not null ? _thirdChrome : ReferenceEquals(vm, _rightVm) && _rightChrome is not null ? _rightChrome : PaneChrome;
 
     private HomeDashboard HomeOf(PaneViewModel vm) =>
-        ReferenceEquals(vm, _rightVm) && _rightHome is not null ? _rightHome : HomeDashboard;
+        ReferenceEquals(vm, _thirdVm) && _thirdHome is not null ? _thirdHome : ReferenceEquals(vm, _rightVm) && _rightHome is not null ? _rightHome : HomeDashboard;
 
     private bool HomeOverlayOf(PaneViewModel vm) =>
-        ReferenceEquals(vm, _rightVm) ? _rightHomeOverlay : _homeOverlay;
+        ReferenceEquals(vm, _thirdVm) ? _thirdHomeOverlay : ReferenceEquals(vm, _rightVm) ? _rightHomeOverlay : _homeOverlay;
 
     private void SetHomeOverlay(PaneViewModel vm, bool value)
     {
+        if (ReferenceEquals(vm, _thirdVm)) { _thirdHomeOverlay = value; return; }
         if (ReferenceEquals(vm, _rightVm))
         {
             _rightHomeOverlay = value;
@@ -2375,40 +2296,29 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     }
 
     private void ActivateFromSurface(FileDetailsSurface? surface) =>
-        ActivateRight(surface is not null && ReferenceEquals(surface, _rightSurface));
+        ActivatePane(surface is not null && ReferenceEquals(surface, _thirdSurface) ? 2 : surface is not null && ReferenceEquals(surface, _rightSurface) ? 1 : 0);
 
     private void ActivateFromChrome(FilePaneChrome? chrome) =>
-        ActivateRight(chrome is not null && ReferenceEquals(chrome, _rightChrome));
+        ActivatePane(chrome is not null && ReferenceEquals(chrome, _thirdChrome) ? 2 : chrome is not null && ReferenceEquals(chrome, _rightChrome) ? 1 : 0);
 
     private void ActivateHome(object? sender) =>
-        ActivateRight(sender is not null && ReferenceEquals(sender, _rightHome));
+        ActivatePane(sender is not null && ReferenceEquals(sender, _thirdHome) ? 2 : sender is not null && ReferenceEquals(sender, _rightHome) ? 1 : 0);
 
-    private void ActivateRight(bool right)
+    private void ActivateRight(bool right) => ActivatePane(right ? 1 : 0);
+
+    private void ActivatePane(int index)
     {
-        if (!_dualPane || _rightVm is null)
-        {
-            right = false;
-        }
-
-        if (_rightActive == right && ReferenceEquals(ViewModel, right ? _rightVm : _leftVm))
-        {
-            PaneChrome.IsActive = !right || !_dualPane;
-            if (_rightChrome is not null)
-            {
-                _rightChrome.IsActive = right;
-            }
-
-            return;
-        }
-
-        _rightActive = right;
-        ViewModel = right ? _rightVm! : _leftVm;
+        index = Math.Clamp(index, 0, _paneCount - 1);
+        var next = index == 2 ? _thirdVm! : index == 1 ? _rightVm! : _leftVm;
+        var changed = !ReferenceEquals(ViewModel, next);
+        _rightActive = index == 1; _thirdActive = index == 2;
+        ViewModel = next;
+        PaneChrome.IsActive = index == 0;
+        if (_rightChrome is not null) _rightChrome.IsActive = index == 1;
+        if (_thirdChrome is not null) _thirdChrome.IsActive = index == 2;
+        UpdateSharedStatus();
+        if (!changed) return;
         UpdateShellWindow();
-        PaneChrome.IsActive = !right;
-        if (_rightChrome is not null)
-        {
-            _rightChrome.IsActive = right;
-        }
 
         if (!DispatcherQueue.TryEnqueue(() =>
             {
@@ -2428,7 +2338,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         }
     }
 
-    private void ToggleDualPane() => SetDualPane(!_dualPane, persist: true);
+    private void ToggleDualPane() => SetPaneCount(_paneCount % 3 + 1, persist: true);
 
     private void ApplyAlphabetNavigationPolicy(ExplorerPreferences preferences)
     {
@@ -2437,6 +2347,8 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             preferences.AlphabetNavigationMinimumItemCount,
             preferences.ShowAlphabetNavigationInDualPane,
             _dualPane);
+        _thirdSurface?.SetAlphabetNavigationPolicy(preferences.ShowAlphabetNavigation, preferences.AlphabetNavigationMinimumItemCount,
+            preferences.ShowAlphabetNavigationInDualPane, _dualPane);
         _rightSurface?.SetAlphabetNavigationPolicy(
             preferences.ShowAlphabetNavigation,
             preferences.AlphabetNavigationMinimumItemCount,
@@ -2444,65 +2356,29 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             _dualPane);
     }
 
-    private void SetDualPane(bool enabled, bool persist)
+    private void SetDualPane(bool enabled, bool persist) => SetPaneCount(enabled ? Math.Max(2, _paneCount) : 1, persist);
+
+    private void SetPaneCount(int count, bool persist)
     {
-        if (enabled == _dualPane && (!enabled || _rightVm is not null))
-        {
-            if (!enabled)
-            {
-                WorkspaceSplit.Layout = WorkspaceLayoutKind.Single;
-                Commands.SetDualPaneActive(false);
-            }
-
-            ApplyAlphabetNavigationPolicy(App.ExplorerPreferences);
-            PersistDualPane(persist);
-            return;
-        }
-
-        if (!enabled)
-        {
-            ActivateRight(false);
-            _dualPane = false;
-            if (_rightVm is not null) CancelFolderStatus(_rightVm);
-            PaneChrome.IsDualPane = false;
-            if (_rightChrome is not null)
-            {
-                _rightChrome.IsDualPane = false;
-            }
-
-            WorkspaceSplit.Layout = WorkspaceLayoutKind.Single;
-            Commands.SetDualPaneActive(false);
-            ApplyAlphabetNavigationPolicy(App.ExplorerPreferences);
-            PersistDualPane(persist);
-            return;
-        }
-
-        EnsureRightPane();
-        _dualPane = true;
-        PaneChrome.IsDualPane = true;
+        count = Math.Clamp(count, 1, 3);
+        var changed = _paneCount != count;
+        if (count >= 2) EnsureRightPane();
+        if (count == 3) EnsureThirdPane();
+        _paneCount = count; _dualPane = count > 1;
+        if (_thirdActive && count < 3 || _rightActive && count < 2) ActivatePane(0);
+        PaneChrome.IsDualPane = _dualPane;
         PaneChrome.IsTrailingPane = false;
-        _rightChrome!.IsDualPane = true;
-        _rightChrome.IsTrailingPane = true;
-        WorkspaceSplit.Layout = WorkspaceLayoutKind.Vertical;
-        Commands.SetDualPaneActive(true);
+        if (_rightChrome is not null) { _rightChrome.IsDualPane = _dualPane; _rightChrome.IsTrailingPane = count == 2; _rightChrome.IsMiddlePane = count == 3; }
+        if (_thirdChrome is not null) { _thirdChrome.IsDualPane = true; _thirdChrome.IsTrailingPane = true; }
+        ApplyPaneArrangement(changed);
+        Commands.SetPaneCount(count);
         ApplyAlphabetNavigationPolicy(App.ExplorerPreferences);
-        if (string.IsNullOrEmpty(_rightVm!.AddressText))
-        {
-            _rightVm.Navigate(DualPaneStartPath());
-        }
-        UpdateFolderStatus(_rightVm);
-
-        PersistDualPane(persist);
-    }
-
-    private void PersistDualPane(bool persist)
-    {
-        if (!persist || App.ExplorerPreferences.DualPane == _dualPane)
-        {
-            return;
-        }
-
-        _ = App.SetExplorerPreferencesAsync(App.ExplorerPreferences with { DualPane = _dualPane });
+        if (count >= 2 && string.IsNullOrEmpty(_rightVm!.AddressText)) _rightVm.Navigate(DualPaneStartPath());
+        if (count == 3 && string.IsNullOrEmpty(_thirdVm!.AddressText)) _thirdVm.Navigate(DualPaneStartPath());
+        if (_rightVm is not null) { if (count >= 2) UpdateFolderStatus(_rightVm); else CancelFolderStatus(_rightVm); }
+        if (_thirdVm is not null) { if (count == 3) UpdateFolderStatus(_thirdVm); else CancelFolderStatus(_thirdVm); }
+        if (persist && (App.ExplorerPreferences.EffectivePaneCount != count || App.ExplorerPreferences.PaneCount != count))
+            _ = App.SetExplorerPreferencesAsync(App.ExplorerPreferences with { DualPane = _dualPane, PaneCount = count });
     }
 
     private string DualPaneStartPath()
@@ -2553,7 +2429,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             }
         };
         _rightSurface.TerminalRequested += (_, path) => OpenTerminalAt(path);
-        ConfigureConvenienceSurface(_rightSurface, true);
+        ConfigureConvenienceSurface(_rightSurface, 1);
         _rightSurface.CommandRequested += (_, id) =>
         {
             ActivateRight(true);
@@ -2590,8 +2466,9 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             IsTrailingPane = true,
             IsActive = false,
             Body = body,
-            ShowStatusBar = PaneChrome.ShowStatusBar,
         };
+        _rightChrome.StatusChanged += PaneChrome_StatusChanged;
+        _rightChrome.GotFocus += PaneChrome_GotFocus;
         _rightChrome.GoUpRequested += PaneChrome_GoUpRequested;
         _rightChrome.RetryRequested += PaneChrome_RetryRequested;
         _rightChrome.AddHandler(
@@ -2599,6 +2476,87 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             new PointerEventHandler((_, _) => ActivateRight(true)),
             handledEventsToo: true);
         WorkspaceSplit.RightContent = _rightChrome;
+    }
+
+    private void EnsureThirdPane()
+    {
+        if (_thirdVm is not null)
+        {
+            return;
+        }
+
+        _thirdVm = CreatePaneViewModel();
+        _thirdVm.PropertyChanged += ViewModel_PropertyChanged;
+        _thirdVm.OpenFileRequested += ViewModel_OpenFileRequested;
+
+        _thirdSurface = new FileDetailsSurface();
+        _thirdSurface.ResolvePath = entry => _thirdVm.FullPath(entry);
+        _thirdSurface.ResolveFolder = () => _thirdVm.Navigation.CurrentPath ?? _thirdVm.AddressText;
+        _thirdSurface.ResolveTags = entry => ResolveTags(_thirdVm, entry);
+        _thirdSurface.CreateTagPicker = CreateTagPickerPanel;
+        _thirdSurface.IsPinnedPath = path => WindowsNavigationSource.IsPinned(path, _pinnedLocations);
+        _thirdSurface.PresentationChanged += (_, _) =>
+        {
+            if (_thirdActive)
+            {
+                RefreshLayoutChrome();
+                PersistFolderView(_thirdVm);
+            }
+        };
+        _thirdSurface.TerminalRequested += (_, path) => OpenTerminalAt(path);
+        ConfigureConvenienceSurface(_thirdSurface, 2);
+        _thirdSurface.CommandRequested += (_, id) =>
+        {
+            ActivatePane(2);
+            RunFileCommand(id);
+        };
+        _thirdSurface.DropRequested = request => HandleFileDropAsync(request, _thirdVm);
+        _thirdSurface.CopyPathRequested += FileSurface_CopyPathRequested;
+        _thirdSurface.OpenInNewTabRequested += FileSurface_OpenInNewTabRequested;
+        _thirdSurface.OpenRequested += FileSurface_OpenRequested;
+        _thirdSurface.RefreshRequested += FileSurface_RefreshRequested;
+        _thirdSurface.SelectionChanged += FileSurface_SelectionChanged;
+        _thirdSurface.SortRequested += FileSurface_SortRequested;
+        _thirdSurface.UpRequested += FileSurface_UpRequested;
+        _thirdSurface.BackRequested += FileSurface_BackRequested;
+        _thirdSurface.ForwardRequested += FileSurface_ForwardRequested;
+        _thirdSurface.SetLayout(FileSurface.LayoutKind);
+
+        _thirdHome = new HomeDashboard
+        {
+            Visibility = Visibility.Collapsed,
+            Opacity = 0,
+            IsHitTestVisible = false,
+        };
+        _thirdHome.PlaceChosen += HomeDashboard_PlaceChosen;
+        _thirdHome.PlaceActionRequested += HomeDashboard_PlaceActionRequested;
+
+        var body = new Grid();
+        body.Children.Add(_thirdSurface);
+        body.Children.Add(_thirdHome);
+
+        _thirdChrome = new FilePaneChrome
+        {
+            IsDualPane = true,
+            IsTrailingPane = true,
+            IsActive = false,
+            Body = body,
+        };
+        _thirdChrome.StatusChanged += PaneChrome_StatusChanged;
+        _thirdChrome.GotFocus += PaneChrome_GotFocus;
+        _thirdChrome.GoUpRequested += PaneChrome_GoUpRequested;
+        _thirdChrome.RetryRequested += PaneChrome_RetryRequested;
+        _thirdChrome.AddHandler(
+            UIElement.PointerPressedEvent,
+            new PointerEventHandler((_, _) => ActivatePane(2)),
+            handledEventsToo: true);
+        if (_trailingSplit is null)
+        {
+            WorkspaceSplit.RightContent = null;
+            _trailingSplit = new Controls.Panes.WorkspaceSplitView { LeftContent = _rightChrome, RightContent = _thirdChrome,
+                Layout = WorkspaceLayoutKind.Vertical, SplitRatio = .5 };
+            WorkspaceSplit.RightContent = _trailingSplit;
+        }
     }
 
     private PaneViewModel CreatePaneViewModel() =>

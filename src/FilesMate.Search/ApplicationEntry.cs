@@ -27,6 +27,10 @@ public static class ApplicationCatalog
     // the user-configured order of registered apps and indexed executables.
     public const int RankStride = 8;
 
+    public static int Relevance(ApplicationEntry entry, string query) => NameIndexReader.Matches(entry.Name, NameIndexReader.Terms(query))
+        ? NameIndexReader.Relevance(entry.Name, query)
+        : 4 + NameIndexReader.Relevance(Path.GetFileNameWithoutExtension(entry.FilePath ?? entry.Name), query);
+
     public static IReadOnlyList<ApplicationEntry> Normalize(IEnumerable<ApplicationEntry> entries) => entries
         .Where(entry => !string.IsNullOrWhiteSpace(entry.Name) && !string.IsNullOrWhiteSpace(entry.LaunchPath) && !Maintenance(entry))
         .OrderByDescending(entry => entry.IsFilesMate)
@@ -85,9 +89,7 @@ public sealed class LauncherSearchProvider(IApplicationCatalog applications, str
         var order = SearchRankingConfiguration.Load(profile);
         var appRank = order.ToList().IndexOf(SearchHitKind.Program) * ApplicationCatalog.RankStride;
         var fileRank = ApplicationCatalog.FileRank(order, query);
-        int ApplicationRelevance(NameHit hit) => NameIndexReader.Matches(hit.Name, terms)
-            ? NameIndexReader.Relevance(hit.Name, query)
-            : 4 + NameIndexReader.Relevance(Path.GetFileNameWithoutExtension(hit.Application!.FilePath ?? hit.Name), query);
+        int ApplicationRelevance(NameHit hit) => ApplicationCatalog.Relevance(hit.Application!, query);
         IEnumerable<NameHit> Sort(IEnumerable<NameHit> hits) => hits
             .OrderBy(hit => hit.Application is null ? fileRank(hit.Path, hit.IsDirectory) : appRank + ApplicationRelevance(hit))
             .ThenBy(hit => hit.Name.Length).ThenBy(hit => hit.Name, StringComparer.OrdinalIgnoreCase).ThenBy(hit => hit.Path, StringComparer.Ordinal);

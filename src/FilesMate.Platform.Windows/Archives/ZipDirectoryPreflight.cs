@@ -5,7 +5,7 @@ namespace FilesMate.Platform.Windows.Archives;
 // Limit metadata before ZipArchive.Entries eagerly allocates central-directory objects.
 internal static class ZipDirectoryPreflight
 {
-    internal static int Validate(FileStream stream, CancellationToken token)
+    internal static int Validate(FileStream stream, CancellationToken token, bool allowAdditionalMethods = false)
     {
         if (stream.Length < 22) throw Invalid();
         var tail = new byte[(int)Math.Min(stream.Length, 65557)];
@@ -64,7 +64,7 @@ internal static class ZipDirectoryPreflight
             if (U32(fixedHeader, 0) != 0x02014b50) throw Invalid();
             var flags = U16(fixedHeader, 8);
             var method = U16(fixedHeader, 10);
-            if ((flags & (1 | 0x40 | 0x2000)) != 0 || method is not (0 or 8))
+            if (!allowAdditionalMethods && ((flags & (1 | 0x40 | 0x2000)) != 0 || method is not (0 or 8)))
                 throw ArchivePathGuard.Error(ArchiveErrorCode.UnsupportedEntry);
             if (U16(fixedHeader, 34) != 0) throw Invalid();
             var variableLength = (long)U16(fixedHeader, 28) + U16(fixedHeader, 30) + U16(fixedHeader, 32);

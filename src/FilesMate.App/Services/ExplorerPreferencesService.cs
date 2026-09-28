@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 
 using FilesMate.App.Models;
 
@@ -76,7 +76,7 @@ public sealed class ExplorerPreferencesService
                     dto.ShowAlphabetNavigation,
                     dto.TabMemory,
                     dto.AlphabetNavigationMinimumItemCount,
-                    dto.ShowAlphabetNavigationInDualPane);
+                    dto.ShowAlphabetNavigationInDualPane, dto.PaneCount, dto.PaneArrangement);
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
         {
@@ -103,6 +103,8 @@ public sealed class ExplorerPreferencesService
             DetailsTypeWidth = settings.DetailsTypeWidth,
             DetailsSizeWidth = settings.DetailsSizeWidth,
             DualPane = settings.DualPane,
+            PaneCount = settings.PaneCount,
+            PaneArrangement = settings.PaneArrangement.ToString(),
             ShowFolderSizes = settings.ShowFolderSizes,
             RestoreLastSession = settings.RestoreLastSession,
             OpenInExistingWindow = settings.OpenInExistingWindow,
@@ -165,6 +167,8 @@ public sealed class ExplorerPreferencesService
         public double? DetailsSizeWidth { get; set; }
 
         public bool? DualPane { get; set; }
+        public int? PaneCount { get; set; }
+        public string? PaneArrangement { get; set; }
 
         public bool? ShowFolderSizes { get; set; }
 

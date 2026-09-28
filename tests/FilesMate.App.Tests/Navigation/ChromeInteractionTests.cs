@@ -13,7 +13,7 @@ public sealed class ChromeInteractionTests
         Assert.Contains("FilesMate.Control.Height.TitleBar\">48", tokens, StringComparison.Ordinal);
         Assert.Contains("FilesMate.Tab.Height\">38", tokens, StringComparison.Ordinal);
         Assert.Contains("FilesMate.Tab.SelectedBrush", tabs, StringComparison.Ordinal);
-        Assert.Contains("FilesMate.ComboBox.BorderBrush", tabs, StringComparison.Ordinal);
+        Assert.Contains("FilesMate.Tab.BorderBrush", tabs, StringComparison.Ordinal);
         Assert.DoesNotContain("FilesMate.LiquidGlass.FillBrush", tabs, StringComparison.Ordinal);
         Assert.DoesNotContain("TabViewItemHeaderBackgroundSelected", tabs, StringComparison.Ordinal);
     }

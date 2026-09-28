@@ -52,6 +52,8 @@ public enum AppCommandId
     CopyToOtherPane,
     MoveToOtherPane,
     SearchCommands,
+    OpenInArchiveApp,
+    RevealInFolder,
 }
 
 public enum CommandSurface

@@ -8,7 +8,7 @@ public sealed record SearchFileAction(string Command, string[] Paths)
     public static bool Supports(string command) => command is "Rename" or "BatchRename" or "Share" or "Recycle"
         or "OpenWith" or "CreateShortcut" or "AddTags" or "AddToShelf" or "AddToFavorites" or "CompressZip" or "Compress7z"
         or "CompressNew" or "ExtractHere" or "ExtractToFolder" or "ExtractToOther" or "SmartExtract"
-        or "OpenInCompactMate" or "OpenInTerminal" or "WhoLocks" or "ShowMore";
+        or "OpenInCompactMate" or "OpenInArchiveApp" or "OpenInTerminal" or "WhoLocks" or "ShowMore";
 
     private static string RequestPath(string id, string? profile)
     {

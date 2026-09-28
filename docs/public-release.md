@@ -1,4 +1,13 @@
-# Initial public release checks
+# Public release checks
+
+## 1.1.119-preview.9 — 2026-09-28
+
+- The public source export builds independently with zero warnings and errors. App 969, Core 155, Integration 20, and Windows platform 354 tests pass (1,498 total).
+- Search UI checks pass in light and dark themes for Simplified Chinese, English, and Japanese, including category selection, scrolling with many categories, selected-category visibility, compact results, and centered window placement.
+- README images were recaptured from the new skin using demonstration files and isolated profiles, including two/three-pane layouts, search, media thumbnails, document previews, and settings.
+- The installer is the locally reviewed preview.9 package: 86,183,425 bytes, SHA-256 `323F01869146DCA5E7FF20AB53222FE277F600E1F4C4980B709DD52DB5DD2F1C`. The documentation capture harness is test-only and does not ship in it.
+
+## Initial public source snapshot
 
 Source baseline: FilesMate 1.1.81-preview.20260920, reviewed on 2026-09-20. This is a preview release, not a security certification.
 

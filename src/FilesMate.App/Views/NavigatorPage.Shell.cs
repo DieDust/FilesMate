@@ -73,7 +73,7 @@ public sealed partial class NavigatorPage
             if (!ScreenToClient(window, ref point)) return null;
             var scale = XamlRoot?.RasterizationScale ?? 1;
             var rootPoint = new Point(point.X / scale, point.Y / scale);
-            return _rightSurface?.ExternalDropDestinationAt(rootPoint)
+            return (_paneCount == 3 ? _thirdSurface?.ExternalDropDestinationAt(rootPoint) : null) ?? _rightSurface?.ExternalDropDestinationAt(rootPoint)
                 ?? FileSurface.ExternalDropDestinationAt(rootPoint);
         }
 

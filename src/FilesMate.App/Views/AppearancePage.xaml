@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <UserControl
     x:Class="FilesMate.App.Views.AppearancePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -149,18 +149,6 @@
                             </StackPanel>
                         </Button>
                     </StackPanel>
-                </settings:SettingCard>
-                <settings:SettingCard
-                    x:Name="ShellStyleCard"
-                    Title="Interface style"
-                    Description="A continuous surface or softly separated regions."
-                    ShowDivider="True">
-                    <ComboBox x:Name="ShellStyleBox" MinWidth="148" MinHeight="34"
-                        CornerRadius="{StaticResource FilesMate.Corner.Small}"
-                        SelectionChanged="ShellStyleBox_SelectionChanged">
-                        <ComboBoxItem x:Name="ShellLayeredItem" Content="Layered" Tag="Layered" />
-                        <ComboBoxItem x:Name="ShellUnifiedItem" Content="Unified" Tag="Unified" />
-                    </ComboBox>
                 </settings:SettingCard>
                 <settings:SettingCard
                     x:Name="BackdropCard"

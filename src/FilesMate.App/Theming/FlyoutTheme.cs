@@ -13,6 +13,10 @@ internal static class FlyoutTheme
 {
     public static void FollowHost(FlyoutBase popup)
     {
+        if (popup is Flyout { FlyoutPresenterStyle: null } rounded
+            && Application.Current.Resources.TryGetValue("FilesMate.RoundedFlyoutPresenterStyle", out var value)
+            && value is Style roundedStyle)
+            rounded.FlyoutPresenterStyle = roundedStyle;
         var original = popup is Flyout initialFlyout ? initialFlyout.FlyoutPresenterStyle
             : (popup as MenuFlyout)?.MenuFlyoutPresenterStyle;
         popup.Opening += (_, _) =>

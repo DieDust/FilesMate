@@ -12,6 +12,23 @@
             Style="{StaticResource FilesMate.SettingsHeadingStyle}"
             Text="Files &amp; folders" />
         <TextBlock x:Name="Lead" Style="{StaticResource FilesMate.SettingsLeadStyle}" />
+        <TextBlock Text="{loc:LocalizedText Key=Archive_Settings}" Style="{StaticResource FilesMate.SectionHeaderStyle}" />
+        <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <StackPanel>
+                <settings:SettingCard Title="{loc:LocalizedText Key=Archive_Preferred}" Description="{loc:LocalizedText Key=Archive_PreferredHint}" ShowDivider="True">
+                    <ComboBox x:Name="ArchiveProviderBox" Width="220" SelectionChanged="ArchiveProvider_Changed"
+                              AutomationProperties.AutomationId="ArchiveProviderBox" AutomationProperties.Name="{loc:LocalizedText Key=Archive_Preferred}" />
+                </settings:SettingCard>
+                <StackPanel Padding="16,8,16,16" Spacing="10">
+                    <TextBlock x:Name="ArchiveProviderHint" TextWrapping="Wrap" />
+                    <TextBlock x:Name="ArchiveProviderPath" TextWrapping="Wrap" FontSize="12" Opacity="0.8" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="ArchiveBrowse" Content="{loc:LocalizedText Key=Archive_BrowseApp}" Click="ArchiveBrowse_Click" />
+                        <Button x:Name="ArchiveReset" Content="{loc:LocalizedText Key=Archive_AutoDetect}" Click="ArchiveReset_Click" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </glass:LiquidGlassSurface>
         <TextBlock x:Name="FoldersHeader" Style="{StaticResource FilesMate.SectionHeaderStyle}" Text="File list" />
         <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
             <StackPanel>

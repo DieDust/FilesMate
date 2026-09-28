@@ -38,6 +38,7 @@ public static class SearchRankingConfiguration
             SearchIndexConfigurationFile.SetProperty(document, "rankOrder",
                 new JsonArray(sanitized.Select(kind => JsonValue.Create(kind.ToString()) as JsonNode).ToArray()));
             SearchIndexConfigurationFile.SetProperty(document, "rankVersion", JsonValue.Create(5));
+            SearchIndexConfigurationFile.SetProperty(document, "resultSort", JsonValue.Create(SearchResultSort.Priority.ToString()));
         });
     }
 }

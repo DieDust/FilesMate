@@ -1,4 +1,4 @@
-using FilesMate.App.Workspace;
+﻿using FilesMate.App.Workspace;
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -48,6 +48,9 @@ public sealed partial class WorkspaceSplitView : UserControl
     }
 
     public event EventHandler<double>? SplitRatioChanged;
+
+    public static readonly DependencyProperty ReverseProperty = DependencyProperty.Register(nameof(Reverse), typeof(bool), typeof(WorkspaceSplitView), new PropertyMetadata(false, OnLayoutChanged));
+    public bool Reverse { get => (bool)GetValue(ReverseProperty); set => SetValue(ReverseProperty, value); }
 
     public WorkspaceLayoutKind Layout
     {
@@ -120,7 +123,7 @@ public sealed partial class WorkspaceSplitView : UserControl
             Separator.SetValue(Grid.ColumnProperty, 0);
             LeftColumn.Width = new GridLength(1, GridUnitType.Star);
             SeparatorColumn.Width = new GridLength(0);
-            RightColumn.Width = new GridLength(1, GridUnitType.Star);
+            RightColumn.Width = new GridLength(0);
             TopRow.Height = new GridLength(SplitRatio, GridUnitType.Star);
             HorizontalSeparatorRow.Height = new GridLength(SplitterVisual);
             BottomRow.Height = new GridLength(1 - SplitRatio, GridUnitType.Star);
@@ -149,6 +152,12 @@ public sealed partial class WorkspaceSplitView : UserControl
                 : new GridLength(SplitRatio, GridUnitType.Star);
         }
 
+        if (Reverse && Layout != WorkspaceLayoutKind.Single)
+        {
+            var row = Grid.GetRow(LeftPresenter); var column = Grid.GetColumn(LeftPresenter);
+            Grid.SetRow(LeftPresenter, Grid.GetRow(RightPresenter)); Grid.SetColumn(LeftPresenter, Grid.GetColumn(RightPresenter));
+            Grid.SetRow(RightPresenter, row); Grid.SetColumn(RightPresenter, column);
+        }
         RightPresenter.Visibility = WorkspaceLayoutMath.IsSecondaryVisible(Layout)
             ? Visibility.Visible
             : Visibility.Collapsed;

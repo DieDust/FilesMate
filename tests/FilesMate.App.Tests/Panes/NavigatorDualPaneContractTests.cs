@@ -31,10 +31,10 @@ public sealed class NavigatorDualPaneContractTests
         Assert.Contains("ToggleDualPane", code, StringComparison.Ordinal);
         Assert.Contains("EnsureRightPane", code, StringComparison.Ordinal);
         Assert.Contains("WorkspaceLayoutKind.Vertical", code, StringComparison.Ordinal);
-        Assert.Contains("PersistDualPane", code, StringComparison.Ordinal);
-        Assert.Contains("ExplorerPreferences.DualPane", code, StringComparison.Ordinal);
-        Assert.Contains("SetDualPane(App.ExplorerPreferences.DualPane, persist: false)", code, StringComparison.Ordinal);
-        Assert.Contains("SetDualPane(!_dualPane, persist: true)", code, StringComparison.Ordinal);
+        Assert.Contains("SetPaneCount", code, StringComparison.Ordinal);
+        Assert.Contains("ExplorerPreferences.EffectivePaneCount", code, StringComparison.Ordinal);
+        Assert.Contains("SetPaneCount(App.ExplorerPreferences.EffectivePaneCount, persist: false)", code, StringComparison.Ordinal);
+        Assert.Contains("SetPaneCount(_paneCount % 3 + 1, persist: true)", code, StringComparison.Ordinal);
         var pane = File.ReadAllText(Path.Combine(
             ThemeXaml.AppRoot,
             "Navigation",
@@ -53,7 +53,7 @@ public sealed class NavigatorDualPaneContractTests
         Assert.Contains("IsTrailingPane", chrome, StringComparison.Ordinal);
         Assert.Contains("ApplyPaneShape", chrome, StringComparison.Ordinal);
         Assert.DoesNotContain("Root.Padding = IsDualPane", chrome, StringComparison.Ordinal);
-        Assert.Contains("new Thickness(8, 0, 0, 8)", chrome, StringComparison.Ordinal);
-        Assert.Contains("new Thickness(0, 0, 8, 8)", chrome, StringComparison.Ordinal);
+        // Actual spacing and non-overlap for all six arrangements are checked by the
+        // native search-page smoke; this contract does not constrain pane orientation.
     }
 }

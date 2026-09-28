@@ -104,6 +104,7 @@ public sealed partial class MainWindow : Window
         _pageFactory = pageFactory ?? throw new ArgumentNullException(nameof(pageFactory));
         _hostTearOut = hostTearOut;
         InitializeComponent();
+        InitializeNavigation();
         InitializeFavoritesBar();
         InitializeTabMemory();
         InitializeShellCompatibility();
@@ -154,12 +155,20 @@ public sealed partial class MainWindow : Window
         {
             InitializeTabs(launch, restartSession);
 #if FILESMATE_UI_TEST
+            if (Environment.GetEnvironmentVariable("FILESMATE_PUBLIC_SCREENSHOTS") == "1")
+                DispatcherQueue.TryEnqueue(async () => await CapturePublicScreenshotsAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_VISUAL_REFRESH_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunVisualRefreshSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_SEARCH_PAGE_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunSearchPageSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_FAVORITE_GROUPS_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunFavoriteGroupsSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_FAVORITE_STAR_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunFavoriteStarSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_TAB_LINK_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunTabLinkSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_TAB_FILE_DROP_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunTabFileDropSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_RANKING_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunRankingSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_EJECT_SMOKE") == "1")
@@ -170,6 +179,8 @@ public sealed partial class MainWindow : Window
                 DispatcherQueue.TryEnqueue(async () => await RunIndexStorageSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_ARCHIVE_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunArchiveSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_ARCHIVE_MENU_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunArchiveMenuSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_REVIEW_PREVIEW_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunReviewPreviewSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_PINNED_PREVIEW_SMOKE") == "1")
@@ -198,12 +209,14 @@ public sealed partial class MainWindow : Window
 #endif
             if (launch.SettingsSection is { } section) DispatcherQueue.TryEnqueue(() => OpenSettings(section));
             if (launch.SearchAction is { } action) DispatcherQueue.TryEnqueue(() => _ = RunSearchActionAsync(action));
+            if (FilesMate.Search.SearchPageRequest.TryParse(launch.SearchPage, out var search)) DispatcherQueue.TryEnqueue(() => OpenSearchPage(search));
             if (launch.MissingPath is { } missing) DispatcherQueue.TryEnqueue(() => _ = ReportMissingLaunchPathAsync(missing));
         }
     }
 
     public void HandleLaunch(LaunchTarget target)
     {
+        if (FilesMate.Search.SearchPageRequest.TryParse(target.SearchPage, out var search)) { OpenSearchPage(search); return; }
         if (target.SearchAction is { } action) { _ = RunSearchActionAsync(action); return; }
         if (target.SettingsSection is { } section) { OpenSettings(section); return; }
         if (target.ActivateOnly) return;
@@ -694,6 +707,7 @@ public sealed partial class MainWindow : Window
 
     private async void Tabs_TabStripDrop(object sender, DragEventArgs e)
     {
+        if (!e.DataView.Contains(TabTransferPayload.Format)) return;
         if (TryGetTabInsertion(e.GetPosition(Tabs), out var index, out _))
             await ReceiveTabDropAsync(e, index);
         else { e.AcceptedOperation = DataPackageOperation.None; e.Handled = true; }
@@ -815,7 +829,8 @@ public sealed partial class MainWindow : Window
     private void DetachTab(TabViewItem tab)
     {
         UnwireTransferredTab(tab);
-        if (tab.Tag is NavigatorTabContent navigator && ReferenceEquals(TabHost.Content, navigator.Content))
+        if (tab.Tag is NavigatorTabContent navigator && ReferenceEquals(TabHost.Content, navigator.Content)
+            || ReferenceEquals(TabHost.Content, tab.Tag))
         {
             TabHost.Content = null;
         }
@@ -891,6 +906,11 @@ public sealed partial class MainWindow : Window
         }
 
         Tabs.TabItems.Remove(tab);
+        if (tab.Tag is SearchResultsPage search)
+        {
+            _closedTabs.Push(new(new(search.Request.Location, new FolderViewSettings(true, 2, FilesMate.Core.Entries.EntrySort.Name), 0)));
+            search.Dispose();
+        }
         tab.Tag = null;
         RefreshClosable();
         ShowSelectedPage();
@@ -902,6 +922,7 @@ public sealed partial class MainWindow : Window
 
     private void AddNavigatorTab(string? path, string? selectPath = null, NavigationHistoryState? history = null)
     {
+        if (FilesMate.Search.SearchPageRequest.TryParse(path, out var search)) { OpenSearchPage(search); return; }
         if (string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(selectPath))
         {
             path = Path.GetDirectoryName(selectPath);
@@ -937,7 +958,7 @@ public sealed partial class MainWindow : Window
 
             try
             {
-                var page = new NavigatorPage(tab.RequestedPath, tab.SelectPath, tab.InitialHistory);
+                var page = new NavigatorPage(this, tab.RequestedPath, tab.SelectPath, tab.InitialHistory);
                 page.PinnedPreviewChanged += Navigator_PinnedPreviewChanged;
                 page.PinnedPreviewVisibilityChanged += Navigator_PinnedPreviewVisibilityChanged;
                 if (!Tabs.TabItems.Contains(item) || !tab.Load.TryComplete() || tab.IsDisposed)
@@ -1107,10 +1128,12 @@ public sealed partial class MainWindow : Window
     {
         var argb = AccentPalette.Resolve(settings.Accent, settings.CustomAccent, dark);
         var color = Color.FromArgb((byte)(argb >> 24), (byte)(argb >> 16), (byte)(argb >> 8), (byte)argb);
-        var hover = Lift(color, 26);
-        var soft = Color.FromArgb(dark ? (byte)0x47 : (byte)0x24, color.R, color.G, color.B);
-        var selected = Color.FromArgb(dark ? (byte)0x47 : (byte)0x24, color.R, color.G, color.B);
-        var selectedHover = Color.FromArgb(dark ? (byte)0x5C : (byte)0x30, color.R, color.G, color.B);
+        var ink = AccentPalette.Foreground(argb);
+        var foreground = Color.FromArgb(255, (byte)(ink >> 16), (byte)(ink >> 8), (byte)ink);
+        var hover = ink == 0xFF000000 ? Lift(color, 20) : Shade(color, 0.9);
+        var soft = Color.FromArgb(SurfacePalette.SelectionAlpha(dark), color.R, color.G, color.B);
+        var selected = soft;
+        var selectedHover = Color.FromArgb(SurfacePalette.SelectionHoverAlpha(dark), color.R, color.G, color.B);
         var light1 = Lift(color, 26);
         var light2 = Lift(color, 48);
         var light3 = Lift(color, 72);
@@ -1126,6 +1149,11 @@ public sealed partial class MainWindow : Window
             "FilesMate.Glass.AccentHoverBrush", "AccentFillColorSecondaryBrush", "AccentFillColorTertiaryBrush",
             "ToggleSwitchFillOnPointerOver", "ToggleSwitchFillOnPressed", "ToggleSwitchStrokeOnPointerOver", "ToggleSwitchStrokeOnPressed",
             "FilesMate.Glass.AccentSoftBrush", "FilesMate.Item.SelectedBrush", "FilesMate.Item.SelectedHoverBrush",
+            "FilesMate.Glass.AccentForegroundBrush", "TextOnAccentFillColorPrimaryBrush",
+            "AccentButtonBackground", "AccentButtonBackgroundPointerOver", "AccentButtonBackgroundPressed",
+            "AccentButtonForeground", "AccentButtonForegroundPointerOver", "AccentButtonForegroundPressed",
+            "ToggleButtonBackgroundChecked", "ToggleButtonBackgroundCheckedPointerOver", "ToggleButtonBackgroundCheckedPressed",
+            "ToggleButtonForegroundChecked", "ToggleButtonForegroundCheckedPointerOver", "ToggleButtonForegroundCheckedPressed",
             "SystemAccentColor", "SystemAccentColorLight1", "SystemAccentColorLight2", "SystemAccentColorLight3",
             "SystemAccentColorDark1", "SystemAccentColorDark2", "SystemAccentColorDark3"];
 
@@ -1137,10 +1165,11 @@ public sealed partial class MainWindow : Window
             {
                 case "FilesMate.Selection.AccentBrush":
                 case "FilesMate.Glass.AccentBrush":
-                case "FilesMate.Item.DropTargetBrush":
                 case "AccentFillColorDefaultBrush":
                 case "ToggleSwitchFillOn":
                 case "ToggleSwitchStrokeOn":
+                case "AccentButtonBackground":
+                case "ToggleButtonBackgroundChecked":
                     AssignBrush(value, color);
                     break;
                 case "FilesMate.Glass.AccentHoverBrush":
@@ -1150,15 +1179,30 @@ public sealed partial class MainWindow : Window
                 case "ToggleSwitchFillOnPressed":
                 case "ToggleSwitchStrokeOnPointerOver":
                 case "ToggleSwitchStrokeOnPressed":
+                case "AccentButtonBackgroundPointerOver":
+                case "AccentButtonBackgroundPressed":
+                case "ToggleButtonBackgroundCheckedPointerOver":
+                case "ToggleButtonBackgroundCheckedPressed":
                     AssignBrush(value, hover);
                     break;
                 case "FilesMate.Glass.AccentSoftBrush":
                     AssignBrush(value, soft);
                     break;
+                case "FilesMate.Glass.AccentForegroundBrush":
+                case "TextOnAccentFillColorPrimaryBrush":
+                case "AccentButtonForeground":
+                case "AccentButtonForegroundPointerOver":
+                case "AccentButtonForegroundPressed":
+                case "ToggleButtonForegroundChecked":
+                case "ToggleButtonForegroundCheckedPointerOver":
+                case "ToggleButtonForegroundCheckedPressed":
+                    AssignBrush(value, foreground);
+                    break;
                 case "FilesMate.Item.SelectedBrush":
                     AssignBrush(value, selected);
                     break;
                 case "FilesMate.Item.SelectedHoverBrush":
+                case "FilesMate.Item.DropTargetBrush":
                     AssignBrush(value, selectedHover);
                     break;
                 case "SystemAccentColor" when value is Color:
@@ -1254,6 +1298,7 @@ public sealed partial class MainWindow : Window
         }
 
         RemoveTitleBarMenuHook();
+        foreach (var search in Tabs.TabItems.OfType<TabViewItem>().Select(t => t.Tag).OfType<SearchResultsPage>()) search.Dispose();
         _glassScene.Dispose();
         _shellHost?.Dispose();
         _shellHost = null;
@@ -1514,12 +1559,13 @@ public sealed partial class MainWindow : Window
         // live page out for that placeholder is the white flash. Keep the current
         // explorer until the real page exists; the upgrade is a hidden host that
         // can load off-screen.
-        if (TabHost.Content is NavigatorPage && content is not NavigatorPage and not PageLoadErrorPage)
+        if (TabHost.Content is NavigatorPage && content is not NavigatorPage and not PageLoadErrorPage and not SearchResultsPage)
         {
             return;
         }
 
         TabHost.Content = content;
+        if (content is SearchResultsPage searchPage) NavigationSidebar.SelectPath(searchPage.Request.Scope ?? "");
         if (content is NavigatorPage favoritesPage) UpdateFavoritesPlacement(favoritesPage);
         else WindowFavorites.Visibility = Visibility.Collapsed;
         if (content is NavigatorPage previewPage) previewPage.ApplyPinnedPreviewFromWindow(_pinnedPreviewPath, _pinnedPreviewVisible);
@@ -1840,6 +1886,7 @@ public sealed partial class MainWindow : Window
 
     private static string? TabPath(TabViewItem tab)
     {
+        if (tab.Tag is SearchResultsPage search) return search.Request.Location;
         if (tab.Tag is not NavigatorTabContent content)
         {
             return null;

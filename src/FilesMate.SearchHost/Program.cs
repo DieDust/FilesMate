@@ -140,7 +140,7 @@ internal sealed partial class SearchHost : IDisposable
         Profile = profile;
         ManagerPath = manager;
         var catalog = new WindowsApplicationCatalog(() => ManagerPath);
-        _searchProvider = new LauncherSearchProvider(catalog, profile);
+        _searchProvider = new ConfiguredSearchProvider(catalog, profile);
         _ = catalog.GetAsync(CancellationToken.None);
         Settings = GlobalSearchConfiguration.Load(profile);
         try { if (FeatureSetup.Load(Profile).Completed) GlobalSearchStartup.Synchronize(Settings, GlobalSearchStartup.HostForManager(ManagerPath), ManagerPath, Profile); }
@@ -233,6 +233,12 @@ internal sealed partial class SearchHost : IDisposable
         if (!File.Exists(ManagerPath)) throw new FileNotFoundException(Loc.Get("Search_ManagerMissing"), ManagerPath);
         var id = new SearchFileAction(command, paths).Write();
         DetachedProcess.Start(ManagerPath, ["--search-action", id]);
+    }
+
+    public void OpenSearchPage(SearchPageRequest request)
+    {
+        if (!File.Exists(ManagerPath)) throw new FileNotFoundException(Loc.Get("Search_ManagerMissing"), ManagerPath);
+        DetachedProcess.Start(ManagerPath, ["--search-page", request.Location]);
     }
 
     private SearchHostReply Reply(bool ok = true, string? message = null, string? errorCode = null) => new(ok, message ?? _status, Registered, _window?.IsVisible == true, Environment.ProcessId, errorCode);

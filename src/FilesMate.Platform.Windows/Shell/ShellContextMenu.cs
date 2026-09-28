@@ -246,6 +246,15 @@ public static class ShellContextMenu
             }
 
             var label = ReadLabel(menu, i);
+            if (info.hSubMenu != 0)
+            {
+                // Shell extensions often populate cascades only when opened.
+                // Snapshot that same state before rendering a XAML/WPF menu.
+                if (_menu3 is not null)
+                    _ = _menu3.HandleMenuMsg2(Shell32.WmInitMenuPopup, info.hSubMenu, (nint)i, out _);
+                else if (_menu2 is not null)
+                    _ = _menu2.HandleMenuMsg(Shell32.WmInitMenuPopup, info.hSubMenu, (nint)i);
+            }
             var children = info.hSubMenu == 0 ? Array.Empty<ShellMenuItem>() : ReadMenu(info.hSubMenu, depth + 1);
             if (label.Length == 0 && children.Count == 0)
             {

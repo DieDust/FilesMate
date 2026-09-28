@@ -42,9 +42,9 @@ $fileVersion = ($Version -split '-', 2)[0] + '.0'
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed ($LASTEXITCODE)." }
 
 $required = @('FilesMate.App.exe', 'FilesMate.App.dll', 'coreclr.dll', 'hostfxr.dll',
-    'hostpolicy.dll', 'Microsoft.WindowsAppRuntime.dll',
+    'hostpolicy.dll', 'SharpCompress.dll', 'Microsoft.WindowsAppRuntime.dll',
     'Microsoft.WindowsAppRuntime.Bootstrap.dll', 'Microsoft.ui.xaml.dll', 'e_sqlite3.dll',
-    'SearchHost\FilesMate.SearchHost.exe', 'SearchHost\coreclr.dll', 'SearchHost\PresentationFramework.dll')
+    'SearchHost\FilesMate.SearchHost.exe', 'SearchHost\coreclr.dll', 'SearchHost\PresentationFramework.dll', 'SearchHost\SharpCompress.dll')
 foreach ($file in $required) {
     if (-not (Test-Path -LiteralPath (Join-Path $payload $file))) {
         throw "Self-contained payload is missing $file"

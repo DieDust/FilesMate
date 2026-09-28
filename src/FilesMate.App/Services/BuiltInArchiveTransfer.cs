@@ -9,14 +9,15 @@ using Microsoft.Win32.SafeHandles;
 
 namespace FilesMate.App.Services;
 
-/// <summary>Prepare ZIP output privately, then publish through the normal conflict and undo pipeline.</summary>
+/// <summary>Prepare archive output privately, then publish through the normal conflict and undo pipeline.</summary>
 internal static class BuiltInArchiveTransfer
 {
     internal static async Task<FileTransferResult> RunAsync(ILocalFileOperations operations,
         IReadOnlyList<string> sources, string destinationDirectory, bool compress, string? archiveName = null,
         bool createSubfolder = false, FileConflictResolver? resolveConflict = null,
         IProgress<ArchiveProgress>? progress = null, CancellationToken token = default,
-        ReplacementBackupBudget? backupBudget = null, bool smartExtract = false)
+        ReplacementBackupBudget? backupBudget = null, bool smartExtract = false,
+        Func<string, bool, CancellationToken, Task<string?>>? requestPassword = null)
     {
         ArgumentNullException.ThrowIfNull(operations);
         ArgumentNullException.ThrowIfNull(sources);
@@ -78,29 +79,46 @@ internal static class BuiltInArchiveTransfer
                         ? (Directory.Exists(inputs[0]) ? Path.GetFileName(inputs[0]) : Path.GetFileNameWithoutExtension(inputs[0])) + ".zip"
                         : "Archive.zip");
                     FileNameRules.Validate(name);
-                    if (!string.Equals(Path.GetExtension(name), ".zip", StringComparison.OrdinalIgnoreCase))
+                    var sevenZip = name.EndsWith(".7z", StringComparison.OrdinalIgnoreCase);
+                    if (!sevenZip && !name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
                         throw ArchiveError(ArchiveErrorCode.UnsupportedEntry);
                     var output = Path.Combine(staging, name);
                     displays.Add(output, Path.Combine(destination, name));
-                    await ZipArchiveService.CreateAsync(inputs, output, progress, token).ConfigureAwait(false);
+                    if (sevenZip) await ManagedArchiveService.Create7zAsync(inputs, output, progress, token).ConfigureAwait(false);
+                    else await ZipArchiveService.CreateAsync(inputs, output, progress, token).ConfigureAwait(false);
                     requests.Add(new(output, Path.Combine(destination, name)));
                 }
                 else
                 {
-                    for (var i = 0; i < inputs.Length; i++)
+                    var sets = ArchiveSetResolver.Resolve(inputs, token);
+                    for (var i = 0; i < sets.Count; i++)
                     {
                         token.ThrowIfCancellationRequested();
-                        var input = inputs[i];
-                        if (!string.Equals(Path.GetExtension(input), ".zip", StringComparison.OrdinalIgnoreCase))
-                            throw ArchiveError(ArchiveErrorCode.UnsupportedEntry);
-                        var output = Path.Combine(staging, i.ToString(System.Globalization.CultureInfo.InvariantCulture));
-                        Directory.CreateDirectory(output);
-                        displays.Add(output, input);
-                        await ZipArchiveService.ExtractAsync(input, output, progress, token).ConfigureAwait(false);
+                        var set = sets[i];
+                        var input = set.PrimaryPath;
+                        string output;
+                        string? password = null;
+                        for (var attempt = 0; ; attempt++)
+                        {
+                            token.ThrowIfCancellationRequested();
+                            output = Path.Combine(staging, $"{i}-{attempt}");
+                            Directory.CreateDirectory(output);
+                            displays.Add(output, input);
+                            try
+                            {
+                                await ManagedArchiveService.ExtractAsync(set, output, password, progress, token).ConfigureAwait(false);
+                                break;
+                            }
+                            catch (ArchiveOperationException error) when (error.ErrorCode == ArchiveErrorCode.PasswordRequired && requestPassword is not null)
+                            {
+                                password = await requestPassword(input, attempt > 0, token).ConfigureAwait(false);
+                                if (password is null) { result = result with { Cancelled = true }; throw new OperationCanceledException(); }
+                            }
+                        }
                         var entries = Directory.GetFileSystemEntries(output);
                         if (createSubfolder || (smartExtract && !(entries.Length == 1 && Directory.Exists(entries[0]))))
                         {
-                            var name = FileNameRules.Validate(Path.GetFileNameWithoutExtension(input));
+                            var name = FileNameRules.Validate(set.Name);
                             requests.Add(new(output, Path.Combine(destination, name)));
                         }
                         else
@@ -135,7 +153,7 @@ internal static class BuiltInArchiveTransfer
                     result = result with { Undo = SeparateReplacementFolders(undo) };
                 }
             }
-            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            catch (OperationCanceledException) when (token.IsCancellationRequested || result.Cancelled)
             {
                 result = result with { Cancelled = true };
             }

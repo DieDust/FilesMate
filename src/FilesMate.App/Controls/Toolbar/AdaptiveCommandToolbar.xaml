@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <UserControl
     x:Class="FilesMate.App.Controls.Toolbar.AdaptiveCommandToolbar"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -18,25 +18,25 @@
                 Visibility="Collapsed">
                 <Button
                     x:Name="NewButton"
-                    Style="{StaticResource CommandBarButtonStyle}"
+                    Style="{StaticResource PrimaryCommandButtonStyle}"
                     Visibility="Collapsed">
                     <Button.Flyout>
                         <MenuFlyout
-                            Placement="Bottom"
+                            Placement="BottomEdgeAlignedLeft"
                             MenuFlyoutPresenterStyle="{StaticResource FilesMate.MenuFlyoutPresenterStyle}">
                             <MenuFlyoutItem x:Name="NewFolderItem" Click="NewFolderItem_Click" Text="New folder" />
                             <MenuFlyoutItem x:Name="NewFileItem" Click="NewFileItem_Click" Text="New file" />
                         </MenuFlyout>
                     </Button.Flyout>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE8F4;" />
+                        <FontIcon Foreground="{ThemeResource FilesMate.Glass.AccentForegroundBrush}" FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE8F4;" />
                         <TextBlock
                             x:Name="NewLabel"
                             VerticalAlignment="Center"
                             FontSize="13"
-                            Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
+                            Foreground="{ThemeResource FilesMate.Glass.AccentForegroundBrush}"
                             Visibility="Collapsed" />
-                        <FontIcon FontFamily="Segoe Fluent Icons" FontSize="8" Glyph="&#xE70D;" />
+                        <FontIcon Foreground="{ThemeResource FilesMate.Glass.AccentForegroundBrush}" FontFamily="Segoe Fluent Icons" FontSize="8" Glyph="&#xE70D;" />
                     </StackPanel>
                 </Button>
             </StackPanel>
@@ -126,7 +126,10 @@
                 DragLeave="ShelfButton_DragLeave" Drop="ShelfButton_Drop"
                 Click="ShelfButton_Click"
                 Style="{StaticResource CommandBarButtonStyle}">
-                <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE7B8;" />
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE7B8;" />
+                    <TextBlock x:Name="ShelfLabel" FontSize="13" VerticalAlignment="Center" />
+                </StackPanel>
             </Button>
             <Button
                 x:Name="SortButton"
@@ -181,7 +184,7 @@
                 AutomationProperties.Name="Details view"
                 Style="{StaticResource CommandBarButtonStyle}"
                 ToolTipService.ToolTip="Details">
-                <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xF0E3;" />
+                <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE8FD;" />
             </Button>
             <Button
                 x:Name="GridViewButton"
@@ -241,7 +244,14 @@
                 AutomationProperties.Name="Dual pane"
                 Style="{StaticResource CommandBarButtonStyle}"
                 ToolTipService.ToolTip="Dual pane">
-                <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE89F;" />
+                <Grid x:Name="PaneIcon" Width="19" Height="16">
+                    <Border BorderBrush="{ThemeResource FilesMate.Text.PrimaryBrush}" BorderThickness="1.2" CornerRadius="2" />
+                    <Border x:Name="PaneDividerOne" Width="1" Margin="6,2,0,2" HorizontalAlignment="Left" Background="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+                    <Border x:Name="PaneDividerTwo" Width="1" Margin="12,2,0,2" HorizontalAlignment="Left" Background="{ThemeResource FilesMate.Text.PrimaryBrush}" Visibility="Collapsed" />
+                </Grid>
+            </Button>
+            <Button x:Name="PaneArrangementButton" Width="22" MinWidth="0" Padding="0" Click="PaneArrangement_Click" Style="{StaticResource CommandBarButtonStyle}">
+                <FontIcon Glyph="&#xE70D;" FontSize="9"/>
             </Button>
             <Button
                 x:Name="PreviewButton"

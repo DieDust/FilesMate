@@ -30,7 +30,7 @@ public sealed partial class NavigatorPage
     private CommandContext DeviceCommandContext() => new(CommandSurface.Shortcut,
         ActiveSurface.Selection.Count, ActiveSurface.PrimaryIsDirectory(), false, ViewModel.CanRefresh,
         ViewModel.CanReceiveFiles, PaneFileActions.ClipboardHasFiles(), PrimarySelectedPath(),
-        FolderPath: ViewModel.AddressText, OtherPanePath: OtherPaneDestination(_rightActive), IsPortableDevice: true);
+        FolderPath: ViewModel.AddressText, OtherPanePath: OtherPaneDestination(_thirdActive ? 2 : _rightActive ? 1 : 0), IsPortableDevice: true);
 
     private IReadOnlyList<HomeSearchHit> SearchCurrentDeviceFolder(string query)
     {
@@ -44,5 +44,6 @@ public sealed partial class NavigatorPage
         if (_disposed) return;
         if (_leftVm.IsPortableDevice) _leftVm.Refresh();
         if (_rightVm?.IsPortableDevice == true) _rightVm.Refresh();
+        if (_thirdVm?.IsPortableDevice == true) _thirdVm.Refresh();
     }
 }

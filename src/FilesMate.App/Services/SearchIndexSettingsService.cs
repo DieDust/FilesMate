@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using FilesMate.App.Models;
@@ -90,6 +90,7 @@ public sealed class SearchIndexSettingsService
             {
                 SearchIndexConfigurationFile.SetProperty(document, "rankOrder", changes["rankOrder"]?.DeepClone());
                 SearchIndexConfigurationFile.SetProperty(document, "rankVersion", JsonValue.Create(5));
+                if (updateRankOrder) SearchIndexConfigurationFile.SetProperty(document, "resultSort", JsonValue.Create(SearchResultSort.Priority.ToString()));
             }
         }, cancellationToken), cancellationToken);
     }

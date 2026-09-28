@@ -9,15 +9,31 @@ public sealed partial class NavigatorPage
 {
     private readonly Dictionary<PaneViewModel, FolderStatusRequest> _folderStatusRequests = [];
 
+    private void PaneChrome_GotFocus(object sender, Microsoft.UI.Xaml.RoutedEventArgs e) =>
+        ActivateFromChrome(sender as Controls.FileSurface.FilePaneChrome);
+
+    private void PaneChrome_StatusChanged(object? sender, EventArgs e)
+    {
+        if (!_disposed && ReferenceEquals(sender, ActiveChrome)) UpdateSharedStatus();
+    }
+
+    private void UpdateSharedStatus()
+    {
+        if (SharedStatusBar is null || ActiveChrome is not { } chrome) return;
+        SharedStatusBar.Apply(chrome.StatusText, chrome.SelectionText, chrome.ZoomText, chrome.SizeText,
+            ViewModel.AddressText);
+    }
+
     private void UpdateFolderStatus(PaneViewModel vm)
     {
         if (_disposed || !IsLoaded) return;
-        if (ReferenceEquals(vm, _rightVm) && !_dualPane)
+        if (ReferenceEquals(vm, _rightVm) && !_dualPane || ReferenceEquals(vm, _thirdVm) && _paneCount < 3)
         {
             CancelFolderStatus(vm);
             return;
         }
         var path = vm.AddressText;
+        ChromeOf(vm).SetFolderCaption(path);
         var generation = vm.Navigation.CurrentGeneration;
         if (vm.IsPortableDevice)
         {

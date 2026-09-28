@@ -1,4 +1,4 @@
-namespace FilesMate.App.Models;
+﻿namespace FilesMate.App.Models;
 
 public enum AccentKind
 {
@@ -28,7 +28,7 @@ public static class AccentPalette
 {
     public static readonly AccentSwatch[] Presets =
     [
-        new(AccentKind.Default, "Accent_Default", 0xFF007AFF),
+        new(AccentKind.Default, "Accent_Default", 0xFF4F786C),
         new(AccentKind.Gold, "Accent_Gold", 0xFFFFB900),
         new(AccentKind.Orange, "Accent_Orange", 0xFFFF8C00),
         new(AccentKind.BrickRed, "Accent_BrickRed", 0xFFE81123),
@@ -56,7 +56,7 @@ public static class AccentPalette
 
         if (kind == AccentKind.Default)
         {
-            return dark ? 0xFF0A84FF : 0xFF007AFF;
+            return dark ? 0xFF96ABC7 : 0xFF4F786C;
         }
 
         foreach (var preset in Presets)
@@ -94,4 +94,17 @@ public static class AccentPalette
     }
 
     public static string ToHex(uint argb) => $"#{argb:X8}";
+
+    // Choose the more legible ink for an opaque accent fill, including custom colors.
+    public static uint Foreground(uint argb)
+    {
+        static double Linear(byte channel)
+        {
+            var value = channel / 255d;
+            return value <= 0.04045 ? value / 12.92 : Math.Pow((value + 0.055) / 1.055, 2.4);
+        }
+        var luminance = 0.2126 * Linear((byte)(argb >> 16))
+            + 0.7152 * Linear((byte)(argb >> 8)) + 0.0722 * Linear((byte)argb);
+        return (luminance + 0.05) / 0.05 >= 1.05 / (luminance + 0.05) ? 0xFF000000 : 0xFFFFFFFF;
+    }
 }

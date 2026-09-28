@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <UserControl
     x:Class="FilesMate.App.Controls.Omnibar.Omnibar"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -178,7 +178,9 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <Grid
+                        x:Name="SearchInputArea"
                         MinWidth="0"
+                        Background="Transparent"
                         PointerPressed="SearchPane_PointerPressed">
                         <TextBlock
                             x:Name="SearchPlaceholderLabel"
@@ -191,7 +193,8 @@
                             TextTrimming="CharacterEllipsis" />
                         <TextBox
                             x:Name="SearchBox"
-                            Padding="12,10,4,0"
+                            Padding="12,0,4,0"
+                            MinHeight="0"
                             VerticalAlignment="Center"
                             VerticalContentAlignment="Center"
                             HorizontalContentAlignment="Left"
@@ -283,7 +286,7 @@
             <Border
                 x:Name="SearchPanel"
                 Width="{Binding ActualWidth, ElementName=SearchHost, Mode=OneWay}"
-                MaxHeight="280"
+                MaxHeight="328"
                 Padding="0,4"
                 Background="{ThemeResource FilesMate.SearchPanel.BackgroundBrush}"
                 BorderBrush="{ThemeResource FilesMate.AddressBar.BorderBrush}"
@@ -294,6 +297,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <CheckBox x:Name="SearchEverywhere" Margin="12,0" Click="SearchEverywhere_Click"
                         HorizontalContentAlignment="Stretch"
@@ -324,6 +328,9 @@
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
+                <Button x:Name="MoreSearchButton" Grid.Row="3" Margin="8,6" HorizontalAlignment="Right"
+                    Height="32" MinHeight="32" Padding="14,0" CornerRadius="16"
+                    Background="{ThemeResource FilesMate.FileContent.BackgroundBrush}" Click="MoreSearch_Click" />
                 </Grid>
             </Border>
         </Popup>

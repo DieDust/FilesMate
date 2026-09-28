@@ -101,6 +101,16 @@ public sealed partial class Omnibar : UserControl
     public event EventHandler<string>? CrumbClicked;
 
     public event EventHandler<string>? SearchChosen;
+    public event EventHandler<FilesMate.Search.SearchPageRequest>? MoreSearchRequested;
+
+    private void MoreSearch_Click(object sender, RoutedEventArgs e)
+    {
+        var scope = SearchEverywhere.IsChecked == true || HomeLocation.IsHome(_session.Path) ? null : _session.Path;
+        if (FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(scope, out _)) return;
+        var request = new FilesMate.Search.SearchPageRequest(SearchBox.Text, scope, Sort: FilesMate.Search.SearchSortConfiguration.Load(System.IO.Path.GetDirectoryName(Program.SettingsPath(Localization.LanguageSettings.DefaultFilePath))));
+        DismissSearch();
+        MoreSearchRequested?.Invoke(this, request);
+    }
 
     public Func<string, IReadOnlyList<HomeSearchHit>>? SearchDeviceFolder { get; set; }
 
@@ -608,6 +618,9 @@ public sealed partial class Omnibar : UserControl
 
     private void ShowSearchStatus(string message)
     {
+        MoreSearchButton.Content = StringTable.Get("SearchPage_More");
+        MoreSearchButton.Visibility = FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(_session.Path, out _) && SearchEverywhere.IsChecked != true
+            ? Visibility.Collapsed : Visibility.Visible;
         SearchStatus.Text = message;
         SearchSuggestPopup.IsOpen = _searchOpen && _searchFocused;
     }

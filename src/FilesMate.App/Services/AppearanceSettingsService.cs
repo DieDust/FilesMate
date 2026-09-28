@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 
 using FilesMate.App.Models;
 
@@ -56,7 +56,6 @@ public sealed class AppearanceSettingsService : IAppearanceSettingsService
                 dto.GlassEffect,
                 dto.Accent,
                 dto.CustomAccent,
-                dto.ShellStyle,
                 dto.TransparencyPercent,
                 dto.UseBundledFileIcons);
         }
@@ -80,7 +79,6 @@ public sealed class AppearanceSettingsService : IAppearanceSettingsService
                 GlassEffect = settings.GlassEffect.ToString(),
                 Accent = settings.Accent.ToString(),
                 CustomAccent = settings.CustomAccent,
-                ShellStyle = settings.ShellStyle.ToString(),
                 TransparencyPercent = settings.TransparencyPercent,
                 UseBundledFileIcons = settings.UseBundledFileIcons,
             },
@@ -121,7 +119,6 @@ public sealed class AppearanceSettingsService : IAppearanceSettingsService
         public string? Accent { get; set; }
 
         public string? CustomAccent { get; set; }
-        public string? ShellStyle { get; set; }
         public int? TransparencyPercent { get; set; }
         public bool? UseBundledFileIcons { get; set; }
     }

@@ -7,11 +7,12 @@ public sealed record LaunchTarget(string? Folder, string? SelectPath, string? Se
     /// navigate to, but the user pressed something and deserves to hear why nothing happened.
     /// </summary>
     public string? MissingPath { get; init; }
+    public string? SearchPage { get; init; }
 
     public bool SameDestination(LaunchTarget other) =>
         string.Equals(Folder, other.Folder, StringComparison.OrdinalIgnoreCase) &&
         string.Equals(SelectPath, other.SelectPath, StringComparison.OrdinalIgnoreCase) &&
-        string.Equals(SettingsSection, other.SettingsSection, StringComparison.OrdinalIgnoreCase) && ActivateOnly == other.ActivateOnly && SearchAction == other.SearchAction;
+        string.Equals(SettingsSection, other.SettingsSection, StringComparison.OrdinalIgnoreCase) && ActivateOnly == other.ActivateOnly && SearchAction == other.SearchAction && SearchPage == other.SearchPage;
 }
 
 public static class LaunchPath
@@ -77,6 +78,8 @@ public static class LaunchPath
         {
             var raw = CollapseExplorerPrefixes(args[i].Trim().Trim('"'), preserveSelect: true);
             if (IsSwitch(raw, "settings-search")) return new(null, null, "search");
+            if (IsSwitch(raw, "search-page") && i + 1 < args.Count && FilesMate.Search.SearchPageRequest.TryParse(args[i + 1], out _))
+                return new(null, null, ActivateOnly: true) { SearchPage = args[i + 1] };
             if (IsSwitch(raw, "search-action") && i + 1 < args.Count && Guid.TryParseExact(args[i + 1], "N", out _))
                 return new(null, null, ActivateOnly: true, SearchAction: args[i + 1]);
             if (IsSwitch(raw, "activate")) return new(null, null, ActivateOnly: true);

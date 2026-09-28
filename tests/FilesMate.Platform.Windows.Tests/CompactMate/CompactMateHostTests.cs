@@ -7,6 +7,27 @@ namespace FilesMate.Platform.Windows.Tests.CompactMate;
 public sealed class CompactMateHostTests
 {
     [Fact]
+    public void App_path_with_spaces_does_not_require_a_file_association()
+    {
+        var folder = Directory.CreateTempSubdirectory("FilesMate-provider-spaces-");
+        var directory = Directory.CreateDirectory(Path.Combine(folder.FullName, "安装 目录"));
+        var exe = Path.Combine(directory.FullName, "CompactMate.exe");
+        File.WriteAllBytes(exe, []);
+        try
+        {
+            var registry = new MemoryUserRegistry();
+            registry.SetDefaultValue(CompactMateHost.AppPathKey, exe);
+            Assert.True(CompactMateHost.TryFind(registry, [], out var found, includeNearby: false));
+            Assert.Equal(exe, found);
+            registry.DeleteDefaultValue(CompactMateHost.AppPathKey);
+            registry.SetValue(CompactMateHost.InstallKey, "InstallDir", directory.FullName);
+            Assert.True(CompactMateHost.TryFind(registry, [], out found, includeNearby: false));
+            Assert.Equal(exe, found);
+        }
+        finally { File.Delete(exe); directory.Delete(); folder.Delete(); }
+    }
+
+    [Fact]
     public void PathsWithSpacesAndTrailingSlashSurviveNativeArgumentParsing()
     {
         var source = @"C:\my archive\";

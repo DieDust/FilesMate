@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 
 namespace FilesMate.App.Localization;
 
@@ -218,10 +218,6 @@ public static partial class StringTable
         ["ThemeLight"] = "Light",
         ["ThemeDark"] = "Dark",
         ["Backdrop"] = "Backdrop",
-        ["ShellStyle"] = "Interface style",
-        ["ShellStyleDescription"] = "Unified keeps the original continuous surface; Layered separates regions with subtle tones. Changes apply immediately.",
-        ["ShellLayered"] = "Layered",
-        ["ShellUnified"] = "Unified",
         ["BackdropDescription"] = "Acrylic or Mica tint the window with the desktop. Solid uses the window fill.",
         ["BackdropAcrylic"] = "Acrylic",
         ["BackdropMica"] = "Mica",
@@ -755,10 +751,6 @@ public static partial class StringTable
         ["ThemeLight"] = "浅色",
         ["ThemeDark"] = "深色",
         ["Backdrop"] = "窗口材质",
-        ["ShellStyle"] = "界面风格",
-        ["ShellStyleDescription"] = "一体化保留原来的连贯底色；分层用柔和色差区分区域。切换立即生效。",
-        ["ShellLayered"] = "分层",
-        ["ShellUnified"] = "一体化",
         ["BackdropDescription"] = "亚克力或云母会透过桌面着色窗口；纯色使用窗口底色。",
         ["BackdropAcrylic"] = "亚克力",
         ["BackdropMica"] = "云母",

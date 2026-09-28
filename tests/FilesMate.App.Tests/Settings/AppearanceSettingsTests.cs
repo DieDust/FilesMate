@@ -1,4 +1,4 @@
-using FilesMate.App.Animations;
+﻿using FilesMate.App.Animations;
 using FilesMate.App.Models;
 using FilesMate.App.Services;
 using FilesMate.App.Tests.DesignSystem;
@@ -43,14 +43,21 @@ public sealed class AppearanceSettingsTests
     [Theory]
     [InlineData(null)]
     [InlineData("invalid")]
+    [InlineData("Unified")]
     [InlineData("1")]
     public void Old_or_invalid_style_settings_keep_layered_default(string? style)
     {
-        Assert.Equal(ShellStyleKind.Layered, AppearanceSettings.Sanitize(null, null, null, null, null, shellStyle: style).ShellStyle);
+        var file = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            File.WriteAllText(file, System.Text.Json.JsonSerializer.Serialize(new { shellStyle = style }));
+            Assert.Equal(AppearanceSettings.Default, new AppearanceSettingsService(file).Load());
+        }
+        finally { File.Delete(file); }
     }
 
     [Fact]
-    public async Task Shell_style_round_trips_and_can_switch_back_without_changing_theme()
+    public async Task Old_unified_settings_load_and_save_without_the_obsolete_option()
     {
         var file = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "appearance.json");
         try
@@ -59,11 +66,12 @@ public sealed class AppearanceSettingsTests
             var applied = new List<AppearanceSettings>();
             var initial = AppearanceSettings.Default with { Theme = AppThemeKind.Dark, Accent = AccentKind.Gold };
             var vm = new AppearanceSettingsViewModel(store, initial, applied.Add);
-            await vm.SetShellStyleAsync(ShellStyleKind.Unified);
-            Assert.Equal(initial with { ShellStyle = ShellStyleKind.Unified }, store.Load());
-            await vm.SetShellStyleAsync(ShellStyleKind.Layered);
+            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+            await File.WriteAllTextAsync(file, "{\"theme\":\"Dark\",\"accent\":\"Gold\",\"shellStyle\":\"Unified\"}");
             Assert.Equal(initial, store.Load());
-            Assert.Equal(new[] { ShellStyleKind.Unified, ShellStyleKind.Layered }, applied.Select(s => s.ShellStyle));
+            await store.SaveAsync(store.Load());
+            Assert.Equal(initial, store.Load());
+            Assert.DoesNotContain("shellStyle", await File.ReadAllTextAsync(file));
         }
         finally { if (Directory.Exists(Path.GetDirectoryName(file))) Directory.Delete(Path.GetDirectoryName(file)!, true); }
     }
@@ -244,8 +252,8 @@ public sealed class AppearanceSettingsTests
         Assert.Equal(100, applied[^1].TransparencyPercent);
         Assert.Null(vm.Current.TransparencyPercent);
         await vm.SetTransparencyPercentAsync(65);
-        await vm.SetShellStyleAsync(ShellStyleKind.Unified);
-        await vm.SetShellStyleAsync(ShellStyleKind.Layered);
+        await vm.SetThemeAsync(AppThemeKind.Dark);
+        await vm.SetThemeAsync(AppThemeKind.Light);
         Assert.Equal(65, vm.Current.TransparencyPercent);
         Assert.Equal(3, store.SaveCount);
     }

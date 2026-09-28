@@ -17,6 +17,7 @@ public sealed partial class FilesAndFoldersSettingsPage : UserControl
     public FilesAndFoldersSettingsPage()
     {
         InitializeComponent();
+        InitializeArchiveSettings();
         Heading.Text = StringTable.Get("FilesFoldersTitle");
         Lead.Text = StringTable.Get("FilesFoldersLead");
         FoldersHeader.Text = StringTable.Get("FileListSection");

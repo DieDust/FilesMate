@@ -118,6 +118,7 @@ public sealed partial class TagManagementPage : UserControl
         var button = new Button
         {
             Width = 34,
+            MinWidth = 34,
             Height = 34,
             Padding = new Thickness(0),
             Tag = tag,

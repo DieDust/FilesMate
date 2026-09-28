@@ -10,6 +10,7 @@ namespace FilesMate.App.Views;
 
 public sealed partial class NavigatorPage
 {
+    private void Omni_MoreSearchRequested(object? sender, SearchPageRequest request) => App.WindowForElement(this)?.OpenSearchPage(request);
     internal async Task RunSearchActionAsync(SearchFileAction request)
     {
         // Capture the search selection; the currently displayed folder and its
@@ -44,6 +45,7 @@ public sealed partial class NavigatorPage
                 _hasTagDefinitions = true;
                 FileSurface.RefreshRealizedTags();
                 _rightSurface?.RefreshRealizedTags();
+                _thirdSurface?.RefreshRealizedTags();
             });
         }
         else if (command == AppCommandId.Share)

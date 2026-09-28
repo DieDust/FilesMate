@@ -104,7 +104,7 @@ public sealed class TabVisualContractTests
         var bar = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Themes", "TabBarStyles.xaml"));
         Assert.Contains("Adapted from Files Community", bar, StringComparison.Ordinal);
         Assert.Contains("Background=\"Transparent\"", bar, StringComparison.Ordinal);
-        Assert.Contains("FilesMate.ComboBox.BorderBrush", bar, StringComparison.Ordinal);
+        Assert.Contains("FilesMate.Tab.BorderBrush", bar, StringComparison.Ordinal);
         Assert.Contains("TabViewSelectedItemBorderThickness", bar, StringComparison.Ordinal);
         Assert.DoesNotContain("TopCornerRadiusFilterConverter", bar, StringComparison.Ordinal);
         Assert.Contains(

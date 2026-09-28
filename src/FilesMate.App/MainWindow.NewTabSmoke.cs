@@ -1,4 +1,4 @@
-#if FILESMATE_UI_TEST
+﻿#if FILESMATE_UI_TEST
 using System.Text.Json;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
@@ -64,15 +64,14 @@ public sealed partial class MainWindow
             foreach (var theme in new[] { Models.AppThemeKind.Light, Models.AppThemeKind.Dark })
             {
                 await App.AppearanceViewModel!.SetThemeAsync(theme);
-                foreach (var style in new[] { Models.ShellStyleKind.Layered, Models.ShellStyleKind.Unified, Models.ShellStyleKind.Layered })
+                foreach (var style in new[] { "Layered" })
                 {
                     AppWindow.Resize(new Windows.Graphics.SizeInt32(1600, 1000));
                     OpenSettings("appearance");
                     await Task.Delay(600);
-                    var box = FindDescendant<ComboBox>((DependencyObject)Content, b => b.Name == "ShellStyleBox")!;
-                    box.SelectedItem = box.Items.OfType<ComboBoxItem>().Single(i => (string)i.Tag == style.ToString());
+                    var box = FindDescendant<ComboBox>((DependencyObject)Content, b => b.Name == "ShellStyleBox");
+                    if (box is not null) throw new InvalidOperationException("Obsolete shell style control remains visible.");
                     await Task.Delay(600);
-                    if (App.AppearanceViewModel.Current.ShellStyle != style) throw new InvalidOperationException("Style selector did not apply.");
                     await Capture((UIElement)Content, $"shell-settings-{theme}-{style}.png");
                     CloseSettings();
                     foreach (var size in new[] { new Windows.Graphics.SizeInt32(1600, 1000), new Windows.Graphics.SizeInt32(1080, 760) })
@@ -163,7 +162,7 @@ public sealed partial class MainWindow
         File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "new-tab-smoke.json"), JsonSerializer.Serialize(new { Passed = failures.Count == 0, Failures = failures, Samples = samples }, new JsonSerializerOptions { WriteIndented = true }));
     }
 
-    private static async Task Capture(UIElement element, string name)
+    internal static async Task Capture(UIElement element, string name)
     {
         var bitmap = new Microsoft.UI.Xaml.Media.Imaging.RenderTargetBitmap();
         await bitmap.RenderAsync(element);

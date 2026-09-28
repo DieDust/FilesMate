@@ -44,6 +44,8 @@ FilesMate's Apache-2.0 license does not replace the following licenses. Exact re
 | NPOI | 2.7.6 | Apache-2.0; package LICENSE retained; used only by the disposable XLS preview worker |
 | ExcelDataReader | 3.9.0 | MIT; ExcelDataReader-LICENSE.txt |
 | Markdig | 1.3.2 | BSD-2-Clause; Markdig-LICENSE.txt |
+| SharpCompress | 0.50.4 | MIT; SharpCompress-LICENSE.txt; managed archive engine, source https://github.com/adamhathcock/sharpcompress/tree/0.50.4 |
+| UnRAR reference decoder notice | As included in SharpCompress 0.50.4 | SharpCompress-UnRAR-license.txt; RAR decoding only, no RAR encoder is included |
 | Mozilla PDF.js (pdfjs-dist) | 6.3.289 | Apache-2.0; Assets/PdfPreview/LICENSE; bundled font/CMap/WASM notices retained in their asset directories |
 | Microsoft.Data.Sqlite and Core | 10.0.1 | MIT; Microsoft.Data.Sqlite-LICENSE.txt |
 | SQLitePCLRaw bundle/core/provider | 2.1.11 | Apache-2.0; SQLitePCLRaw-LICENSE.txt |

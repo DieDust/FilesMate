@@ -1,4 +1,4 @@
-#if FILESMATE_UI_TEST
+﻿#if FILESMATE_UI_TEST
 using System.Text.Json;
 using FilesMate.App.Models;
 using FilesMate.App.Views;
@@ -32,27 +32,24 @@ public sealed partial class MainWindow
                 var settings = original with { Theme = theme, Backdrop = backdrop, GlassEffect = effect, TransparencyPercent = 25 };
                 double[]? first = null;
                 Windows.UI.Color[]? firstColors = null;
-                foreach (var style in new[] { ShellStyleKind.Layered, ShellStyleKind.Unified, ShellStyleKind.Layered })
+                foreach (var pass in new[] { 0, 1, 2 })
                 {
-                    ApplyAppearance(settings with { ShellStyle = style });
+                    ApplyAppearance(settings);
                     await Task.Delay(30);
                     var brushes = keys.Select(key => (SolidColorBrush)FindTheme(Application.Current.Resources,
                         theme == AppThemeKind.Light ? "Light" : "Dark", key)!).ToArray();
                     var coverage = brushes.Select(b => b.Opacity * b.Color.A / 255d).ToArray();
-                    if (style == ShellStyleKind.Layered)
-                    {
-                        var opaque = backdrop == BackdropKind.Solid || effect == GlassEffectMode.Off;
-                        if (coverage.Where((a, i) => Math.Abs(a - (opaque ? 1 : Coverage(i, .75))) > 0.000001).Any())
-                            throw new InvalidOperationException($"Unexpected coverage: {theme}/{backdrop}/{effect}");
-                        if (first is not null && !first.SequenceEqual(coverage))
-                            throw new InvalidOperationException("Style round trip changed transparency.");
-                        var colors = brushes.Select(b => b.Color).ToArray();
-                        if (firstColors is not null && !firstColors.SequenceEqual(colors))
-                            throw new InvalidOperationException("Style round trip accumulated tint compensation.");
-                        first = coverage;
-                        firstColors = colors;
-                    }
-                    results.Add(new { theme, backdrop, effect, style, coverage });
+                    var opaque = backdrop == BackdropKind.Solid || effect == GlassEffectMode.Off;
+                    if (coverage.Where((a, i) => Math.Abs(a - (opaque ? 1 : Coverage(i, .75))) > 0.000001).Any())
+                        throw new InvalidOperationException($"Unexpected coverage: {theme}/{backdrop}/{effect}");
+                    if (first is not null && !first.SequenceEqual(coverage))
+                        throw new InvalidOperationException("Repeated appearance application changed transparency.");
+                    var colors = brushes.Select(b => b.Color).ToArray();
+                    if (firstColors is not null && !firstColors.SequenceEqual(colors))
+                        throw new InvalidOperationException("Repeated appearance application accumulated tint compensation.");
+                    first = coverage;
+                    firstColors = colors;
+                    results.Add(new { theme, backdrop, effect, pass, coverage });
                 }
             }
 
@@ -61,7 +58,7 @@ public sealed partial class MainWindow
             {
                 var name = theme == AppThemeKind.Light ? "Light" : "Dark";
                 var settings = original with { Theme = theme, Backdrop = BackdropKind.Acrylic,
-                    GlassEffect = GlassEffectMode.Balanced, ShellStyle = ShellStyleKind.Layered };
+                    GlassEffect = GlassEffectMode.Balanced };
                 Windows.UI.Color[]? palette = null;
                 foreach (var percent in new[] { 0, 1, 5, 25, 50, 100 })
                 {

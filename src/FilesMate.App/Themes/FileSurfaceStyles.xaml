@@ -61,6 +61,25 @@
         <Setter Property="Padding" Value="12,5,8,5" />
         <Setter Property="MinHeight" Value="34" />
     </Style>
+    <Style x:Key="FilesMate.RoundedFlyoutPresenterStyle" TargetType="FlyoutPresenter">
+        <Setter Property="Padding" Value="4" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="Background" Value="{ThemeResource FilesMate.LiquidGlass.SolidFillBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.Floating.OutlineBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style x:Key="FilesMate.PaneChoiceStyle" TargetType="Button" BasedOn="{StaticResource QuietButtonStyle}">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}"/>
+        <Setter Property="Padding" Value="10"/><Setter Property="CornerRadius" Value="8"/>
+    </Style>
+    <Style x:Key="FilesMate.ActivePaneChoiceStyle" TargetType="Button" BasedOn="{StaticResource FilesMate.PaneChoiceStyle}">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}"/>
+    </Style>
+    <Style x:Key="FilesMate.PaneDiagramStyle" TargetType="Border">
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.Text.SecondaryBrush}"/>
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="3"/>
+    </Style>
     <Style TargetType="ComboBoxItem" BasedOn="{StaticResource DefaultComboBoxItemStyle}">
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
     </Style>
@@ -80,5 +99,88 @@
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="TextWrapping" Value="WrapWholeWords" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+    </Style>
+
+    <!-- Shared semantic accents; colors live exclusively in the theme dictionaries. -->
+
+    <Style x:Key="FilesMate.Place.NeutralStyle" TargetType="FontIcon">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Place.NeutralBrush}" />
+    </Style>
+    <Style x:Key="FilesMate.DetailsMetadataTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style x:Key="FilesMate.Type.NeutralStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Type.Neutral.BackgroundBrush}" />
+        <Setter Property="Padding" Value="6,1" />
+    </Style>
+    <Style x:Key="FilesMate.Type.NeutralTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Type.Neutral.ForegroundBrush}" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <Style x:Key="FilesMate.Place.BlueStyle" TargetType="FontIcon">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Place.BlueBrush}" />
+    </Style>
+    <Style x:Key="FilesMate.Type.BlueStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Type.Blue.BackgroundBrush}" />
+        <Setter Property="Padding" Value="6,1" />
+    </Style>
+    <Style x:Key="FilesMate.Type.BlueTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Type.Blue.ForegroundBrush}" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <Style x:Key="FilesMate.Place.TealStyle" TargetType="FontIcon">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Place.TealBrush}" />
+    </Style>
+    <Style x:Key="FilesMate.Type.TealStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Type.Teal.BackgroundBrush}" />
+        <Setter Property="Padding" Value="6,1" />
+    </Style>
+    <Style x:Key="FilesMate.Type.TealTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Type.Teal.ForegroundBrush}" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <Style x:Key="FilesMate.Place.AmberStyle" TargetType="FontIcon">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Place.AmberBrush}" />
+    </Style>
+    <Style x:Key="FilesMate.Type.AmberStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Type.Amber.BackgroundBrush}" />
+        <Setter Property="Padding" Value="6,1" />
+    </Style>
+    <Style x:Key="FilesMate.Type.AmberTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Type.Amber.ForegroundBrush}" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <Style x:Key="FilesMate.Place.VioletStyle" TargetType="FontIcon">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Place.VioletBrush}" />
+    </Style>
+    <Style x:Key="FilesMate.Type.VioletStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Type.Violet.BackgroundBrush}" />
+        <Setter Property="Padding" Value="6,1" />
+    </Style>
+    <Style x:Key="FilesMate.Type.VioletTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Type.Violet.ForegroundBrush}" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <Style x:Key="FilesMate.Place.RoseStyle" TargetType="FontIcon">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Place.RoseBrush}" />
+    </Style>
+    <Style x:Key="FilesMate.Type.RoseStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Type.Rose.BackgroundBrush}" />
+        <Setter Property="Padding" Value="6,1" />
+    </Style>
+    <Style x:Key="FilesMate.Type.RoseTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Type.Rose.ForegroundBrush}" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <Style x:Key="FilesMate.Type.PlainTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.SecondaryBrush}" />
     </Style>
 </ResourceDictionary>

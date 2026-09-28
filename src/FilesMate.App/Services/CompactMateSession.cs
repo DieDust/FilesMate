@@ -13,7 +13,7 @@ internal static class CompactMateSession
     public static Task<bool> IsAvailableAsync(bool forceRefresh = false) => Availability.GetAsync(forceRefresh);
 
     public static bool RequiresExternalProvider(AppCommandId id) =>
-        id is AppCommandId.Compress7z or AppCommandId.OpenInCompactMate;
+        id is AppCommandId.OpenInCompactMate;
 
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     public static void Launch(CompactMateVerb verb, IReadOnlyList<string> paths, IUserRegistry registry)

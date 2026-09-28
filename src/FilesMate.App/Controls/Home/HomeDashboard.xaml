@@ -23,10 +23,10 @@
                 Tag="{x:Bind}"
                 AutomationProperties.Name="{x:Bind Label}">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                    <FontIcon
-                        FontFamily="Segoe Fluent Icons"
-                        FontSize="16"
-                        Glyph="{x:Bind Glyph}" />
+                    <Border Width="32" Height="32" CornerRadius="9"
+                        Background="{ThemeResource FilesMate.Home.IconBackgroundBrush}">
+                        <sidebar:PlaceGlyph Glyph="{x:Bind Glyph}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
                     <TextBlock
                         VerticalAlignment="Center"
                         FontSize="14"
@@ -50,10 +50,7 @@
                 Tag="{x:Bind}"
                 AutomationProperties.Name="{x:Bind Label}">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon
-                        FontFamily="Segoe Fluent Icons"
-                        FontSize="14"
-                        Glyph="{x:Bind Glyph}" />
+                    <sidebar:PlaceGlyph Glyph="{x:Bind Glyph}" VerticalAlignment="Center" />
                     <TextBlock
                         VerticalAlignment="Center"
                         FontSize="13"
@@ -152,14 +149,9 @@
                                     Width="40"
                                     Height="40"
                                     VerticalAlignment="Top"
-                                    Background="{ThemeResource FilesMate.Item.HoverBrush}"
+                                    Background="{ThemeResource FilesMate.Home.IconBackgroundBrush}"
                                     CornerRadius="10">
-                                    <FontIcon
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        FontFamily="Segoe Fluent Icons"
-                                        FontSize="18"
-                                        Glyph="{x:Bind Glyph}" />
+                                    <sidebar:PlaceGlyph HorizontalAlignment="Center" VerticalAlignment="Center" Glyph="{x:Bind Glyph}" />
                                 </Border>
                                 <StackPanel Grid.Column="1" Spacing="6">
                                     <Grid ColumnSpacing="8">

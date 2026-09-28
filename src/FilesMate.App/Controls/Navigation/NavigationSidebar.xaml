@@ -5,6 +5,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:FilesMate.App.Controls.Navigation"
+    xmlns:glyph="using:FilesMate.App.Controls.Navigation"
     xmlns:nav="using:FilesMate.App.Navigation"
     IsTabStop="True"
     KeyDown="Root_KeyDown">
@@ -142,15 +143,17 @@
                                                 Background="{ThemeResource FilesMate.Item.SelectedBrush}"
                                                 CornerRadius="{StaticResource FilesMate.Corner.Small}"
                                                 IsHitTestVisible="False" />
-                                            <FontIcon
+                                            <Border Width="3" Height="16" Margin="4,0,0,0"
+                                                HorizontalAlignment="Left" VerticalAlignment="Center" CornerRadius="1.5"
+                                                Background="{ThemeResource FilesMate.Selection.AccentBrush}"
+                                                Opacity="{x:Bind Selected, Mode=OneWay, Converter={StaticResource BoolToOpacity}}"
+                                                IsHitTestVisible="False" />
+                                            <glyph:PlaceGlyph
                                                 Width="16"
                                                 Height="16"
                                                 Margin="{Binding IsCompact, ElementName=Root, Converter={StaticResource IconMargin}}"
                                                 HorizontalAlignment="{Binding IsCompact, ElementName=Root, Converter={StaticResource CompactAlign}}"
                                                 VerticalAlignment="Center"
-                                                FontFamily="Segoe Fluent Icons"
-                                                FontSize="16"
-                                                Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
                                                 Glyph="{x:Bind IconGlyph}" />
                                             <Grid
                                                 Margin="44,0,12,0"

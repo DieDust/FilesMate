@@ -15,7 +15,7 @@ public sealed class NameSearchDiagnostics
 }
 
 /// <summary>Shared filename semantics for the app and the executable Flow plugin.</summary>
-public static class NameIndexReader
+public static partial class NameIndexReader
 {
     public static string[] Terms(string query) => query.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
 

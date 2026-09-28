@@ -1,4 +1,4 @@
-using Loc = FilesMate.App.Localization.StringTable;
+﻿using Loc = FilesMate.App.Localization.StringTable;
 using System.ComponentModel;
 using System.IO;
 using System.Threading;
@@ -155,6 +155,16 @@ public sealed class SearchRow(NameHit hit, ImageSource icon) : INotifyPropertyCh
     public bool CanLocate => !string.IsNullOrEmpty(FilePath);
     public string DisplayName => System.IO.Path.GetExtension(Name).Equals(".lnk", StringComparison.OrdinalIgnoreCase) ? System.IO.Path.GetFileNameWithoutExtension(Name) : Name;
     public string Location => IsApplication ? Hit.Application!.IsFilesMate ? Loc.Get("App_TrayDescription") : Loc.Get("LaunchApplication") : System.IO.Path.GetDirectoryName(Path) ?? Path;
+    public string CompactLocation
+    {
+        get
+        {
+            if (IsApplication) return Location;
+            var parent = System.IO.Path.GetDirectoryName(Location);
+            if (string.IsNullOrEmpty(parent)) return Location;
+            return System.IO.Path.GetFileName(parent.TrimEnd('\\')) + "  ›  " + System.IO.Path.GetFileName(Location.TrimEnd('\\'));
+        }
+    }
     public string Path => Hit.Path;
     public string Kind => IsApplication ? Loc.Get("Application") : Hit.IsDirectory ? Loc.Get("Type_Folder") : System.IO.Path.GetExtension(Hit.Name).ToLowerInvariant() switch
     { ".lnk" => Loc.Get("SearchRankShortcut"), ".exe" or ".com" => Loc.Get("ProgramFile"), _ => System.IO.Path.GetExtension(Hit.Name).TrimStart('.').ToUpperInvariant() };

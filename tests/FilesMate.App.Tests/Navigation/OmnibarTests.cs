@@ -311,7 +311,7 @@ public sealed class OmnibarTests
         Assert.Equal("{x:Null}", (string?)searchHost.Attribute("Shadow"));
         Assert.Equal("Transparent", (string?)searchFill.Attribute("Color"));
         Assert.Equal("{ThemeResource FilesMate.TextControl.CaretHostBrush}", (string?)searchBox.Attribute("Background"));
-        Assert.Equal("12,10,4,0", (string?)searchBox.Attribute("Padding"));
+        Assert.Equal("Center", (string?)searchBox.Attribute("VerticalAlignment"));
         Assert.Equal("Center", (string?)searchBox.Attribute("VerticalContentAlignment"));
         Assert.Equal("TextBox", searchBox.Name.LocalName);
         Assert.Null(searchBox.Attribute("PlaceholderText"));

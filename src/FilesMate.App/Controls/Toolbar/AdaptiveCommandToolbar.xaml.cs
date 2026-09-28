@@ -7,10 +7,6 @@ using FilesMate.Core.Entries;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media;
-
-using Windows.UI;
-
 namespace FilesMate.App.Controls.Toolbar;
 
 public sealed partial class AdaptiveCommandToolbar : UserControl
@@ -23,6 +19,7 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
 
     private CommandContext _context = CommandContext.ForToolbar(0);
     private bool _overflowPending;
+    public bool SearchMode { get; set; }
     private readonly List<MenuFlyoutItem> _extraOverflowSortItems = [];
     private readonly List<(AppCommandId Id, MenuFlyoutItem Item)> _overflowFileItems = [];
     private readonly MenuFlyoutSeparator _fileOverflowSeparator = new();
@@ -36,12 +33,14 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
         SortLabel.Text = StringTable.Get("Sort");
         Caption(SortButton, "Sort");
         Caption(ShelfButton, "Shelf_Title");
+        ShelfLabel.Text = StringTable.Get("Shelf_Short");
         Caption(DetailsViewButton, "Layout_Details");
         Caption(GridViewButton, "Layout_LargeIcons");
         Caption(MoreButton, "Nav_More");
         Caption(FolderSizesButton, "ShowFolderSizesTitle");
         FolderSizesLabel.Text = StringTable.Get("Column_Size");
         Caption(DualPaneButton, "DualPane");
+        Caption(PaneArrangementButton, "Pane_Arrangement");
         Caption(PreviewButton, "PreviewPaneTitle");
         OverflowSortName.Text = StringTable.Get("SortByName");
         OverflowSortModified.Text = StringTable.Get("SortByModified");
@@ -119,6 +118,7 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
         Apply(ShareButton, Find(states, ToolbarCommandId.Share));
         Apply(DeleteButton, Find(states, ToolbarCommandId.Delete));
         Apply(CopyPathButton, Find(states, ToolbarCommandId.CopyPath));
+        if (SearchMode) NewButton.Visibility = Visibility.Collapsed;
         Apply(SortButton, Find(states, ToolbarCommandId.Sort));
         NewFolderItem.IsEnabled = CommandCatalog.CanExecute(AppCommandId.NewFolder, _context);
         NewFileItem.IsEnabled = CommandCatalog.CanExecute(AppCommandId.NewFile, _context);
@@ -129,33 +129,44 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
 
     public void SetLayout(FileLayoutKind kind)
     {
-        DetailsViewButton.Background = kind == FileLayoutKind.Details
-            ? Theme("FilesMate.Item.SelectedBrush")
-            : Transparent();
-        GridViewButton.Background = kind == FileLayoutKind.Grid
-            ? Theme("FilesMate.Item.SelectedBrush")
-            : Transparent();
+        SetActive(DetailsViewButton, kind == FileLayoutKind.Details);
+        SetActive(GridViewButton, kind == FileLayoutKind.Grid);
     }
 
     public void SetFolderSizesActive(bool active)
     {
-        FolderSizesButton.Background = active
-            ? Theme("FilesMate.Item.SelectedBrush")
-            : Transparent();
+        SetActive(FolderSizesButton, active);
     }
 
     public void SetDualPaneActive(bool active)
     {
-        DualPaneButton.Background = active
-            ? Theme("FilesMate.Item.SelectedBrush")
-            : Transparent();
+        SetPaneCount(active ? 2 : 1);
+    }
+
+    public void SetPaneCount(int count)
+    {
+        _arrangementActive = count == 3;
+        SetActive(DualPaneButton, count > 1);
+        PaneDividerOne.Margin = new Thickness(count == 3 ? 6 : 9, 2, 0, 2);
+        PaneDividerTwo.Visibility = count == 3 ? Visibility.Visible : Visibility.Collapsed;
+        Caption(DualPaneButton, count == 1 ? "Pane_NextDual" : count == 2 ? "Pane_NextTriple" : "Pane_NextSingle");
+    }
+
+    private static void AnimateChoice(object sender)
+    {
+        if (sender is not Button { Content: FrameworkElement content } || App.Motion.Fast <= TimeSpan.Zero) return;
+        var visual = Microsoft.UI.Xaml.Hosting.ElementCompositionPreview.GetElementVisual(content);
+        visual.CenterPoint = new System.Numerics.Vector3((float)content.ActualWidth / 2, (float)content.ActualHeight / 2, 0);
+        var animation = visual.Compositor.CreateVector3KeyFrameAnimation();
+        animation.InsertKeyFrame(0, new System.Numerics.Vector3(.84f, .84f, 1));
+        animation.InsertKeyFrame(1, System.Numerics.Vector3.One);
+        animation.Duration = App.Motion.Fast;
+        visual.StartAnimation("Scale", animation);
     }
 
     public void SetPreviewActive(bool active)
     {
-        PreviewButton.Background = active
-            ? Theme("FilesMate.Item.SelectedBrush")
-            : Transparent();
+        SetActive(PreviewButton, active);
     }
 
     private static void OnShowCommandLabelsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -273,6 +284,14 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
         OverflowSeparator.Visibility = !overflow.ShowSort && !overflow.ShowView
             ? Visibility.Visible
             : Visibility.Collapsed;
+        if (SearchMode)
+        {
+            SortButton.Visibility = FolderSizesButton.Visibility = DualPaneButton.Visibility = PaneArrangementButton.Visibility = Visibility.Collapsed;
+            OverflowSortName.Visibility = OverflowSortModified.Visibility = OverflowSortType.Visibility = OverflowSortSize.Visibility = Visibility.Collapsed;
+            foreach (var item in _extraOverflowSortItems) item.Visibility = Visibility.Collapsed;
+            foreach (var (id, item) in _overflowFileItems)
+                if (id is AppCommandId.NewFolder or AppCommandId.NewFile) item.Visibility = Visibility.Collapsed;
+        }
     }
 
     private void UpdateGroups()
@@ -345,17 +364,17 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
     private void DeleteButton_Click(object sender, RoutedEventArgs e) =>
         CommandInvoked?.Invoke(this, AppCommandId.Recycle);
 
-    private void DetailsViewButton_Click(object sender, RoutedEventArgs e) =>
-        LayoutChanged?.Invoke(this, FileLayoutKind.Details);
+    private void DetailsViewButton_Click(object sender, RoutedEventArgs e)
+    { LayoutChanged?.Invoke(this, FileLayoutKind.Details); AnimateChoice(DetailsViewButton); }
 
-    private void GridViewButton_Click(object sender, RoutedEventArgs e) =>
-        LayoutChanged?.Invoke(this, FileLayoutKind.Grid);
+    private void GridViewButton_Click(object sender, RoutedEventArgs e)
+    { LayoutChanged?.Invoke(this, FileLayoutKind.Grid); AnimateChoice(GridViewButton); }
 
     private void FolderSizesButton_Click(object sender, RoutedEventArgs e) =>
         FolderSizesClicked?.Invoke(this, e);
 
-    private void DualPaneButton_Click(object sender, RoutedEventArgs e) =>
-        DualPaneClicked?.Invoke(this, e);
+    private void DualPaneButton_Click(object sender, RoutedEventArgs e)
+    { DualPaneClicked?.Invoke(this, e); AnimateChoice(DualPaneButton); }
 
     private void PreviewButton_Click(object sender, RoutedEventArgs e) =>
         PreviewClicked?.Invoke(this, e);
@@ -372,12 +391,6 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
     private void SortSize_Click(object sender, RoutedEventArgs e) =>
         SortRequested?.Invoke(this, EntrySortColumn.Size);
 
-    private static Brush Theme(string key)
-    {
-        return Application.Current.Resources.TryGetValue(key, out var value) && value is Brush brush
-            ? brush
-            : Transparent();
-    }
-
-    private static Brush Transparent() => new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+    private static void SetActive(Button button, bool active) => button.Style =
+        (Style)Application.Current.Resources[active ? "SelectedCommandBarButtonStyle" : "CommandBarButtonStyle"];
 }

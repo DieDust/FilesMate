@@ -1,4 +1,4 @@
-using FilesMate.App.Animations;
+﻿using FilesMate.App.Animations;
 using FilesMate.App.Models;
 using FilesMate.App.Tests.DesignSystem;
 
@@ -10,15 +10,12 @@ public sealed class GlassSceneControllerTests
     [InlineData(0, 1d)]
     [InlineData(50, 0.5d)]
     [InlineData(100, 0d)]
-    public void Custom_percentage_controls_material_coverage_in_both_styles(int percent, double expected)
+    public void Custom_percentage_controls_layered_material_coverage(int percent, double expected)
     {
-        foreach (var style in Enum.GetValues<ShellStyleKind>())
-        {
-            var settings = AppearanceSettings.Default with { ShellStyle = style, TransparencyPercent = percent };
-            Assert.Equal(expected, GlassSceneState.Resolve(settings).SurfaceOpacity);
-            Assert.Equal(1, GlassSceneState.Resolve(settings with { Backdrop = BackdropKind.Solid }).SurfaceOpacity);
-            Assert.Equal(1, GlassSceneState.Resolve(settings with { GlassEffect = GlassEffectMode.Off }).SurfaceOpacity);
-        }
+        var settings = AppearanceSettings.Default with { TransparencyPercent = percent };
+        Assert.Equal(expected, GlassSceneState.Resolve(settings).SurfaceOpacity);
+        Assert.Equal(1, GlassSceneState.Resolve(settings with { Backdrop = BackdropKind.Solid }).SurfaceOpacity);
+        Assert.Equal(1, GlassSceneState.Resolve(settings with { GlassEffect = GlassEffectMode.Off }).SurfaceOpacity);
     }
 
     [Fact]

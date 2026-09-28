@@ -182,7 +182,7 @@
                 PointerMoved="ColumnResize_PointerMoved"
                 PointerReleased="ColumnResize_PointerReleased"
                 PointerCaptureLost="ColumnResize_PointerCaptureLost">
-                <Border Width="1" HorizontalAlignment="Center" Background="{ThemeResource FilesMate.Divider.Brush}" />
+                <Border Width="1" Margin="0,8" HorizontalAlignment="Center" Background="{ThemeResource FilesMate.Divider.Brush}" />
             </Border>
             <Border
                 x:Name="ModifiedResize"
@@ -198,7 +198,7 @@
                 PointerMoved="ColumnResize_PointerMoved"
                 PointerReleased="ColumnResize_PointerReleased"
                 PointerCaptureLost="ColumnResize_PointerCaptureLost">
-                <Border Width="1" HorizontalAlignment="Center" Background="{ThemeResource FilesMate.Divider.Brush}" />
+                <Border Width="1" Margin="0,8" HorizontalAlignment="Center" Background="{ThemeResource FilesMate.Divider.Brush}" />
             </Border>
             <Border
                 x:Name="TypeResize"
@@ -214,7 +214,7 @@
                 PointerMoved="ColumnResize_PointerMoved"
                 PointerReleased="ColumnResize_PointerReleased"
                 PointerCaptureLost="ColumnResize_PointerCaptureLost">
-                <Border Width="1" HorizontalAlignment="Center" Background="{ThemeResource FilesMate.Divider.Brush}" />
+                <Border Width="1" Margin="0,8" HorizontalAlignment="Center" Background="{ThemeResource FilesMate.Divider.Brush}" />
             </Border>
             <Border
                 x:Name="SizeResize"
@@ -230,7 +230,7 @@
                 PointerMoved="ColumnResize_PointerMoved"
                 PointerReleased="ColumnResize_PointerReleased"
                 PointerCaptureLost="ColumnResize_PointerCaptureLost">
-                <Border Width="1" HorizontalAlignment="Center" Background="{ThemeResource FilesMate.Divider.Brush}" />
+                <Border Width="1" Margin="0,8" HorizontalAlignment="Center" Background="{ThemeResource FilesMate.Divider.Brush}" />
             </Border>
             <Border
                 Grid.ColumnSpan="7"

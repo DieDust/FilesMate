@@ -81,6 +81,10 @@
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
 
+    <Style x:Key="SelectedCommandBarButtonStyle" TargetType="Button" BasedOn="{StaticResource CommandBarButtonStyle}">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}" />
+    </Style>
+
     <Style
         x:Key="FilesMate.ContextCommandButtonStyle"
         BasedOn="{StaticResource ToolbarIconButtonStyle}"
@@ -330,5 +334,13 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <Style x:Key="PrimaryCommandButtonStyle" TargetType="Button" BasedOn="{StaticResource PillButtonStyle}">
+        <Setter Property="MinWidth" Value="36" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Height" Value="{StaticResource FilesMate.Control.Height.Row}" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Small}" />
     </Style>
 </ResourceDictionary>

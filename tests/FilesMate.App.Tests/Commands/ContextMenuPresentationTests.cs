@@ -1,5 +1,6 @@
 using FilesMate.App.Commands;
 using FilesMate.App.Controls.Menus;
+using FilesMate.App.Icons;
 using FilesMate.App.Navigation;
 using FilesMate.App.Tests.DesignSystem;
 
@@ -7,6 +8,22 @@ namespace FilesMate.App.Tests.Commands;
 
 public sealed class ContextMenuPresentationTests
 {
+    [Fact]
+    public void Decorated_volume_selection_keeps_extract_menu_available_without_provider_probe()
+    {
+        string[] paths = [@"D:\包\妹妹可爱.7z.001删删删", @"D:\包\妹妹可爱.7z.002删删删", @"D:\包\other.zip删"];
+        var context = CommandContext.ForMenu(paths.Length) with
+        {
+            PrimaryPath = paths[0],
+            PrimaryIsArchive = FileTypeIconCatalog.IsArchivePath(paths[0]),
+            SelectionIsArchive = paths.All(FileTypeIconCatalog.IsArchivePath),
+        };
+        var extract = Assert.Single(FileContextMenuBuilder.Build(context), entry => entry.Command == AppCommandId.Extract);
+        Assert.True(extract.Enabled);
+        Assert.True(extract.HasChevron);
+        Assert.True(CommandCatalog.CanExecute(AppCommandId.SmartExtract, context));
+    }
+
     [Fact]
     public void Menu_puts_frequent_actions_on_the_command_strip()
     {
@@ -306,7 +323,7 @@ public sealed class ContextMenuPresentationTests
         Assert.DoesNotContain("CompactMateSession.Launch", actions, StringComparison.Ordinal);
         Assert.DoesNotContain("CompactMateSession.Launch", shelf, StringComparison.Ordinal);
         Assert.Contains("ShellOperationWorker.RunAsync", archiveUi, StringComparison.Ordinal);
-        Assert.Contains("CompactMateSession.TryLaunch", archiveUi, StringComparison.Ordinal);
+        Assert.Contains("ArchiveRouting.Choose", archiveUi, StringComparison.Ordinal);
         Assert.Contains("BuiltInArchiveTransfer.RunAsync", archiveUi, StringComparison.Ordinal);
 
         var flyout = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Controls", "Menus", "FileContextFlyout.cs"));

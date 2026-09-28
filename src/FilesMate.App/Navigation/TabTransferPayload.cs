@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using FilesMate.Platform.Windows.Shell;
 
 namespace FilesMate.App.Navigation;
@@ -20,7 +20,10 @@ internal sealed record TabTransferPayload(int Version, int SourceProcessId, Guid
             var value = JsonSerializer.Deserialize<TabTransferPayload>(json);
             return value is { Version: 1, SourceProcessId: > 0 } && value.Id != Guid.Empty
                 && value.State is { } state && ValidPane(state.Left)
-                && (state.Right is null || ValidPane(state.Right)) ? value : null;
+                && Enum.IsDefined(state.PaneArrangement) && double.IsFinite(state.SplitRatio) && double.IsFinite(state.InnerSplitRatio)
+                && (state.Right is null || ValidPane(state.Right))
+                && (state.Third is null || state.Right is not null && ValidPane(state.Third))
+                && (!state.ThirdActive || state.Third is not null) ? value : null;
         }
         catch (JsonException) { return null; }
     }
@@ -36,5 +39,6 @@ internal sealed record TabTransferPayload(int Version, int SourceProcessId, Guid
     private static bool ValidHistory(string[]? items) => items is { Length: <= 4096 } && items.All(ValidLocation);
     private static bool ValidLocation(string? path) => path is { Length: > 0 and <= 32768 }
         && !path.Contains('\0') && (HomeLocation.IsHome(path) || TagLocation.TryParse(path, out _)
+            || FilesMate.Search.SearchPageRequest.TryParse(path, out _)
             || PortableDeviceLocation.TryParse(path, out _) || Path.IsPathFullyQualified(path));
 }

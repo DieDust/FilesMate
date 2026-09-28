@@ -1,0 +1,5 @@
+{
+  "zh-CN": "更新界面皮肤，统一深浅主题、圆角、间距与导航层次。重做搜索页及类型、大小和高级筛选。Alt+Space 搜索窗口居中显示，适度放大输入区；分类直接显示在一行，空间不足时滚动，查看更多移到顶部。精简三栏布局选择卡片，再次点击当前布局可回到单一视窗。加入独立的内置压缩引擎及外部压缩软件选择。项目首页预览图已按新皮肤重新截取。",
+  "en-US": "Refreshed light and dark themes with consistent corners, spacing, and navigation. Redesigned search results and type, size, and advanced filters. Alt+Space search stays centered with a slightly larger input, directly visible scrollable categories, and View more at the top. The compact three-pane layout picker returns to a single pane when the active layout is selected again. Includes a bundled archive engine and configurable external archive apps. Project screenshots now show the refreshed interface.",
+  "ja-JP": "ライト・ダークテーマを刷新し、角丸、余白、ナビゲーションを統一しました。検索結果と種類・サイズ・詳細フィルターを改善しました。Alt+Space 検索を中央に配置し、入力欄を少し拡大。カテゴリを横一列で表示し、必要に応じてスクロールできます。「さらに表示」は上部に移動しました。3 ペインのレイアウト選択を小型化し、選択中のレイアウトをもう一度押すと 1 ペインに戻ります。内蔵圧縮エンジンと外部圧縮ソフトの選択に対応し、紹介画像も新しい外観に更新しました。"
+}

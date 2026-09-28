@@ -223,8 +223,26 @@
   <data name="Applying" xml:space="preserve">
     <value>正在应用…</value>
   </data>
+  <data name="Archive_360" xml:space="preserve">
+    <value>360 压缩</value>
+  </data>
+  <data name="Archive_AutoDetect" xml:space="preserve">
+    <value>恢复自动检测</value>
+  </data>
+  <data name="Archive_AutoHint" xml:space="preserve">
+    <value>依次尝试 CompactMate、Bandizip、7-Zip、WinRAR；没有可处理此操作的软件时使用内置引擎。</value>
+  </data>
+  <data name="Archive_Automatic" xml:space="preserve">
+    <value>自动</value>
+  </data>
+  <data name="Archive_BrowseApp" xml:space="preserve">
+    <value>指定程序…</value>
+  </data>
+  <data name="Archive_BuiltIn" xml:space="preserve">
+    <value>FileMate 内置</value>
+  </data>
   <data name="Archive_BuiltinHint" xml:space="preserve">
-    <value>内置支持普通 ZIP。加密 ZIP 和其他格式请使用 CompactMate 或其他压缩软件。</value>
+    <value>可创建 ZIP、7z，解压 ZIP、7z、RAR、TAR，支持常见加密包和分卷，无需安装其他软件。</value>
   </data>
   <data name="Archive_Cancel" xml:space="preserve">
     <value>取消</value>
@@ -241,14 +259,23 @@
   <data name="Archive_ChooseDestination" xml:space="preserve">
     <value>选择目标文件夹</value>
   </data>
+  <data name="Archive_CompactMateHint" xml:space="preserve">
+    <value>安装后使用 CompactMate 的批量解压、密码库和内层压缩包自动解压功能。</value>
+  </data>
+  <data name="Archive_CompatibleHint" xml:space="preserve">
+    <value>请选择兼容 7zG.exe 的图形操作程序。命令行程序或不支持的操作将使用内置引擎。</value>
+  </data>
   <data name="Archive_Completed" xml:space="preserve">
     <value>已完成：{0}</value>
   </data>
   <data name="Archive_CreateZip" xml:space="preserve">
-    <value>创建 ZIP</value>
+    <value>创建压缩文件</value>
   </data>
   <data name="Archive_DefaultName" xml:space="preserve">
     <value>压缩文件</value>
+  </data>
+  <data name="Archive_Detecting" xml:space="preserve">
+    <value>正在查找软件…</value>
   </data>
   <data name="Archive_ErrorArchiveTooLarge" xml:space="preserve">
     <value>解压后的内容超过内置功能的 64 GiB 上限。</value>
@@ -271,8 +298,14 @@
   <data name="Archive_ErrorMetadataTooLarge" xml:space="preserve">
     <value>压缩文件的目录信息超过内置功能的 64 MiB 上限。</value>
   </data>
+  <data name="Archive_ErrorMissingVolume" xml:space="preserve">
+    <value>分卷缺失或不完整，请将所有分卷放在同一个文件夹后重试。</value>
+  </data>
   <data name="Archive_ErrorOperationFailed" xml:space="preserve">
     <value>操作未能完成。请检查文件访问权限和磁盘可用空间，然后重试。</value>
+  </data>
+  <data name="Archive_ErrorPasswordRequired" xml:space="preserve">
+    <value>需要密码，或密码及加密内容校验失败。</value>
   </data>
   <data name="Archive_ErrorSecurityMetadataUnavailable" xml:space="preserve">
     <value>无法安全读取或保留文件的互联网来源标记。请使用支持此标记的本地磁盘，或改用 CompactMate 解压。</value>
@@ -287,7 +320,10 @@
     <value>操作中包含符号链接或重定向文件夹，请选择普通文件和文件夹。</value>
   </data>
   <data name="Archive_ErrorUnsupportedEntry" xml:space="preserve">
-    <value>压缩文件包含加密数据或不支持的内容，请用兼容的压缩软件打开。</value>
+    <value>内置引擎不支持此格式或压缩方式，请使用“用压缩软件打开”或系统右键菜单。</value>
+  </data>
+  <data name="Archive_ExternalHint" xml:space="preserve">
+    <value>支持的操作交给此软件处理；改名分卷及不支持的操作使用内置引擎。</value>
   </data>
   <data name="Archive_ExternalOnly" xml:space="preserve">
     <value>需要 CompactMate</value>
@@ -295,23 +331,65 @@
   <data name="Archive_Failed" xml:space="preserve">
     <value>操作失败：{0}</value>
   </data>
+  <data name="Archive_FallbackHint" xml:space="preserve">
+    <value>首选软件不可用或不支持此操作，正在使用 FileMate 内置引擎。</value>
+  </data>
   <data name="Archive_FolderPicker" xml:space="preserve">
     <value>选择文件夹…</value>
+  </data>
+  <data name="Archive_HaoZip" xml:space="preserve">
+    <value>2345 好压</value>
   </data>
   <data name="Archive_InvalidSelection" xml:space="preserve">
     <value>请至少选择一个已存在的文件或文件夹。</value>
   </data>
   <data name="Archive_NameInvalid" xml:space="preserve">
-    <value>请输入有效的 ZIP 文件名，不要包含文件夹路径。</value>
+    <value>请输入有效的 ZIP 或 7z 文件名，不要包含文件夹路径。</value>
   </data>
   <data name="Archive_NameLabel" xml:space="preserve">
     <value>压缩文件名称</value>
   </data>
+  <data name="Archive_NotInstalled" xml:space="preserve">
+    <value>未找到软件。可指定便携版程序，否则使用内置引擎。</value>
+  </data>
+  <data name="Archive_OpenOnlyHint" xml:space="preserve">
+    <value>可通过“用压缩软件打开”调用。直接压缩、解压由内置引擎完成；此软件自己的操作可从系统右键菜单使用。</value>
+  </data>
+  <data name="Archive_OpenWithApp" xml:space="preserve">
+    <value>用压缩软件打开…</value>
+  </data>
+  <data name="Archive_OtherApp" xml:space="preserve">
+    <value>其他软件（用于打开）</value>
+  </data>
   <data name="Archive_OutputLabel" xml:space="preserve">
     <value>保存到</value>
   </data>
+  <data name="Archive_Password" xml:space="preserve">
+    <value>压缩包密码</value>
+  </data>
+  <data name="Archive_PasswordRetry" xml:space="preserve">
+    <value>密码不正确，或加密内容已损坏，请尝试其他密码。</value>
+  </data>
+  <data name="Archive_Preferred" xml:space="preserve">
+    <value>首选压缩软件</value>
+  </data>
+  <data name="Archive_PreferredHint" xml:space="preserve">
+    <value>选择 FileMate 执行压缩和解压时使用的软件。</value>
+  </data>
   <data name="Archive_Progress" xml:space="preserve">
     <value>{0} / {1} 项 · {2} / {3} MB</value>
+  </data>
+  <data name="Archive_Settings" xml:space="preserve">
+    <value>压缩与解压</value>
+  </data>
+  <data name="Archive_SevenZipCompatible" xml:space="preserve">
+    <value>兼容 7-Zip 的软件</value>
+  </data>
+  <data name="Archive_SmartBuiltinHint" xml:space="preserve">
+    <value>内置智能解压会自动整理目标文件夹；继续解压内层压缩包、自动尝试密码库需要 CompactMate。</value>
+  </data>
+  <data name="Archive_SystemOpenWith" xml:space="preserve">
+    <value>系统打开方式…</value>
   </data>
   <data name="Archive_TemporaryFilesRemain" xml:space="preserve">
     <value>部分临时文件未能清理，位置：{0}</value>
@@ -324,6 +402,9 @@
   </data>
   <data name="Archive_Unsupported" xml:space="preserve">
     <value>此压缩格式需要使用 CompactMate 或其他兼容的压缩软件。</value>
+  </data>
+  <data name="Archive_WinRARHint" xml:space="preserve">
+    <value>使用 WinRAR 打开或解压单个压缩包。压缩、批量处理及改名分卷由内置引擎完成。</value>
   </data>
   <data name="Attribute_Archive" xml:space="preserve">
     <value>存档</value>
@@ -471,6 +552,15 @@
   </data>
   <data name="Category_NameRequired" xml:space="preserve">
     <value>请填写分类名称。</value>
+  </data>
+  <data name="Category_Programs" xml:space="preserve">
+    <value>程序</value>
+  </data>
+  <data name="Category_ScrollNext" xml:space="preserve">
+    <value>向右滚动分类</value>
+  </data>
+  <data name="Category_ScrollPrevious" xml:space="preserve">
+    <value>向左滚动分类</value>
   </data>
   <data name="Category_Show" xml:space="preserve">
     <value>显示此分类</value>
@@ -805,23 +895,23 @@
   <data name="Device_EjectDenied" xml:space="preserve">
     <value>Windows 未能弹出设备。请关闭正在使用它的文件和程序后重试，暂时保持设备连接。</value>
   </data>
-  <data name="Device_EjectShowBlockers" xml:space="preserve">
-    <value>查看文件占用</value>
-  </data>
-  <data name="Device_EjectRetry" xml:space="preserve">
-    <value>重试安全弹出</value>
-  </data>
-  <data name="Device_EjectReleaseOwn" xml:space="preserve">
-    <value>释放 FilesMate 的预览占用</value>
-  </data>
   <data name="Device_EjectNoFileLocks" xml:space="preserve">
     <value>未发现占用此磁盘文件的程序。驱动、系统服务或设备接口仍可能在使用它；请保持连接，关闭相关程序后重试。</value>
   </data>
   <data name="Device_EjectPreparing" xml:space="preserve">
     <value>正在准备弹出，释放已打开的设备文件夹和预览…</value>
   </data>
+  <data name="Device_EjectReleaseOwn" xml:space="preserve">
+    <value>释放 FilesMate 的预览占用</value>
+  </data>
   <data name="Device_EjectRemoving" xml:space="preserve">
     <value>正在等待 Windows 安全弹出设备。结果显示前请保持连接。</value>
+  </data>
+  <data name="Device_EjectRetry" xml:space="preserve">
+    <value>重试安全弹出</value>
+  </data>
+  <data name="Device_EjectShowBlockers" xml:space="preserve">
+    <value>查看文件占用</value>
   </data>
   <data name="Device_EjectSuccess" xml:space="preserve">
     <value>设备已安全弹出，现在可以拔出。</value>
@@ -979,17 +1069,14 @@
   <data name="Favorites_EditFolder" xml:space="preserve">
     <value>已收藏此文件夹，点击编辑或取消收藏</value>
   </data>
-  <data name="Favorites_NewSubgroup" xml:space="preserve">
-    <value>新建子分组</value>
-  </data>
-  <data name="Favorites_GroupCycle" xml:space="preserve">
-    <value>不能将分组移入自身或它的子分组。</value>
-  </data>
   <data name="Favorites_Group" xml:space="preserve">
     <value>收藏分组</value>
   </data>
   <data name="Favorites_GroupAtRoot" xml:space="preserve">
     <value>收藏分组只能放在收藏栏上。</value>
+  </data>
+  <data name="Favorites_GroupCycle" xml:space="preserve">
+    <value>不能将分组移入自身或它的子分组。</value>
   </data>
   <data name="Favorites_GroupDrop" xml:space="preserve">
     <value>拖入文件，添加到此分组</value>
@@ -1056,6 +1143,9 @@
   </data>
   <data name="Favorites_NewGroupMenu" xml:space="preserve">
     <value>新建收藏分组…</value>
+  </data>
+  <data name="Favorites_NewSubgroup" xml:space="preserve">
+    <value>新建子分组</value>
   </data>
   <data name="Favorites_NoMatch" xml:space="preserve">
     <value>没有匹配的收藏</value>
@@ -1603,6 +1693,36 @@
   <data name="PageLoadError_Title" xml:space="preserve">
     <value>无法打开此页面</value>
   </data>
+  <data name="Pane_Arrangement" xml:space="preserve">
+    <value>选择面板排列</value>
+  </data>
+  <data name="Pane_BottomFocus" xml:space="preserve">
+    <value>上二下一</value>
+  </data>
+  <data name="Pane_Columns" xml:space="preserve">
+    <value>左右三栏</value>
+  </data>
+  <data name="Pane_LeftFocus" xml:space="preserve">
+    <value>左一右二</value>
+  </data>
+  <data name="Pane_NextDual" xml:space="preserve">
+    <value>切换为双栏</value>
+  </data>
+  <data name="Pane_NextSingle" xml:space="preserve">
+    <value>切换为单栏</value>
+  </data>
+  <data name="Pane_NextTriple" xml:space="preserve">
+    <value>切换为三栏</value>
+  </data>
+  <data name="Pane_RightFocus" xml:space="preserve">
+    <value>左二右一</value>
+  </data>
+  <data name="Pane_Rows" xml:space="preserve">
+    <value>上下三栏</value>
+  </data>
+  <data name="Pane_TopFocus" xml:space="preserve">
+    <value>上一下二</value>
+  </data>
   <data name="ParentFolder" xml:space="preserve">
     <value>所在文件夹</value>
   </data>
@@ -1632,18 +1752,6 @@
   <data name="PreviewInfoTab" xml:space="preserve">
     <value>信息</value>
   </data>
-  <data name="Preview_FollowingSelection" xml:space="preserve"><value>跟随选择</value></data>
-  <data name="Preview_PinnedStatus" xml:space="preserve"><value>本窗口已固定：{0}</value></data>
-  <data name="TitleBar_Restore" xml:space="preserve"><value>还原</value></data>
-  <data name="TitleBar_Move" xml:space="preserve"><value>移动</value></data>
-  <data name="TitleBar_Size" xml:space="preserve"><value>调整大小</value></data>
-  <data name="TitleBar_Minimize" xml:space="preserve"><value>最小化</value></data>
-  <data name="TitleBar_Maximize" xml:space="preserve"><value>最大化</value></data>
-  <data name="TitleBar_Close" xml:space="preserve"><value>关闭窗口</value></data>
-  <data name="Preview_Pin" xml:space="preserve"><value>固定</value></data>
-  <data name="Preview_Unpin" xml:space="preserve"><value>取消固定</value></data>
-  <data name="Preview_RefreshPinned" xml:space="preserve"><value>刷新</value></data>
-  <data name="Preview_PinnedUnavailable" xml:space="preserve"><value>固定的项目已无法访问。请刷新或取消固定。</value></data>
   <data name="PreviewMediaError" xml:space="preserve">
     <value>此格式暂时无法在这里播放，请打开文件播放。</value>
   </data>
@@ -1717,6 +1825,9 @@
   <data name="Preview_EmptyText" xml:space="preserve">
     <value>空文本文档</value>
   </data>
+  <data name="Preview_FollowingSelection" xml:space="preserve">
+    <value>跟随选择</value>
+  </data>
   <data name="Preview_Hidden" xml:space="preserve">
     <value>隐藏</value>
   </data>
@@ -1765,11 +1876,23 @@
   <data name="Preview_PieChart" xml:space="preserve">
     <value>饼图预览</value>
   </data>
+  <data name="Preview_Pin" xml:space="preserve">
+    <value>固定</value>
+  </data>
+  <data name="Preview_PinnedStatus" xml:space="preserve">
+    <value>本窗口已固定：{0}</value>
+  </data>
+  <data name="Preview_PinnedUnavailable" xml:space="preserve">
+    <value>固定的项目已无法访问。请刷新或取消固定。</value>
+  </data>
   <data name="Preview_ReadFailed" xml:space="preserve">
     <value>暂时无法读取此文件</value>
   </data>
   <data name="Preview_ReadOnly" xml:space="preserve">
     <value>只读</value>
+  </data>
+  <data name="Preview_RefreshPinned" xml:space="preserve">
+    <value>刷新</value>
   </data>
   <data name="Preview_ResizeBottom" xml:space="preserve">
     <value>调整预览下边缘</value>
@@ -1836,6 +1959,9 @@
   </data>
   <data name="Preview_UnavailableShort" xml:space="preserve">
     <value>无法预览此文档，可打开文件查看</value>
+  </data>
+  <data name="Preview_Unpin" xml:space="preserve">
+    <value>取消固定</value>
   </data>
   <data name="Preview_WebViewFailed" xml:space="preserve">
     <value>无法初始化文档预览，请重新打开预览或检查 WebView2。</value>
@@ -2121,6 +2247,257 @@
   <data name="SearchOperationFailed" xml:space="preserve">
     <value>操作未完成：{0}</value>
   </data>
+  <data name="SearchPage_Advanced" xml:space="preserve">
+    <value>高级筛选</value>
+  </data>
+  <data name="SearchPage_AllLocations" xml:space="preserve">
+    <value>全部已索引位置</value>
+  </data>
+  <data name="SearchPage_AllTypes" xml:space="preserve">
+    <value>所有类型</value>
+  </data>
+  <data name="SearchPage_AnyDate" xml:space="preserve">
+    <value>不限日期</value>
+  </data>
+  <data name="SearchPage_AnySize" xml:space="preserve">
+    <value>不限大小</value>
+  </data>
+  <data name="SearchPage_Apply" xml:space="preserve">
+    <value>应用</value>
+  </data>
+  <data name="SearchPage_Browse" xml:space="preserve">
+    <value>选取文件夹…</value>
+  </data>
+  <data name="SearchPage_ByPath" xml:space="preserve">
+    <value>按所在位置</value>
+  </data>
+  <data name="SearchPage_Cancelled" xml:space="preserve">
+    <value>搜索已停止，调整条件后可重新搜索。</value>
+  </data>
+  <data name="SearchPage_Case" xml:space="preserve">
+    <value>区分大小写</value>
+  </data>
+  <data name="SearchPage_Category" xml:space="preserve">
+    <value>结果分类</value>
+  </data>
+  <data name="SearchPage_Count" xml:space="preserve">
+    <value>第 {0}–{1}{2} 项 · 每页 200 项</value>
+  </data>
+  <data name="SearchPage_CustomDates" xml:space="preserve">
+    <value>选择日期范围…</value>
+  </data>
+  <data name="SearchPage_CustomSize" xml:space="preserve">
+    <value>自定义大小</value>
+  </data>
+  <data name="SearchPage_DateOrder" xml:space="preserve">
+    <value>结束日期不能早于开始日期。</value>
+  </data>
+  <data name="SearchPage_DateRange" xml:space="preserve">
+    <value>日期范围只能包含开始和结束日期。</value>
+  </data>
+  <data name="SearchPage_EndDate" xml:space="preserve">
+    <value>结束日期</value>
+  </data>
+  <data name="SearchPage_Examples" xml:space="preserve">
+    <value>空格：同时匹配；|：任一匹配；!：排除；双引号：连续短语。
+*.pdf · ext:pdf;docx · file: · folder: · path:项目 · parent:D:\项目
+size:&gt;100mb · size:10mb..50mb
+dm:today · dm:7days · dm:2026-01-01..2026-12-31
+
+正则模式将整条关键词作为表达式，筛选控件仍然生效。不搜索文件正文。大小和日期以最近一次索引为准。</value>
+  </data>
+  <data name="SearchPage_ExcludeNeedsTerm" xml:space="preserve">
+    <value>“!” 后需要排除的名称或条件。</value>
+  </data>
+  <data name="SearchPage_Extensions" xml:space="preserve">
+    <value>扩展名</value>
+  </data>
+  <data name="SearchPage_Filters" xml:space="preserve">
+    <value>筛选条件</value>
+  </data>
+  <data name="SearchPage_Formats" xml:space="preserve">
+    <value>文件格式</value>
+  </data>
+  <data name="SearchPage_Help" xml:space="preserve">
+    <value>搜索语法</value>
+  </data>
+  <data name="SearchPage_Index" xml:space="preserve">
+    <value>索引设置</value>
+  </data>
+  <data name="SearchPage_IndexMissing" xml:space="preserve">
+    <value>尚未建立文件索引。请打开索引设置选择搜索位置并建立索引。</value>
+  </data>
+  <data name="SearchPage_InvalidDate" xml:space="preserve">
+    <value>日期格式示例：today、7days、2026-01-01..2026-12-31。</value>
+  </data>
+  <data name="SearchPage_InvalidRegex" xml:space="preserve">
+    <value>正则表达式无效，或使用了不支持的回溯、环视、反向引用。</value>
+  </data>
+  <data name="SearchPage_InvalidScope" xml:space="preserve">
+    <value>搜索范围需要完整的文件夹路径，例如 D:\资料。</value>
+  </data>
+  <data name="SearchPage_InvalidSize" xml:space="preserve">
+    <value>大小格式示例：&gt;100mb、10mb..50mb、&lt;=1gb。</value>
+  </data>
+  <data name="SearchPage_Largest" xml:space="preserve">
+    <value>大小：从大到小</value>
+  </data>
+  <data name="SearchPage_Last30Days" xml:space="preserve">
+    <value>最近 30 天</value>
+  </data>
+  <data name="SearchPage_Last7Days" xml:space="preserve">
+    <value>最近 7 天</value>
+  </data>
+  <data name="SearchPage_Last90Days" xml:space="preserve">
+    <value>最近 90 天</value>
+  </data>
+  <data name="SearchPage_Loaded" xml:space="preserve">
+    <value>已加载 {0:N0} 项</value>
+  </data>
+  <data name="SearchPage_LoadingMore" xml:space="preserve">
+    <value>已加载 {0:N0} 项 · 正在加载更多…</value>
+  </data>
+  <data name="SearchPage_Location" xml:space="preserve">
+    <value>所在位置</value>
+  </data>
+  <data name="SearchPage_MatchPath" xml:space="preserve">
+    <value>匹配完整路径</value>
+  </data>
+  <data name="SearchPage_MatchingOptions" xml:space="preserve">
+    <value>匹配选项</value>
+  </data>
+  <data name="SearchPage_Maximum" xml:space="preserve">
+    <value>最大</value>
+  </data>
+  <data name="SearchPage_MetadataMissing" xml:space="preserve">
+    <value>大小和日期尚未收录；更新索引后即可显示。名称搜索可以继续使用。</value>
+  </data>
+  <data name="SearchPage_MetadataRequired" xml:space="preserve">
+    <value>旧索引尚未记录大小和日期。请在索引设置中更新索引后使用此条件。</value>
+  </data>
+  <data name="SearchPage_Minimum" xml:space="preserve">
+    <value>最小</value>
+  </data>
+  <data name="SearchPage_Modified" xml:space="preserve">
+    <value>修改日期</value>
+  </data>
+  <data name="SearchPage_More" xml:space="preserve">
+    <value>查看更多结果</value>
+  </data>
+  <data name="SearchPage_MoreCompact" xml:space="preserve">
+    <value>查看更多</value>
+  </data>
+  <data name="SearchPage_Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="SearchPage_NameAZ" xml:space="preserve">
+    <value>名称 A → Z</value>
+  </data>
+  <data name="SearchPage_NameZA" xml:space="preserve">
+    <value>名称 Z → A</value>
+  </data>
+  <data name="SearchPage_Newest" xml:space="preserve">
+    <value>修改日期：最新优先</value>
+  </data>
+  <data name="SearchPage_Next" xml:space="preserve">
+    <value>下一页（200 项）</value>
+  </data>
+  <data name="SearchPage_NoLimit" xml:space="preserve">
+    <value>不限</value>
+  </data>
+  <data name="SearchPage_NoResults" xml:space="preserve">
+    <value>没有匹配的项目。可以减少筛选条件，或检查索引范围。</value>
+  </data>
+  <data name="SearchPage_OrNeedsTerms" xml:space="preserve">
+    <value>“|” 两侧都需要搜索条件。</value>
+  </data>
+  <data name="SearchPage_Previous" xml:space="preserve">
+    <value>上一页（200 项）</value>
+  </data>
+  <data name="SearchPage_Priority" xml:space="preserve">
+    <value>按类型优先级</value>
+  </data>
+  <data name="SearchPage_QueryHint" xml:space="preserve">
+    <value>搜索名称或条件，如 报告 ext:pdf</value>
+  </data>
+  <data name="SearchPage_QueryTooLong" xml:space="preserve">
+    <value>搜索条件过长，请缩短到 2048 个字符以内。</value>
+  </data>
+  <data name="SearchPage_RefreshAfterOperation" xml:space="preserve">
+    <value>已更新当前结果。新增或重命名的文件将在索引刷新后收录。</value>
+  </data>
+  <data name="SearchPage_Regex" xml:space="preserve">
+    <value>正则表达式</value>
+  </data>
+  <data name="SearchPage_Reset" xml:space="preserve">
+    <value>清除筛选</value>
+  </data>
+  <data name="SearchPage_Reveal" xml:space="preserve">
+    <value>打开所在位置</value>
+  </data>
+  <data name="SearchPage_Scope" xml:space="preserve">
+    <value>搜索范围</value>
+  </data>
+  <data name="SearchPage_Search" xml:space="preserve">
+    <value>搜索</value>
+  </data>
+  <data name="SearchPage_Selected" xml:space="preserve">
+    <value>已选中 {0} 项</value>
+  </data>
+  <data name="SearchPage_Size" xml:space="preserve">
+    <value>大小</value>
+  </data>
+  <data name="SearchPage_SizeOrder" xml:space="preserve">
+    <value>大小范围的下限不能大于上限。</value>
+  </data>
+  <data name="SearchPage_SizeTooLarge" xml:space="preserve">
+    <value>文件大小超出支持范围。</value>
+  </data>
+  <data name="SearchPage_Sort" xml:space="preserve">
+    <value>排序方式</value>
+  </data>
+  <data name="SearchPage_SortLargest" xml:space="preserve">
+    <value>大小递减</value>
+  </data>
+  <data name="SearchPage_SortNewest" xml:space="preserve">
+    <value>最近修改</value>
+  </data>
+  <data name="SearchPage_SortPriority" xml:space="preserve">
+    <value>类型优先</value>
+  </data>
+  <data name="SearchPage_StartDate" xml:space="preserve">
+    <value>开始日期</value>
+  </data>
+  <data name="SearchPage_Stop" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="SearchPage_TimedOut" xml:space="preserve">
+    <value>搜索超时，请缩小范围或增加名称关键词。</value>
+  </data>
+  <data name="SearchPage_Title" xml:space="preserve">
+    <value>搜索</value>
+  </data>
+  <data name="SearchPage_Today" xml:space="preserve">
+    <value>今天</value>
+  </data>
+  <data name="SearchPage_Total" xml:space="preserve">
+    <value>共 {0:N0} 项</value>
+  </data>
+  <data name="SearchPage_TotalLoaded" xml:space="preserve">
+    <value>共 {0:N0} 项 · 已加载 {1:N0} 项</value>
+  </data>
+  <data name="SearchPage_UnclosedQuote" xml:space="preserve">
+    <value>引号没有闭合。含空格的名称请用一对双引号括起来。</value>
+  </data>
+  <data name="SearchPage_Unit" xml:space="preserve">
+    <value>大小单位</value>
+  </data>
+  <data name="SearchPage_UnsupportedCondition" xml:space="preserve">
+    <value>不支持的搜索条件。可用 ext:、file:、folder:、path:、parent:、size:、dm:。</value>
+  </data>
+  <data name="SearchPage_Yesterday" xml:space="preserve">
+    <value>昨天</value>
+  </data>
   <data name="SearchParallel" xml:space="preserve">
     <value>同时扫描多个驱动器</value>
   </data>
@@ -2154,6 +2531,9 @@
   <data name="SearchRankDocument" xml:space="preserve">
     <value>文档</value>
   </data>
+  <data name="SearchRankExecutable" xml:space="preserve">
+    <value>独立 EXE/COM 程序</value>
+  </data>
   <data name="SearchRankFolder" xml:space="preserve">
     <value>文件夹</value>
   </data>
@@ -2165,15 +2545,6 @@
   </data>
   <data name="SearchRankProgram" xml:space="preserve">
     <value>应用</value>
-  </data>
-  <data name="SearchRankExecutable" xml:space="preserve">
-    <value>独立 EXE/COM 程序</value>
-  </data>
-  <data name="Search_StandaloneExecutables" xml:space="preserve">
-    <value>显示独立程序</value>
-  </data>
-  <data name="Search_StandaloneExecutablesHint" xml:space="preserve">
-    <value>在索引中单独搜索 EXE 和 COM 文件；关闭后保留索引。</value>
   </data>
   <data name="SearchRankSection" xml:space="preserve">
     <value>结果排序</value>
@@ -2397,6 +2768,12 @@
   <data name="Search_StaleFiles" xml:space="preserve">
     <value>部分文件已移动或删除，请重新搜索。</value>
   </data>
+  <data name="Search_StandaloneExecutables" xml:space="preserve">
+    <value>显示独立程序</value>
+  </data>
+  <data name="Search_StandaloneExecutablesHint" xml:space="preserve">
+    <value>在索引中单独搜索 EXE 和 COM 文件；关闭后保留索引。</value>
+  </data>
   <data name="Search_StartAtLogin" xml:space="preserve">
     <value>开机启动全局搜索</value>
   </data>
@@ -2559,20 +2936,11 @@
   <data name="Shelf_Remove" xml:space="preserve">
     <value>移除所选引用</value>
   </data>
+  <data name="Shelf_Short" xml:space="preserve">
+    <value>收纳</value>
+  </data>
   <data name="Shelf_Title" xml:space="preserve">
     <value>文件暂存架</value>
-  </data>
-  <data name="ShellLayered" xml:space="preserve">
-    <value>分层</value>
-  </data>
-  <data name="ShellStyle" xml:space="preserve">
-    <value>界面风格</value>
-  </data>
-  <data name="ShellStyleDescription" xml:space="preserve">
-    <value>一体化保留原来的连贯底色；分层用柔和色差区分区域。切换立即生效。</value>
-  </data>
-  <data name="ShellUnified" xml:space="preserve">
-    <value>一体化</value>
   </data>
   <data name="Shortcut_Change" xml:space="preserve">
     <value>更换快捷键</value>
@@ -3000,6 +3368,24 @@ Ctrl+T 新标签　　Ctrl+W 关闭标签　　Ctrl+L 路径　　Ctrl+F 筛选�
   </data>
   <data name="ThemeSystem" xml:space="preserve">
     <value>跟随系统</value>
+  </data>
+  <data name="TitleBar_Close" xml:space="preserve">
+    <value>关闭窗口</value>
+  </data>
+  <data name="TitleBar_Maximize" xml:space="preserve">
+    <value>最大化</value>
+  </data>
+  <data name="TitleBar_Minimize" xml:space="preserve">
+    <value>最小化</value>
+  </data>
+  <data name="TitleBar_Move" xml:space="preserve">
+    <value>移动</value>
+  </data>
+  <data name="TitleBar_Restore" xml:space="preserve">
+    <value>还原</value>
+  </data>
+  <data name="TitleBar_Size" xml:space="preserve">
+    <value>调整大小</value>
   </data>
   <data name="Toolbar" xml:space="preserve">
     <value>工具栏</value>

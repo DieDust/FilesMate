@@ -1,0 +1,215 @@
+﻿<Page
+    x:Class="FilesMate.App.Views.SearchResultsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:files="using:FilesMate.App.Controls.FileSurface"
+    xmlns:toolbar="using:FilesMate.App.Controls.Toolbar"
+    Background="{ThemeResource FilesMate.App.SolidBackgroundBrush}" SizeChanged="Page_SizeChanged">
+    <Page.Resources>
+        <CornerRadius x:Key="ControlCornerRadius">8</CornerRadius>
+        <CornerRadius x:Key="OverlayCornerRadius">12</CornerRadius>
+        <Style x:Key="SearchFilterFlyoutStyle" TargetType="FlyoutPresenter" BasedOn="{StaticResource FilesMate.RoundedFlyoutPresenterStyle}">
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="MaxWidth" Value="380"/>
+        </Style>
+        <Style x:Key="FilterChipStyle" TargetType="ToggleButton">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}"/>
+            <Setter Property="UseSystemFocusVisuals" Value="True"/>
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ToggleButton">
+                <Grid Background="Transparent">
+                    <Border CornerRadius="{TemplateBinding CornerRadius}" Background="{ThemeResource FilesMate.SettingsCard.BackgroundBrush}" BorderBrush="{ThemeResource FilesMate.Card.BorderBrush}" BorderThickness="1"/>
+                    <Border x:Name="CheckedFill" CornerRadius="{TemplateBinding CornerRadius}" Background="{ThemeResource FilesMate.Item.SelectedBrush}" BorderBrush="{ThemeResource FilesMate.Selection.AccentBrush}" BorderThickness="1" Opacity="0"/>
+                    <Border x:Name="HoverFill" CornerRadius="{TemplateBinding CornerRadius}" Background="{ThemeResource FilesMate.Item.HoverBrush}" Opacity="0"/>
+                    <ContentPresenter Content="{TemplateBinding Content}" Padding="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}"/>
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal"/>
+                            <VisualState x:Name="PointerOver"><VisualState.Setters><Setter Target="HoverFill.Opacity" Value="1"/></VisualState.Setters></VisualState>
+                            <VisualState x:Name="Pressed"><VisualState.Setters><Setter Target="HoverFill.Opacity" Value="1"/></VisualState.Setters></VisualState>
+                        </VisualStateGroup>
+                        <VisualStateGroup x:Name="CheckStates"><VisualState x:Name="Unchecked"/><VisualState x:Name="Checked"><VisualState.Setters><Setter Target="CheckedFill.Opacity" Value="1"/></VisualState.Setters></VisualState></VisualStateGroup>
+                    </VisualStateManager.VisualStateGroups>
+                </Grid>
+            </ControlTemplate></Setter.Value></Setter>
+        </Style>
+        <Style x:Key="SearchFilterButtonStyle" TargetType="Button" BasedOn="{StaticResource QuietButtonStyle}">
+            <Setter Property="Height" Value="28"/><Setter Property="MinWidth" Value="0"/>
+            <Setter Property="Padding" Value="10,2"/><Setter Property="FontSize" Value="12"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="{ThemeResource FilesMate.FileContent.BackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.Card.BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.SecondaryBrush}"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="ActiveSearchFilterStyle" TargetType="Button" BasedOn="{StaticResource SearchFilterButtonStyle}">
+            <Setter Property="Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}"/>
+            <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}"/>
+        </Style>
+        <Style x:Key="SearchFilterComboStyle" TargetType="ComboBox" BasedOn="{StaticResource DefaultComboBoxStyle}">
+            <Setter Property="Height" Value="28"/><Setter Property="MinHeight" Value="28"/>
+            <Setter Property="MinWidth" Value="0"/><Setter Property="Padding" Value="8,2,8,2"/>
+            <Setter Property="FontSize" Value="12"/><Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="{ThemeResource FilesMate.FileContent.BackgroundBrush}"/><Setter Property="BorderBrush" Value="{ThemeResource FilesMate.Card.BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.SecondaryBrush}"/>
+        </Style>
+    </Page.Resources>
+    <Grid Padding="8,10,8,8" RowSpacing="6" KeyDown="Page_KeyDown">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <Grid x:Name="SearchHeader" RowSpacing="6">
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <Button x:Name="PaneToggle" Click="PaneToggle_Click" Style="{StaticResource QuietButtonStyle}" Width="32" MinWidth="0" Height="32" Padding="0"><FontIcon x:Name="PaneToggleIcon" FontSize="14"/></Button>
+                <Grid Grid.Column="1">
+                    <TextBox x:Name="QueryBox" MaxLength="2048" MinWidth="120" Height="32" MinHeight="0" VerticalContentAlignment="Center" Padding="32,5,10,5"
+                        KeyDown="Query_KeyDown" TextChanged="Query_Changed" CornerRadius="8"/>
+                    <FontIcon Glyph="&#xE721;" FontSize="16" Margin="12,0,0,0" HorizontalAlignment="Left"
+                        IsHitTestVisible="False" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"/>
+                </Grid>
+                <Button x:Name="SearchButton" Grid.Column="2" Click="Search_Click" Height="32" Padding="16,3"
+                    Style="{StaticResource AccentButtonStyle}" CornerRadius="8"/>
+            </Grid>
+            <Grid x:Name="FilterBar" Grid.Row="1" ColumnSpacing="4" RowSpacing="4">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <Button x:Name="ScopeButton" MaxWidth="180" Style="{StaticResource SearchFilterButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE8B7;" FontSize="13"/>
+                        <TextBlock x:Name="ScopeCaption" FontSize="12" MaxWidth="130" TextTrimming="CharacterEllipsis"/>
+                        <FontIcon Glyph="&#xE70D;" FontSize="8"/>
+                    </StackPanel>
+                    <Button.Flyout>
+                        <Flyout x:Name="ScopeFlyout" Placement="BottomEdgeAlignedLeft" FlyoutPresenterStyle="{StaticResource SearchFilterFlyoutStyle}">
+                            <StackPanel x:Name="ScopePanel" Width="300" Spacing="12">
+                                <TextBlock x:Name="ScopeHeading" FontWeight="SemiBold" FontSize="14"/>
+                                <Button x:Name="AllLocationsButton" Click="AllLocations_Click" Style="{StaticResource SearchFilterButtonStyle}" Height="32" HorizontalAlignment="Stretch"/>
+                                <TextBox x:Name="ScopeBox" MaxLength="4096" KeyDown="Query_KeyDown" CornerRadius="8"/>
+                                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                    <Button x:Name="BrowseScopeButton" Click="BrowseScope_Click" Height="32" Padding="14,0" CornerRadius="8"/>
+                                    <Button x:Name="ApplyScopeButton" Click="Search_Click" Style="{StaticResource AccentButtonStyle}" Height="32" Padding="14,0" CornerRadius="8"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+                <Button x:Name="TypeButton" Grid.Column="1" Style="{StaticResource SearchFilterButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock x:Name="TypeCaption" FontSize="12" MaxWidth="84" TextTrimming="CharacterEllipsis"/>
+                        <FontIcon Glyph="&#xE70D;" FontSize="8"/>
+                    </StackPanel>
+                    <Button.Flyout>
+                        <Flyout x:Name="TypeFlyout" Placement="BottomEdgeAlignedLeft" FlyoutPresenterStyle="{StaticResource SearchFilterFlyoutStyle}">
+                            <StackPanel x:Name="TypePanel" Width="316" Spacing="12">
+                                <TextBlock x:Name="FormatsHeading" FontWeight="SemiBold" FontSize="14"/>
+                                <ComboBox x:Name="CategoryBox" HorizontalAlignment="Stretch" DisplayMemberPath="Label" SelectionChanged="Filter_Changed"/>
+                                <Grid x:Name="FormatChoices" ColumnSpacing="4" RowSpacing="4">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                </Grid>
+                                <TextBox x:Name="ExtensionsBox" MaxLength="1024" KeyDown="Query_KeyDown" CornerRadius="8"/>
+                                <Button x:Name="ApplyTypeButton" HorizontalAlignment="Right" Click="Search_Click" Style="{StaticResource AccentButtonStyle}" Height="32" MinHeight="32" Padding="14,0" CornerRadius="8"/>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+                <Button x:Name="SizeButton" Grid.Column="2" Style="{StaticResource SearchFilterButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock x:Name="SizeCaption" FontSize="12" MaxWidth="110" TextTrimming="CharacterEllipsis"/>
+                        <FontIcon Glyph="&#xE70D;" FontSize="8"/>
+                    </StackPanel>
+                    <Button.Flyout>
+                        <Flyout x:Name="SizeFlyout" Placement="BottomEdgeAlignedLeft" FlyoutPresenterStyle="{StaticResource SearchFilterFlyoutStyle}">
+                            <StackPanel x:Name="SizePanel" Width="300" Spacing="12">
+                                <TextBlock x:Name="SizeHeading" FontWeight="SemiBold" FontSize="14"/>
+                                <Grid x:Name="SizePresets" RowSpacing="6" ColumnSpacing="6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                </Grid>
+                                <Border Height="1" Background="{ThemeResource FilesMate.Divider.Brush}" Margin="0,4"/>
+                                <TextBox x:Name="SizeBox" Visibility="Collapsed"/>
+                                <Grid ColumnSpacing="6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="72"/></Grid.ColumnDefinitions>
+                                    <NumberBox x:Name="MinimumSize" Minimum="0" SmallChange="1" SpinButtonPlacementMode="Hidden" CornerRadius="8"/>
+                                    <NumberBox x:Name="MaximumSize" Grid.Column="1" Minimum="0" SmallChange="1" SpinButtonPlacementMode="Hidden" CornerRadius="8"/>
+                                    <ComboBox x:Name="SizeUnit" Grid.Column="2" SelectedIndex="2" VerticalAlignment="Bottom"><x:String>B</x:String><x:String>KB</x:String><x:String>MB</x:String><x:String>GB</x:String></ComboBox>
+                                </Grid>
+                                <Button x:Name="ApplySizeButton" HorizontalAlignment="Right" Click="ApplySize_Click" Style="{StaticResource AccentButtonStyle}" Height="32" MinHeight="32" Padding="14,0" CornerRadius="8"/>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+                <Button x:Name="DateButton" Grid.Column="3" Style="{StaticResource SearchFilterButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock x:Name="DateCaption" FontSize="12" MaxWidth="92" TextTrimming="CharacterEllipsis"/>
+                        <FontIcon Glyph="&#xE70D;" FontSize="8"/>
+                    </StackPanel>
+                    <Button.Flyout>
+                        <Flyout x:Name="DateFlyout" Placement="BottomEdgeAlignedLeft" FlyoutPresenterStyle="{StaticResource SearchFilterFlyoutStyle}">
+                            <StackPanel x:Name="DatePanel" Width="316" Spacing="12">
+                                <TextBlock x:Name="DateHeading" FontWeight="SemiBold" FontSize="14"/>
+                                <Grid x:Name="DatePresets" RowSpacing="6" ColumnSpacing="6">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                </Grid>
+                                <ComboBox x:Name="DatePresetBox" Visibility="Collapsed" SelectionChanged="DatePreset_Changed"/>
+                                <TextBox x:Name="DateBox" Visibility="Collapsed"/>
+                                <Grid x:Name="DateRangePanel" ColumnSpacing="8" Visibility="Collapsed">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <CalendarDatePicker x:Name="StartDateBox" HorizontalAlignment="Stretch" MinWidth="0" CornerRadius="8" DateChanged="DateRange_Changed"/>
+                                    <CalendarDatePicker x:Name="EndDateBox" Grid.Column="1" HorizontalAlignment="Stretch" MinWidth="0" CornerRadius="8" DateChanged="DateRange_Changed"/>
+                                </Grid>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+                <ComboBox x:Name="SortBox" Grid.Column="5" Width="126" Style="{StaticResource SearchFilterComboStyle}" SelectionChanged="Sort_Changed"/>
+                <Button x:Name="AdvancedButton" Grid.Column="6" Style="{StaticResource SearchFilterButtonStyle}" Width="30" Padding="0">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE71C;" FontSize="14"/>
+                        <TextBlock x:Name="FilterLabel" FontSize="13" Visibility="Collapsed"/>
+                    </StackPanel>
+                    <Button.Flyout>
+                        <Flyout x:Name="FilterFlyout" Placement="BottomEdgeAlignedRight" FlyoutPresenterStyle="{StaticResource SearchFilterFlyoutStyle}">
+                            <ScrollViewer x:Name="AdvancedScroller" VerticalScrollBarVisibility="Auto"
+                                HorizontalScrollBarVisibility="Disabled" HorizontalScrollMode="Disabled" MaxHeight="420">
+                                <StackPanel x:Name="AdvancedPanel" Width="280" Spacing="12">
+                                    <TextBlock x:Name="FilterHeading" FontSize="14" FontWeight="SemiBold"/>
+                                    <StackPanel x:Name="MatchingOptionsPanel" Spacing="4">
+                                        <CheckBox x:Name="CaseBox" MinWidth="0" FontSize="13" MinHeight="28" Click="MatchOption_Click"/>
+                                        <CheckBox x:Name="PathBox" MinWidth="0" FontSize="13" MinHeight="28" Click="MatchOption_Click"/>
+                                        <CheckBox x:Name="RegexBox" MinWidth="0" FontSize="13" MinHeight="28" Click="MatchOption_Click"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                        <Button x:Name="ResetButton" MinWidth="0" Height="32" Padding="14,0" Click="Reset_Click" CornerRadius="8"/>
+                                        <Button x:Name="ApplyButton" MinWidth="72" Height="32" Padding="14,0" Click="Search_Click" Style="{StaticResource AccentButtonStyle}" CornerRadius="8"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+            </Grid>
+        </Grid>
+        <toolbar:AdaptiveCommandToolbar x:Name="Commands" Grid.Row="1" SearchMode="True"/>
+        <Border Grid.Row="2" CornerRadius="8" Background="{ThemeResource FilesMate.FileContent.BackgroundBrush}"
+            BorderBrush="{ThemeResource FilesMate.FileContent.BorderBrush}" BorderThickness="1" Padding="0,2">
+            <Grid>
+                <files:FileDetailsSurface x:Name="Results"/>
+                <StackPanel x:Name="EmptyPanel" IsHitTestVisible="False" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" MaxWidth="540" Margin="24">
+                    <FontIcon Glyph="&#xE721;" FontSize="36" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"/>
+                    <TextBlock x:Name="EmptyText" FontSize="16" TextWrapping="Wrap" TextAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+        <Grid Grid.Row="3" ColumnSpacing="6">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <TextBlock x:Name="StatusLabel" VerticalAlignment="Center" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" TextWrapping="Wrap"/>
+            <Button x:Name="HelpButton" Grid.Column="1" Content="?" Width="28" MinWidth="0" Height="28" Padding="0" Click="Help_Click" Style="{StaticResource QuietButtonStyle}"/>
+            <Button x:Name="IndexButton" Grid.Column="2" Click="Index_Click" Width="28" MinWidth="0" Height="28" Padding="0" Style="{StaticResource QuietButtonStyle}"><FontIcon Glyph="&#xE713;" FontSize="14"/></Button>
+            <Button x:Name="StopButton" Grid.Column="3" Height="28" MinHeight="28" Padding="8,3" Click="Stop_Click" Visibility="Collapsed" CornerRadius="8"/>
+        </Grid>
+    </Grid>
+</Page>

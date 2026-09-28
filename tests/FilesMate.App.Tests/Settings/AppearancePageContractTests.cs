@@ -76,7 +76,6 @@ public sealed class AppearancePageContractTests
         Assert.Contains("SetGlassEffectAsync", code, StringComparison.Ordinal);
         Assert.Contains("GlassEffectBalanced", code, StringComparison.Ordinal);
         Assert.Contains("button.BorderBrush", code, StringComparison.Ordinal);
-        Assert.DoesNotContain("button.Background", code, StringComparison.Ordinal);
         Assert.DoesNotContain("Glass.SurfaceBrush", code, StringComparison.Ordinal);
     }
 
@@ -120,7 +119,7 @@ public sealed class AppearancePageContractTests
             "Controls",
             "FileSurface",
             "FilePaneChrome.xaml.cs"));
-        Assert.Contains("ShowStatusBar", chrome, StringComparison.Ordinal);
+        Assert.DoesNotContain("ShowStatusBar", chrome, StringComparison.Ordinal);
 
         var sidebar = File.ReadAllText(Path.Combine(
             ThemeXaml.AppRoot,

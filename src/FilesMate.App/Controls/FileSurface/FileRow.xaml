@@ -118,6 +118,13 @@
         </Grid.ColumnDefinitions>
         <!-- Draw state borders independently of the fixed-width content columns. -->
         <Border
+            x:Name="Stripe"
+            Grid.ColumnSpan="6"
+            Visibility="Collapsed"
+            Background="{ThemeResource FilesMate.Item.StripeBrush}"
+            CornerRadius="{StaticResource FilesMate.Corner.Small}"
+            IsHitTestVisible="False" />
+        <Border
             x:Name="Fill"
             Grid.ColumnSpan="6"
             Background="Transparent"
@@ -185,14 +192,18 @@
             Style="{StaticResource CaptionTextBlockStyle}"
             TextTrimming="CharacterEllipsis"
             Typography.NumeralAlignment="Tabular" />
-        <TextBlock
-            x:Name="TypeText"
+        <Border
+            x:Name="TypeCell" Width="68" Height="20"
             Grid.Column="4"
-            Padding="8,0,8,0"
+            Margin="8,0,8,0"
+            HorizontalAlignment="Left"
             VerticalAlignment="Center"
-            Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
-            Style="{StaticResource CaptionTextBlockStyle}"
-            TextTrimming="CharacterEllipsis" />
+            CornerRadius="4">
+            <TextBlock
+                x:Name="TypeText" HorizontalAlignment="Center" VerticalAlignment="Center"
+                Style="{StaticResource FilesMate.Type.PlainTextStyle}"
+                TextTrimming="CharacterEllipsis" />
+        </Border>
         <TextBlock
             x:Name="SizeText"
             Grid.Column="5"

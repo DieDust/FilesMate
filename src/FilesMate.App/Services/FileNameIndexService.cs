@@ -302,7 +302,7 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
         PrepareBuildConnection(connection);
         EnsureSchema(connection);
 
-        void Flush(List<(string Name, string Path, bool Directory)> buffer)
+        void Flush(List<(string Name, string Path, bool Directory, long? Size, long? Modified)> buffer)
         {
             if (buffer.Count == 0)
             {
@@ -322,12 +322,20 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
             var dir = insert.CreateParameter();
             dir.ParameterName = "$dir";
             insert.Parameters.Add(dir);
+            using var metadata = connection.CreateCommand();
+            metadata.Transaction = tx;
+            metadata.CommandText = "INSERT INTO file_metadata(rowid,size,modified) VALUES (last_insert_rowid(),$size,$modified);";
+            metadata.Parameters.AddWithValue("$size", DBNull.Value);
+            metadata.Parameters.AddWithValue("$modified", DBNull.Value);
             foreach (var row in buffer)
             {
                 name.Value = row.Name;
                 path.Value = row.Path;
                 dir.Value = row.Directory ? "1" : "0";
                 insert.ExecuteNonQuery();
+                metadata.Parameters["$size"].Value = row.Size is { } length ? length : DBNull.Value;
+                metadata.Parameters["$modified"].Value = row.Modified is { } ticks ? ticks : DBNull.Value;
+                metadata.ExecuteNonQuery();
             }
 
             tx.Commit();
@@ -351,12 +359,12 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
         // enumeration already carries each entry's attributes, so no second stat call per file is needed.
         var options = new EnumerationOptions { IgnoreInaccessible = false, AttributesToSkip = 0 };
         var rebuildPrefix = FilePath + ".rebuild-";
-        using var batches = new System.Collections.Concurrent.BlockingCollection<List<(string Name, string Path, bool Directory)>>(boundedCapacity: 8);
+        using var batches = new System.Collections.Concurrent.BlockingCollection<List<(string Name, string Path, bool Directory, long? Size, long? Modified)>>(boundedCapacity: 8);
         // Walkers stop on the caller's token, and also when the writer fails and nobody would drain their batches.
         using var walkCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var walkToken = walkCancellation.Token;
 
-        void Walk(string directory, int depth, ref List<(string Name, string Path, bool Directory)> buffer)
+        void Walk(string directory, int depth, ref List<(string Name, string Path, bool Directory, long? Size, long? Modified)> buffer)
         {
             walkToken.ThrowIfCancellationRequested();
             if (SearchIndexPathRules.IsExcluded(directory, settings.Exclusions))
@@ -402,7 +410,18 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
                         continue;
                     }
 
-                    buffer.Add((name, path, isDir));
+                    // Enumeration already cached this metadata; no per-result stat
+                    // or content read is needed while searching. Keep the name if
+                    // the file disappears while metadata is being read.
+                    long? size = null, modified = null;
+                    try
+                    {
+                        if (entry is FileInfo file) size = file.Length;
+                        modified = entry.LastWriteTimeUtc.Ticks;
+                    }
+                    catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+                    { Interlocked.Increment(ref errors); }
+                    buffer.Add((name, path, isDir, size, modified));
                     if (isDir)
                     {
                         Interlocked.Increment(ref folders);
@@ -415,7 +434,7 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
                     if (buffer.Count >= 250)
                     {
                         batches.Add(buffer, walkToken);
-                        buffer = new List<(string Name, string Path, bool Directory)>(256);
+                        buffer = new List<(string Name, string Path, bool Directory, long? Size, long? Modified)>(256);
                     }
 
                     if (isDir && (settings.MaxDepth <= 0 || depth + 1 < settings.MaxDepth))
@@ -443,7 +462,7 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
             walkers[i] = new Thread(() =>
             {
                 using var background = FilesMate.Platform.Windows.Threading.BackgroundThreadMode.Enter();
-                var buffer = new List<(string Name, string Path, bool Directory)>(256);
+                var buffer = new List<(string Name, string Path, bool Directory, long? Size, long? Modified)>(256);
                 try
                 {
                     while (!walkToken.IsCancellationRequested && roots.TryDequeue(out var root))
@@ -452,7 +471,7 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
                         if (buffer.Count > 0)
                         {
                             batches.Add(buffer, walkToken);
-                            buffer = new List<(string Name, string Path, bool Directory)>(256);
+                            buffer = new List<(string Name, string Path, bool Directory, long? Size, long? Modified)>(256);
                         }
                     }
                 }
@@ -551,6 +570,8 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
             using var version = connection.CreateCommand();
             version.CommandText = "SELECT value FROM index_meta WHERE key='schema';";
             NeedsUpgrade = version.ExecuteScalar() as string != "3";
+            version.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE name='file_metadata';";
+            NeedsUpgrade |= Convert.ToInt64(version.ExecuteScalar()) == 0;
             return ReadStats(connection);
         }
         catch (Exception ex) when (ex is SqliteException or IOException or InvalidDataException or UnauthorizedAccessException)
@@ -736,6 +757,7 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
     private void Raise(SearchIndexProgress progress) => ProgressChanged?.Invoke(this, progress);
 
     private const string SchemaSql = """
+        CREATE TABLE IF NOT EXISTS file_metadata(rowid INTEGER PRIMARY KEY, size INTEGER, modified INTEGER);
         CREATE TABLE IF NOT EXISTS index_meta(key TEXT PRIMARY KEY, value TEXT NOT NULL);
         CREATE VIRTUAL TABLE IF NOT EXISTS file_name USING fts5(name UNINDEXED, path UNINDEXED, is_dir UNINDEXED);
         """;

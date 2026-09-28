@@ -59,6 +59,7 @@ public static class CommandCatalog
         AppCommandId.OpenWith,
         AppCommandId.OpenInTerminal,
         AppCommandId.OpenInCompactMate,
+        AppCommandId.OpenInArchiveApp,
         AppCommandId.Properties,
         AppCommandId.WhoLocks,
         AppCommandId.PinToSidebar,
@@ -88,6 +89,7 @@ public static class CommandCatalog
         AppCommandId.OpenInNewWindow,
         AppCommandId.OpenWith,
         AppCommandId.OpenInCompactMate,
+        AppCommandId.OpenInArchiveApp,
         AppCommandId.PinToSidebar,
         AppCommandId.UnpinFromSidebar,
         AppCommandId.SelectAll,
@@ -175,6 +177,7 @@ public static class CommandCatalog
 
     private static bool CanExecuteCore(AppCommandId id, CommandContext context) => id switch
     {
+        AppCommandId.RevealInFolder => context.SelectionCount == 1,
         AppCommandId.AddToFavorites => context.SelectionCount > 0,
         AppCommandId.AddToShelf => context.SelectionCount > 0,
         AppCommandId.ShowShelf => true,
@@ -194,7 +197,7 @@ public static class CommandCatalog
         AppCommandId.OpenInNewTab or AppCommandId.OpenInNewWindow =>
             context.SelectionCount == 1 && context.PrimaryIsDirectory,
         AppCommandId.OpenWith => context.SelectionCount == 1 && !context.PrimaryIsDirectory,
-        AppCommandId.OpenInCompactMate => context.SelectionCount == 1 && context.PrimaryIsArchive,
+        AppCommandId.OpenInCompactMate or AppCommandId.OpenInArchiveApp => context.SelectionCount == 1 && context.PrimaryIsArchive,
         AppCommandId.OpenInTerminal => TerminalTarget(context) is not null,
         AppCommandId.Properties => context.SelectionCount > 0 || HasFolderPath(context),
         AppCommandId.WhoLocks => HasItemTarget(context),
@@ -292,7 +295,7 @@ public static class CommandCatalog
             AppCommandId.OpenInNewTab or AppCommandId.OpenInNewWindow =>
                 context.SelectionCount == 1 && context.PrimaryIsDirectory,
             AppCommandId.OpenWith => context.SelectionCount == 1 && !context.PrimaryIsDirectory,
-            AppCommandId.OpenInCompactMate => context.SelectionCount == 1 && context.PrimaryIsArchive,
+            AppCommandId.OpenInCompactMate or AppCommandId.OpenInArchiveApp => context.SelectionCount == 1 && context.PrimaryIsArchive,
             AppCommandId.OpenInTerminal => TerminalTarget(context) is not null,
             AppCommandId.Cut or AppCommandId.Copy => context.SelectionCount > 0,
             AppCommandId.Share => context.ShareAvailable && context.SelectionCount > 0,
@@ -327,6 +330,7 @@ public static class CommandCatalog
     private static (string Label, string Glyph, string? Shortcut, CommandGroup Group) Describe(AppCommandId id) =>
         id switch
         {
+            AppCommandId.RevealInFolder => (StringTable.Get("SearchPage_Reveal"), "\uE8B7", "Ctrl+Enter", CommandGroup.Open),
             AppCommandId.AddToFavorites => (StringTable.Get("Favorites_Add"), "\uE734", null, CommandGroup.Organize),
             AppCommandId.AddToShelf => (StringTable.Get("Shelf_Add"), "\uE710", null, CommandGroup.Organize),
             AppCommandId.ShowShelf => (StringTable.Get("Shelf_Title"), "\uE7B8", null, CommandGroup.Organize),
@@ -348,6 +352,7 @@ public static class CommandCatalog
             AppCommandId.OpenInNewWindow => (StringTable.Get("Command_OpenInNewWindow"), "\uE8A7", null, CommandGroup.Open),
             AppCommandId.OpenWith => (StringTable.Get("Command_OpenWith"), "\uE7AC", null, CommandGroup.Open),
             AppCommandId.OpenInCompactMate => (StringTable.Get("Command_OpenInCompactMate"), "\uE8B7", null, CommandGroup.Open),
+            AppCommandId.OpenInArchiveApp => (StringTable.Get("Archive_OpenWithApp"), "\uE8B7", null, CommandGroup.Open),
             AppCommandId.OpenInTerminal => (StringTable.Get("Command_OpenInTerminal"), "\uE756", null, CommandGroup.Folder),
             AppCommandId.Properties => (StringTable.Get("Command_Properties"), "\uE946", "Alt+Enter", CommandGroup.Folder),
             AppCommandId.WhoLocks => (StringTable.Get("Command_WhoLocks"), "\uE72E", null, CommandGroup.Folder),

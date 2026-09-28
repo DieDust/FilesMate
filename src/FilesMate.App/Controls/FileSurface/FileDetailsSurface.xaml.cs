@@ -246,6 +246,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     public event EventHandler? CopyPathRequested;
     public event EventHandler? QuickPreviewRequested;
+    public event EventHandler? RevealRequested;
     public Func<string?>? OtherPanePath { get; set; }
     public void SelectSameType() => ChangeSelection(s => s.SelectSameType(_items.Store!, _items.Index!));
     public void InvertSelection() => ChangeSelection(s => s.Invert(_items.Store!, _items.Index!));
@@ -403,7 +404,7 @@ public sealed partial class FileDetailsSurface : UserControl
         OpenRequested = null;
         OpenInNewTabRequested = null;
         UpRequested = BackRequested = ForwardRequested = null;
-        CopyPathRequested = QuickPreviewRequested = RefreshRequested = null;
+        CopyPathRequested = QuickPreviewRequested = RefreshRequested = RevealRequested = null;
         SelectionChanged = PresentationChanged = null;
         SortRequested = null;
         CommandRequested = null;
@@ -476,7 +477,7 @@ public sealed partial class FileDetailsSurface : UserControl
         }
     }
 
-    public void Bind(EntryStore? store, EntryViewIndex? index, long generation)
+    public void Bind(EntryStore? store, EntryViewIndex? index, long generation, bool append = false)
     {
         var navigated = generation != _generation;
         if (navigated || !ReferenceEquals(store, _items.Store) || !ReferenceEquals(index, _items.Index))
@@ -528,7 +529,7 @@ public sealed partial class FileDetailsSurface : UserControl
             selectionChanged = true;
         }
 
-        if (!_items.TryPublish(store, index, generation))
+        if (!_items.TryPublish(store, index, generation, append))
         {
             if (selectionChanged)
             {
@@ -568,6 +569,7 @@ public sealed partial class FileDetailsSurface : UserControl
     }
 
     public event EventHandler? ViewportLayoutChanged;
+    public event EventHandler? NearEndReached;
 
     public void SetLayout(FileLayoutKind kind)
     {
@@ -921,6 +923,8 @@ public sealed partial class FileDetailsSurface : UserControl
 
         UpdateAlphabetPosition(AlphabetLetters.Visibility == Visibility.Visible);
         ScheduleVisibleRange();
+        if (Scroller.VerticalOffset > 0 && Scroller.ScrollableHeight - Scroller.VerticalOffset < Math.Max(180, Scroller.ViewportHeight * .5))
+            NearEndReached?.Invoke(this, EventArgs.Empty);
     }
 
     private void ScheduleVisibleRange()
@@ -1552,6 +1556,8 @@ public sealed partial class FileDetailsSurface : UserControl
                     ShowContextMenu(_selection.Count == 0, new Point(ActualWidth / 2, 40)));
                 break;
             case VirtualKey.Enter:
+                if (ctrl && RevealRequested is not null)
+                { RevealRequested.Invoke(this, EventArgs.Empty); e.Handled = true; break; }
                 if (_items.TryGetEntry(Math.Max(0, current), out var open))
                 {
                     OpenRequested?.Invoke(this, open);
@@ -1872,6 +1878,9 @@ public sealed partial class FileDetailsSurface : UserControl
             return;
         }
 
+        if (!background && _selection.Count == 1 && RevealRequested is not null)
+            layout = layout with { Items = [new(false, AppCommandId.RevealInFolder, StringTable.Get("SearchPage_Reveal"), "\uE8B7", "Ctrl+Enter", true), .. layout.Items] };
+
         var showMore = false;
         var host = FileContextFlyout.Create(
             layout,
@@ -1929,6 +1938,9 @@ public sealed partial class FileDetailsSurface : UserControl
     {
         switch (id)
         {
+            case AppCommandId.RevealInFolder:
+                RevealRequested?.Invoke(this, EventArgs.Empty);
+                break;
             case AppCommandId.SelectSameType:
                 SelectSameType();
                 break;

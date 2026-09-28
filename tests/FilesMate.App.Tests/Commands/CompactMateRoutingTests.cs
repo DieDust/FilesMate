@@ -94,7 +94,7 @@ public sealed class CompactMateRoutingTests
     }
 
     [Theory]
-    [InlineData(AppCommandId.Compress7z, true)]
+    [InlineData(AppCommandId.Compress7z, false)]
     [InlineData(AppCommandId.OpenInCompactMate, true)]
     [InlineData(AppCommandId.CompressZip, false)]
     [InlineData(AppCommandId.CompressNew, false)]

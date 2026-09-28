@@ -16,6 +16,7 @@ public sealed class SearchFileActionTests
     [InlineData("ExtractToOther")]
     [InlineData("SmartExtract")]
     [InlineData("OpenInCompactMate")]
+    [InlineData("OpenInArchiveApp")]
     public void Search_archive_commands_reach_a_supported_main_window_archive_route(string command)
     {
         Assert.True(SearchFileAction.Supports(command));
@@ -28,7 +29,8 @@ public sealed class SearchFileActionTests
             Assert.Equal(command, request.Command);
             Assert.Equal(paths, request.Paths);
             Assert.True(Enum.TryParse<AppCommandId>(request.Command, out var action));
-            Assert.NotNull(CompactMateSession.VerbFor(action));
+            if (action == AppCommandId.OpenInArchiveApp) Assert.Contains(action, CommandCatalog.Implemented);
+            else Assert.NotNull(CompactMateSession.VerbFor(action));
             Assert.ThrowsAny<IOException>(() => SearchFileAction.Take(id, profile));
         });
     }

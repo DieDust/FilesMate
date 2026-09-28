@@ -1,4 +1,4 @@
-using Loc = FilesMate.App.Localization.StringTable;
+﻿using Loc = FilesMate.App.Localization.StringTable;
 using FilesMate.App.Commands;
 using FilesMate.App.Controls.FileSurface;
 using FilesMate.App.Navigation;
@@ -47,32 +47,32 @@ public sealed partial class NavigatorPage
         };
     }
 
-    private void ConfigureConvenienceSurface(FileDetailsSurface surface, bool right)
+    private void ConfigureConvenienceSurface(FileDetailsSurface surface, int paneIndex)
     {
         surface.ViewportLayoutChanged += (_, _) =>
         {
-            var chrome = right ? _rightChrome : PaneChrome;
+            var chrome = paneIndex == 2 ? _thirdChrome : paneIndex == 1 ? _rightChrome : PaneChrome;
             if (chrome is not null) chrome.ContentTopInset = surface.LayoutKind == FileLayoutKind.Details ? FileColumnLayout.RowHeight : 0;
         };
-        surface.OtherPanePath = () => OtherPaneDestination(right);
+        surface.OtherPanePath = () => OtherPaneDestination(paneIndex);
         surface.RenameRequested = _fileActions.RenamePathAsync;
         surface.QuickPreviewRequested += (_, _) =>
         {
-            ActivateRight(right);
+            ActivatePane(paneIndex);
             ToggleQuickPreview();
         };
     }
 
-    private string? OtherPaneDestination(bool right)
+    private string? OtherPaneDestination(int paneIndex)
     {
-        var path = _dualPane ? (right ? _leftVm : _rightVm)?.AddressText : null;
-        var pane = right ? _leftVm : _rightVm;
+        var pane = paneIndex == 0 ? _rightVm : paneIndex == 1 && _paneCount == 3 ? _thirdVm : _leftVm;
+        var path = _dualPane ? pane?.AddressText : null;
         return path is not null && (Directory.Exists(path) || pane?.IsPortableDevice == true && pane.CanReceiveFiles) ? path : null;
     }
 
     private async Task TransferToOtherPaneAsync(bool move)
     {
-        var target = OtherPaneDestination(_rightActive);
+        var target = OtherPaneDestination(_thirdActive ? 2 : _rightActive ? 1 : 0);
         var sources = SelectedPaths().ToArray();
         if (target is null || sources.Length == 0) return;
         var deviceTransfer = ViewModel.IsPortableDevice || FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(target, out _);
@@ -186,8 +186,8 @@ public sealed partial class NavigatorPage
         FileAction(AppCommandId.Copy, selected > 0, App.Shortcuts[ShortcutAction.Copy].DisplayText);
         FileAction(AppCommandId.Cut, selected > 0, App.Shortcuts[ShortcutAction.Cut].DisplayText);
         FileAction(AppCommandId.Paste, hasFolder && PaneFileActions.ClipboardHasFiles(), App.Shortcuts[ShortcutAction.Paste].DisplayText);
-        FileAction(AppCommandId.CopyToOtherPane, selected > 0 && OtherPaneDestination(_rightActive) is not null);
-        FileAction(AppCommandId.MoveToOtherPane, selected > 0 && OtherPaneDestination(_rightActive) is not null);
+        FileAction(AppCommandId.CopyToOtherPane, selected > 0 && OtherPaneDestination(_thirdActive ? 2 : _rightActive ? 1 : 0) is not null);
+        FileAction(AppCommandId.MoveToOtherPane, selected > 0 && OtherPaneDestination(_thirdActive ? 2 : _rightActive ? 1 : 0) is not null);
         Add(Loc.Get("SelectSameType"), "", selected > 0, ActiveSurface.SelectSameType);
         Add(Loc.Get("InvertSelection"), "", ViewModel.ItemCount > 0, ActiveSurface.InvertSelection);
         Add(Loc.Get("Action_UndoFile"), App.Shortcuts[ShortcutAction.Undo].DisplayText, App.FileUndo.CanUndo, _fileActions.Undo);
@@ -247,15 +247,16 @@ public sealed partial class NavigatorPage
     public ClosedTabState CaptureClosedTab() => new(
         CapturePane(_leftVm, FileSurface),
         _dualPane && _rightVm is not null && _rightSurface is not null ? CapturePane(_rightVm, _rightSurface) : null,
-        _rightActive, _previewVisible);
+        _rightActive, _previewVisible,
+        _paneCount == 3 && _thirdVm is not null && _thirdSurface is not null ? CapturePane(_thirdVm, _thirdSurface) : null, _thirdActive, _paneArrangement, WorkspaceSplit.SplitRatio, _trailingSplit?.SplitRatio ?? .5);
 
     public bool CanHibernate => !_disposed && !_restoringClosedTab && !FileOperationLifetime.IsBusy && !PaneFileActions.IsBusy
-        && !_leftVm.IsLoading && _rightVm?.IsLoading != true && !FileSurface.IsRenaming && _rightSurface?.IsRenaming != true
+        && !_leftVm.IsLoading && _rightVm?.IsLoading != true && _thirdVm?.IsLoading != true && !FileSurface.IsRenaming && _rightSurface?.IsRenaming != true && _thirdSurface?.IsRenaming != true
         && !Omni.IsEditing && !Omni.IsSearchOpen && _commandDialog is null
-        && _leftVm.TagFilterLabel is null && _rightVm?.TagFilterLabel is null;
+        && _leftVm.TagFilterLabel is null && _rightVm?.TagFilterLabel is null && _thirdVm?.TagFilterLabel is null;
 
     internal bool CanInstallUpdate => !FileOperationLifetime.IsBusy && !PaneFileActions.IsBusy
-        && !FileSurface.IsRenaming && _rightSurface?.IsRenaming != true && _commandDialog is null;
+        && !FileSurface.IsRenaming && _rightSurface?.IsRenaming != true && _thirdSurface?.IsRenaming != true && _commandDialog is null;
 
     private static ClosedPaneState CapturePane(PaneViewModel vm, FileDetailsSurface surface) =>
         new(vm.AddressText, new FolderViewSettings(surface.LayoutKind == FileLayoutKind.Details,
@@ -270,14 +271,25 @@ public sealed partial class NavigatorPage
             if (!await Ready(_leftVm, state.Left.Path)) return;
             ApplyFolderView(_leftVm, state.Left.View);
             await RestorePane(_leftVm, FileSurface, state.Left);
+            _paneArrangement = state.PaneArrangement;
+            SetPaneCount(state.Third is not null ? 3 : state.Right is not null ? 2 : 1, persist: false);
+            WorkspaceSplit.SplitRatio = state.SplitRatio;
+            if (_trailingSplit is not null) _trailingSplit.SplitRatio = state.InnerSplitRatio;
             if (state.Right is { } right)
             {
-                SetDualPane(true, persist: false);
                 _rightVm!.Navigate(right.Path);
                 if (!await Ready(_rightVm, right.Path)) return;
                 ApplyFolderView(_rightVm, right.View);
                 await RestorePane(_rightVm, _rightSurface!, right);
                 ActivateRight(state.RightActive);
+            }
+            if (state.Third is { } third)
+            {
+                _thirdVm!.Navigate(third.Path);
+                if (!await Ready(_thirdVm, third.Path)) return;
+                ApplyFolderView(_thirdVm, third.View);
+                await RestorePane(_thirdVm, _thirdSurface!, third);
+                if (state.ThirdActive) ActivatePane(2);
             }
             if (!_disposed) SetPreviewVisible(state.PreviewVisible);
         }

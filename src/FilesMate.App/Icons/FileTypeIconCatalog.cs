@@ -1,6 +1,7 @@
 using System.IO;
 
 using FilesMate.Core.Entries;
+using FilesMate.Core.Archives;
 
 namespace FilesMate.App.Icons;
 
@@ -58,8 +59,6 @@ internal static class FileTypeIconCatalog
         ".zipx", ".gzip", ".tgz", ".bzip2", ".tbz2", ".txz", ".lzma", ".tzst",
         ".wim", ".swm", ".esd", ".ar", ".cpio", ".rpm", ".deb", ".dmg",
     ];
-
-    private static readonly HashSet<string> CompactMateExtractExtensions = CreateExtractExtensions();
 
     private static readonly HashSet<string> LinkExtensions =
     [
@@ -123,7 +122,7 @@ internal static class FileTypeIconCatalog
             return FileIconKind.Folder;
         }
 
-        var extension = Path.GetExtension(name ?? string.Empty).ToLowerInvariant();
+        var extension = Path.GetExtension(ArchiveFileName.CanonicalName(name ?? string.Empty)).ToLowerInvariant();
         if (LinkExtensions.Contains(extension))
         {
             return FileIconKind.Link;
@@ -170,7 +169,7 @@ internal static class FileTypeIconCatalog
             return specificKind;
         }
 
-        if (ArchiveExtensions.Contains(extension))
+        if (ArchiveExtensions.Contains(extension) || ArchiveFileName.IsArchive(name))
         {
             return FileIconKind.Archive;
         }
@@ -230,33 +229,7 @@ internal static class FileTypeIconCatalog
             return true;
         }
 
-        return CompactMateExtractExtensions.Contains(Path.GetExtension(path));
-    }
-
-    private static HashSet<string> CreateExtractExtensions()
-    {
-        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ".7z", ".zip", ".zipx", ".rar", ".tar", ".gz", ".gzip", ".tgz",
-            ".bz2", ".bzip2", ".tbz", ".tbz2", ".xz", ".txz", ".lz", ".lzma",
-            ".zst", ".tzst", ".cab", ".iso", ".wim", ".swm", ".esd",
-            ".ar", ".cpio", ".rpm", ".deb", ".dmg", ".001",
-        };
-        for (var i = 1; i <= 40; i++)
-        {
-            set.Add("." + i.ToString("D3", System.Globalization.CultureInfo.InvariantCulture));
-        }
-
-        for (var i = 0; i <= 39; i++)
-        {
-            set.Add(".r" + i.ToString("D2", System.Globalization.CultureInfo.InvariantCulture));
-            if (i >= 1)
-            {
-                set.Add(".z" + i.ToString("D2", System.Globalization.CultureInfo.InvariantCulture));
-            }
-        }
-
-        return set;
+        return ArchiveFileName.IsArchive(path);
     }
 
     /// <summary>

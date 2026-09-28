@@ -39,7 +39,7 @@ public sealed class EntryItemsSource : IList, INotifyCollectionChanged
         set => throw new NotSupportedException();
     }
 
-    public bool TryPublish(EntryStore store, EntryViewIndex index, long currentGeneration)
+    public bool TryPublish(EntryStore store, EntryViewIndex index, long currentGeneration, bool append = false)
     {
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(index);
@@ -48,10 +48,16 @@ public sealed class EntryItemsSource : IList, INotifyCollectionChanged
             return false;
         }
 
+        var previousCount = Count;
+        var appended = append && ReferenceEquals(Store, store) && Generation == currentGeneration && index.Count >= previousCount
+            && Index is not null && Enumerable.Range(0, previousCount).All(i => Index[i] == index[i]);
         Store = store;
         Index = index;
         Generation = index.Generation;
-        CollectionChanged?.Invoke(this, ResetArgs);
+        if (!appended) CollectionChanged?.Invoke(this, ResetArgs);
+        else if (index.Count > previousCount)
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
+                Enumerable.Range(previousCount, index.Count - previousCount).ToArray(), previousCount));
         return true;
     }
 

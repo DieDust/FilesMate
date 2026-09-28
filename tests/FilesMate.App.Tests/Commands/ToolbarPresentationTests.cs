@@ -106,7 +106,7 @@ public sealed class ToolbarPresentationTests
         var detailsStart = xaml.IndexOf("x:Name=\"DetailsViewButton\"", StringComparison.Ordinal);
         var gridStart = xaml.IndexOf("x:Name=\"GridViewButton\"", StringComparison.Ordinal);
         Assert.True(detailsStart >= 0 && gridStart > detailsStart);
-        Assert.Contains("Glyph=\"&#xF0E3;\"", xaml[detailsStart..gridStart], StringComparison.Ordinal);
+        Assert.Contains("Glyph=\"&#xE8FD;\"", xaml[detailsStart..gridStart], StringComparison.Ordinal);
         Assert.Contains("Glyph=\"&#xF0E2;\"", xaml[gridStart..], StringComparison.Ordinal);
 
         var page = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "NavigatorPage.xaml"));

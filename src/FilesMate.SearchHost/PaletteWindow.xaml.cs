@@ -156,7 +156,7 @@ public partial class PaletteWindow : Window
         var margins = new Native.Margins { Left = glass && applied ? -1 : 0 };
         Native.DwmExtendFrameIntoClientArea(hwnd, ref margins);
         if (HwndSource.FromHwnd(hwnd)?.CompositionTarget is { } target) target.BackgroundColor = Colors.Transparent;
-        if (!glass || !applied) Resources["GlassSurface"] = Resources["Surface"];
+        if (!glass || !applied) Resources["GlassSurface"] = Resources["PaletteCanvas"];
     }
 
     private bool _roundRegionQueued;
@@ -186,9 +186,9 @@ public partial class PaletteWindow : Window
         var handle = new WindowInteropHelper(this).Handle;
         if (handle == IntPtr.Zero) return;
         var scale = VisualTreeHelper.GetDpi(this);
-        Width = Math.Min(660, (_workArea.Right - _workArea.Left - 40) / scale.DpiScaleX);
-        MaxHeight = Math.Min(590, (_workArea.Bottom - _workArea.Top - 40) / scale.DpiScaleY);
-        Results.MaxHeight = Math.Max(60, Math.Min(372, MaxHeight - 170));
+        Width = Math.Min(620, (_workArea.Right - _workArea.Left - 40) / scale.DpiScaleX);
+        MaxHeight = Math.Min(500, (_workArea.Bottom - _workArea.Top - 40) / scale.DpiScaleY);
+        Results.MaxHeight = Math.Max(48, Math.Min(336, MaxHeight - 110));
         SearchSettingsScroll.MaxHeight = Math.Max(140, MaxHeight - 110);
         Native.GetWindowRect(handle, out var bounds);
         var x = _workArea.Left + (_workArea.Right - _workArea.Left - (bounds.Right - bounds.Left)) / 2;
@@ -268,7 +268,8 @@ public partial class PaletteWindow : Window
         var query = QueryBox.Text.Trim();
         var filter = _filter;
         var category = _categories.FirstOrDefault(c => c.Id == _categoryId);
-        var provider = category is { Builtin: null } ? new IndexedFilesSearchProvider(_host.Profile, true, category.Extensions) : _provider;
+        var provider = _provider is ConfiguredSearchProvider configured ? configured.ForCategory(_categoryId)
+            : category is { Builtin: null } ? new IndexedFilesSearchProvider(_host.Profile, true, category.Extensions) : _provider;
         _loadingMore = append;
         _pending = !append;
         // Keep the previous frame visually stable while the next query runs.
@@ -306,7 +307,7 @@ public partial class PaletteWindow : Window
                 if (Results.SelectedItem is not null) Results.ScrollIntoView(Results.SelectedItem);
             }
             CountLabel.Text = _rows.Count > 0 ? Loc.Format(_hasMore ? "Search_MoreCount" : "Search_ResultCount", _rows.Count) : "";
-            StatusText.Text = response.Notice ?? (_rows.Count == 0 ? filter == SearchFilter.All
+            StatusText.Text = (response.Notice is { } notice ? (notice.StartsWith("SearchPage_", StringComparison.Ordinal) ? Loc.Get(notice) : notice) : null) ?? (_rows.Count == 0 ? filter == SearchFilter.All
                 ? Loc.Get("Search_NoResultsHint") : Loc.Get("Search_NoCategoryResults") : "");
             StatusText.Visibility = StatusText.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
             IndexHelpButton.Visibility = response.Notice is not null || _rows.Count == 0 && filter == SearchFilter.All ? Visibility.Visible : Visibility.Collapsed;
@@ -317,6 +318,10 @@ public partial class PaletteWindow : Window
         catch (OperationCanceledException)
         {
             if (_query == request && IsVisible) SearchFailed(append, Loc.Get("Search_SlowHint"));
+        }
+        catch (ArgumentException e)
+        {
+            if (_query == request && IsVisible) SearchFailed(append, Loc.Get(e.Message));
         }
         catch (Exception e) when (e is Microsoft.Data.Sqlite.SqliteException or IOException or UnauthorizedAccessException)
         {
@@ -510,6 +515,16 @@ public partial class PaletteWindow : Window
         ShowSettings(show, "");
         if (!show) { QueryBox.Focus(); Search(); }
     }
+    private async void MoreResults_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            _host.OpenSearchPage(new SearchPageRequest(QueryBox.Text, CategoryId: _categoryId, Sort: SearchSortConfiguration.Load(_host.Profile)));
+            await AnimatePaletteCloseAsync(_openVersion);
+            _host.WindowDismissed();
+        }
+        catch (Exception error) { ActionError(error.Message); }
+    }
     private void ShowSettings(bool show, string notice)
     {
         if (show) CancelSearch();
@@ -543,8 +558,15 @@ public partial class PaletteWindow : Window
         _rankItems.Clear();
         foreach (var kind in preferences.RankOrder) _rankItems.Add(new(kind, preferences.IncludeStandaloneExecutables));
     }
+    private string _sharedOrder = "";
     private void RefreshSharedRanking()
     {
+        var signature = SearchSortConfiguration.Load(_host.Profile) + ":" + string.Join(",", SearchRankingConfiguration.Load(_host.Profile)) + ":" + SearchExecutableConfiguration.Load(_host.Profile);
+        if (_sharedOrder != signature)
+        {
+            _sharedOrder = signature;
+            if (_ready && IsVisible && !SettingsPanel.IsVisible && !RankingPanel.IsVisible && !CategoriesPanel.IsVisible) Search();
+        }
         if (!RankingPanel.IsVisible || _dragging || _pressedRank is not null) return;
         var preferences = SearchRankingConfiguration.LoadPreferences(_host.Profile);
         if (_rankItems.Select(item => item.Kind).SequenceEqual(preferences.RankOrder)
@@ -644,7 +666,6 @@ public partial class PaletteWindow : Window
         e.Handled = true;
     }
 }
-
 internal sealed record RankOption(SearchHitKind Kind, bool InitialEnabled)
 {
     public bool ExecutablesEnabled { get; set; } = InitialEnabled;

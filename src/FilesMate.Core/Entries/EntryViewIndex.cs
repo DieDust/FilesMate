@@ -40,6 +40,14 @@ public sealed class EntryViewIndex : IReadOnlyList<int>
 
     public int this[int index] => _indexes[index];
 
+    /// <summary>Preserves the provider's global ordering for an already ranked or paged result set.</summary>
+    public static EntryViewIndex InSourceOrder(EntryStore store, long generation, EntrySort? sort = null)
+    {
+        ArgumentNullException.ThrowIfNull(store);
+        return store.Observe(entries => new EntryViewIndex(Enumerable.Range(0, entries.Count).ToArray(),
+            generation, sort ?? EntrySort.Name, new EntryFilter(), []));
+    }
+
     public static bool ShouldDebounce(int storeCount, string previousQuery, string nextQuery)
     {
         _ = previousQuery;

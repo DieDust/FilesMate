@@ -90,7 +90,7 @@ public static class ZipArchiveService
         }
     }
 
-    private static void AddSource(string path, string name, List<SourceItem> items, EntryNames names, ref long total, CancellationToken token)
+    internal static void AddSource(string path, string name, List<SourceItem> items, EntryNames names, ref long total, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
         if (items.Count >= MaxEntries) throw Error(ArchiveErrorCode.TooManyEntries);
@@ -179,7 +179,7 @@ public static class ZipArchiveService
         reporter.Report(source, force: true);
     }
 
-    private static DirectoryLease CreateParents(string root, string relative)
+    internal static DirectoryLease CreateParents(string root, string relative)
     {
         var guard = new DirectoryLease();
         try
@@ -219,19 +219,19 @@ public static class ZipArchiveService
             throw Error(ArchiveErrorCode.InvalidArchive, path);
     }
 
-    private static long AddSize(long total, long size)
+    internal static long AddSize(long total, long size)
     {
         if (size < 0 || size > MaxExpandedBytes - total) throw Error(ArchiveErrorCode.ArchiveTooLarge);
         return total + size;
     }
 
-    private static void CheckSpace(string path, long bytes)
+    internal static void CheckSpace(string path, long bytes)
     {
         var available = new DriveInfo(Path.GetPathRoot(path)!).AvailableFreeSpace;
         if (bytes > Math.Max(0, available - 16 * 1024 * 1024)) throw Error(ArchiveErrorCode.InsufficientSpace);
     }
 
-    private sealed class EntryNames
+    internal sealed class EntryNames
     {
         private readonly Dictionary<string, bool> _nodes = new(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _explicit = new(StringComparer.OrdinalIgnoreCase);
@@ -265,8 +265,8 @@ public static class ZipArchiveService
         }
     }
 
-    private sealed record SourceItem(string Path, string Name, bool Directory, FileIdentity Identity);
-    private sealed class Reporter(IProgress<ArchiveProgress>? progress, long total, int entries)
+    internal sealed record SourceItem(string Path, string Name, bool Directory, FileIdentity Identity);
+    internal sealed class Reporter(IProgress<ArchiveProgress>? progress, long total, int entries)
     {
         private readonly Stopwatch _watch = Stopwatch.StartNew();
         private long _reported = -100;

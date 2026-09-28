@@ -8,6 +8,17 @@ namespace FilesMate.Core.Tests.Entries;
 public sealed class EntryViewIndexTests
 {
     [Fact]
+    public void Source_order_preserves_ranked_page_and_selection_ids()
+    {
+        var store = Store(File("z.txt"), File("a.txt"), File("m.txt"));
+        var index = EntryViewIndex.InSourceOrder(store, 7, EntrySort.Size);
+        Assert.Equal(["z.txt", "a.txt", "m.txt"], Names(store, index));
+        Assert.Equal(7, index.Generation);
+        Assert.Equal(EntrySort.Size, index.Sort);
+        Assert.Equal(1, index.IndexOfId(store, store[1].Id));
+        Assert.Empty(index.NameSections);
+    }
+    [Fact]
     public void AccessDateSortUsesTimestampInsteadOfFilename()
     {
         var store = Store(File("a.txt") with { AccessedUtcTicks = 300 }, File("b.txt") with { AccessedUtcTicks = 100 });

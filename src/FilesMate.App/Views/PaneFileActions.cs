@@ -127,6 +127,10 @@ internal sealed partial class PaneFileActions
                 case AppCommandId.OpenWith:
                     await OpenWithAsync();
                     break;
+                case AppCommandId.OpenInArchiveApp:
+                    if (_selectedPaths() is { Count: 1 } archivePaths && !await ArchiveAppPicker.ShowAsync(_host, archivePaths[0]))
+                        await OpenWithAsync();
+                    break;
                 case AppCommandId.CreateShortcut:
                     CreateShortcut();
                     break;

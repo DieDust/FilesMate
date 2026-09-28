@@ -64,7 +64,7 @@ public sealed class FrostedBackdrop : Grid
         _kind = kind;
     }
 
-    internal static Color FloatingColor(bool dark) => dark ? Color.FromArgb(255, 53, 59, 67) : Color.FromArgb(255, 250, 251, 253);
+    internal static Color FloatingColor(bool dark) => Themes.ShellStyleResources.FromArgb(SurfacePalette.Floating(dark));
     internal static BackdropKind EffectiveBackdrop(AppearanceSettings settings) => settings.GlassEffect == GlassEffectMode.Off
         || settings.EffectiveTransparencyPercent == 0 ? BackdropKind.Solid : settings.Backdrop;
     internal static SystemBackdrop? CreateBackdrop(BackdropKind kind) => kind switch

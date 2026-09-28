@@ -1,4 +1,4 @@
-using FilesMate.App.Localization;
+﻿using FilesMate.App.Localization;
 using FilesMate.App.Models;
 using FilesMate.App.Services;
 
@@ -49,8 +49,6 @@ public sealed class AppearanceSettingsViewModel
     public Task SetGlassEffectAsync(GlassEffectMode glassEffect, CancellationToken cancellationToken = default) =>
         CommitAsync(Current with { GlassEffect = glassEffect }, cancellationToken);
 
-    public Task SetShellStyleAsync(ShellStyleKind style, CancellationToken cancellationToken = default) =>
-        CommitAsync(Current with { ShellStyle = style }, cancellationToken);
 
     public void PreviewTransparencyPercent(int percent) =>
         _apply?.Invoke(Current with { TransparencyPercent = Math.Clamp(percent, 0, 100) });

@@ -223,8 +223,26 @@
   <data name="Applying" xml:space="preserve">
     <value>適用中…</value>
   </data>
+  <data name="Archive_360" xml:space="preserve">
+    <value>360 Zip</value>
+  </data>
+  <data name="Archive_AutoDetect" xml:space="preserve">
+    <value>自動検出に戻す</value>
+  </data>
+  <data name="Archive_AutoHint" xml:space="preserve">
+    <value>CompactMate、Bandizip、7-Zip、WinRAR の順に確認し、対応できるソフトがない場合は標準機能を使用します。</value>
+  </data>
+  <data name="Archive_Automatic" xml:space="preserve">
+    <value>自動</value>
+  </data>
+  <data name="Archive_BrowseApp" xml:space="preserve">
+    <value>プログラムを指定…</value>
+  </data>
+  <data name="Archive_BuiltIn" xml:space="preserve">
+    <value>FileMate 標準機能</value>
+  </data>
   <data name="Archive_BuiltinHint" xml:space="preserve">
-    <value>標準機能は通常の ZIP に対応しています。暗号化 ZIP やその他の形式には CompactMate などの圧縮ソフトをご利用ください。</value>
+    <value>ZIP・7z の作成、ZIP・7z・RAR・TAR の展開に対応。対応形式の暗号化・分割アーカイブも他のアプリなしで展開できます。</value>
   </data>
   <data name="Archive_Cancel" xml:space="preserve">
     <value>キャンセル</value>
@@ -241,14 +259,23 @@
   <data name="Archive_ChooseDestination" xml:space="preserve">
     <value>保存先フォルダーを選択</value>
   </data>
+  <data name="Archive_CompactMateHint" xml:space="preserve">
+    <value>インストール済みの CompactMate で一括展開、パスワードライブラリ、入れ子アーカイブの自動展開を使用します。</value>
+  </data>
+  <data name="Archive_CompatibleHint" xml:space="preserve">
+    <value>7zG.exe と互換性のある GUI プログラムを指定してください。コンソールツールや未対応の操作には標準機能を使用します。</value>
+  </data>
   <data name="Archive_Completed" xml:space="preserve">
     <value>完了：{0}</value>
   </data>
   <data name="Archive_CreateZip" xml:space="preserve">
-    <value>ZIP を作成</value>
+    <value>アーカイブを作成</value>
   </data>
   <data name="Archive_DefaultName" xml:space="preserve">
     <value>アーカイブ</value>
+  </data>
+  <data name="Archive_Detecting" xml:space="preserve">
+    <value>ソフトを検索中…</value>
   </data>
   <data name="Archive_ErrorArchiveTooLarge" xml:space="preserve">
     <value>展開後の内容が標準機能の上限である 64 GiB を超えています。</value>
@@ -271,8 +298,14 @@
   <data name="Archive_ErrorMetadataTooLarge" xml:space="preserve">
     <value>アーカイブのディレクトリ情報が標準機能の上限である 64 MiB を超えています。</value>
   </data>
+  <data name="Archive_ErrorMissingVolume" xml:space="preserve">
+    <value>分割ファイルが不足しているか不完全です。すべて同じフォルダーに置いて再試行してください。</value>
+  </data>
   <data name="Archive_ErrorOperationFailed" xml:space="preserve">
     <value>操作を完了できませんでした。ファイルのアクセス権とディスクの空き容量を確認して再試行してください。</value>
+  </data>
+  <data name="Archive_ErrorPasswordRequired" xml:space="preserve">
+    <value>パスワードが必要か、パスワードまたは暗号化された内容の検証に失敗しました。</value>
   </data>
   <data name="Archive_ErrorSecurityMetadataUnavailable" xml:space="preserve">
     <value>ファイルのインターネット由来のマークを安全に読み取るか保持することができません。このマークに対応したローカルドライブを使用するか、CompactMate で展開してください。</value>
@@ -287,7 +320,10 @@
     <value>シンボリックリンクまたはリダイレクトされたフォルダーが含まれています。通常のファイルやフォルダーを選択してください。</value>
   </data>
   <data name="Archive_ErrorUnsupportedEntry" xml:space="preserve">
-    <value>暗号化データまたは未対応の項目が含まれています。対応する圧縮ソフトで開いてください。</value>
+    <value>この形式または圧縮方式は標準機能に未対応です。「圧縮ソフトで開く」またはシステムメニューをご利用ください。</value>
+  </data>
+  <data name="Archive_ExternalHint" xml:space="preserve">
+    <value>対応する操作にはこのソフトを使い、改名された分割ファイルや未対応の操作には標準機能を使用します。</value>
   </data>
   <data name="Archive_ExternalOnly" xml:space="preserve">
     <value>CompactMate が必要</value>
@@ -295,23 +331,65 @@
   <data name="Archive_Failed" xml:space="preserve">
     <value>操作に失敗しました：{0}</value>
   </data>
+  <data name="Archive_FallbackHint" xml:space="preserve">
+    <value>優先するソフトが利用できないか、この操作に未対応のため、FileMate の標準機能を使用しています。</value>
+  </data>
   <data name="Archive_FolderPicker" xml:space="preserve">
     <value>フォルダーを選択…</value>
+  </data>
+  <data name="Archive_HaoZip" xml:space="preserve">
+    <value>2345 HaoZip</value>
   </data>
   <data name="Archive_InvalidSelection" xml:space="preserve">
     <value>既存のファイルまたはフォルダーを 1 つ以上選択してください。</value>
   </data>
   <data name="Archive_NameInvalid" xml:space="preserve">
-    <value>フォルダーのパスを含まない有効な ZIP ファイル名を入力してください。</value>
+    <value>フォルダーのパスを含まない有効な ZIP または 7z ファイル名を入力してください。</value>
   </data>
   <data name="Archive_NameLabel" xml:space="preserve">
     <value>アーカイブ名</value>
   </data>
+  <data name="Archive_NotInstalled" xml:space="preserve">
+    <value>ソフトが見つかりません。ポータブル版を指定するか、標準機能をご利用ください。</value>
+  </data>
+  <data name="Archive_OpenOnlyHint" xml:space="preserve">
+    <value>「圧縮ソフトで開く」で使用できます。直接の圧縮・展開には標準機能を使い、このソフト固有の操作はシステムメニューで使用します。</value>
+  </data>
+  <data name="Archive_OpenWithApp" xml:space="preserve">
+    <value>圧縮ソフトで開く…</value>
+  </data>
+  <data name="Archive_OtherApp" xml:space="preserve">
+    <value>その他（開くのみ）</value>
+  </data>
   <data name="Archive_OutputLabel" xml:space="preserve">
     <value>保存先</value>
   </data>
+  <data name="Archive_Password" xml:space="preserve">
+    <value>アーカイブのパスワード</value>
+  </data>
+  <data name="Archive_PasswordRetry" xml:space="preserve">
+    <value>パスワードが正しくないか、暗号化された内容が破損しています。別のパスワードをお試しください。</value>
+  </data>
+  <data name="Archive_Preferred" xml:space="preserve">
+    <value>優先する圧縮ソフト</value>
+  </data>
+  <data name="Archive_PreferredHint" xml:space="preserve">
+    <value>FileMate の圧縮・展開に使用するソフトを選択します。</value>
+  </data>
   <data name="Archive_Progress" xml:space="preserve">
     <value>{0} / {1} 件 · {2} / {3} MB</value>
+  </data>
+  <data name="Archive_Settings" xml:space="preserve">
+    <value>圧縮・展開</value>
+  </data>
+  <data name="Archive_SevenZipCompatible" xml:space="preserve">
+    <value>7-Zip 互換ソフト</value>
+  </data>
+  <data name="Archive_SmartBuiltinHint" xml:space="preserve">
+    <value>標準のスマート展開は保存先フォルダーを自動整理します。入れ子の展開とパスワードライブラリには CompactMate が必要です。</value>
+  </data>
+  <data name="Archive_SystemOpenWith" xml:space="preserve">
+    <value>システムの開く方法…</value>
   </data>
   <data name="Archive_TemporaryFilesRemain" xml:space="preserve">
     <value>一部の一時ファイルを削除できませんでした。場所：{0}</value>
@@ -324,6 +402,9 @@
   </data>
   <data name="Archive_Unsupported" xml:space="preserve">
     <value>この形式には CompactMate または対応する圧縮ソフトが必要です。</value>
+  </data>
+  <data name="Archive_WinRARHint" xml:space="preserve">
+    <value>WinRAR でアーカイブを開き、単一アーカイブを展開します。圧縮・一括処理・改名された分割ファイルには標準機能を使用します。</value>
   </data>
   <data name="Attribute_Archive" xml:space="preserve">
     <value>アーカイブ</value>
@@ -471,6 +552,15 @@
   </data>
   <data name="Category_NameRequired" xml:space="preserve">
     <value>分類名を入力してください。</value>
+  </data>
+  <data name="Category_Programs" xml:space="preserve">
+    <value>プログラム</value>
+  </data>
+  <data name="Category_ScrollNext" xml:space="preserve">
+    <value>分類を右にスクロール</value>
+  </data>
+  <data name="Category_ScrollPrevious" xml:space="preserve">
+    <value>分類を左にスクロール</value>
   </data>
   <data name="Category_Show" xml:space="preserve">
     <value>この分類を表示</value>
@@ -805,23 +895,23 @@
   <data name="Device_EjectDenied" xml:space="preserve">
     <value>Windows が取り外しを拒否しました。使用中のファイルやアプリを閉じて再試行してください。接続は維持してください。</value>
   </data>
-  <data name="Device_EjectShowBlockers" xml:space="preserve">
-    <value>ファイルの使用元を表示</value>
-  </data>
-  <data name="Device_EjectRetry" xml:space="preserve">
-    <value>安全な取り外しを再試行</value>
-  </data>
-  <data name="Device_EjectReleaseOwn" xml:space="preserve">
-    <value>FilesMate のプレビューを解放</value>
-  </data>
   <data name="Device_EjectNoFileLocks" xml:space="preserve">
     <value>このドライブで開かれているファイルは見つかりませんでした。ドライバー、システムサービス、デバイス接続が使用中の可能性があります。接続を維持し、関連アプリを閉じてから再試行してください。</value>
   </data>
   <data name="Device_EjectPreparing" xml:space="preserve">
     <value>取り外しを準備しています。デバイスのフォルダーとプレビューを解放中…</value>
   </data>
+  <data name="Device_EjectReleaseOwn" xml:space="preserve">
+    <value>FilesMate のプレビューを解放</value>
+  </data>
   <data name="Device_EjectRemoving" xml:space="preserve">
     <value>Windows による安全な取り外しを待っています。結果が表示されるまで接続を維持してください。</value>
+  </data>
+  <data name="Device_EjectRetry" xml:space="preserve">
+    <value>安全な取り外しを再試行</value>
+  </data>
+  <data name="Device_EjectShowBlockers" xml:space="preserve">
+    <value>ファイルの使用元を表示</value>
   </data>
   <data name="Device_EjectSuccess" xml:space="preserve">
     <value>デバイスを安全に取り外しました。接続を解除できます。</value>
@@ -979,17 +1069,14 @@
   <data name="Favorites_EditFolder" xml:space="preserve">
     <value>お気に入りに登録済み — 編集または削除</value>
   </data>
-  <data name="Favorites_NewSubgroup" xml:space="preserve">
-    <value>子グループを作成</value>
-  </data>
-  <data name="Favorites_GroupCycle" xml:space="preserve">
-    <value>グループを自身またはその子グループに移動することはできません。</value>
-  </data>
   <data name="Favorites_Group" xml:space="preserve">
     <value>お気に入りグループ</value>
   </data>
   <data name="Favorites_GroupAtRoot" xml:space="preserve">
     <value>グループはお気に入りバーの直下にのみ配置できます。</value>
+  </data>
+  <data name="Favorites_GroupCycle" xml:space="preserve">
+    <value>グループを自身またはその子グループに移動することはできません。</value>
   </data>
   <data name="Favorites_GroupDrop" xml:space="preserve">
     <value>ファイルをドロップしてこのグループに追加</value>
@@ -1056,6 +1143,9 @@
   </data>
   <data name="Favorites_NewGroupMenu" xml:space="preserve">
     <value>お気に入りグループを作成…</value>
+  </data>
+  <data name="Favorites_NewSubgroup" xml:space="preserve">
+    <value>子グループを作成</value>
   </data>
   <data name="Favorites_NoMatch" xml:space="preserve">
     <value>一致するお気に入りはありません</value>
@@ -1603,6 +1693,36 @@
   <data name="PageLoadError_Title" xml:space="preserve">
     <value>ページを開けませんでした</value>
   </data>
+  <data name="Pane_Arrangement" xml:space="preserve">
+    <value>ペインの配置を選択</value>
+  </data>
+  <data name="Pane_BottomFocus" xml:space="preserve">
+    <value>上2・下1</value>
+  </data>
+  <data name="Pane_Columns" xml:space="preserve">
+    <value>横に3列</value>
+  </data>
+  <data name="Pane_LeftFocus" xml:space="preserve">
+    <value>左1・右2</value>
+  </data>
+  <data name="Pane_NextDual" xml:space="preserve">
+    <value>2 ペインに切り替え</value>
+  </data>
+  <data name="Pane_NextSingle" xml:space="preserve">
+    <value>1 ペインに切り替え</value>
+  </data>
+  <data name="Pane_NextTriple" xml:space="preserve">
+    <value>3 ペインに切り替え</value>
+  </data>
+  <data name="Pane_RightFocus" xml:space="preserve">
+    <value>左2・右1</value>
+  </data>
+  <data name="Pane_Rows" xml:space="preserve">
+    <value>縦に3段</value>
+  </data>
+  <data name="Pane_TopFocus" xml:space="preserve">
+    <value>上1・下2</value>
+  </data>
   <data name="ParentFolder" xml:space="preserve">
     <value>親フォルダー</value>
   </data>
@@ -1632,18 +1752,6 @@
   <data name="PreviewInfoTab" xml:space="preserve">
     <value>情報</value>
   </data>
-  <data name="Preview_FollowingSelection" xml:space="preserve"><value>選択項目に追従</value></data>
-  <data name="Preview_PinnedStatus" xml:space="preserve"><value>このウィンドウで固定：{0}</value></data>
-  <data name="TitleBar_Restore" xml:space="preserve"><value>元に戻す</value></data>
-  <data name="TitleBar_Move" xml:space="preserve"><value>移動</value></data>
-  <data name="TitleBar_Size" xml:space="preserve"><value>サイズ変更</value></data>
-  <data name="TitleBar_Minimize" xml:space="preserve"><value>最小化</value></data>
-  <data name="TitleBar_Maximize" xml:space="preserve"><value>最大化</value></data>
-  <data name="TitleBar_Close" xml:space="preserve"><value>ウィンドウを閉じる</value></data>
-  <data name="Preview_Pin" xml:space="preserve"><value>固定</value></data>
-  <data name="Preview_Unpin" xml:space="preserve"><value>固定解除</value></data>
-  <data name="Preview_RefreshPinned" xml:space="preserve"><value>更新</value></data>
-  <data name="Preview_PinnedUnavailable" xml:space="preserve"><value>固定した項目にアクセスできません。更新するか固定を解除してください。</value></data>
   <data name="PreviewMediaError" xml:space="preserve">
     <value>この形式は再生できません。メディアプレーヤーで開いてください。</value>
   </data>
@@ -1717,6 +1825,9 @@
   <data name="Preview_EmptyText" xml:space="preserve">
     <value>空のテキスト文書</value>
   </data>
+  <data name="Preview_FollowingSelection" xml:space="preserve">
+    <value>選択項目に追従</value>
+  </data>
   <data name="Preview_Hidden" xml:space="preserve">
     <value>隠しファイル</value>
   </data>
@@ -1765,11 +1876,23 @@
   <data name="Preview_PieChart" xml:space="preserve">
     <value>円グラフのプレビュー</value>
   </data>
+  <data name="Preview_Pin" xml:space="preserve">
+    <value>固定</value>
+  </data>
+  <data name="Preview_PinnedStatus" xml:space="preserve">
+    <value>このウィンドウで固定：{0}</value>
+  </data>
+  <data name="Preview_PinnedUnavailable" xml:space="preserve">
+    <value>固定した項目にアクセスできません。更新するか固定を解除してください。</value>
+  </data>
   <data name="Preview_ReadFailed" xml:space="preserve">
     <value>現在このファイルを読み取れません</value>
   </data>
   <data name="Preview_ReadOnly" xml:space="preserve">
     <value>読み取り専用</value>
+  </data>
+  <data name="Preview_RefreshPinned" xml:space="preserve">
+    <value>更新</value>
   </data>
   <data name="Preview_ResizeBottom" xml:space="preserve">
     <value>プレビューの下端を調整</value>
@@ -1836,6 +1959,9 @@
   </data>
   <data name="Preview_UnavailableShort" xml:space="preserve">
     <value>この文書はプレビューできません。ファイルを開いてください。</value>
+  </data>
+  <data name="Preview_Unpin" xml:space="preserve">
+    <value>固定解除</value>
   </data>
   <data name="Preview_WebViewFailed" xml:space="preserve">
     <value>プレビューを初期化できませんでした。開き直すか WebView2 を確認してください。</value>
@@ -2121,6 +2247,256 @@
   <data name="SearchOperationFailed" xml:space="preserve">
     <value>操作を完了できませんでした：{0}</value>
   </data>
+  <data name="SearchPage_Advanced" xml:space="preserve">
+    <value>詳細フィルター</value>
+  </data>
+  <data name="SearchPage_AllLocations" xml:space="preserve">
+    <value>すべてのインデックス場所</value>
+  </data>
+  <data name="SearchPage_AllTypes" xml:space="preserve">
+    <value>すべての種類</value>
+  </data>
+  <data name="SearchPage_AnyDate" xml:space="preserve">
+    <value>期間指定なし</value>
+  </data>
+  <data name="SearchPage_AnySize" xml:space="preserve">
+    <value>サイズ指定なし</value>
+  </data>
+  <data name="SearchPage_Apply" xml:space="preserve">
+    <value>適用</value>
+  </data>
+  <data name="SearchPage_Browse" xml:space="preserve">
+    <value>フォルダーを選択…</value>
+  </data>
+  <data name="SearchPage_ByPath" xml:space="preserve">
+    <value>場所順</value>
+  </data>
+  <data name="SearchPage_Cancelled" xml:space="preserve">
+    <value>検索を停止しました。条件を変えて再検索できます。</value>
+  </data>
+  <data name="SearchPage_Case" xml:space="preserve">
+    <value>大文字小文字</value>
+  </data>
+  <data name="SearchPage_Category" xml:space="preserve">
+    <value>結果の種類</value>
+  </data>
+  <data name="SearchPage_Count" xml:space="preserve">
+    <value>結果 {0}–{1}{2} · 1ページ200件</value>
+  </data>
+  <data name="SearchPage_CustomDates" xml:space="preserve">
+    <value>日付範囲を選択…</value>
+  </data>
+  <data name="SearchPage_CustomSize" xml:space="preserve">
+    <value>サイズを指定</value>
+  </data>
+  <data name="SearchPage_DateOrder" xml:space="preserve">
+    <value>終了日は開始日以降にしてください。</value>
+  </data>
+  <data name="SearchPage_DateRange" xml:space="preserve">
+    <value>日付範囲には開始日と終了日だけを入力してください。</value>
+  </data>
+  <data name="SearchPage_EndDate" xml:space="preserve">
+    <value>終了日</value>
+  </data>
+  <data name="SearchPage_Examples" xml:space="preserve">
+    <value>空白はAND、| はOR、! は除外、引用符はフレーズ。
+*.pdf · ext:pdf;docx · file: · folder: · path:Projects · parent:D:\Projects
+size:&gt;100mb · dm:7days
+
+正規表現モードは検索文字列全体に適用されます。本文は検索しません。サイズと日時は直近のインデックスに基づきます。</value>
+  </data>
+  <data name="SearchPage_ExcludeNeedsTerm" xml:space="preserve">
+    <value>! の後に除外する名前や条件を入力してください。</value>
+  </data>
+  <data name="SearchPage_Extensions" xml:space="preserve">
+    <value>拡張子</value>
+  </data>
+  <data name="SearchPage_Filters" xml:space="preserve">
+    <value>絞り込み</value>
+  </data>
+  <data name="SearchPage_Formats" xml:space="preserve">
+    <value>ファイル形式</value>
+  </data>
+  <data name="SearchPage_Help" xml:space="preserve">
+    <value>検索構文</value>
+  </data>
+  <data name="SearchPage_Index" xml:space="preserve">
+    <value>インデックス設定</value>
+  </data>
+  <data name="SearchPage_IndexMissing" xml:space="preserve">
+    <value>ファイルのインデックスがありません。設定で検索場所を選んで作成してください。</value>
+  </data>
+  <data name="SearchPage_InvalidDate" xml:space="preserve">
+    <value>日付の例：today、7days、2026-01-01..2026-12-31。</value>
+  </data>
+  <data name="SearchPage_InvalidRegex" xml:space="preserve">
+    <value>正規表現が無効か、未対応の先読み・後読み・バックトラッキング・後方参照が含まれています。</value>
+  </data>
+  <data name="SearchPage_InvalidScope" xml:space="preserve">
+    <value>検索範囲には D:\Projects のような完全なフォルダーパスを入力してください。</value>
+  </data>
+  <data name="SearchPage_InvalidSize" xml:space="preserve">
+    <value>サイズの例：&gt;100mb、10mb..50mb、&lt;=1gb。</value>
+  </data>
+  <data name="SearchPage_Largest" xml:space="preserve">
+    <value>サイズ：大きい順</value>
+  </data>
+  <data name="SearchPage_Last30Days" xml:space="preserve">
+    <value>過去30日間</value>
+  </data>
+  <data name="SearchPage_Last7Days" xml:space="preserve">
+    <value>過去7日間</value>
+  </data>
+  <data name="SearchPage_Last90Days" xml:space="preserve">
+    <value>過去90日間</value>
+  </data>
+  <data name="SearchPage_Loaded" xml:space="preserve">
+    <value>{0:N0} 件を表示</value>
+  </data>
+  <data name="SearchPage_LoadingMore" xml:space="preserve">
+    <value>{0:N0} 件を表示 · 読み込み中…</value>
+  </data>
+  <data name="SearchPage_Location" xml:space="preserve">
+    <value>場所</value>
+  </data>
+  <data name="SearchPage_MatchPath" xml:space="preserve">
+    <value>パスも検索</value>
+  </data>
+  <data name="SearchPage_MatchingOptions" xml:space="preserve">
+    <value>一致条件</value>
+  </data>
+  <data name="SearchPage_Maximum" xml:space="preserve">
+    <value>上限</value>
+  </data>
+  <data name="SearchPage_MetadataMissing" xml:space="preserve">
+    <value>サイズと日付を表示するにはインデックスを更新してください。名前の検索は引き続き利用できます。</value>
+  </data>
+  <data name="SearchPage_MetadataRequired" xml:space="preserve">
+    <value>このインデックスにはサイズや日付がありません。条件を使うには設定からインデックスを更新してください。</value>
+  </data>
+  <data name="SearchPage_Minimum" xml:space="preserve">
+    <value>下限</value>
+  </data>
+  <data name="SearchPage_Modified" xml:space="preserve">
+    <value>更新日時</value>
+  </data>
+  <data name="SearchPage_More" xml:space="preserve">
+    <value>すべての結果を表示</value>
+  </data>
+  <data name="SearchPage_MoreCompact" xml:space="preserve">
+    <value>すべて表示</value>
+  </data>
+  <data name="SearchPage_Name" xml:space="preserve">
+    <value>名前</value>
+  </data>
+  <data name="SearchPage_NameAZ" xml:space="preserve">
+    <value>名前 A → Z</value>
+  </data>
+  <data name="SearchPage_NameZA" xml:space="preserve">
+    <value>名前 Z → A</value>
+  </data>
+  <data name="SearchPage_Newest" xml:space="preserve">
+    <value>更新日時：新しい順</value>
+  </data>
+  <data name="SearchPage_Next" xml:space="preserve">
+    <value>次の200件</value>
+  </data>
+  <data name="SearchPage_NoLimit" xml:space="preserve">
+    <value>指定なし</value>
+  </data>
+  <data name="SearchPage_NoResults" xml:space="preserve">
+    <value>該当する項目がありません。条件やインデックス範囲を確認してください。</value>
+  </data>
+  <data name="SearchPage_OrNeedsTerms" xml:space="preserve">
+    <value>| の両側に検索条件を入力してください。</value>
+  </data>
+  <data name="SearchPage_Previous" xml:space="preserve">
+    <value>前の200件</value>
+  </data>
+  <data name="SearchPage_Priority" xml:space="preserve">
+    <value>種類の優先順位</value>
+  </data>
+  <data name="SearchPage_QueryHint" xml:space="preserve">
+    <value>名前や条件（例 report ext:pdf）</value>
+  </data>
+  <data name="SearchPage_QueryTooLong" xml:space="preserve">
+    <value>検索条件は2048文字以内にしてください。</value>
+  </data>
+  <data name="SearchPage_RefreshAfterOperation" xml:space="preserve">
+    <value>現在の結果を更新しました。新規・改名したファイルはインデックス更新後に反映されます。</value>
+  </data>
+  <data name="SearchPage_Regex" xml:space="preserve">
+    <value>正規表現</value>
+  </data>
+  <data name="SearchPage_Reset" xml:space="preserve">
+    <value>絞り込み解除</value>
+  </data>
+  <data name="SearchPage_Reveal" xml:space="preserve">
+    <value>ファイルの場所を開く</value>
+  </data>
+  <data name="SearchPage_Scope" xml:space="preserve">
+    <value>検索範囲</value>
+  </data>
+  <data name="SearchPage_Search" xml:space="preserve">
+    <value>検索</value>
+  </data>
+  <data name="SearchPage_Selected" xml:space="preserve">
+    <value>{0}件を選択</value>
+  </data>
+  <data name="SearchPage_Size" xml:space="preserve">
+    <value>サイズ</value>
+  </data>
+  <data name="SearchPage_SizeOrder" xml:space="preserve">
+    <value>サイズの下限は上限以下にしてください。</value>
+  </data>
+  <data name="SearchPage_SizeTooLarge" xml:space="preserve">
+    <value>サイズが対応範囲を超えています。</value>
+  </data>
+  <data name="SearchPage_Sort" xml:space="preserve">
+    <value>並び替え</value>
+  </data>
+  <data name="SearchPage_SortLargest" xml:space="preserve">
+    <value>サイズ降順</value>
+  </data>
+  <data name="SearchPage_SortNewest" xml:space="preserve">
+    <value>更新日時順</value>
+  </data>
+  <data name="SearchPage_SortPriority" xml:space="preserve">
+    <value>種類順</value>
+  </data>
+  <data name="SearchPage_StartDate" xml:space="preserve">
+    <value>開始日</value>
+  </data>
+  <data name="SearchPage_Stop" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="SearchPage_TimedOut" xml:space="preserve">
+    <value>検索がタイムアウトしました。範囲を狭めてください。</value>
+  </data>
+  <data name="SearchPage_Title" xml:space="preserve">
+    <value>検索</value>
+  </data>
+  <data name="SearchPage_Today" xml:space="preserve">
+    <value>今日</value>
+  </data>
+  <data name="SearchPage_Total" xml:space="preserve">
+    <value>全 {0:N0} 件</value>
+  </data>
+  <data name="SearchPage_TotalLoaded" xml:space="preserve">
+    <value>全 {0:N0} 件 · {1:N0} 件を表示</value>
+  </data>
+  <data name="SearchPage_UnclosedQuote" xml:space="preserve">
+    <value>フレーズを囲む引用符を閉じてください。</value>
+  </data>
+  <data name="SearchPage_Unit" xml:space="preserve">
+    <value>サイズの単位</value>
+  </data>
+  <data name="SearchPage_UnsupportedCondition" xml:space="preserve">
+    <value>未対応の条件です。ext:、file:、folder:、path:、parent:、size:、dm: を使用してください。</value>
+  </data>
+  <data name="SearchPage_Yesterday" xml:space="preserve">
+    <value>昨日</value>
+  </data>
   <data name="SearchParallel" xml:space="preserve">
     <value>複数のドライブをスキャン</value>
   </data>
@@ -2154,6 +2530,9 @@
   <data name="SearchRankDocument" xml:space="preserve">
     <value>文書</value>
   </data>
+  <data name="SearchRankExecutable" xml:space="preserve">
+    <value>単独の EXE/COM</value>
+  </data>
   <data name="SearchRankFolder" xml:space="preserve">
     <value>フォルダー</value>
   </data>
@@ -2165,15 +2544,6 @@
   </data>
   <data name="SearchRankProgram" xml:space="preserve">
     <value>アプリ</value>
-  </data>
-  <data name="SearchRankExecutable" xml:space="preserve">
-    <value>単独の EXE/COM</value>
-  </data>
-  <data name="Search_StandaloneExecutables" xml:space="preserve">
-    <value>単独プログラムを表示</value>
-  </data>
-  <data name="Search_StandaloneExecutablesHint" xml:space="preserve">
-    <value>インデックス済みの EXE・COM をアプリのショートカットとは別に検索します。オフにしてもインデックスは保持されます。</value>
   </data>
   <data name="SearchRankSection" xml:space="preserve">
     <value>検索結果の優先順位</value>
@@ -2397,6 +2767,12 @@
   <data name="Search_StaleFiles" xml:space="preserve">
     <value>一部のファイルは移動または削除されています。再度検索してください。</value>
   </data>
+  <data name="Search_StandaloneExecutables" xml:space="preserve">
+    <value>単独プログラムを表示</value>
+  </data>
+  <data name="Search_StandaloneExecutablesHint" xml:space="preserve">
+    <value>インデックス済みの EXE・COM をアプリのショートカットとは別に検索します。オフにしてもインデックスは保持されます。</value>
+  </data>
   <data name="Search_StartAtLogin" xml:space="preserve">
     <value>サインイン時にグローバル検索を起動</value>
   </data>
@@ -2559,20 +2935,11 @@
   <data name="Shelf_Remove" xml:space="preserve">
     <value>選択した項目をシェルフから外す</value>
   </data>
+  <data name="Shelf_Short" xml:space="preserve">
+    <value>シェルフ</value>
+  </data>
   <data name="Shelf_Title" xml:space="preserve">
     <value>ファイルシェルフ</value>
-  </data>
-  <data name="ShellLayered" xml:space="preserve">
-    <value>階層型</value>
-  </data>
-  <data name="ShellStyle" xml:space="preserve">
-    <value>インターフェイスのスタイル</value>
-  </data>
-  <data name="ShellStyleDescription" xml:space="preserve">
-    <value>一体型は連続した背景、階層型は色調の違いで領域を分けます。変更はすぐに反映されます。</value>
-  </data>
-  <data name="ShellUnified" xml:space="preserve">
-    <value>一体型</value>
   </data>
   <data name="Shortcut_Change" xml:space="preserve">
     <value>ショートカットを変更</value>
@@ -3000,6 +3367,24 @@ Ctrl+T で新しいタブ。Ctrl+W でタブを閉じる。Ctrl+L でアドレ�
   </data>
   <data name="ThemeSystem" xml:space="preserve">
     <value>システムに合わせる</value>
+  </data>
+  <data name="TitleBar_Close" xml:space="preserve">
+    <value>ウィンドウを閉じる</value>
+  </data>
+  <data name="TitleBar_Maximize" xml:space="preserve">
+    <value>最大化</value>
+  </data>
+  <data name="TitleBar_Minimize" xml:space="preserve">
+    <value>最小化</value>
+  </data>
+  <data name="TitleBar_Move" xml:space="preserve">
+    <value>移動</value>
+  </data>
+  <data name="TitleBar_Restore" xml:space="preserve">
+    <value>元に戻す</value>
+  </data>
+  <data name="TitleBar_Size" xml:space="preserve">
+    <value>サイズ変更</value>
   </data>
   <data name="Toolbar" xml:space="preserve">
     <value>ツールバー</value>

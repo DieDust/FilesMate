@@ -6,6 +6,7 @@ using FilesMate.App.Services;
 using FilesMate.App.Views;
 using FilesMate.Core.Operations;
 using FilesMate.Platform.Windows.CompactMate;
+using FilesMate.Platform.Windows.Archives;
 using FilesMate.Platform.Windows.Operations;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation.Peers;
@@ -33,6 +34,10 @@ public sealed partial class MainWindow
             var input = Path.Combine(source, "资料.txt");
             File.WriteAllText(input, "archive UI roundtrip");
             var operations = new WindowsLocalFileOperations();
+            // Force the real command entry to use the bundled engine even on development
+            // machines with CompactMate installed. This writes only to the isolated UI profile.
+            var settings = new ArchivePreferencesStore(Program.SettingsPath(ArchivePreferencesStore.DefaultPath));
+            settings.Save(new(ArchiveProvider.BuiltIn));
             var compressed = await ArchiveOperationUI.RunBuiltInAsync(host, CompactMateVerb.CompressZip, [input], source, operations);
             evidence["CreateResult"] = compressed is null ? "null" : new { compressed.Errors, compressed.Completed, compressed.Cancelled, Undo = compressed.Undo?.Kind.ToString() };
             Require(compressed is { Errors.Count: 0, Completed.Count: 1, Undo: not null }, "ZIP create result");
@@ -44,6 +49,94 @@ public sealed partial class MainWindow
             Require(extracted is { Errors.Count: 0, Completed.Count: 1, Undo: not null }, "ZIP extract result");
             Require(File.ReadAllText(Path.Combine(output, "资料.txt")) == "archive UI roundtrip", "Extract contents");
             evidence["ExtractZipWithProgress"] = true;
+
+            var renamedArchive = Path.Combine(source, "资料.zip删删删");
+            File.Copy(archive, renamedArchive);
+            var renamedOutput = Directory.CreateDirectory(Path.Combine(root, "renamed-output")).FullName;
+            var renamed = await ArchiveOperationUI.RunAsync(host, CompactMateVerb.ExtractHere, [renamedArchive], renamedOutput, operations);
+            Require(renamed is { Errors.Count: 0, Completed.Count: 1 }, "Renamed ZIP real command routing");
+            Require(File.ReadAllText(Path.Combine(renamedOutput, "资料.txt")) == "archive UI roundtrip", "Renamed ZIP payload");
+            evidence["RenamedZipThroughRealEntry"] = true;
+
+            var sevenZip = await ArchiveOperationUI.RunAsync(host, CompactMateVerb.Compress7z, [input], source, operations);
+            Require(sevenZip is { Errors.Count: 0, Completed.Count: 1 }, "7z creation without CompactMate");
+            var sevenOutput = Directory.CreateDirectory(Path.Combine(root, "seven-output")).FullName;
+            var sevenExtract = await ArchiveOperationUI.RunAsync(host, CompactMateVerb.ExtractHere,
+                [Path.Combine(source, "资料.7z")], sevenOutput, operations);
+            Require(sevenExtract is { Errors.Count: 0, Completed.Count: 1 }, "7z extraction without CompactMate");
+            evidence["SevenZipThroughRealEntry"] = true;
+
+            var encryptedFixture = Environment.GetEnvironmentVariable("FILESMATE_ARCHIVE_PASSWORD_FIXTURE");
+            if (!string.IsNullOrEmpty(encryptedFixture))
+            {
+                var encryptedOutput = Directory.CreateDirectory(Path.Combine(root, "encrypted-output")).FullName;
+                var encryptedWork = ArchiveOperationUI.RunAsync(host, CompactMateVerb.ExtractHere, [encryptedFixture], encryptedOutput, operations);
+                for (var attempt = 0; attempt < 2; attempt++)
+                {
+                    var passwordDialog = await WaitDialogAsync(dialog => dialog.Title?.ToString() == StringTable.Get("Archive_Password"));
+                    var passwordBox = FindDescendant<PasswordBox>(passwordDialog, _ => true) ?? throw new IOException("Password entry missing");
+                    passwordBox.Password = attempt == 0 ? "incorrect" : "test";
+                    Invoke(FindDescendant<Button>(passwordDialog, button => button.Name == "PrimaryButton")!);
+                    await Task.Delay(400);
+                }
+                var decrypted = await encryptedWork;
+                Require(decrypted is { Errors.Count: 0, Cancelled: false }, "Password retry result");
+                Require(Directory.EnumerateFiles(encryptedOutput, "*", SearchOption.AllDirectories).Any(), "Encrypted output missing");
+                evidence["PasswordDialogRetriesWithoutPublishingPartialOutput"] = true;
+            }
+
+            var bandizip = Environment.GetEnvironmentVariable("FILESMATE_ARCHIVE_BANDIZIP");
+            if (!string.IsNullOrEmpty(bandizip))
+            {
+                var processName = Path.GetFileNameWithoutExtension(bandizip);
+                var existingIds = System.Diagnostics.Process.GetProcessesByName(processName).Select(p => p.Id).ToHashSet();
+                var secondArchive = Path.Combine(source, "第二份 空格.zip");
+                File.Copy(archive, secondArchive);
+                var bandiOutput = Directory.CreateDirectory(Path.Combine(root, "Bandizip 输出")).FullName;
+                try
+                {
+                    settings.Save(new(ArchiveProvider.Bandizip, new() { [ArchiveProvider.Bandizip] = bandizip }));
+                    var externalResult = await ArchiveOperationUI.RunAsync(host, CompactMateVerb.ExtractToFolder,
+                        [archive, secondArchive], bandiOutput, operations);
+                    Require(externalResult is null, "Bandizip was not selected");
+                    var firstPayload = Path.Combine(bandiOutput, "资料", "资料.txt");
+                    var secondPayload = Path.Combine(bandiOutput, "第二份 空格", "资料.txt");
+                    for (var i = 0; i < 200 && !(File.Exists(firstPayload) && File.Exists(secondPayload)); i++) await Task.Delay(100);
+                    Require(File.ReadAllText(firstPayload) == "archive UI roundtrip", "Bandizip first payload");
+                    Require(File.ReadAllText(secondPayload) == "archive UI roundtrip", "Bandizip second payload");
+                    evidence["BandizipBatchThroughRealEntry"] = true;
+                }
+                finally
+                {
+                    settings.Save(new(ArchiveProvider.BuiltIn));
+                    foreach (var process in System.Diagnostics.Process.GetProcessesByName(processName))
+                    {
+                        using (process)
+                        {
+                            if (existingIds.Contains(process.Id) || !string.Equals(process.MainModule?.FileName, bandizip, StringComparison.OrdinalIgnoreCase)) continue;
+                            process.CloseMainWindow();
+                        }
+                    }
+                }
+            }
+
+            var settingsPage = new FilesAndFoldersSettingsPage { Width = 720, Height = 620 };
+            var settingsHost = new ScrollViewer { Content = settingsPage, Width = 760, Height = 620 };
+            ((Grid)Content).Children.Add(settingsHost);
+            try
+            {
+                for (var i = 0; i < 100 && !settingsPage.IsLoaded; i++) await Task.Delay(50);
+                settingsPage.UpdateLayout();
+                var providerBox = FindDescendant<ComboBox>(settingsPage, box => box.Name == "ArchiveProviderBox")
+                    ?? throw new IOException("Archive provider settings missing");
+                for (var i = 0; i < 100 && providerBox.SelectedIndex < 0; i++) await Task.Delay(50);
+                Require(providerBox.Items.Count == Enum.GetValues<ArchiveProvider>().Length, "Archive provider choices");
+                providerBox.SelectedIndex = (int)ArchiveProvider.HaoZip;
+                for (var i = 0; i < 100 && settings.Load().Preferred != ArchiveProvider.HaoZip; i++) await Task.Delay(50);
+                Require(settings.Load().Preferred == ArchiveProvider.HaoZip, "Preferred application was not persisted");
+                evidence["ProviderSettingsPersistSelection"] = true;
+            }
+            finally { ((Grid)Content).Children.Remove(settingsHost); settings.Save(new(ArchiveProvider.BuiltIn)); }
 
             File.WriteAllText(Path.Combine(output, "资料.txt"), "existing content");
             var work = ArchiveOperationUI.RunBuiltInAsync(host, CompactMateVerb.ExtractHere, [archive], output, operations);
