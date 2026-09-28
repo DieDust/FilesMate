@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Text;
 using System.Text.Json;
 using FilesMate.App.Models;
 using FilesMate.App.Services;
@@ -92,34 +91,24 @@ public sealed class SearchIndexConfigurationTests : IDisposable
         var original = await File.ReadAllBytesAsync(SettingsPath);
         var ready = Path.Combine(_root, "ready");
         var release = Path.Combine(_root, "release");
-        static string Encoded(string value) => Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
-        var script = """
-            $lockPath = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('__LOCK__'))
-            $readyPath = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('__READY__'))
-            $releasePath = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('__RELEASE__'))
-            $gate = [IO.File]::Open($lockPath, [IO.FileMode]::OpenOrCreate, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
-            try {
-                [IO.File]::WriteAllText($readyPath, 'ready')
-                $deadline = [DateTime]::UtcNow.AddSeconds(15)
-                while (-not [IO.File]::Exists($releasePath) -and [DateTime]::UtcNow -lt $deadline) { Start-Sleep -Milliseconds 20 }
-            } finally { $gate.Dispose() }
-            """.Replace("__LOCK__", Encoded(SettingsPath + ".lock"), StringComparison.Ordinal)
-            .Replace("__READY__", Encoded(ready), StringComparison.Ordinal)
-            .Replace("__RELEASE__", Encoded(release), StringComparison.Ordinal);
-        var start = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "WindowsPowerShell", "v1.0", "powershell.exe"))
+        // Use the existing compiled helper so this file-lock check does not depend
+        // on a cold Windows PowerShell startup on a shared CI runner.
+        var executable = Path.Combine(AppContext.BaseDirectory, "ProcessIsolationFixture", "FilesMate.ProcessIsolation.Fixture.exe");
+        var start = new ProcessStartInfo(executable)
         {
             UseShellExecute = false,
             CreateNoWindow = true,
+            ArgumentList = { "hold-file-lock", SettingsPath + ".lock", ready, release },
         };
-        start.ArgumentList.Add("-NoProfile");
-        start.ArgumentList.Add("-NonInteractive");
-        start.ArgumentList.Add("-EncodedCommand");
-        start.ArgumentList.Add(Convert.ToBase64String(Encoding.Unicode.GetBytes(script)));
         using var child = Process.Start(start)!;
         try
         {
             using var readyTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            while (!File.Exists(ready)) await Task.Delay(20, readyTimeout.Token);
+            while (!File.Exists(ready))
+            {
+                Assert.False(child.HasExited, "The file-lock helper exited before acquiring the lock.");
+                await Task.Delay(20, readyTimeout.Token);
+            }
             using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(150));
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => Store.UpdateDatabaseDirectoryAsync(Path.Combine(_root, "cancelled"), cancellation.Token));
             Assert.Equal(original, await File.ReadAllBytesAsync(SettingsPath));
@@ -135,7 +124,13 @@ public sealed class SearchIndexConfigurationTests : IDisposable
         finally
         {
             await File.WriteAllTextAsync(release, "release");
-            await child.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5));
+            try { await child.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5)); }
+            catch (TimeoutException)
+            {
+                // Preserve the original assertion/timeout and never leave a test helper running.
+                if (!child.HasExited) child.Kill(entireProcessTree: true);
+                await child.WaitForExitAsync();
+            }
         }
     }
 

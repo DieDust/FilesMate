@@ -10,6 +10,15 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        if (args is ["hold-file-lock", var lockPath, var readyPath, var releasePath])
+        {
+            using var gate = File.Open(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            File.WriteAllText(readyPath, "ready");
+            var timeout = Stopwatch.StartNew();
+            while (!File.Exists(releasePath) && timeout.Elapsed < TimeSpan.FromMinutes(1))
+                Thread.Sleep(20);
+            return;
+        }
         if (args is ["allocation-probe", var allocationOutput])
         {
             var allocation = VirtualAlloc(0, 512u * 1024 * 1024, 0x1000 | 0x2000, 4);
