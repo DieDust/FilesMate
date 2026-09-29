@@ -85,7 +85,7 @@ public sealed class NavigatorResponsiveContractTests
         Assert.Contains("x:Name=\"PaneCard\"", chrome, StringComparison.Ordinal);
         Assert.Contains("BorderThickness=\"1\"", chrome, StringComparison.Ordinal);
         Assert.Contains("FilesMate.FileContent.BackgroundBrush", chrome, StringComparison.Ordinal);
-        Assert.Contains("Margin=\"8,0,8,8\"", chrome, StringComparison.Ordinal);
+        Assert.Contains("Margin=\"8,0,8,0\"", chrome, StringComparison.Ordinal);
     }
 
     [Fact]

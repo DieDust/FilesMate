@@ -68,9 +68,12 @@ public sealed partial class FileDetailsSurface : UserControl
     private Point _marqueePointer;
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _marqueeScrollTimer;
     private int _pressViewIndex = -1;
-    private int _lastClickViewIndex = -1;
+    private long _pressGeneration;
+    private bool _pressHasModifier;
+    private ItemOpeningMode _pressOpeningMode;
+    private bool _pressOnName;
+    private uint? _pressPointerId;
     private int _dropTargetViewIndex = -1;
-    private long _lastClickTimestamp;
     private long _generation;
     private CancellationTokenSource _folderSizeCts = new();
     private IReadOnlyList<string> _dragSourcePaths = [];
@@ -82,7 +85,7 @@ public sealed partial class FileDetailsSurface : UserControl
     private bool _revealScheduled;
     private FileLayoutKind _layout = FileLayoutKind.Grid;
     private GridSizePreset _gridPreset = GridSizePreset.Default;
-    private int _resizeColumn = -1;
+    private string? _resizeColumn;
     private uint? _resizePointerId;
     private double _resizeOriginX;
     private double _resizeOriginWidth;
@@ -108,6 +111,7 @@ public sealed partial class FileDetailsSurface : UserControl
         InitializeAlphabet();
         Scroller.SizeChanged += (_, _) =>
         {
+            UpdateListMetrics();
             UpdateAlphabetTailSpace();
             ApplyDetailsColumns(persist: false);
             ScheduleVisibleRange();
@@ -119,6 +123,10 @@ public sealed partial class FileDetailsSurface : UserControl
         Loaded += (_, _) =>
         {
             if (_resourcesReleased) return;
+            StartTypography();
+            App.ExplorerPreferencesChanged -= OpeningPreferencesChanged;
+            App.ExplorerPreferencesChanged += OpeningPreferencesChanged;
+            ApplyOpeningPreferences();
             if (_visualsDetached)
             {
                 _visualsDetached = false;
@@ -131,8 +139,10 @@ public sealed partial class FileDetailsSurface : UserControl
         };
         Unloaded += (_, _) =>
         {
+            StopTypography();
+            App.ExplorerPreferencesChanged -= OpeningPreferencesChanged;
             if (!_restoreScrollOnLoad && !_visualsDetached)
-                _detachedScrollOffset = _pendingScrollRestore ?? Scroller.VerticalOffset;
+                _detachedScrollOffset = _pendingScrollRestore ?? ActiveScrollOffset;
             CancelScrollRestore();
             _restoreScrollOnLoad = true;
             CancelMarquee();
@@ -163,7 +173,7 @@ public sealed partial class FileDetailsSurface : UserControl
     internal void ReleaseInactiveVisuals()
     {
         if (IsLoaded || _resourcesReleased || _visualsDetached) return;
-        if (!_restoreScrollOnLoad) _detachedScrollOffset = Scroller.VerticalOffset;
+        if (!_restoreScrollOnLoad) _detachedScrollOffset = ActiveScrollOffset;
         _restoreScrollOnLoad = true;
         _visualsDetached = true;
         RetireRepeater();
@@ -193,7 +203,7 @@ public sealed partial class FileDetailsSurface : UserControl
         {
             HorizontalCacheLength = 0, VerticalCacheLength = 1,
             MinWidth = previous.MinWidth,
-            Layout = _layout == FileLayoutKind.Grid ? FileGridLayout : _stackLayout,
+            Layout = CurrentItemLayout,
             ItemTemplate = (DataTemplate)Resources[_layout == FileLayoutKind.Grid ? "TileTemplate" : "RowTemplate"],
         };
         Repeater.ElementPrepared += Repeater_ElementPrepared;
@@ -202,7 +212,7 @@ public sealed partial class FileDetailsSurface : UserControl
         Scroller.Content = Repeater;
     }
 
-    public double ScrollOffset => _visualsDetached || _restoreScrollOnLoad ? _detachedScrollOffset : Scroller.VerticalOffset;
+    public double ScrollOffset => _visualsDetached || _restoreScrollOnLoad ? _detachedScrollOffset : _pendingScrollRestore ?? ActiveScrollOffset;
     internal bool IsBoundTo(EntryStore? store, EntryViewIndex index) => ReferenceEquals(_items.Store, store) && ReferenceEquals(_items.Index, index);
     public void RestoreScrollOffset(double offset)
     {
@@ -224,10 +234,11 @@ public sealed partial class FileDetailsSurface : UserControl
         if (!IsLoaded || _pendingScrollRestore is not double offset) return;
         // A recreated repeater initially has an empty extent. Wait for its
         // measured content to reach the ScrollViewer before clamping the target.
-        if (_items.Count > 0 && (Repeater.ActualHeight <= 0
-            || Scroller.ExtentHeight + 1 < Repeater.ActualHeight)) return;
+        if (_items.Count > 0 && (_layout == FileLayoutKind.List
+            ? Repeater.ActualWidth <= 0 || Scroller.ExtentWidth + 1 < Repeater.ActualWidth
+            : Repeater.ActualHeight <= 0 || Scroller.ExtentHeight + 1 < Repeater.ActualHeight)) return;
         CancelScrollRestore();
-        Scroller.ChangeView(null, Math.Clamp(offset, 0, Scroller.ScrollableHeight), null, true);
+        ChangeScrollOffset(Math.Clamp(offset, 0, ActiveScrollableExtent));
     }
 
     private void CancelScrollRestore()
@@ -315,6 +326,18 @@ public sealed partial class FileDetailsSurface : UserControl
 
     public IReadOnlyList<string> SelectedPaths() => ResolveSelectionPaths();
 
+    internal string[] SelectedNames()
+    {
+        if (_items.Store is null || _items.Index is null) return [];
+        var names = new List<string>(_selection.Count);
+        foreach (var id in _selection.Ids)
+        {
+            var viewIndex = _items.Index.IndexOfId(_items.Store, id);
+            if (viewIndex >= 0 && _items.TryGetEntry(viewIndex, out var entry)) names.Add(entry.Name);
+        }
+        return names.ToArray();
+    }
+
     public long SelectedFileBytes()
     {
         var store = _items.Store;
@@ -384,6 +407,8 @@ public sealed partial class FileDetailsSurface : UserControl
     {
         if (_resourcesReleased) return;
         _resourcesReleased = true;
+        _columnMenu?.Hide();
+        App.ExplorerPreferencesChanged -= OpeningPreferencesChanged;
         CancelScrollRestore();
         CancelMarquee();
         CancelFolderHover();
@@ -579,13 +604,18 @@ public sealed partial class FileDetailsSurface : UserControl
         }
 
         var switched = _layoutReady && _layout != kind;
-        if (switched) CancelMarquee();
+        if (switched) { CancelMarquee(); CancelInlineRename(); }
         _layout = kind;
         var grid = kind == FileLayoutKind.Grid;
-        HeaderRow.Height = grid ? new GridLength(0) : new GridLength(FileColumnLayout.RowHeight);
-        DetailsHeader.Visibility = grid ? Visibility.Collapsed : Visibility.Visible;
+        HeaderRow.Height = kind == FileLayoutKind.Details ? new GridLength(RowHeight) : new GridLength(0);
+        DetailsHeader.Visibility = kind == FileLayoutKind.Details ? Visibility.Visible : Visibility.Collapsed;
         ViewportLayoutChanged?.Invoke(this, EventArgs.Empty);
         Scroller.HorizontalScrollBarVisibility = grid ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto;
+        Scroller.HorizontalScrollMode = grid ? ScrollMode.Disabled : ScrollMode.Enabled;
+        Scroller.VerticalScrollMode = kind == FileLayoutKind.List ? ScrollMode.Disabled : ScrollMode.Enabled;
+        Scroller.VerticalScrollBarVisibility = kind == FileLayoutKind.List ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto;
+        UpdateListMetrics();
+        RefreshAlphabet();
         ApplyDetailsColumns(persist: false);
         if (grid)
         {
@@ -604,7 +634,7 @@ public sealed partial class FileDetailsSurface : UserControl
             if (switched) RetireRepeater();
             else
             {
-                Repeater.Layout = grid ? FileGridLayout : _stackLayout;
+                Repeater.Layout = CurrentItemLayout;
                 Repeater.ItemTemplate = (DataTemplate)Resources[grid ? "TileTemplate" : "RowTemplate"];
             }
             Repeater.ItemsSource = _visualsDetached ? null : _items;
@@ -645,8 +675,8 @@ public sealed partial class FileDetailsSurface : UserControl
         {
             if (row.ViewIndex >= 0 && _items.TryGetEntry(row.ViewIndex, out var entry))
             {
-                row.Bind(row.ViewIndex, entry, _selection.Contains(entry.Id), ResolvePath?.Invoke(entry), _folderSizeCts.Token);
-                row.ApplyColumns(_detailColumns);
+                ApplyRowColumns(row);
+                row.Bind(row.ViewIndex, entry, _selection.Contains(entry.Id), ResolvePath?.Invoke(entry), _folderSizeCts.Token, singleSelection: _selection.Count == 1);
                 row.SetTags(ResolveTags?.Invoke(entry));
             }
         }
@@ -765,10 +795,21 @@ public sealed partial class FileDetailsSurface : UserControl
             return;
         }
 
+        if (_layout == FileLayoutKind.List)
+        {
+            var left = view / ListRows * ListWidth;
+            if (Scroller.ViewportWidth <= 0 || Scroller.ExtentWidth + 1 < left + ListWidth - 8) return;
+            var desiredLeft = left < Scroller.HorizontalOffset ? left
+                : left + ListWidth > Scroller.HorizontalOffset + Scroller.ViewportWidth ? left + ListWidth - Scroller.ViewportWidth : Scroller.HorizontalOffset;
+            ChangeScrollOffset(Math.Clamp(desiredLeft, 0, Scroller.ScrollableWidth));
+            CancelPendingReveal();
+            return;
+        }
+
         var offset = _layout == FileLayoutKind.Grid
             ? (view / Columns()) * ItemHeight()
             : view * ItemHeight();
-        var contentHeight = _layout == FileLayoutKind.Grid ? _gridPreset.ItemHeight : FileColumnLayout.RowHeight;
+        var contentHeight = _layout == FileLayoutKind.Grid ? EffectiveGridPreset.ItemHeight : RowHeight;
         if (Scroller.ViewportHeight <= 0 || Scroller.ExtentHeight + 1 < offset + contentHeight)
             return;
 
@@ -876,15 +917,16 @@ public sealed partial class FileDetailsSurface : UserControl
         var path = ResolvePath?.Invoke(entry);
         if (args.Element is FileRow row)
         {
-            row.Bind(args.Index, entry, _selection.Contains(entry.Id), path, _folderSizeCts.Token);
-            row.ApplyColumns(_detailColumns);
+            ApplyRowColumns(row);
+            row.Bind(args.Index, entry, _selection.Contains(entry.Id), path, _folderSizeCts.Token, singleSelection: _selection.Count == 1);
+            row.ApplyTypography(RowTypography, XamlRoot?.RasterizationScale ?? 1);
             row.SetTags(ResolveTags?.Invoke(entry));
             row.SetDropTarget(args.Index == _dropTargetViewIndex);
             _realized.Add(row);
         }
         else if (args.Element is FileTile tile)
         {
-            tile.ApplyMetrics(_gridPreset, GridItemWidth());
+            tile.ApplyMetrics(EffectiveGridPreset, GridItemWidth());
             tile.Bind(args.Index, entry, _selection.Contains(entry.Id), path);
             tile.SetTags(ResolveTags?.Invoke(entry));
             tile.SetDropTarget(args.Index == _dropTargetViewIndex);
@@ -923,7 +965,8 @@ public sealed partial class FileDetailsSurface : UserControl
 
         UpdateAlphabetPosition(AlphabetLetters.Visibility == Visibility.Visible);
         ScheduleVisibleRange();
-        if (Scroller.VerticalOffset > 0 && Scroller.ScrollableHeight - Scroller.VerticalOffset < Math.Max(180, Scroller.ViewportHeight * .5))
+        var viewport = _layout == FileLayoutKind.List ? Scroller.ViewportWidth : Scroller.ViewportHeight;
+        if (ActiveScrollOffset > 0 && ActiveScrollableExtent - ActiveScrollOffset < Math.Max(180, viewport * .5))
             NearEndReached?.Invoke(this, EventArgs.Empty);
     }
 
@@ -952,6 +995,12 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void UpdateVisibleRange()
     {
+        if (_layout == FileLayoutKind.List)
+        {
+            VisibleRange = _tracker.Update(Scroller.HorizontalOffset, Scroller.ViewportWidth, ListWidth,
+                (int)Math.Ceiling(_items.Count / (double)ListRows));
+            return;
+        }
         VisibleRange = _tracker.Update(
             Scroller.VerticalOffset,
             Scroller.ViewportHeight,
@@ -971,7 +1020,7 @@ public sealed partial class FileDetailsSurface : UserControl
         {
             if (row.EntryId >= 0)
             {
-                row.SetSelected(_selection.Contains(row.EntryId));
+                row.SetSelected(_selection.Contains(row.EntryId), singleSelection: _selection.Count == 1);
                 row.SetFocused(focused && row.ViewIndex == primary);
                 row.SetDropTarget(row.ViewIndex == _dropTargetViewIndex);
             }
@@ -994,7 +1043,7 @@ public sealed partial class FileDetailsSurface : UserControl
         if (IsRenaming) return;
         _nameJump.Reset();
         var point = e.GetCurrentPoint(Scroller);
-        if (_resizeColumn >= 0 || point.Position.Y < 0 || point.Position.Y >= Scroller.ActualHeight)
+        if (_resizeColumn is not null || point.Position.Y < 0 || point.Position.Y >= Scroller.ActualHeight)
         {
             return;
         }
@@ -1017,23 +1066,34 @@ public sealed partial class FileDetailsSurface : UserControl
         }
         if (point.Properties.PointerUpdateKind != PointerUpdateKind.LeftButtonPressed)
         {
-            _lastClickViewIndex = -1;
+            ItemActivation.CancelPendingClick(this);
             return;
         }
 
+        CapturePointer(e.Pointer);
+        PreparePointerSelection(point.Position, e.Pointer.PointerId);
+        e.Handled = true;
+    }
+
+    private void PreparePointerSelection(Point position, uint pointerId)
+    {
         _pointerDown = true;
         _dragging = false;
         _dragCandidate = false;
         _externalDragStarted = false;
-        _dragStart = point.Position;
+        _pressPointerId = pointerId;
+        _pressGeneration = _generation;
+        _pressHasModifier = ItemActivation.HasSelectionModifier;
+        _dragStart = position;
         // Keep the anchor in content space: scrolling must not move the first selected row.
-        _marqueeStart = ToContentPoint(point.Position);
-        _marqueePointer = point.Position;
-        _pressViewIndex = ViewIndexFromPoint(point.Position.X, point.Position.Y + Scroller.VerticalOffset);
-        CapturePointer(e.Pointer);
+        _marqueeStart = ToContentPoint(position);
+        _marqueePointer = position;
+        _pressViewIndex = ViewIndexFromPoint(position.X, position.Y + Scroller.VerticalOffset);
+        _pressOnName = IsNameAt(_pressViewIndex, position);
 
         if (_pressViewIndex < 0 || !_items.TryGetEntry(_pressViewIndex, out var entry))
         {
+            ItemActivation.CancelPendingClick(this);
             if (!IsModifier(VirtualKey.Control) && !IsModifier(VirtualKey.Shift))
             {
                 _selection.Clear();
@@ -1041,12 +1101,13 @@ public sealed partial class FileDetailsSurface : UserControl
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
             }
 
-            e.Handled = true;
             return;
         }
 
         var ctrl = IsModifier(VirtualKey.Control);
         var shift = IsModifier(VirtualKey.Shift);
+        _pressOpeningMode = App.ExplorerPreferences.OpeningMode(entry.Kind == EntryKind.Directory);
+        if (_pressHasModifier) ItemActivation.CancelPendingClick(this);
         if (shift && _items.Store is not null && _items.Index is not null)
         {
             var anchor = _selection.AnchorId is int aid
@@ -1067,25 +1128,6 @@ public sealed partial class FileDetailsSurface : UserControl
 
         RefreshRealizedSelection();
         SelectionChanged?.Invoke(this, EventArgs.Empty);
-
-        if (!ctrl && !shift && IsDoubleClick(_pressViewIndex))
-        {
-            OpenRequested?.Invoke(this, entry);
-            _lastClickViewIndex = -1;
-        }
-
-        e.Handled = true;
-    }
-
-    private bool IsDoubleClick(int viewIndex)
-    {
-        var now = Stopwatch.GetTimestamp();
-        var repeat = viewIndex == _lastClickViewIndex
-            && viewIndex >= 0
-            && Stopwatch.GetElapsedTime(_lastClickTimestamp, now).TotalMilliseconds <= 500;
-        _lastClickViewIndex = viewIndex;
-        _lastClickTimestamp = now;
-        return repeat;
     }
 
     private void OnPointerMoved(object sender, PointerRoutedEventArgs e)
@@ -1096,40 +1138,58 @@ public sealed partial class FileDetailsSurface : UserControl
         }
 
         var point = e.GetCurrentPoint(Scroller);
-        var pos = point.Position;
+        if (AdvanceSelectionPointer(point.Position))
+        {
+            _externalDragStarted = true;
+            _dragCandidate = false;
+            _pointerDown = false;
+            _dragSourcePaths = ResolveSelectionPaths(viewOrder: true);
+            SetDragState(true);
+            _ = BeginExternalDragAsync(e);
+            e.Handled = true;
+            return;
+        }
+        if (_dragging) e.Handled = true;
+    }
+
+    // Returns true only when the press began on an actual file item.
+    private bool AdvanceSelectionPointer(Point pos)
+    {
         _marqueePointer = pos;
         if (!_dragging && !_externalDragStarted && Hypot(pos.X - _dragStart.X, pos.Y - _dragStart.Y) > 4)
         {
+            ItemActivation.CancelPendingClick(this);
             if (_dragCandidate)
             {
-                _externalDragStarted = true;
-                _dragCandidate = false;
-                _pointerDown = false;
-                _dragSourcePaths = ResolveSelectionPaths(viewOrder: true);
-                SetDragState(true);
-                _ = BeginExternalDragAsync(e);
-                e.Handled = true;
-                return;
+                return true;
             }
 
             _dragging = true;
-            _lastClickViewIndex = -1;
             Marquee.Visibility = Visibility.Visible;
             StartMarqueeAutoScroll();
         }
 
         if (!_dragging || _items.Store is null || _items.Index is null)
         {
-            return;
+            return false;
         }
 
         UpdateMarquee();
-        e.Handled = true;
+        return false;
     }
 
     private void OnPointerReleased(object sender, PointerRoutedEventArgs e)
     {
+        if (_pressPointerId != e.Pointer.PointerId) return;
         _marqueePointer = e.GetCurrentPoint(Scroller).Position;
+        var click = _pointerDown && !_dragging && !_externalDragStarted && !IsRenaming
+            && !_pressHasModifier && !ItemActivation.HasSelectionModifier
+            && _pressGeneration == _generation
+            && _marqueePointer.Y >= 0 && _marqueePointer.Y < Scroller.ActualHeight
+            && Hypot(_marqueePointer.X - _dragStart.X, _marqueePointer.Y - _dragStart.Y) <= 4
+            && _pressViewIndex == ViewIndexFromPoint(_marqueePointer.X, _marqueePointer.Y + Scroller.VerticalOffset);
+        var clickedEntry = click && _items.TryGetEntry(_pressViewIndex, out var released) ? released : (FileEntryCore?)null;
+        var position = e.GetCurrentPoint(XamlRoot.Content).Position;
         UpdateMarquee();
         _marqueeScrollTimer?.Stop();
         _pointerDown = false;
@@ -1142,11 +1202,33 @@ public sealed partial class FileDetailsSurface : UserControl
         }
 
         _dragging = false;
+        _pressPointerId = null;
         ReleasePointerCapture(e.Pointer);
+        if (clickedEntry is { } entry)
+        {
+            // Keep a multi-selection intact while dragging; collapse only after a plain click.
+            if (_selection.Count != 1 || !_selection.Contains(entry.Id))
+            {
+                _selection.SelectOnly(entry.Id);
+                RefreshRealizedSelection();
+                SelectionChanged?.Invoke(this, EventArgs.Empty);
+            }
+            var identity = ResolvePath?.Invoke(entry) ?? $"{_generation}:{entry.Id}";
+            var mode = App.ExplorerPreferences.OpeningMode(entry.Kind == EntryKind.Directory);
+            if (_pressOpeningMode == mode)
+            {
+                if (ItemActivation.ShouldOpen(this, identity, position, mode,
+                    _pressOnName && IsNameAt(_pressViewIndex, _marqueePointer))) OpenRequested?.Invoke(this, entry);
+            }
+            else ItemActivation.CancelPendingClick(this);
+        }
+        else ItemActivation.CancelPendingClick(this);
     }
 
     private void OnPointerCaptureLost(object sender, PointerRoutedEventArgs e)
     {
+        if (_pressPointerId is not null) ItemActivation.CancelPendingClick(this);
+        _pressPointerId = null;
         _marqueeScrollTimer?.Stop();
         var wasDragging = _dragging;
         _pointerDown = false;
@@ -1539,6 +1621,22 @@ public sealed partial class FileDetailsSurface : UserControl
 
         switch (e.Key)
         {
+            case VirtualKey.Escape when !ctrl && !shift:
+                ItemActivation.CancelPendingClick(this);
+                _selection.Clear();
+                RefreshRealizedSelection();
+                SelectionChanged?.Invoke(this, EventArgs.Empty);
+                e.Handled = true;
+                break;
+            case VirtualKey.Space when ctrl:
+                if (_items.TryGetEntry(Math.Max(0, current), out var toggle))
+                {
+                    _selection.Toggle(toggle.Id);
+                    RefreshRealizedSelection();
+                    SelectionChanged?.Invoke(this, EventArgs.Empty);
+                }
+                e.Handled = true;
+                break;
             case VirtualKey.Space when !ctrl && !shift:
                 QuickPreviewRequested?.Invoke(this, EventArgs.Empty);
                 e.Handled = true;
@@ -1578,11 +1676,11 @@ public sealed partial class FileDetailsSurface : UserControl
                 e.Handled = true;
                 break;
             case VirtualKey.Left:
-                MoveTo(Math.Max(0, current - 1), shift);
+                MoveTo(Math.Max(0, current - (_layout == FileLayoutKind.List ? ListRows : 1)), shift);
                 e.Handled = true;
                 break;
             case VirtualKey.Right:
-                MoveTo(Math.Min(_items.Count - 1, current + 1), shift);
+                MoveTo(Math.Min(_items.Count - 1, current + (_layout == FileLayoutKind.List ? ListRows : 1)), shift);
                 e.Handled = true;
                 break;
             case VirtualKey.Up:
@@ -1637,14 +1735,15 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private int PageSize()
     {
+        if (_layout == FileLayoutKind.List) return Math.Max(1, (int)(Scroller.ViewportWidth / ListWidth)) * ListRows;
         var n = (int)(Scroller.ViewportHeight / ItemHeight());
         return Math.Max(1, n - 1) * Columns();
     }
 
     private double ItemHeight() =>
         _layout == FileLayoutKind.Grid
-            ? _gridPreset.ItemHeight + _gridPreset.Gutter
-            : FileColumnLayout.RowStride;
+            ? EffectiveGridPreset.ItemHeight + _gridPreset.Gutter
+            : RowHeight;
 
     private int Columns()
     {
@@ -1672,7 +1771,7 @@ public sealed partial class FileDetailsSurface : UserControl
     private void ApplyGridMetrics()
     {
         FileGridLayout.MinItemWidth = GridItemWidth();
-        FileGridLayout.MinItemHeight = _gridPreset.ItemHeight;
+        FileGridLayout.MinItemHeight = EffectiveGridPreset.ItemHeight;
         FileGridLayout.MinColumnSpacing = _gridPreset.Gutter;
         FileGridLayout.MinRowSpacing = _gridPreset.Gutter;
         UpdateAlphabetTailSpace();
@@ -1705,7 +1804,7 @@ public sealed partial class FileDetailsSurface : UserControl
             var width = GridItemWidth();
             foreach (var tile in _tiles.ToArray())
             {
-                tile.ApplyMetrics(_gridPreset, width);
+                tile.ApplyMetrics(EffectiveGridPreset, width);
             }
         }
         catch (Exception error)
@@ -1717,13 +1816,15 @@ public sealed partial class FileDetailsSurface : UserControl
     }
 
     private int ViewIndexFromPoint(double x, double absoluteY) =>
-        _layout == FileLayoutKind.Grid
+        _layout == FileLayoutKind.List
+            ? CompactListMetrics.IndexAt(x + Scroller.HorizontalOffset, absoluteY, _items.Count, ListRows, ListWidth, RowHeight)
+            : _layout == FileLayoutKind.Grid
             ? GridSizePreset.IndexFromPoint(
                 x,
                 absoluteY,
                 _items.Count,
                 Columns(),
-                _gridPreset)
+                EffectiveGridPreset, GridEntryHasTags)
             : FileColumnLayout.IndexFromPoint(
                 x + Scroller.HorizontalOffset,
                 absoluteY,
@@ -1731,7 +1832,7 @@ public sealed partial class FileDetailsSurface : UserControl
                 VisibleColumnWidth,
                 0,
                 0,
-                0);
+                0, RowHeight);
 
     private Point ToContentPoint(Point point) => new(
         point.X + Scroller.HorizontalOffset, point.Y + Scroller.VerticalOffset);
@@ -1757,6 +1858,8 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void CancelMarquee()
     {
+        ItemActivation.CancelPendingClick(this);
+        _pressPointerId = null;
         _marqueeScrollTimer?.Stop();
         _pointerDown = false;
         _dragging = false;
@@ -1777,6 +1880,13 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void AutoScroll(double y)
     {
+        if (_layout == FileLayoutKind.List)
+        {
+            var x = _marqueePointer.X;
+            if (x < 24) ChangeScrollOffset(Math.Max(0, Scroller.HorizontalOffset - ListWidth / 4));
+            else if (x > Scroller.ViewportWidth - 24) ChangeScrollOffset(Math.Min(Scroller.ScrollableWidth, Scroller.HorizontalOffset + ListWidth / 4));
+            return;
+        }
         const double edge = 28;
         var offset = Scroller.VerticalOffset;
         if (y < edge)
@@ -1801,7 +1911,9 @@ public sealed partial class FileDetailsSurface : UserControl
         var top = Math.Min(start.Y, current.Y);
         var bottom = Math.Max(start.Y, current.Y);
         _marqueeHits.Clear();
-        if (_layout == FileLayoutKind.Grid)
+        if (_layout == FileLayoutKind.List)
+            CompactListMetrics.Collect(left, top, right, bottom, _items.Count, ListRows, ListWidth, _marqueeHits, RowHeight);
+        else if (_layout == FileLayoutKind.Grid)
         {
             GridSizePreset.CollectIndicesInRect(
                 left,
@@ -1810,8 +1922,8 @@ public sealed partial class FileDetailsSurface : UserControl
                 bottom,
                 _items.Count,
                 Columns(),
-                _gridPreset,
-                _marqueeHits);
+                EffectiveGridPreset,
+                _marqueeHits, GridEntryHasTags);
         }
         else
         {
@@ -1825,7 +1937,7 @@ public sealed partial class FileDetailsSurface : UserControl
                 0,
                 0,
                 0,
-                _marqueeHits);
+                _marqueeHits, RowHeight);
         }
 
         _selection.ReplaceFromViewIndices(_items.Store, _items.Index, _marqueeHits);
@@ -1896,7 +2008,12 @@ public sealed partial class FileDetailsSurface : UserControl
             () => showMore = true,
             column => SortRequested?.Invoke(this, column),
             SetLayout,
-            CreateTagPicker?.Invoke());
+            CreateTagPicker?.Invoke(),
+            () => _headerSort,
+            ascending => SortSpecificationRequested?.Invoke(this, _headerSort with { Ascending = ascending }),
+            SetGridSize,
+            grouping => SortSpecificationRequested?.Invoke(this, _headerSort with
+                { Grouping = grouping, DirectoriesFirst = grouping == EntryGrouping.FoldersFirst }));
         host.Closed += (_, _) =>
         {
             if (!showMore)
@@ -2013,6 +2130,19 @@ public sealed partial class FileDetailsSurface : UserControl
     private void OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
     {
         CancelScrollRestore();
+        if (_layout == FileLayoutKind.List && !IsModifier(VirtualKey.Control))
+        {
+            var point = e.GetCurrentPoint(Scroller);
+            _marqueePointer = point.Position;
+            if (!e.Handled || !point.Properties.IsHorizontalMouseWheel)
+            {
+                var wheel = point.Properties.MouseWheelDelta;
+                var direction = point.Properties.IsHorizontalMouseWheel ? 1 : -1;
+                ChangeScrollOffset(Math.Clamp(Scroller.HorizontalOffset + direction * wheel / 120d * ListWidth, 0, Scroller.ScrollableWidth));
+            }
+            e.Handled = true;
+            return;
+        }
         if (_pointerDown && _dragging)
         {
             // Capture belongs to this surface, so wheel input may bypass the child ScrollViewer.
@@ -2087,6 +2217,11 @@ public sealed partial class FileDetailsSurface : UserControl
 
         try
         {
+            if (_layout == FileLayoutKind.List)
+            {
+                SetListZoom(CompactListMetrics.StepZoom(ListZoomPercent, direction));
+                return;
+            }
             var next = GridSizePreset.Step(_layout, _gridPreset, direction);
             if (next.Layout == _layout && next.Preset == _gridPreset)
             {

@@ -33,7 +33,7 @@ internal static class PaletteAppearance
                 document.RootElement.TryGetProperty("transparencyPercent", out var value) && value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out var percent) ? percent : null;
             bool? bundled = document.RootElement.ValueKind == JsonValueKind.Object &&
                 document.RootElement.TryGetProperty("useBundledFileIcons", out var icons) && icons.ValueKind is JsonValueKind.True or JsonValueKind.False ? icons.GetBoolean() : null;
-            return AppearanceSettings.Sanitize(Read("theme"), Read("backdrop"), null, null, Read("reduceMotion"), Read("glassEffect"), Read("accent"), Read("customAccent"), transparency, bundled);
+            return AppearanceSettings.Sanitize(Read("theme"), Read("backdrop"), null, null, Read("reduceMotion"), Read("glassEffect"), Read("accent"), Read("customAccent"), transparency, bundled, fileFontFamily: Read("fileFontFamily"));
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException) { return AppearanceSettings.Default; }
     }
@@ -47,6 +47,7 @@ internal static class PaletteAppearance
 
     internal static void Apply(ResourceDictionary resources, AppearanceSettings settings)
     {
+        resources["AppFontFamily"] = new FontFamily(settings.FileFontFamily ?? "Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI");
         if (SystemParameters.HighContrast)
         {
             resources["Surface"] = SystemColors.WindowBrush;
@@ -62,21 +63,20 @@ internal static class PaletteAppearance
             return;
         }
         var dark = IsDark(settings);
-        // Consume the main app's actual theme tokens instead of maintaining a
-        // second palette that drifts from its Light/Dark colors.
+        // Skin and text roles share one palette with WinUI. Functional colors
+        // stay in the shared theme dictionary, independent of skin replacement.
+        foreach (var (key, color) in SkinPalette.For(dark).CompanionColors())
+            resources[key] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(AccentPalette.ToHex(color)));
         var document = ThemeTokens.Value;
         XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
         var theme = document.Descendants().First(element => element.Name.LocalName == "ResourceDictionary" && (string?)element.Attribute(x + "Key") == (dark ? "Dark" : "Light"));
         var mappings = new Dictionary<string, string>
         {
-            ["Surface"] = "FilesMate.SearchPanel.BackgroundBrush", ["ResultSurface"] = "FilesMate.FileContent.BackgroundBrush", ["Ink"] = "FilesMate.Text.PrimaryBrush",
-            ["Muted"] = "FilesMate.Text.SecondaryBrush", ["Line"] = "FilesMate.Divider.Brush", ["Outline"] = "FilesMate.Floating.OutlineBrush",
-            ["Selected"] = "FilesMate.Item.SelectedBrush", ["Hover"] = "FilesMate.Item.HoverBrush",
             ["CloseHover"] = "FilesMate.Close.HoverBrush", ["ClosePressed"] = "FilesMate.Close.PressedBrush",
         };
         foreach (var (key, token) in mappings)
         {
-            var value = theme.Elements().First(element => (string?)element.Attribute(x + "Key") == token).Attribute("Color")!.Value;
+            var value = BrushColor(document, theme, token);
             resources[key] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(value));
         }
         var menuColor = AccentPalette.ToHex(SurfacePalette.Floating(dark));
@@ -89,6 +89,7 @@ internal static class PaletteAppearance
         var accent = AccentPalette.Resolve(settings.Accent, settings.CustomAccent, dark);
         resources["Accent"] = new SolidColorBrush(Color.FromArgb(255, (byte)(accent >> 16), (byte)(accent >> 8), (byte)accent));
         resources["Selected"] = new SolidColorBrush(Color.FromArgb(SurfacePalette.SelectionAlpha(dark), (byte)(accent >> 16), (byte)(accent >> 8), (byte)accent));
+        resources["Hover"] = new SolidColorBrush(Color.FromArgb(0x10, (byte)(accent >> 16), (byte)(accent >> 8), (byte)accent));
         resources["CloseInk"] = Brushes.White;
         resources["SelectedInk"] = resources["Ink"];
         resources["SelectedMuted"] = resources["Muted"];
@@ -100,5 +101,20 @@ internal static class PaletteAppearance
             resources["GlassSurface"] = new SolidColorBrush(color);
         }
         else resources["GlassSurface"] = resources["PaletteCanvas"];
+    }
+
+    private static string BrushColor(XDocument document, XElement theme, string key)
+    {
+        XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
+        var visited = new HashSet<string>(StringComparer.Ordinal);
+        while (visited.Add(key))
+        {
+            var resource = theme.Elements().Concat(document.Root!.Elements())
+                .First(element => (string?)element.Attribute(x + "Key") == key);
+            if (resource.Attribute("Color") is { } color) return color.Value;
+            key = resource.Attribute("ResourceKey")?.Value
+                ?? throw new InvalidDataException($"Theme brush '{key}' has no color.");
+        }
+        throw new InvalidDataException($"Theme brush '{key}' contains a resource cycle.");
     }
 }

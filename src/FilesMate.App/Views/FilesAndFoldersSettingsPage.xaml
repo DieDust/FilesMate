@@ -21,8 +21,8 @@
                 </settings:SettingCard>
                 <StackPanel Padding="16,8,16,16" Spacing="10">
                     <TextBlock x:Name="ArchiveProviderHint" TextWrapping="Wrap" />
-                    <TextBlock x:Name="ArchiveProviderPath" TextWrapping="Wrap" FontSize="12" Opacity="0.8" />
-                    <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock x:Name="ArchiveProviderPath" TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" Visibility="Collapsed" />
+                    <StackPanel x:Name="ArchiveProviderActions" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
                         <Button x:Name="ArchiveBrowse" Content="{loc:LocalizedText Key=Archive_BrowseApp}" Click="ArchiveBrowse_Click" />
                         <Button x:Name="ArchiveReset" Content="{loc:LocalizedText Key=Archive_AutoDetect}" Click="ArchiveReset_Click" />
                     </StackPanel>
@@ -32,11 +32,33 @@
         <TextBlock x:Name="FoldersHeader" Style="{StaticResource FilesMate.SectionHeaderStyle}" Text="File list" />
         <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
             <StackPanel>
+                <settings:SettingCard x:Name="FileOpeningCard" Title="{loc:LocalizedText Key=Opening_FileTitle}" Description="{loc:LocalizedText Key=Opening_Hint}" ShowDivider="True">
+                    <ComboBox x:Name="FileOpeningModeBox" MinWidth="160" MinHeight="34"
+                              CornerRadius="{StaticResource FilesMate.Corner.Small}"
+                              SelectionChanged="OpeningMode_Changed"
+                              AutomationProperties.AutomationId="FileOpeningModeBox"
+                              AutomationProperties.Name="{loc:LocalizedText Key=Opening_FileTitle}">
+                        <ComboBoxItem Content="{loc:LocalizedText Key=Opening_DoubleClick}" />
+                        <ComboBoxItem Content="{loc:LocalizedText Key=Opening_SingleClick}" />
+                        <ComboBoxItem Content="{loc:LocalizedText Key=Opening_NameClick}" />
+                    </ComboBox>
+                </settings:SettingCard>
+                <settings:SettingCard x:Name="FolderOpeningCard" Title="{loc:LocalizedText Key=Opening_FolderTitle}" Description="{loc:LocalizedText Key=Opening_FolderHint}" ShowDivider="True">
+                    <ComboBox x:Name="FolderOpeningModeBox" MinWidth="160" MinHeight="34"
+                              CornerRadius="{StaticResource FilesMate.Corner.Small}"
+                              SelectionChanged="OpeningMode_Changed"
+                              AutomationProperties.AutomationId="FolderOpeningModeBox"
+                              AutomationProperties.Name="{loc:LocalizedText Key=Opening_FolderTitle}">
+                        <ComboBoxItem Content="{loc:LocalizedText Key=Opening_DoubleClick}" />
+                        <ComboBoxItem Content="{loc:LocalizedText Key=Opening_SingleClick}" />
+                        <ComboBoxItem Content="{loc:LocalizedText Key=Opening_NameClick}" />
+                    </ComboBox>
+                </settings:SettingCard>
                 <settings:SettingCard Title="{loc:LocalizedText Key=Favorites_Bar}" Description="{loc:LocalizedText Key=Favorites_SettingsHint}" ShowDivider="True">
                     <ToggleSwitch x:Name="FavoritesToggle" MinWidth="0" Toggled="FavoritesToggle_Toggled" />
                 </settings:SettingCard>
                 <settings:SettingCard Title="{loc:LocalizedText Key=Setup_Guide}" Description="{loc:LocalizedText Key=Setup_GuideHint}" ShowDivider="True">
-                    <Button Content="{loc:LocalizedText Key=Setup_Reopen}" Click="FeatureSetup_Click" />
+                    <Button x:Name="FeatureSetupButton" Content="{loc:LocalizedText Key=Setup_Reopen}" Click="FeatureSetup_Click" />
                 </settings:SettingCard>
                 <settings:SettingCard Title="{loc:LocalizedText Key=View_Scope}" Description="{loc:LocalizedText Key=View_ScopeHint}" ShowDivider="True">
                     <ComboBox x:Name="ViewScopeBox" MinWidth="190" MinHeight="34" CornerRadius="{StaticResource FilesMate.Corner.Small}" SelectionChanged="ViewScope_Changed">
@@ -57,6 +79,7 @@
                         SelectionChanged="DefaultViewBox_SelectionChanged">
                         <ComboBoxItem x:Name="ViewIconsItem" Content="Icons" Tag="Icons" />
                         <ComboBoxItem x:Name="ViewDetailsItem" Content="Details" Tag="Details" />
+                        <ComboBoxItem x:Name="ViewListItem" Content="List" Tag="List" />
                     </ComboBox>
                 </settings:SettingCard>
                 <settings:SettingCard
@@ -80,8 +103,24 @@
                     ShowDivider="True">
                     <ToggleSwitch x:Name="FolderSizesToggle" MinWidth="0" Toggled="FolderSizesToggle_Toggled" />
                 </settings:SettingCard>
+                <settings:SettingCard Title="{loc:LocalizedText Key=Grouping_Default}" Description="{loc:LocalizedText Key=Grouping_DefaultHint}">
+            <ComboBox x:Name="DefaultGroupingBox" Width="180" SelectionChanged="DefaultGrouping_Changed">
+                <ComboBoxItem Tag="FoldersFirst" Content="{loc:LocalizedText Key=Sort_FoldersFirst}"/>
+                <ComboBoxItem Tag="Mixed" Content="{loc:LocalizedText Key=Sort_Mixed}"/>
+                <ComboBoxItem Tag="FilesFirst" Content="{loc:LocalizedText Key=Sort_FilesFirst}"/>
+            </ComboBox>
+        </settings:SettingCard>
+        <settings:SettingCard x:Name="DefaultSortDirectionCard" Title="{loc:LocalizedText Key=Sort_DefaultDirection}" Description="{loc:LocalizedText Key=Sort_DefaultDirectionHint}" ShowDivider="True">
+                    <ComboBox x:Name="DefaultSortDirectionBox" MinWidth="160" MinHeight="34" CornerRadius="{StaticResource FilesMate.Corner.Small}" SelectionChanged="DefaultSortDirection_Changed" AutomationProperties.Name="{loc:LocalizedText Key=Sort_DefaultDirection}">
+                        <ComboBoxItem Content="{loc:LocalizedText Key=Sort_Ascending}" />
+                        <ComboBoxItem Content="{loc:LocalizedText Key=Sort_Descending}" />
+                    </ComboBox>
+                </settings:SettingCard>
                 <settings:SettingCard Title="{loc:LocalizedText Key=Sort_MixedPinyin}" Description="{loc:LocalizedText Key=Sort_MixedPinyinHint}" ShowDivider="True">
                     <ToggleSwitch x:Name="MixedNameSortToggle" MinWidth="0" Toggled="MixedNameSortToggle_Toggled" AutomationProperties.Name="{loc:LocalizedText Key=Sort_MixedPinyin}" />
+                </settings:SettingCard>
+                <settings:SettingCard x:Name="AlternatingRowsCard" Title="{loc:LocalizedText Key=View_AlternatingRows}" Description="{loc:LocalizedText Key=View_AlternatingRowsHint}" ShowDivider="True">
+                    <ToggleSwitch x:Name="AlternatingRowsToggle" MinWidth="0" Toggled="AlternatingRowsToggle_Toggled" AutomationProperties.Name="{loc:LocalizedText Key=View_AlternatingRows}" />
                 </settings:SettingCard>
                 <settings:SettingCard
                     x:Name="DateFormatCard"
@@ -159,7 +198,7 @@
         <TextBlock Style="{StaticResource FilesMate.SettingsSectionHeaderStyle}" Text="{loc:LocalizedText Key=Backup_Title}" />
         <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
             <settings:SettingCard Title="{loc:LocalizedText Key=Backup_Title}" Description="{loc:LocalizedText Key=Backup_Policy}">
-                <Button Content="{loc:LocalizedText Key=Backup_Manage}" Click="BackupManage_Click" />
+                <Button x:Name="BackupManageButton" Content="{loc:LocalizedText Key=Backup_Manage}" Click="BackupManage_Click" />
             </settings:SettingCard>
         </glass:LiquidGlassSurface>
         <TextBlock

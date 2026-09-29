@@ -1,4 +1,4 @@
-﻿using FilesMate.App.Commands;
+using FilesMate.App.Commands;
 using FilesMate.App.Models;
 using FilesMate.App.Controls.FileSurface;
 using FilesMate.Core.Entries;
@@ -93,7 +93,7 @@ public sealed partial class SearchResultsPage : Page, IDisposable
         InitializeFileSurface();
         Results.NearEndReached += async (_, _) => await LoadMoreAsync();
         Loaded += Page_Loaded;
-        Unloaded += (_, _) => { HideFilterPopups(); Cancel(); _sortWatcher?.Dispose(); _sortWatcher = null; Clipboard.ContentChanged -= Clipboard_Changed; _quickPreview?.Close(); _shelfFlyout?.Hide(); };
+        Unloaded += (_, _) => { HideFilterPopups(); Cancel(); _sortWatcher?.Dispose(); _sortWatcher = null; Clipboard.ContentChanged -= Clipboard_Changed; CloseQuickPreview(); HideShelf(); };
     }
 
     private void LoadCategories()
@@ -186,7 +186,7 @@ public sealed partial class SearchResultsPage : Page, IDisposable
         }
     }
 
-    private void UpdateStatusSelection() => StatusLabel.Text = _summary + (Results.Selection.Count > 0
+    private void UpdateStatusSelection() => StatusLabel.Text = _summary + (_resultSort is null ? "" : " · " + Loc.Get("SearchPage_LoadedSort")) + (Results.Selection.Count > 0
         ? " · " + Loc.Format("SearchPage_Selected", Results.Selection.Count) : "");
 
     private string SharedOrderSignature() => SearchSortConfiguration.Load(_profile) + ":" +
@@ -205,6 +205,7 @@ public sealed partial class SearchResultsPage : Page, IDisposable
     private async void Sort_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (!_ready) return;
+        _resultSort = null;
         try
         {
             SearchSortConfiguration.Save((SearchResultSort)Math.Max(0, SortBox.SelectedIndex), _profile);
@@ -213,9 +214,9 @@ public sealed partial class SearchResultsPage : Page, IDisposable
         }
         catch (Exception error) { ShowError(Loc.Get("Order_SaveFailed") + error.Message); }
     }
-    private void Cancel() { ++_version; _query?.Cancel(); _query = null; }
+    private void Cancel() { ++_version; _query?.Cancel(); _query = null; _resultSortBuild?.Cancel(); }
     public void Dispose()
-    { _disposed = true; Cancel(); _sortWatcher?.Dispose(); Clipboard.ContentChanged -= Clipboard_Changed; _quickPreview?.Close(); _shelfFlyout?.Hide(); Results.ReleaseResources(); _rows = []; }
+    { _disposed = true; Cancel(); _sortWatcher?.Dispose(); Clipboard.ContentChanged -= Clipboard_Changed; CloseQuickPreview(); HideShelf(); Results.ReleaseResources(); _rows = []; }
     private void ShowError(string text) { StatusLabel.Text = text; EmptyText.Text = text; EmptyPanel.Visibility = ResultCount == 0 ? Visibility.Visible : Visibility.Collapsed; }
     private async void Search_Click(object sender, RoutedEventArgs e)
     {
@@ -224,6 +225,7 @@ public sealed partial class SearchResultsPage : Page, IDisposable
     }
     private void Page_SizeChanged(object sender, SizeChangedEventArgs e)
     {
+        PositionShelf();
         if (AdvancedScroller is null) return;
         AdvancedScroller.MaxHeight = Math.Clamp(e.NewSize.Height - 110, 180, 420);
         var compact = e.NewSize.Width < 570;
@@ -283,24 +285,18 @@ public sealed partial class SearchResultsPage : Page, IDisposable
         var scrollOffset = Results.ScrollOffset;
         Results.Bind(_resultStore, EntryViewIndex.InSourceOrder(_resultStore, _generation, SurfaceSort()), _generation, append);
         if (append) Results.RestoreScrollOffset(scrollOffset);
-        Results.SetSort(SurfaceSort()); SyncCommands();
+        Results.SetSort(SurfaceSort()); Commands.SetSort(SurfaceSort()); SyncCommands();
+        if (_resultSort is not null) _ = ApplyResultSortAsync();
         if (rows.Length > 0) _ = LoadTagsAsync();
     }
 
-    private EntrySort SurfaceSort() => Request.Sort switch
+    private EntrySort SurfaceSort() => _resultSort ?? (Request.Sort switch
     {
         SearchResultSort.NameDescending => EntrySort.Name with { Ascending = false },
         SearchResultSort.SizeDescending => EntrySort.Size with { Ascending = false },
         SearchResultSort.ModifiedDescending => EntrySort.Modified with { Ascending = false },
         SearchResultSort.Path => new EntrySort { Column = EntrySortColumn.Location },
         _ => EntrySort.Name
-    };
-    private void SortResults(EntrySortColumn column) => SortBox.SelectedIndex = (int)(column switch
-    {
-        EntrySortColumn.Name => Request.Sort == SearchResultSort.Name ? SearchResultSort.NameDescending : SearchResultSort.Name,
-        EntrySortColumn.Size => SearchResultSort.SizeDescending,
-        EntrySortColumn.Modified => SearchResultSort.ModifiedDescending,
-        EntrySortColumn.Location or EntrySortColumn.FullPath => SearchResultSort.Path,
-        _ => SearchResultSort.Priority
-    });
+    }) with { MixChineseAndLatin = App.ExplorerPreferences.MixChineseAndLatin };
+    private void SortResults(EntrySortColumn column) => SetResultSort(SurfaceSort().SelectColumn(column, App.ExplorerPreferences.DefaultSortAscending));
 }

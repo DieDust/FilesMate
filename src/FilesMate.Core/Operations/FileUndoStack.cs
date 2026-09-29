@@ -11,6 +11,9 @@ public sealed class FileUndoStack(IFileUndoCleanupScheduler? cleanupScheduler = 
 
     public bool CanRedo => _redo.Count > 0;
     public FileUndoRecord? Latest => _undo.Count == 0 ? null : _undo[^1];
+    public FileUndoRecord? LatestRedo => _redo.Count == 0 ? null : _redo[^1];
+    public IReadOnlyList<FileUndoRecord> UndoRecords => _undo.AsEnumerable().Reverse().ToArray();
+    public IReadOnlyList<FileUndoRecord> RedoRecords => _redo.AsEnumerable().Reverse().ToArray();
     public event EventHandler<FileUndoRecord>? Recorded;
     public event EventHandler? Changed;
 

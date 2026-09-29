@@ -25,7 +25,7 @@ internal static class ShellStyleResources
                 || resources.ThemeDictionaries[key] is not ResourceDictionary theme) continue;
             var dark = name != "Light";
             ApplyFloatingSurfaces(theme, dark, glass.SurfaceOpacity);
-            var neutral = dark ? FromArgb(SurfacePalette.Foundation(true)) : Colors.White;
+            var neutral = FromArgb(dark ? SurfacePalette.Foundation(true) : SurfacePalette.Card(false));
             Set(theme, "FilesMate.Chrome.FillBrush",
                 GlassMaterialPolicy.FloatingCoverage(glass.SurfaceOpacity), neutral);
             Set(theme, "FilesMate.Sidebar.BackgroundBrush", surfaceOpacity, neutral);
@@ -66,11 +66,11 @@ internal static class ShellStyleResources
             Paint(theme, key, color);
         var card = FromArgb(SurfacePalette.Card(dark));
         var cardCoverage = GlassMaterialPolicy.CardCoverage(surfaceOpacity);
-        Paint(theme, "FilesMate.SettingsCard.BackgroundBrush", ContrastTint(card, dark ? color : Colors.White, cardCoverage), cardCoverage);
+        Paint(theme, "FilesMate.SettingsCard.BackgroundBrush", ContrastTint(card, dark ? color : card, cardCoverage), cardCoverage);
         Paint(theme, "ContentDialogTopOverlay", card);
         Paint(theme, "FilesMate.SettingsOverlay.ScrimBrush", Color.FromArgb(dark ? (byte)0x26 : (byte)0x1A, 0, 0, 0));
         var nav = FromArgb(SurfacePalette.Navigation(dark));
-        Paint(theme, "FilesMate.SettingsNav.BackgroundBrush", ContrastTint(nav, dark ? color : Colors.White, cardCoverage), cardCoverage);
+        Paint(theme, "FilesMate.SettingsNav.BackgroundBrush", ContrastTint(nav, dark ? color : card, cardCoverage), cardCoverage);
     }
 
     private static void Paint(ResourceDictionary theme, string key, Color color, double opacity = 1)

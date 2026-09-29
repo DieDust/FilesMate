@@ -177,6 +177,7 @@ public static class CommandCatalog
 
     private static bool CanExecuteCore(AppCommandId id, CommandContext context) => id switch
     {
+        _ when NewDocumentCommands.IsDocument(id) => context.IsFolderWritable,
         AppCommandId.RevealInFolder => context.SelectionCount == 1,
         AppCommandId.AddToFavorites => context.SelectionCount > 0,
         AppCommandId.AddToShelf => context.SelectionCount > 0,
@@ -237,7 +238,9 @@ public static class CommandCatalog
         (!context.IsPortableDevice || context.Surface == CommandSurface.Toolbar || DeviceCommandSupported(id))
         && IsVisibleCore(id, context);
 
-    private static bool IsVisibleCore(AppCommandId id, CommandContext context) => context.Surface switch
+    private static bool IsVisibleCore(AppCommandId id, CommandContext context) => NewDocumentCommands.IsDocument(id)
+        ? context.Surface == CommandSurface.Shortcut || context.Surface == CommandSurface.Menu && context.IsBackground && HasFolderPath(context)
+        : context.Surface switch
     {
         CommandSurface.Toolbar => id switch
         {
@@ -330,6 +333,7 @@ public static class CommandCatalog
     private static (string Label, string Glyph, string? Shortcut, CommandGroup Group) Describe(AppCommandId id) =>
         id switch
         {
+            _ when NewDocumentCommands.IsDocument(id) => (StringTable.Get(NewDocumentCommands.LabelKey(id)), "\uE7C3", null, CommandGroup.Create),
             AppCommandId.RevealInFolder => (StringTable.Get("SearchPage_Reveal"), "\uE8B7", "Ctrl+Enter", CommandGroup.Open),
             AppCommandId.AddToFavorites => (StringTable.Get("Favorites_Add"), "\uE734", null, CommandGroup.Organize),
             AppCommandId.AddToShelf => (StringTable.Get("Shelf_Add"), "\uE710", null, CommandGroup.Organize),

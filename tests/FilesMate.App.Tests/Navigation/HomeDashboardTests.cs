@@ -111,7 +111,8 @@ public sealed class HomeDashboardTests
             "Home",
             "HomeDashboard.xaml.cs"));
         Assert.Contains("Reload();", dashboardCode, StringComparison.Ordinal);
-        Assert.Contains("HomePlaceButtonStyle", dashboardCode, StringComparison.Ordinal);
+        Assert.Contains("SelectableHomePlaceStyle", dashboardCode, StringComparison.Ordinal);
+        Assert.Contains("BasedOn=\"{StaticResource HomePlaceButtonStyle}\"", dashboard, StringComparison.Ordinal);
         Assert.DoesNotContain("Width = 248", dashboardCode, StringComparison.Ordinal);
         Assert.DoesNotContain("fill.Width", dashboardCode, StringComparison.Ordinal);
         Assert.DoesNotContain("SizeChanged", dashboardCode, StringComparison.Ordinal);

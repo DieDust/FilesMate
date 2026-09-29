@@ -89,7 +89,7 @@ public static class FileContextMenuBuilder
             {
                 AppCommandId.SelectAll or AppCommandId.SelectSameType or AppCommandId.InvertSelection =>
                     new[] { AppCommandId.SelectAll, AppCommandId.SelectSameType, AppCommandId.InvertSelection },
-                AppCommandId.NewFolder or AppCommandId.NewFile => new[] { AppCommandId.NewFolder, AppCommandId.NewFile },
+                AppCommandId.NewFolder or AppCommandId.NewFile => new[] { AppCommandId.NewFolder }.Concat(NewDocumentCommands.All).ToArray(),
                 AppCommandId.ChooseFolderCover or AppCommandId.ResetFolderCover or AppCommandId.ResetFolderView =>
                     new[] { AppCommandId.ChooseFolderCover, AppCommandId.ResetFolderCover, AppCommandId.ResetFolderView },
                 _ => Array.Empty<AppCommandId>(),

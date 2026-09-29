@@ -14,6 +14,7 @@
     <DefineConstants>$(DefineConstants);FILESMATE_UI_TEST</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\FilesMate.App\Models\ItemOpeningMode.cs;..\FilesMate.App\Models\ItemClickTracker.cs" Link="Models\%(Filename)%(Extension)" />
     <Content Include="..\FilesMate.App\Assets\PdfPreview\**\*" Link="Assets\PdfPreview\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Compile Include="..\FilesMate.App\Preview\PdfPreviewAssets.cs" Link="Preview\PdfPreviewAssets.cs" />
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
@@ -37,7 +38,8 @@
     <Compile Include="..\FilesMate.App\Icons\ShellThumbnailService.cs;..\FilesMate.App\Services\VividThumbnailCache.cs" Link="Preview\%(Filename)%(Extension)" />
     <Compile Include="..\FilesMate.App\Models\AccentPalette.cs" Link="Models\AccentPalette.cs" />
     <Compile Include="..\FilesMate.App\Models\SurfacePalette.cs" Link="Models\SurfacePalette.cs" />
-    <Compile Include="..\FilesMate.App\Commands\AppCommand.cs;..\FilesMate.App\Commands\CommandContext.cs;..\FilesMate.App\Commands\CommandCatalog.cs" Link="Commands\%(Filename)%(Extension)" />
+    <Compile Include="..\FilesMate.App\Models\SkinPalette.cs" Link="Models\SkinPalette.cs" />
+    <Compile Include="..\FilesMate.App\Commands\AppCommand.cs;..\FilesMate.App\Commands\CommandContext.cs;..\FilesMate.App\Commands\CommandCatalog.cs;..\FilesMate.App\Commands\NewDocumentCommands.cs" Link="Commands\%(Filename)%(Extension)" />
     <Compile Include="..\FilesMate.App\Controls\Menus\FileContextMenuBuilder.cs" Link="Commands\FileContextMenuBuilder.cs" />
     <Compile Include="..\FilesMate.App\Services\CompactMateSession.cs" Link="Commands\CompactMateSession.cs" />
     <Compile Include="..\FilesMate.App\Localization\StringTable.cs" Link="Commands\StringTable.cs" />

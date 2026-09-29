@@ -1,4 +1,4 @@
-﻿using FilesMate.App.Animations;
+using FilesMate.App.Animations;
 using FilesMate.App.Localization;
 using FilesMate.App.Models;
 using FilesMate.App.Navigation;
@@ -29,8 +29,6 @@ public sealed partial class Omnibar : UserControl
 
     private readonly OmnibarSession _session = new();
     private List<NavigationPathSegment> _segments = [];
-    private Brush? _pathBorder;
-    private Brush? _searchBorder;
     private bool _editRequestPending;
     private bool _searchFocused;
     private bool _searchHovered;
@@ -69,8 +67,6 @@ public sealed partial class Omnibar : UserControl
         ToolTipService.SetToolTip(SearchButton, StringTable.Get("SearchPlaceholderFolder"));
         Loaded += (_, _) =>
         {
-            _pathBorder = PathHost.BorderBrush;
-            _searchBorder = SearchHost.BorderBrush;
             SearchSuggestPopup.PlacementTarget = SearchHost;
             SearchSuggestPopup.DesiredPlacement = PopupPlacementMode.BottomEdgeAlignedRight;
             UpdateSearchPlaceholder();
@@ -85,6 +81,7 @@ public sealed partial class Omnibar : UserControl
         {
             CancelSearch();
             DismissCrumbFolders();
+            SetCrumbDropTarget(null);
         };
     }
 
@@ -367,28 +364,9 @@ public sealed partial class Omnibar : UserControl
 
     private void ApplySearchChrome()
     {
-        if (_searchBorder is null)
-        {
-            return;
-        }
-
-        if (_searchFocused
-            && Application.Current.Resources.TryGetValue("FilesMate.Selection.AccentBrush", out var accent)
-            && accent is Brush accentBrush)
-        {
-            SearchHost.BorderBrush = accentBrush;
-            return;
-        }
-
-        if (_searchHovered
-            && Application.Current.Resources.TryGetValue("FilesMate.Glass.BorderStrongBrush", out var strong)
-            && strong is Brush strongBrush)
-        {
-            SearchHost.BorderBrush = strongBrush;
-            return;
-        }
-
-        SearchHost.BorderBrush = _searchBorder;
+        Theming.ThemeResources.Bind(SearchHost, Control.BorderBrushProperty,
+            _searchFocused ? "FilesMate.Selection.AccentBrush" : _searchHovered
+                ? "FilesMate.Glass.BorderStrongBrush" : "FilesMate.AddressBar.BorderBrush");
     }
 
     private void UpdateSearchPlaceholder()
@@ -881,6 +859,8 @@ public sealed partial class Omnibar : UserControl
             AutomationProperties.SetName(item, folder.Name);
             ToolTipService.SetToolTip(item, folder.Path);
             item.Click += CrumbChild_Click;
+            item.BorderThickness = new Thickness(1);
+            ConfigureCrumbDrop(item, folder.Path);
             CrumbFolderItems.Children.Add(item);
         }
 
@@ -1003,21 +983,14 @@ public sealed partial class Omnibar : UserControl
 
     private void ShowErrorVisual(string? message)
     {
-        if (Application.Current.Resources.TryGetValue("SystemFillColorCriticalBrush", out var resource)
-            && resource is Brush critical)
-        {
-            PathHost.BorderBrush = critical;
-        }
+        Theming.ThemeResources.Bind(PathHost, Control.BorderBrushProperty, "SystemFillColorCriticalBrush");
 
         ToolTipService.SetToolTip(PathHost, message);
     }
 
     private void ClearPathErrorVisual()
     {
-        if (_pathBorder is not null)
-        {
-            PathHost.BorderBrush = _pathBorder;
-        }
+        Theming.ThemeResources.Bind(PathHost, Control.BorderBrushProperty, "FilesMate.AddressBar.BorderBrush");
 
         ToolTipService.SetToolTip(PathHost, _session.Path);
     }

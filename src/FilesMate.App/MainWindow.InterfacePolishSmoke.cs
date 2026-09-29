@@ -107,11 +107,11 @@ public sealed partial class MainWindow
         ((Microsoft.UI.Xaml.Automation.Provider.IInvokeProvider)new Microsoft.UI.Xaml.Automation.Peers.ButtonAutomationPeer((Button)toolbar.ShelfAnchor)
             .GetPattern(Microsoft.UI.Xaml.Automation.Peers.PatternInterface.Invoke)).Invoke();
         await Task.Delay(140);
-        var shelf = VisualTreeHelper.GetOpenPopupsForXamlRoot(page.XamlRoot).SelectMany(p => PolishDescendants(p.Child)).OfType<FileShelfPanel>().First();
-        var presenter = VisualTreeHelper.GetOpenPopupsForXamlRoot(page.XamlRoot).SelectMany(p => PolishDescendants(p.Child)).OfType<FlyoutPresenter>().First();
-        Require(presenter.CornerRadius.TopLeft >= 12, "Shelf popup is not rounded");
-        await CapturePopupAsync(shelf, "search-page-shelf-" + page.ActualTheme + ".png");
-        foreach (var popup in VisualTreeHelper.GetOpenPopupsForXamlRoot(page.XamlRoot)) popup.IsOpen = false;
+        var shelf = PolishDescendants(page).OfType<FileShelfPanel>().First();
+        var card = (Border)page.FindName("ShelfCard");
+        Require(card.CornerRadius.TopLeft >= 12, "Shelf card is not rounded");
+        await Capture(card, "search-page-shelf-" + page.ActualTheme + ".png");
+        shelf.RequestClose();
         report["RoundedShelf" + page.ActualTheme] = true;
         static void Require(bool ok, string message) { if (!ok) throw new InvalidOperationException(message); }
     }

@@ -21,6 +21,7 @@ public sealed partial class Omnibar
 
     private void BuildAdaptiveCrumbs()
     {
+        SetCrumbDropTarget(null);
         _breadcrumbLayout = null;
         Crumbs.Children.Clear();
         _crumbViews.Clear();
@@ -53,7 +54,10 @@ public sealed partial class Omnibar
             };
             AutomationProperties.SetName(chevron, segment.Name);
             chevron.Click += CrumbChevron_Click;
-            var view = new Grid { Margin = new Thickness(2, 0, 0, 0), MinHeight = 28 };
+            var view = new Grid { Margin = new Thickness(2, 0, 0, 0), MinHeight = 28,
+                Tag = segment.Path, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(4) };
+            Theming.ThemeResources.Bind(view, Grid.BackgroundProperty, "FilesMate.TransparentBrush");
+            ConfigureCrumbDrop(view, segment.Path);
             view.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             view.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             view.Children.Add(name);

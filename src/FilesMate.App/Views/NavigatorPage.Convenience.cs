@@ -1,4 +1,4 @@
-﻿using Loc = FilesMate.App.Localization.StringTable;
+using Loc = FilesMate.App.Localization.StringTable;
 using FilesMate.App.Commands;
 using FilesMate.App.Controls.FileSurface;
 using FilesMate.App.Navigation;
@@ -17,8 +17,9 @@ namespace FilesMate.App.Views;
 
 public sealed partial class NavigatorPage
 {
+    internal Task ApplyHistoryAsync(bool redo, Action<string> reportError) => _fileActions.ApplyUndoAsync(redo, reportError);
     private ContentDialog? _commandDialog;
-    private Border? _operationNotice;
+    private Controls.Status.OperationNotice? _operationNotice;
     private TextBlock? _operationText;
     private Button? _operationUndo;
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _operationNoticeTimer;
@@ -95,9 +96,17 @@ public sealed partial class NavigatorPage
         catch (Exception error) { if (!_disposed) ViewModel.ReportUserError(error.Message); }
     }
 
+    internal void DismissOperationNotice()
+    {
+        _operationNoticeTimer?.Stop();
+        if (_operationNotice is not null) _operationNotice.Visibility = Visibility.Collapsed;
+        _noticeRecord = null;
+    }
+
     private void OperationRecorded(object? sender, FileUndoRecord record) => DispatcherQueue.TryEnqueue(() =>
     {
         if (!IsLoaded || _disposed || !ReferenceEquals(App.FileUndo.Latest, record)) return;
+        App.WindowForElement(this)?.DismissActionNotice();
         if (_transferResultNotice is { IsOpen: true })
         {
             if (ReferenceEquals(_transferResultRecord, record)) return;
@@ -105,19 +114,17 @@ public sealed partial class NavigatorPage
         }
         if (_operationNotice is null)
         {
-            _operationText = new TextBlock { VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 440 };
-            _operationUndo = new Button { Content = Loc.Get("Undo"), MinWidth = 64 };
+            _operationNotice = new Controls.Status.OperationNotice
+            {
+                Margin = new Thickness(16, 0, 16, 40),
+                HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom
+            };
+            _operationText = (TextBlock)_operationNotice.FindName("MessageText");
+            _operationUndo = (Button)_operationNotice.FindName("UndoButton");
             _operationUndo.Click += (_, _) =>
             {
                 if (_noticeRecord is not null && ReferenceEquals(App.FileUndo.Latest, _noticeRecord)) _fileActions.Undo();
             };
-            var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
-            content.Children.Add(_operationText);
-            content.Children.Add(_operationUndo);
-            _operationNotice = new Border { Child = content, Padding = new Thickness(12, 6, 8, 6), Margin = new Thickness(16, 0, 16, 40),
-                HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, CornerRadius = new CornerRadius(8),
-                Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["FilesMate.Menu.BackgroundBrush"],
-                BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["FilesMate.Card.BorderBrush"], BorderThickness = new Thickness(1) };
             Canvas.SetZIndex(_operationNotice, 30);
             ShellRoot.Children.Add(_operationNotice);
             _operationNoticeTimer = DispatcherQueue.CreateTimer();
@@ -199,8 +206,8 @@ public sealed partial class NavigatorPage
         Add(Loc.Get("Action_ToggleFolderSizes"), "", !ViewModel.IsPortableDevice, ToggleFolderSizes);
         Add(Loc.Get("DetailsView"), "", true, () => ActiveSurface.SetLayout(FileLayoutKind.Details));
         Add(Loc.Get("Action_IconView"), "", true, () => ActiveSurface.SetLayout(FileLayoutKind.Grid));
-        foreach (var column in FilesMate.App.Models.DetailsColumn.Defaults())
-            Add(Loc.Format("Action_SortColumn", column.Title), "", true, () => ViewModel.SetSortColumn(column.Sort));
+        foreach (var column in FilesMate.App.Models.DetailsColumn.Defaults().Where(c => c.CanSort))
+            Add(Loc.Format("Action_SortColumn", column.Title), "", true, () => ViewModel.SetSortColumn(column.Sort, App.ExplorerPreferences.DefaultSortAscending));
         Add(Loc.Get("Action_RefreshFolder"), App.Shortcuts[ShortcutAction.Refresh].DisplayText, ViewModel.CanRefresh, RefreshFilePanes);
         Add(Loc.Get("Action_OpenSettings"), "", true, () => App.CurrentWindow?.OpenSettings("general"));
         var search = new TextBox { PlaceholderText = Loc.Get("Action_SearchHint"), MinWidth = 320 };
@@ -260,7 +267,7 @@ public sealed partial class NavigatorPage
 
     private static ClosedPaneState CapturePane(PaneViewModel vm, FileDetailsSurface surface) =>
         new(vm.AddressText, new FolderViewSettings(surface.LayoutKind == FileLayoutKind.Details,
-            surface.GridPreset.Slot, vm.Sort, surface.GetColumns()), surface.ScrollOffset,
+            surface.GridPreset.Slot, vm.Sort, surface.GetColumns(), surface.LayoutKind == FileLayoutKind.List, surface.ListZoomPercent), surface.ScrollOffset,
             surface.SelectedPaths().Select(path => Path.GetFileName(path)).ToArray(), vm.FilterQuery, vm.Navigation.CaptureHistory());
 
     public async Task RestoreClosedTabAsync(ClosedTabState state)

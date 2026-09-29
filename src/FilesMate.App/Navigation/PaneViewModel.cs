@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 
 using FilesMate.App.Localization;
+using FilesMate.App.Services;
 using FilesMate.Core.Directories;
 using FilesMate.Core.Entries;
 using FilesMate.Core.Navigation;
@@ -303,12 +304,10 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         return true;
     }
 
-    public void SetSortColumn(EntrySortColumn column)
+    public void SetSortColumn(EntrySortColumn column, bool defaultAscending = true)
     {
         AssertUi();
-        _sort = _sort.Column == column
-            ? _sort with { Ascending = !_sort.Ascending }
-            : _sort with { Column = column, Ascending = true };
+        _sort = _sort.SelectColumn(column, defaultAscending);
         OnPropertyChanged(nameof(Sort));
         RebuildIndex();
     }
@@ -869,7 +868,7 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         var matchingTagIds = _tagFilter?.MatchingEntryIds;
         var token = buildCts.Token;
 
-        if (session.Store.Count < BackgroundIndexThreshold)
+        if (session.Store.Count < BackgroundIndexThreshold && sort.Column != EntrySortColumn.ShellProperty)
         {
             try
             {
@@ -908,8 +907,21 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
     {
         try
         {
+            IReadOnlyDictionary<int, EntryPropertyValue>? properties = null;
+            if (sort.Column == EntrySortColumn.ShellProperty && Models.DetailsColumn.IsPropertyName(sort.PropertyName))
+            {
+                var values = new System.Collections.Concurrent.ConcurrentDictionary<int, EntryPropertyValue>();
+                var entries = session.Store.Observe(items => items.ToArray());
+                await Parallel.ForEachAsync(entries, new ParallelOptions { MaxDegreeOfParallelism = 3, CancellationToken = buildCts.Token }, async (entry, token) =>
+                {
+                    var path = Path.IsPathRooted(entry.Name) ? entry.Name : Path.Combine(session.Path, entry.Name);
+                    var result = await FilePropertyCache.GetAsync(path, entry, [sort.PropertyName!], token).ConfigureAwait(false);
+                    if (result.TryGetValue(sort.PropertyName!, out var value)) values[entry.Id] = value;
+                }).ConfigureAwait(false);
+                properties = values;
+            }
             var index = await Task.Run(
-                () => BuildIndex(session, sort, filter, matchingTagIds, buildCts.Token),
+                () => BuildIndex(session, sort, filter, matchingTagIds, buildCts.Token, properties),
                 buildCts.Token).ConfigureAwait(false);
             Publish(session, index, change, buildVersion);
         }
@@ -931,7 +943,8 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         EntrySort sort,
         EntryFilter filter,
         IReadOnlySet<int>? matchingTagIds,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyDictionary<int, EntryPropertyValue>? propertyValues = null)
     {
         Func<FileEntryCore, bool>? tagMatch = matchingTagIds is null
             ? null
@@ -944,7 +957,8 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
             session.Generation,
             tagMatch,
             cancellationToken,
-            SizeOf);
+            SizeOf,
+            propertyValues);
     }
 
     private void CancelIndexBuild()

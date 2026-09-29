@@ -25,6 +25,7 @@ public sealed partial class HomeDashboard : UserControl
     private readonly Dictionary<HomeSectionKind, bool> _sectionHasContent = [];
     private readonly Dictionary<HomeSectionKind, StackPanel> _sections;
     private HomeLayoutSettings _layout;
+    private HomeItemButton? _selectedPlace;
 
     public HomeDashboard()
     {
@@ -157,19 +158,20 @@ public sealed partial class HomeDashboard : UserControl
         SearchHost.IsHitTestVisible = true;
         foreach (var hit in hits.Take(40))
         {
-            var button = new Button
+            var button = new HomeItemButton
             {
+                IsFolder = hit.IsDirectory,
                 Tag = hit.Path,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 HorizontalContentAlignment = HorizontalAlignment.Left,
-                Style = (Style)Application.Current.Resources["HomePlaceButtonStyle"],
+                Style = (Style)Resources["SelectableHomePlaceStyle"],
                 Padding = new Thickness(10, 8, 10, 8),
                 Content = new StackPanel
                 {
                     Spacing = 2,
                     Children =
                     {
-                        new TextBlock { Text = hit.Name, FontSize = 13 },
+                        new TextBlock { Text = hit.Name, FontSize = 13, Tag = "ItemName", HorizontalAlignment = HorizontalAlignment.Left },
                         new TextBlock
                         {
                             Text = hit.Path,
@@ -180,7 +182,8 @@ public sealed partial class HomeDashboard : UserControl
                     },
                 },
             };
-            button.Click += Place_Click;
+            button.ItemInvoked += Place_Click;
+            button.SelectionRequested += Place_Selected;
             button.ContextRequested += Place_ContextRequested;
             SearchResults.Children.Add(button);
         }
@@ -280,6 +283,7 @@ public sealed partial class HomeDashboard : UserControl
         var reset = new MenuFlyoutItem { Text = StringTable.Get("Home_ResetLayout") };
         reset.Click += async (_, _) => await ChangeLayoutAsync(HomeLayoutSettings.Default);
         menu.Items.Add(reset);
+        Theming.FlyoutTheme.FollowHost(menu);
         menu.ShowAt(CustomizeButton);
     }
 
@@ -310,7 +314,14 @@ public sealed partial class HomeDashboard : UserControl
 
     private void RefreshButton_Click(object sender, RoutedEventArgs e) => Reload();
 
-    private void Place_Click(object sender, RoutedEventArgs e)
+    private void Place_Selected(object? sender, EventArgs e)
+    {
+        _selectedPlace?.SetSelected(false);
+        _selectedPlace = sender as HomeItemButton;
+        _selectedPlace?.SetSelected(true);
+    }
+
+    private void Place_Click(object? sender, EventArgs e)
     {
         if (sender is FrameworkElement anchor && PlaceFrom(anchor)?.Target is { } path)
         {
@@ -321,6 +332,7 @@ public sealed partial class HomeDashboard : UserControl
     private void Place_ContextRequested(UIElement sender, ContextRequestedEventArgs e)
     {
         if (sender is not FrameworkElement anchor) return;
+        Place_Selected(sender, EventArgs.Empty);
         ShowPlaceContext(anchor, e.TryGetPosition(anchor, out var point) ? point : null);
         e.Handled = true;
     }

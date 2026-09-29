@@ -1,4 +1,4 @@
-﻿using FilesMate.App.Commands;
+using FilesMate.App.Commands;
 using FilesMate.App.Controls.FileSurface;
 using FilesMate.App.Localization;
 using FilesMate.App.Models;
@@ -23,19 +23,27 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
     private readonly List<MenuFlyoutItem> _extraOverflowSortItems = [];
     private readonly List<(AppCommandId Id, MenuFlyoutItem Item)> _overflowFileItems = [];
     private readonly MenuFlyoutSeparator _fileOverflowSeparator = new();
+    private readonly List<(AppCommandId Id, MenuFlyoutItem Item)> _newDocumentItems = [];
+    private readonly MenuFlyoutSubItem _overflowNew = new();
+    private EntrySort _sort = EntrySort.Name;
+    private readonly MenuFlyoutSubItem _overflowDirection;
+    private readonly MenuFlyoutSubItem _overflowGrouping;
+    public event EventHandler<bool>? SortDirectionRequested;
+    public event EventHandler<EntryGrouping>? GroupingRequested;
+    public void SetSort(EntrySort sort) { _sort = sort; SyncGroupingIcon(); }
 
     public AdaptiveCommandToolbar()
     {
         InitializeComponent();
+        InitializeHiddenFiles();
         NewFolderItem.Text = StringTable.Get("Command_NewFolder");
-        NewFileItem.Text = StringTable.Get("Command_NewFile");
+        NewFileItem.Text = StringTable.Get("NewDocument_Text");
         NewLabel.Text = StringTable.Get("Command_New");
         SortLabel.Text = StringTable.Get("Sort");
         Caption(SortButton, "Sort");
         Caption(ShelfButton, "Shelf_Title");
         ShelfLabel.Text = StringTable.Get("Shelf_Short");
-        Caption(DetailsViewButton, "Layout_Details");
-        Caption(GridViewButton, "Layout_LargeIcons");
+        ViewLabel.Text = StringTable.Get("View_Options");
         Caption(MoreButton, "Nav_More");
         Caption(FolderSizesButton, "ShowFolderSizesTitle");
         FolderSizesLabel.Text = StringTable.Get("Column_Size");
@@ -48,13 +56,33 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
         OverflowSortSize.Text = StringTable.Get("SortBySize");
         OverflowDetails.Text = StringTable.Get("DetailsView");
         OverflowGrid.Text = StringTable.Get("Layout_LargeIcons");
+        OverflowList.Text = StringTable.Get("Layout_List");
         SortNameItem.Text = StringTable.Get("Sort_Name");
         SortModifiedItem.Text = StringTable.Get("Sort_Modified");
         SortTypeItem.Text = StringTable.Get("Sort_Type");
         SortSizeItem.Text = StringTable.Get("Sort_Size");
         var sortMenu = (MenuFlyout)SortButton.Flyout;
         var moreMenu = (MenuFlyout)MoreButton.Flyout;
-        foreach (var column in DetailsColumn.Defaults().Skip(4))
+        _overflowNew.Text = StringTable.Get("Command_New");
+        var newFolderOverflow = new MenuFlyoutItem { Text = StringTable.Get("Command_NewFolder") };
+        newFolderOverflow.Click += NewFolderItem_Click;
+        _overflowNew.Items.Add(newFolderOverflow);
+        foreach (var id in NewDocumentCommands.All)
+        {
+            MenuFlyoutItem CreateItem()
+            {
+                var item = new MenuFlyoutItem { Text = StringTable.Get(NewDocumentCommands.LabelKey(id)) };
+                item.Click += (_, _) => CommandInvoked?.Invoke(this, id);
+                _newDocumentItems.Add((id, item));
+                return item;
+            }
+            if (id != AppCommandId.NewFile) ((MenuFlyout)NewButton.Flyout).Items.Add(CreateItem());
+            _overflowNew.Items.Add(CreateItem());
+        }
+        FilesMate.App.Theming.FlyoutTheme.FollowHost(NewButton.Flyout);
+        FilesMate.App.Theming.FlyoutTheme.FollowHost(moreMenu);
+        FilesMate.App.Theming.FlyoutTheme.FollowHost(sortMenu);
+        foreach (var column in DetailsColumn.Defaults().Skip(4).Where(c => c.CanSort))
         {
             var item = new MenuFlyoutItem { Text = column.Title };
             item.Click += (_, _) => SortRequested?.Invoke(this, column.Sort);
@@ -73,6 +101,15 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
             _overflowFileItems.Add((id, item));
         }
         moreMenu.Items.Insert(_overflowFileItems.Count, _fileOverflowSeparator);
+        moreMenu.Items.Insert(0, _overflowNew);
+        sortMenu.Items.Add(new MenuFlyoutSeparator());
+        sortMenu.Items.Add(Menus.SortDirectionMenu.Create(() => _sort, ascending => SortDirectionRequested?.Invoke(this, ascending)));
+        _overflowDirection = Menus.SortDirectionMenu.Create(() => _sort, ascending => SortDirectionRequested?.Invoke(this, ascending));
+        moreMenu.Items.Insert(moreMenu.Items.IndexOf(OverflowSortSize) + 1, _overflowDirection);
+        sortMenu.Items.Add(Menus.EntryGroupingMenu.Create(() => _sort, grouping => GroupingRequested?.Invoke(this, grouping)));
+        _overflowGrouping = Menus.EntryGroupingMenu.Create(() => _sort, grouping => GroupingRequested?.Invoke(this, grouping));
+        moreMenu.Items.Insert(moreMenu.Items.IndexOf(_overflowDirection) + 1, _overflowGrouping);
+        InitializeViewControls();
         Loaded += (_, _) => ScheduleOverflow();
         SetLayout(FileLayoutKind.Grid);
         ApplyContext(CommandContext.ForToolbar(0));
@@ -122,6 +159,11 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
         Apply(SortButton, Find(states, ToolbarCommandId.Sort));
         NewFolderItem.IsEnabled = CommandCatalog.CanExecute(AppCommandId.NewFolder, _context);
         NewFileItem.IsEnabled = CommandCatalog.CanExecute(AppCommandId.NewFile, _context);
+        HiddenFilesButton.Visibility = SearchMode ? Visibility.Collapsed : Visibility.Visible;
+        ShelfButton.Visibility = PreviewButton.Visibility = Visibility.Visible;
+        GroupingGroup.Visibility = GroupingButton.Visibility = Visibility.Visible;
+        FolderSizesButton.Visibility = DualPaneButton.Visibility = PaneArrangementButton.Visibility = SearchMode ? Visibility.Collapsed : Visibility.Visible;
+        ApplyHiddenTools();
         UpdateGroups();
         UpdateLabels();
         ApplyOverflow();
@@ -129,8 +171,11 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
 
     public void SetLayout(FileLayoutKind kind)
     {
-        SetActive(DetailsViewButton, kind == FileLayoutKind.Details);
-        SetActive(GridViewButton, kind == FileLayoutKind.Grid);
+        _viewKind = kind;
+        ViewIcon.Glyph = kind switch { FileLayoutKind.List => "\uEA37", FileLayoutKind.Grid => "\uF0E2", _ => "\uE8FD" };
+        var label = StringTable.Get(kind switch { FileLayoutKind.List => "Layout_List", FileLayoutKind.Grid => _viewSize.ZoomKey, _ => "Layout_Details" });
+        ToolTipService.SetToolTip(ViewMenuButton, StringTable.Get("View_Options") + " · " + label);
+        AutomationProperties.SetName(ViewMenuButton, StringTable.Get("View_Options") + " · " + label);
     }
 
     public void SetFolderSizesActive(bool active)
@@ -235,7 +280,7 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
         if (ActualWidth <= 0) return;
         LeadingGroups.Visibility = Visibility.Visible;
         LeadingGroups.Measure(new Windows.Foundation.Size(double.PositiveInfinity, 40));
-        SortButton.Visibility = DetailsViewButton.Visibility = GridViewButton.Visibility = Visibility.Collapsed;
+        SortButton.Visibility = ViewMenuButton.Visibility = Visibility.Collapsed;
         MoreButton.Visibility = Visibility.Visible;
         ViewGroup.Measure(new Windows.Foundation.Size(double.PositiveInfinity, 40));
         var fileOverflow = ActualWidth < LeadingGroups.DesiredSize.Width + ViewGroup.DesiredSize.Width;
@@ -243,9 +288,8 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
         var width = Math.Max(0, ActualWidth - (fileOverflow ? 0 : LeadingGroups.DesiredSize.Width));
         var overflow = ToolbarOverflow.ForWidth(width);
         var sortState = CommandCatalog.Resolve(AppCommandId.Sort, _context);
-        SortButton.Visibility = overflow.ShowSort && sortState.Visible ? Visibility.Visible : Visibility.Collapsed;
-        DetailsViewButton.Visibility = overflow.ShowView ? Visibility.Visible : Visibility.Collapsed;
-        GridViewButton.Visibility = overflow.ShowView ? Visibility.Visible : Visibility.Collapsed;
+        SortButton.Visibility = overflow.ShowSort && sortState.Visible && !Hidden(ToolbarTool.Sort) ? Visibility.Visible : Visibility.Collapsed;
+        ViewMenuButton.Visibility = overflow.ShowView && !Hidden(ToolbarTool.ViewMenu) ? Visibility.Visible : Visibility.Collapsed;
         MoreButton.Visibility = overflow.ShowMore || fileOverflow ? Visibility.Visible : Visibility.Collapsed;
 
         // Account for labels, font scaling and the always-visible utility buttons.
@@ -259,7 +303,7 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
             if (ViewGroup.DesiredSize.Width > width)
             {
                 overflow = overflow with { ShowView = false };
-                DetailsViewButton.Visibility = GridViewButton.Visibility = Visibility.Collapsed;
+                ViewMenuButton.Visibility = Visibility.Collapsed;
             }
         }
         foreach (var (id, item) in _overflowFileItems)
@@ -270,17 +314,25 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
             item.Visibility = fileOverflow && (command.Visible || id == AppCommandId.NewFile) ? Visibility.Visible : Visibility.Collapsed;
         }
         _fileOverflowSeparator.Visibility = fileOverflow ? Visibility.Visible : Visibility.Collapsed;
+        _overflowHiddenFiles.Visibility = fileOverflow && !SearchMode && !Hidden(ToolbarTool.HiddenFiles) ? Visibility.Visible : Visibility.Collapsed;
 
-        var sortOverflow = overflow.ShowSort ? Visibility.Collapsed : Visibility.Visible;
-        OverflowSortName.Visibility = sortOverflow;
-        OverflowSortModified.Visibility = sortOverflow;
-        OverflowSortType.Visibility = sortOverflow;
-        OverflowSortSize.Visibility = sortOverflow;
-        foreach (var item in _extraOverflowSortItems) item.Visibility = sortOverflow;
+        var sortOverflow = overflow.ShowSort || Hidden(ToolbarTool.Sort) ? Visibility.Collapsed : Visibility.Visible;
+        _overflowSortPanel.Visibility = SearchMode ? Visibility.Collapsed : sortOverflow;
+        _overflowDirection.Visibility = _overflowGrouping.Visibility = Visibility.Collapsed;
+        OverflowSortName.Visibility = OverflowSortModified.Visibility = OverflowSortType.Visibility = OverflowSortSize.Visibility = Visibility.Collapsed;
+        foreach (var item in _extraOverflowSortItems) item.Visibility = Visibility.Collapsed;
 
         var viewOverflow = overflow.ShowView ? Visibility.Collapsed : Visibility.Visible;
-        OverflowDetails.Visibility = viewOverflow;
-        OverflowGrid.Visibility = viewOverflow;
+        OverflowDetails.Visibility = OverflowGrid.Visibility = OverflowList.Visibility = Hidden(ToolbarTool.ViewMenu) ? Visibility.Collapsed : viewOverflow;
+        _overflowNew.Visibility = fileOverflow && !SearchMode && !Hidden(ToolbarTool.New) ? Visibility.Visible : Visibility.Collapsed;
+        _overflowNew.IsEnabled = _context.IsFolderWritable;
+        foreach (var (id, item) in _newDocumentItems) item.IsEnabled = CommandCatalog.CanExecute(id, _context);
+        foreach (var (id, item) in _overflowFileItems)
+        {
+            if (id is AppCommandId.NewFolder or AppCommandId.NewFile) item.Visibility = Visibility.Collapsed;
+            var name = id == AppCommandId.Recycle ? nameof(ToolbarTool.Delete) : id.ToString();
+            if (Enum.TryParse<ToolbarTool>(name, out var tool) && Hidden(tool)) item.Visibility = Visibility.Collapsed;
+        }
         OverflowSeparator.Visibility = !overflow.ShowSort && !overflow.ShowView
             ? Visibility.Visible
             : Visibility.Collapsed;
@@ -292,13 +344,16 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
             foreach (var (id, item) in _overflowFileItems)
                 if (id is AppCommandId.NewFolder or AppCommandId.NewFile) item.Visibility = Visibility.Collapsed;
         }
+        if (!((MenuFlyout)MoreButton.Flyout).Items.Any(item => item is not MenuFlyoutSeparator && item.Visibility == Visibility.Visible))
+            MoreButton.Visibility = Visibility.Collapsed;
+        ApplyHiddenTools();
     }
 
     private void UpdateGroups()
     {
         var create = NewButton.Visibility == Visibility.Visible;
         var clipboard = AnyVisible(CutButton, CopyButton, PasteButton);
-        var organize = AnyVisible(RenameButton, ShareButton, DeleteButton, CopyPathButton);
+        var organize = AnyVisible(RenameButton, ShareButton, DeleteButton, CopyPathButton, HiddenFilesButton);
         CreateGroup.Visibility = create ? Visibility.Visible : Visibility.Collapsed;
         ClipboardGroup.Visibility = clipboard ? Visibility.Visible : Visibility.Collapsed;
         OrganizeGroup.Visibility = organize ? Visibility.Visible : Visibility.Collapsed;
@@ -317,6 +372,7 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
         NewLabel.Visibility = labels;
         SortLabel.Visibility = labels;
         FolderSizesLabel.Visibility = labels;
+        ViewLabel.Visibility = labels;
     }
 
     private static bool AnyVisible(params UIElement[] elements)
@@ -365,10 +421,13 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
         CommandInvoked?.Invoke(this, AppCommandId.Recycle);
 
     private void DetailsViewButton_Click(object sender, RoutedEventArgs e)
-    { LayoutChanged?.Invoke(this, FileLayoutKind.Details); AnimateChoice(DetailsViewButton); }
+    { LayoutChanged?.Invoke(this, FileLayoutKind.Details); }
 
     private void GridViewButton_Click(object sender, RoutedEventArgs e)
-    { LayoutChanged?.Invoke(this, FileLayoutKind.Grid); AnimateChoice(GridViewButton); }
+    { GridSizeRequested?.Invoke(this, GridSizePreset.Large); LayoutChanged?.Invoke(this, FileLayoutKind.Grid); }
+
+    private void ListViewButton_Click(object sender, RoutedEventArgs e)
+    { LayoutChanged?.Invoke(this, FileLayoutKind.List); }
 
     private void FolderSizesButton_Click(object sender, RoutedEventArgs e) =>
         FolderSizesClicked?.Invoke(this, e);

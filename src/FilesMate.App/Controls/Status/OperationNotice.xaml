@@ -1,0 +1,15 @@
+<UserControl x:Class="FilesMate.App.Controls.Status.OperationNotice"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:loc="using:FilesMate.App.Localization">
+    <Border Background="{ThemeResource FilesMate.Menu.BackgroundBrush}"
+            BorderBrush="{ThemeResource FilesMate.Card.BorderBrush}" BorderThickness="1"
+            CornerRadius="10" Padding="12,6,8,6">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+            <TextBlock x:Name="MessageText" MaxWidth="440" TextTrimming="CharacterEllipsis"
+                       Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}" VerticalAlignment="Center"/>
+            <Button x:Name="UndoButton" Content="{loc:LocalizedText Key=Undo}" MinWidth="64" Height="30"
+                    Padding="12,0" Style="{StaticResource QuietButtonStyle}"/>
+        </StackPanel>
+    </Border>
+</UserControl>

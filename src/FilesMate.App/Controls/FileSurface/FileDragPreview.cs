@@ -89,8 +89,7 @@ internal static class FileDragPreview
 
     public static async Task<SoftwareBitmap> RenderAsync(Canvas host, IReadOnlyList<ImageSource?> icons, int count, double iconSize)
     {
-        var dark = host.ActualTheme == ElementTheme.Dark;
-        var face = new SolidColorBrush(dark ? ColorHelper.FromArgb(255, 47, 50, 57) : Colors.White);
+        var face = (Brush)Theming.ThemeResources.Resolve(host, "FilesMate.FileContent.BackgroundBrush")!;
         var label = "×" + count.ToString(System.Globalization.CultureInfo.CurrentCulture);
         var badgeWidth = Math.Max(26, 12 + label.Length * 7);
         var layers = Math.Min(Math.Min(count, icons.Count), 3);
@@ -121,12 +120,12 @@ internal static class FileDragPreview
             {
                 MinWidth = badgeWidth, Height = 18, Padding = new Thickness(5, 0, 5, 0),
                 CornerRadius = new CornerRadius(9),
-                Background = new SolidColorBrush(ColorHelper.FromArgb(255, 36, 103, 192)),
+                Background = (Brush)Theming.ThemeResources.Resolve(host, "FilesMate.Glass.AccentBrush")!,
                 BorderBrush = face, BorderThickness = new Thickness(1),
                 Child = new TextBlock
                 {
                     Text = label, FontSize = 10, FontWeight = FontWeights.SemiBold,
-                    Foreground = new SolidColorBrush(Colors.White),
+                    Foreground = (Brush)Theming.ThemeResources.Resolve(host, "FilesMate.Glass.AccentForegroundBrush")!,
                     HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
                 },
             };

@@ -1,4 +1,4 @@
-﻿using FilesMate.App.Commands;
+using FilesMate.App.Commands;
 using FilesMate.App.Controls.FileSurface;
 using FilesMate.App.Controls.Preview;
 using FilesMate.App.Controls.Tags;
@@ -20,9 +20,11 @@ namespace FilesMate.App.Views;
 
 public sealed partial class SearchResultsPage
 {
+    internal Task ApplyHistoryAsync(bool redo, Action<string> reportError) => _fileActions.ApplyUndoAsync(redo, reportError);
     private PaneFileActions _fileActions = null!;
     private QuickPreviewWindow? _quickPreview;
-    private Flyout? _shelfFlyout;
+    private QuickPreviewDismissal? _quickPreviewInput;
+    private FileShelfPanel? _shelfPanel;
     private readonly PinnedLocationStore _pins = new(Program.SettingsPath(PinnedLocationStore.DefaultFilePath));
     private bool _autoColumns = true, _fittingColumns;
     private readonly Dictionary<string, IReadOnlyList<TagDefinition>> _tags = new(StringComparer.OrdinalIgnoreCase);
@@ -38,7 +40,7 @@ public sealed partial class SearchResultsPage
         Results.CreateTagPicker = () => App.MetadataStore is { } store && App.FileIdentityProvider is { } identities
             ? TagPickerFlyout.CreatePanel(store, Results.SelectedPaths().Select(identities.Resolve).ToArray(), () => _ = LoadTagsAsync()) : null;
         Results.SetColumns([new(DetailsColumnId.Name, 260), new(DetailsColumnId.Location, 220),
-            new(DetailsColumnId.Type, 90), new(DetailsColumnId.Size, 88), new(DetailsColumnId.Modified, 148)]);
+            new(DetailsColumnId.Type, 90), new(DetailsColumnId.Size, 88), new(DetailsColumnId.Modified, 148), new(DetailsColumnId.Tags, 144)]);
         Results.SizeChanged += (_, _) => FitResultColumns();
         Results.SetLayout(FileLayoutKind.Details);
         Results.PresentationChanged += (_, _) => { if (!_fittingColumns) _autoColumns = false; };
@@ -62,12 +64,18 @@ public sealed partial class SearchResultsPage
         Results.CopyPathRequested += (_, _) => CopyPaths(false);
         Results.RefreshRequested += async (_, _) => await SearchAsync(false);
         Results.SortRequested += (_, column) => SortResults(column);
+        Results.SortSpecificationRequested += (_, sort) => SetResultSort(sort);
         Results.CommandRequested += (_, id) => _ = RunActionAsync(id);
         Results.SelectionChanged += (_, _) =>
         {
+            _shelfPanel?.RefreshSourceSelection();
             UpdateStatusSelection();
             SyncCommands();
-            if (_quickPreview is { } preview && Results.PrimaryPath() is { } path) _ = preview.LoadAsync(path);
+            if (_quickPreview is { } preview)
+            {
+                if (Results.Selection.Count == 1 && Results.PrimaryPath() is { } path) _ = preview.LoadAsync(path);
+                else CloseQuickPreview();
+            }
         };
         Results.QuickPreviewRequested += (_, _) => ToggleQuickPreview();
         Results.TerminalRequested += (_, path) => _ = new PaneFileActions(new WindowsLocalFileOperations(), () => [],
@@ -77,7 +85,14 @@ public sealed partial class SearchResultsPage
         Commands.CommandInvoked += (_, id) => _ = RunActionAsync(id);
         Commands.CopyPathClicked += (_, _) => CopyPaths(false);
         Commands.LayoutChanged += (_, layout) => { Results.SetLayout(layout); Commands.SetLayout(layout); };
+        Commands.SortSpecificationRequested += (_, sort) => SetResultSort(sort);
+        Commands.GroupingRequested += (_, grouping) => SetResultSort(SurfaceSort() with { Grouping = grouping });
+        Commands.GridSizeRequested += (_, preset) => Results.SetGridSize(preset);
+        Commands.ListZoomRequested += (_, zoom) => Results.SetListZoom(zoom);
+        Results.PresentationChanged += (_, _) => { Commands.SetLayout(Results.LayoutKind); Commands.SetViewSize(Results.GridPreset, Results.ListZoomPercent); };
         Commands.PreviewClicked += (_, _) => ToggleQuickPreview();
+        Commands.ShelfDragOver += ShelfDragOver;
+        Commands.ShelfDrop += ShelfDrop;
         Commands.SetLayout(FileLayoutKind.Details);
     }
 
@@ -88,11 +103,11 @@ public sealed partial class SearchResultsPage
         try
         {
             var available = Math.Max(240, Results.ActualWidth - 60);
-            var type = available >= 740; var date = available >= 530;
-            var remaining = available - 72 - (type ? 84 : 0) - (date ? 128 : 0);
+            var type = available >= 884; var date = available >= 674;
+            var remaining = available - 72 - 144 - (type ? 84 : 0) - (date ? 128 : 0);
             var name = Math.Max(116, remaining * .52); var location = Math.Max(96, remaining - name);
             Results.SetColumns([new(DetailsColumnId.Name, name), new(DetailsColumnId.Location, location),
-                new(DetailsColumnId.Type, 84, type), new(DetailsColumnId.Size, 72), new(DetailsColumnId.Modified, 128, date)]);
+                new(DetailsColumnId.Type, 84, type), new(DetailsColumnId.Size, 72), new(DetailsColumnId.Modified, 128, date), new(DetailsColumnId.Tags, 144)]);
         }
         finally { _fittingColumns = false; }
     }
@@ -121,6 +136,7 @@ public sealed partial class SearchResultsPage
         var paths = Results.SelectedPaths(); if (paths.Count == 0) return;
         var data = new DataPackage(); data.SetText(string.Join(Environment.NewLine, paths.Select(p => quoted ? $"\"{p}\"" : p)));
         Clipboard.SetContent(data);
+        App.WindowForElement(this)?.ShowActionNotice(Loc.Get("Path_Copied"));
     }
     private void RevealSelected()
     {
@@ -142,14 +158,24 @@ public sealed partial class SearchResultsPage
         if (_disposed || IsSearching) return;
         try
         {
-            if (command == AppCommandId.ShowShelf) { await ShowShelfAsync(); return; }
+            if (command == AppCommandId.ShowShelf)
+            {
+                if (ShelfCard.Visibility == Visibility.Visible) _shelfPanel?.RequestClose();
+                else await ShowShelfAsync();
+                return;
+            }
             if (command == AppCommandId.ManageTags) { App.WindowForElement(this)?.OpenSettings("tags"); return; }
             var paths = Results.SelectedPaths();
             if (command == AppCommandId.CopyPath) { CopyPaths(false); return; }
             if (command == AppCommandId.CopyPathQuoted) { CopyPaths(true); return; }
             if (command == AppCommandId.Rename && paths.Count == 1) { Results.BeginInlineRename(); return; }
             if (command == AppCommandId.AddToFavorites) { await App.Favorites.AddAsync(paths.Select(p => (p, System.IO.Directory.Exists(p)))); return; }
-            if (command == AppCommandId.AddToShelf) { await App.FileShelf.AddAsync(paths); await ShowShelfAsync(); return; }
+            if (command == AppCommandId.AddToShelf)
+            {
+                await ShowShelfAsync();
+                if (_shelfPanel is not null) await _shelfPanel.AddPathsAsync(paths);
+                return;
+            }
             if (command == AppCommandId.AddTags && App.MetadataStore is { } store && App.FileIdentityProvider is { } identities)
             { TagPickerFlyout.Show(Results, store, paths.Select(identities.Resolve).ToArray(), () => _ = LoadTagsAsync()); return; }
             if (command == AppCommandId.Share && App.ShareService is { } share) { await share.ShareAsync(paths); return; }
@@ -192,26 +218,76 @@ public sealed partial class SearchResultsPage
     private async void ToggleQuickPreview()
     {
         if (_quickPreview is not null) { _quickPreview.Close(); return; }
-        if (Results.PrimaryPath() is not { } path || App.WindowForElement(this) is not { } owner) return;
+        if (Results.Selection.Count != 1 || Results.PrimaryPath() is not { } path || App.WindowForElement(this) is not { } owner) return;
         var preview = _quickPreview = new QuickPreviewWindow(owner);
         preview.NavigateFile += (_, step) => Results.MovePreviewSelection(step);
-        preview.Closed += (_, _) => { if (_quickPreview == preview) _quickPreview = null; if (IsLoaded) Results.Focus(FocusState.Programmatic); };
+        _quickPreviewInput = new(XamlRoot.Content, CloseQuickPreview);
+        preview.Closed += (_, _) =>
+        {
+            if (_quickPreview == preview) { _quickPreview = null; _quickPreviewInput?.Dispose(); _quickPreviewInput = null; }
+            if (_quickPreview is null && preview.RestoreOwnerFocus && IsLoaded && !_disposed) Results.Focus(FocusState.Programmatic);
+        };
         preview.Activate(); await preview.LoadAsync(path);
+    }
+    private void CloseQuickPreview()
+    {
+        var preview = _quickPreview;
+        _quickPreview = null;
+        _quickPreviewInput?.Dispose(); _quickPreviewInput = null;
+        preview?.Dismiss();
     }
     private async Task ShowShelfAsync()
     {
-        if (_shelfFlyout is not null) { _shelfFlyout.Hide(); _shelfFlyout = null; return; }
-        var panel = new FileShelfPanel(this, () => _ = RefreshVisibleAsync()) { Width = 320, MaxHeight = Math.Max(220, ActualHeight - 180), IsOpen = true };
-        var flyout = _shelfFlyout = new Flyout { Content = panel, Placement = Microsoft.UI.Xaml.Controls.Primitives.FlyoutPlacementMode.BottomEdgeAlignedRight };
-        flyout.FlyoutPresenterStyle = (Style)Application.Current.Resources["FilesMate.RoundedFlyoutPresenterStyle"];
-        FlyoutTheme.FollowHost(flyout);
-        panel.CloseRequested += (_, _) => flyout.Hide();
-        flyout.Closed += (_, _) => { panel.IsOpen = false; if (_shelfFlyout == flyout) _shelfFlyout = null; };
-        flyout.ShowAt(Commands.ShelfAnchor); await panel.ReloadAsync();
+        if (_disposed || XamlRoot is null) return;
+        if (_shelfPanel is null)
+        {
+            _shelfPanel = new FileShelfPanel(this, () => _ = RefreshVisibleAsync(), Results.SelectedPaths);
+            _shelfPanel.CloseRequested += (_, _) => HideShelf();
+            ShelfContent.Content = _shelfPanel;
+        }
+        ShelfCard.Visibility = Visibility.Visible;
+        _shelfPanel.IsOpen = true;
+        PositionShelf();
+        await _shelfPanel.ReloadAsync();
+    }
+    private void HideShelf()
+    {
+        if (_shelfPanel is not null) _shelfPanel.IsOpen = false;
+        ShelfCard.Visibility = Visibility.Collapsed;
+    }
+    private void PositionShelf()
+    {
+        if (_disposed || ShelfCard is null || ShelfCard.Visibility != Visibility.Visible || !Commands.IsLoaded) return;
+        var anchor = Commands.ShelfAnchor;
+        var point = anchor.TransformToVisual(SearchRoot).TransformPoint(new Windows.Foundation.Point(0, anchor.ActualHeight));
+        var width = Math.Min(360, Math.Max(280, SearchRoot.ActualWidth - 24));
+        ShelfCard.Width = width;
+        ShelfCard.MaxHeight = Math.Max(180, SearchRoot.ActualHeight - point.Y - 20);
+        ShelfCard.Margin = new Thickness(Math.Clamp(point.X + anchor.ActualWidth - width - 8, 4,
+            Math.Max(4, SearchRoot.ActualWidth - width - 20)), point.Y - 2, 0, 0);
+    }
+    private void ShelfDragOver(object? sender, DragEventArgs e)
+    {
+        if (!FileShelfPanel.CanAccept(e.DataView)) { e.AcceptedOperation = DataPackageOperation.None; return; }
+        e.AcceptedOperation = DataPackageOperation.Copy;
+        e.DragUIOverride.IsGlyphVisible = false;
+        e.DragUIOverride.Caption = Loc.Get("Shelf_Add");
+        e.Handled = true;
+        if (ShelfCard.Visibility != Visibility.Visible) _ = ShowShelfAsync();
+    }
+    private async void ShelfDrop(object? sender, DragEventArgs e)
+    {
+        var deferral = e.GetDeferral(); e.Handled = true;
+        try
+        {
+            await ShowShelfAsync();
+            if (_shelfPanel is not null) await _shelfPanel.ReceiveDropAsync(e);
+        }
+        finally { deferral.Complete(); }
     }
     private async void Page_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (e.Handled || IsTextInput(e.OriginalSource as DependencyObject)) return;
+        if (e.Handled || _shelfPanel?.ContainsFocus() == true || IsTextInput(e.OriginalSource as DependencyObject)) return;
         var ctrl = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
         var shift = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
         if (ctrl && e.Key == VirtualKey.F) { QueryBox.Focus(FocusState.Keyboard); QueryBox.SelectAll(); e.Handled = true; }

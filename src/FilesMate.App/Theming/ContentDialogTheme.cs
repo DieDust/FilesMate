@@ -15,9 +15,16 @@ internal static class ContentDialogTheme
     {
         ArgumentNullException.ThrowIfNull(dialog);
         host ??= dialog.XamlRoot?.Content as FrameworkElement;
-        var theme = Resolve(host);
-        Assign(dialog, theme);
-        dialog.Opened += (_, _) => Assign(dialog, theme);
+        void Refresh() => Assign(dialog, Resolve(host));
+        void Changed(object? sender, AppearanceSettings settings) => Refresh();
+        Refresh();
+        dialog.Opened += (_, _) =>
+        {
+            App.AppearanceChanged -= Changed;
+            App.AppearanceChanged += Changed;
+            Refresh();
+        };
+        dialog.Closed += (_, _) => App.AppearanceChanged -= Changed;
     }
 
     internal static ElementTheme Resolve(FrameworkElement? host)
@@ -52,6 +59,8 @@ internal static class ContentDialogTheme
     private static void Assign(ContentDialog dialog, ElementTheme theme)
     {
         dialog.RequestedTheme = theme;
+        AppTypography.Apply(dialog);
+        if (dialog.Content is DependencyObject body) AppTypography.Apply(body);
         if (dialog.Content is FrameworkElement content)
         {
             content.RequestedTheme = theme;

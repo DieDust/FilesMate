@@ -8,37 +8,52 @@ public readonly record struct GridSizePreset(
     double TextHeight,
     double Gutter)
 {
-    public const double ContentPadding = 8;
-
     public const double HighlightPad = 2;
 
-    public const double TileIconTextGap = 2;
+    public const double TileIconTextGap = 4;
+    public const double TileTagGap = 6;
 
-    public static readonly GridSizePreset Small = new(96, 72, 80, 32, 32, 2);
+    public bool ShowsTagNames => IconSize >= 72;
+    public double TagHeight => ShowsTagNames ? 20 : 16;
+    // Tags occupy a separate row below the uniformly sized icon/name highlight.
+    public double TagTop => ChromeHeight + TileTagGap;
 
-    public static readonly GridSizePreset Medium = new(120, 80, 88, 48, 32, 2);
+    public static readonly GridSizePreset Small = new(96, 72, 100, 32, 36, 2);
 
-    public static readonly GridSizePreset Large = new(160, 108, 116, 72, 32, 4);
+    public static readonly GridSizePreset Medium = new(120, 80, 116, 48, 36, 2);
 
-    public static readonly GridSizePreset ExtraLarge = new(200, 140, 152, 96, 36, 4);
+    public static readonly GridSizePreset Large = new(160, 108, 144, 72, 36, 4);
 
-    public static readonly GridSizePreset Huge = new(256, 176, 184, 128, 40, 6);
+    public static readonly GridSizePreset ExtraLarge = new(200, 140, 168, 96, 36, 4);
 
-    public static readonly GridSizePreset Jumbo = new(320, 224, 248, 192, 40, 8);
+    public static readonly GridSizePreset Huge = new(256, 176, 200, 128, 36, 6);
 
-    public static readonly GridSizePreset Maximum = new(384, 280, 312, 256, 40, 8);
+    public static readonly GridSizePreset Jumbo = new(320, 224, 264, 192, 36, 8);
+
+    public static readonly GridSizePreset Maximum = new(384, 280, 328, 256, 36, 8);
 
     public static readonly GridSizePreset[] All = [Small, Medium, Large, ExtraLarge, Huge, Jumbo, Maximum];
 
     public static GridSizePreset Default => Medium;
 
+    public GridSizePreset WithFontSize(double fontSize)
+    {
+        if (fontSize <= 13) return this;
+        var textHeight = Math.Max(TextHeight, Math.Ceiling(fontSize * 1.35) * 2);
+        return this with { TextHeight = textHeight, ItemHeight = ItemHeight + textHeight - TextHeight };
+    }
+
     public double ChromeWidth => Math.Max(IconSize, ItemWidth - (2 * HighlightPad));
+
+    public double ChromeHeight => HighlightPad + IconSize + TileIconTextGap + TextHeight + HighlightPad;
 
     public double ChromeLeft => HighlightPad;
 
     public static int Columns(double viewportWidth, GridSizePreset preset)
     {
-        var available = Math.Max(preset.ItemWidth, viewportWidth - ContentPadding);
+        // UniformGridLayout fills the ScrollViewer width without an extra inset.
+        // Reserving padding here alone makes hit testing wrap before the actual grid.
+        var available = Math.Max(preset.ItemWidth, viewportWidth);
         return Math.Max(1, (int)((available + preset.Gutter) / (preset.ItemWidth + preset.Gutter)));
     }
 
@@ -53,7 +68,8 @@ public readonly record struct GridSizePreset(
         double y,
         int count,
         int columns,
-        GridSizePreset preset)
+        GridSizePreset preset,
+        Func<int, bool>? hasTags = null)
     {
         if (count <= 0 || columns <= 0 || x < 0 || y < 0)
         {
@@ -71,13 +87,14 @@ public readonly record struct GridSizePreset(
 
         var localX = x - (column * columnStride);
         var localY = y - (row * rowStride);
-        if (localX >= preset.ItemWidth || localY >= preset.ItemHeight || !HitsContent(localX, localY, preset))
+        var index = (row * columns) + column;
+        if ((uint)index >= (uint)count || localX >= preset.ItemWidth || localY >= preset.ItemHeight
+            || !HitsContent(localX, localY, preset, localY >= preset.TagTop && hasTags?.Invoke(index) == true))
         {
             return -1;
         }
 
-        var index = (row * columns) + column;
-        return (uint)index >= (uint)count ? -1 : index;
+        return index;
     }
 
     public static void CollectIndicesInRect(
@@ -88,7 +105,8 @@ public readonly record struct GridSizePreset(
         int count,
         int columns,
         GridSizePreset preset,
-        List<int> into)
+        List<int> into,
+        Func<int, bool>? hasTags = null)
     {
         if (count <= 0 || columns <= 0 || right <= left || bottom <= top)
         {
@@ -125,7 +143,7 @@ public readonly record struct GridSizePreset(
                         left,
                         top,
                         right,
-                        bottom))
+                        bottom, hasTags, index))
                 {
                     into.Add(index);
                 }
@@ -172,7 +190,7 @@ public readonly record struct GridSizePreset(
             : (FileLayoutKind.Grid, All[index - 1]);
     }
 
-    internal static bool HitsContent(double localX, double localY, GridSizePreset preset)
+    internal static bool HitsContent(double localX, double localY, GridSizePreset preset, bool hasTags = false)
     {
         var left = preset.ChromeLeft;
         var right = left + preset.ChromeWidth;
@@ -181,15 +199,8 @@ public readonly record struct GridSizePreset(
             return false;
         }
 
-        var iconTop = HighlightPad;
-        var iconBottom = iconTop + preset.IconSize;
-        if (localY >= iconTop && localY < iconBottom)
-        {
-            return true;
-        }
-
-        var textTop = iconBottom + TileIconTextGap;
-        return localY >= textTop && localY < textTop + preset.TextHeight;
+        return localY >= 0 && localY < preset.ChromeHeight
+            || hasTags && localY >= preset.TagTop && localY < preset.TagTop + preset.TagHeight;
     }
 
     private static bool ContentBoundsIntersect(
@@ -199,13 +210,17 @@ public readonly record struct GridSizePreset(
         double left,
         double top,
         double right,
-        double bottom)
+        double bottom,
+        Func<int, bool>? hasTags,
+        int index)
     {
         var contentLeft = cellX + preset.ChromeLeft;
-        var contentTop = cellY + HighlightPad;
         var contentRight = contentLeft + preset.ChromeWidth;
-        var contentBottom = contentTop + preset.IconSize + TileIconTextGap + preset.TextHeight + HighlightPad;
-        return left < contentRight && right > contentLeft && top < contentBottom && bottom > contentTop;
+        if (left >= contentRight || right <= contentLeft) return false;
+        if (top < cellY + preset.ChromeHeight && bottom > cellY) return true;
+        // Empty tag reservations and the gap above visible tags are blank drag space.
+        return top < cellY + preset.TagTop + preset.TagHeight && bottom > cellY + preset.TagTop
+            && hasTags?.Invoke(index) == true;
     }
 
     private static int IndexOf(GridSizePreset preset)

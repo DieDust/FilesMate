@@ -8,6 +8,7 @@
         x:Key="ColumnHeaderButtonStyle"
         BasedOn="{StaticResource QuietButtonStyle}"
         TargetType="Button">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="Height" Value="24" />
         <Setter Property="MinHeight" Value="0" />
         <Setter Property="Margin" Value="2,2" />
@@ -30,6 +31,7 @@
         <Setter Property="SurfaceKind" Value="Sidebar" />
     </Style>
     <Style x:Key="FilesMate.SectionHeaderStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
@@ -39,20 +41,24 @@
         x:Key="FilesMate.SettingsSectionHeaderStyle"
         BasedOn="{StaticResource FilesMate.SectionHeaderStyle}"
         TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="Margin" Value="4,20,0,8" />
     </Style>
     <Style x:Key="FilesMate.SettingsHeadingStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="FontSize" Value="26" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
     </Style>
     <Style x:Key="FilesMate.SettingsLeadStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="Margin" Value="0,4,0,20" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.SecondaryBrush}" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
     <Style TargetType="ComboBox" BasedOn="{StaticResource DefaultComboBoxStyle}">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
         <Setter Property="Background" Value="{ThemeResource FilesMate.ComboBox.BackgroundBrush}" />
         <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.ComboBox.BorderBrush}" />
@@ -62,6 +68,7 @@
         <Setter Property="MinHeight" Value="34" />
     </Style>
     <Style x:Key="FilesMate.RoundedFlyoutPresenterStyle" TargetType="FlyoutPresenter">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="Padding" Value="4" />
         <Setter Property="CornerRadius" Value="12" />
         <Setter Property="Background" Value="{ThemeResource FilesMate.LiquidGlass.SolidFillBrush}" />
@@ -69,10 +76,12 @@
         <Setter Property="BorderThickness" Value="1" />
     </Style>
     <Style x:Key="FilesMate.PaneChoiceStyle" TargetType="Button" BasedOn="{StaticResource QuietButtonStyle}">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}"/>
         <Setter Property="Padding" Value="10"/><Setter Property="CornerRadius" Value="8"/>
     </Style>
     <Style x:Key="FilesMate.ActivePaneChoiceStyle" TargetType="Button" BasedOn="{StaticResource FilesMate.PaneChoiceStyle}">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}"/>
     </Style>
     <Style x:Key="FilesMate.PaneDiagramStyle" TargetType="Border">
@@ -91,6 +100,7 @@
     <Style
         x:Key="FileTileNameStyle"
         TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="LineStackingStrategy" Value="MaxHeight" />
@@ -101,12 +111,17 @@
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
     </Style>
 
+    <Style x:Key="FilesMate.TagChipStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Glass.SurfaceBrush}" />
+    </Style>
+
     <!-- Shared semantic accents; colors live exclusively in the theme dictionaries. -->
 
     <Style x:Key="FilesMate.Place.NeutralStyle" TargetType="FontIcon">
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Place.NeutralBrush}" />
     </Style>
     <Style x:Key="FilesMate.DetailsMetadataTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.SecondaryBrush}" />
         <Setter Property="FontSize" Value="12" />
     </Style>
@@ -115,6 +130,7 @@
         <Setter Property="Padding" Value="6,1" />
     </Style>
     <Style x:Key="FilesMate.Type.NeutralTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Type.Neutral.ForegroundBrush}" />
         <Setter Property="FontSize" Value="11" />
     </Style>
@@ -127,6 +143,7 @@
         <Setter Property="Padding" Value="6,1" />
     </Style>
     <Style x:Key="FilesMate.Type.BlueTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Type.Blue.ForegroundBrush}" />
         <Setter Property="FontSize" Value="11" />
     </Style>
@@ -139,6 +156,7 @@
         <Setter Property="Padding" Value="6,1" />
     </Style>
     <Style x:Key="FilesMate.Type.TealTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Type.Teal.ForegroundBrush}" />
         <Setter Property="FontSize" Value="11" />
     </Style>
@@ -151,6 +169,7 @@
         <Setter Property="Padding" Value="6,1" />
     </Style>
     <Style x:Key="FilesMate.Type.AmberTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Type.Amber.ForegroundBrush}" />
         <Setter Property="FontSize" Value="11" />
     </Style>
@@ -163,6 +182,7 @@
         <Setter Property="Padding" Value="6,1" />
     </Style>
     <Style x:Key="FilesMate.Type.VioletTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Type.Violet.ForegroundBrush}" />
         <Setter Property="FontSize" Value="11" />
     </Style>
@@ -175,11 +195,13 @@
         <Setter Property="Padding" Value="6,1" />
     </Style>
     <Style x:Key="FilesMate.Type.RoseTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Type.Rose.ForegroundBrush}" />
         <Setter Property="FontSize" Value="11" />
     </Style>
 
     <Style x:Key="FilesMate.Type.PlainTextStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.SecondaryBrush}" />
     </Style>

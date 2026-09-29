@@ -22,7 +22,7 @@ public static partial class StringTable
         ["Shelf_Browse"] = "転送先フォルダーを選択",
         ["Shelf_Copy"] = "選択した項目を転送先にコピー",
         ["Shelf_Move"] = "選択した項目を転送先に移動",
-        ["Shelf_Remove"] = "選択した項目をシェルフから外す",
+        ["Shelf_Remove"] = "選択項目をシェルフから除く（元のファイルは保持）",
         ["Shelf_Clear"] = "シェルフを空にする",
         ["Shelf_Cancel"] = "現在の項目が完了したら停止",
         ["Shelf_Empty"] = "シェルフは空です",

@@ -1,5 +1,7 @@
 ﻿namespace FilesMate.Core.Entries;
 
+public enum EntryGrouping { FoldersFirst, FilesFirst, Mixed }
+
 public enum EntrySortColumn
 {
     Name = 0,
@@ -12,6 +14,7 @@ public enum EntrySortColumn
     Accessed = 7,
     Location = 8,
     FullPath = 9,
+    ShellProperty = 10,
 }
 
 /// <summary>
@@ -34,5 +37,20 @@ public sealed record EntrySort
     public bool Ascending { get; init; } = true;
 
     public bool DirectoriesFirst { get; init; } = true;
+    // Null preserves views saved before three-way grouping was available.
+    public EntryGrouping? Grouping { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore]
+    public EntryGrouping EffectiveGrouping => Grouping is { } grouping && Enum.IsDefined(grouping)
+        ? grouping : DirectoriesFirst ? EntryGrouping.FoldersFirst : EntryGrouping.Mixed;
     public bool MixChineseAndLatin { get; init; }
+    public string? PropertyName { get; init; }
+
+    public EntrySort SelectColumn(EntrySortColumn column, bool defaultAscending = true, string? propertyName = null) =>
+        this with
+        {
+            Column = column,
+            PropertyName = column == EntrySortColumn.ShellProperty ? propertyName : null,
+            Ascending = Column == column && (column != EntrySortColumn.ShellProperty || PropertyName == propertyName)
+                ? !Ascending : defaultAscending,
+        };
 }

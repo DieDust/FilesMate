@@ -4,25 +4,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <UserControl.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.ThemeDictionaries>
-                <ResourceDictionary x:Key="Light">
-                    <SolidColorBrush x:Key="RenameRowEvenBrush" Color="#FFFFFF"/>
-                    <SolidColorBrush x:Key="RenameRowOddBrush" Color="#F1F4F8"/>
-                    <SolidColorBrush x:Key="RenameRowDividerBrush" Color="#DFE3E8"/>
-                </ResourceDictionary>
-                <ResourceDictionary x:Key="Dark">
-                    <SolidColorBrush x:Key="RenameRowEvenBrush" Color="#282A2E"/>
-                    <SolidColorBrush x:Key="RenameRowOddBrush" Color="#32353A"/>
-                    <SolidColorBrush x:Key="RenameRowDividerBrush" Color="#45484D"/>
-                </ResourceDictionary>
-                <ResourceDictionary x:Key="HighContrast">
-                    <SolidColorBrush x:Key="RenameRowEvenBrush" Color="{ThemeResource SystemColorWindowColor}"/>
-                    <SolidColorBrush x:Key="RenameRowOddBrush" Color="{ThemeResource SystemColorWindowColor}"/>
-                    <SolidColorBrush x:Key="RenameRowDividerBrush" Color="{ThemeResource SystemColorWindowTextColor}"/>
-                </ResourceDictionary>
-            </ResourceDictionary.ThemeDictionaries>
-            <Style x:Key="RenameEvenRow" TargetType="Border"><Setter Property="Background" Value="{ThemeResource RenameRowEvenBrush}"/></Style>
-            <Style x:Key="RenameOddRow" TargetType="Border"><Setter Property="Background" Value="{ThemeResource RenameRowOddBrush}"/></Style>
+
+            <Style x:Key="RenameEvenRow" TargetType="Border"><Setter Property="Background" Value="{ThemeResource FilesMate.TransparentBrush}"/></Style>
+            <Style x:Key="RenameOddRow" TargetType="Border"><Setter Property="Background" Value="{ThemeResource FilesMate.Item.StripeBrush}"/></Style>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid RowSpacing="12">
@@ -72,7 +56,7 @@
                     <TextBlock x:Name="OriginalHeader" FontWeight="SemiBold"/>
                     <TextBlock x:Name="NewHeader" Grid.Column="1" FontWeight="SemiBold"/>
                 </Grid>
-                <Border x:Name="PreviewTable" Grid.Row="1" CornerRadius="8" BorderBrush="{ThemeResource RenameRowDividerBrush}" BorderThickness="1" Background="{ThemeResource RenameRowEvenBrush}">
+                <Border x:Name="PreviewTable" Grid.Row="1" CornerRadius="8" BorderBrush="{ThemeResource FilesMate.Divider.Brush}" BorderThickness="1" Background="{ThemeResource FilesMate.TransparentBrush}">
                     <ListView x:Name="PreviewList" SelectionMode="None" IsItemClickEnabled="False" HorizontalContentAlignment="Stretch">
                         <ListView.ItemContainerStyle>
                             <Style TargetType="ListViewItem">
@@ -84,7 +68,7 @@
                         </ListView.ItemContainerStyle>
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <Border Padding="12,6" Style="{Binding RowStyle}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource RenameRowDividerBrush}">
+                                <Border Padding="12,6" Style="{Binding RowStyle}" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource FilesMate.Divider.Brush}">
                                 <Grid ColumnSpacing="16" RowSpacing="4">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>

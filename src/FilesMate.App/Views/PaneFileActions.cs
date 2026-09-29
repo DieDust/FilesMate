@@ -72,7 +72,7 @@ internal sealed partial class PaneFileActions
     public async Task RunAsync(AppCommandId id)
     {
         if (PortableDeviceLocation.TryParse(_folderPath(), out _) && !CommandCatalog.DeviceCommandSupported(id)) return;
-        var mutates = id is AppCommandId.NewFolder or AppCommandId.NewFile or AppCommandId.Paste
+        var mutates = NewDocumentCommands.IsDocument(id) || id is AppCommandId.NewFolder or AppCommandId.Paste
             or AppCommandId.Rename or AppCommandId.BatchRename or AppCommandId.Recycle or AppCommandId.PermanentDelete
             or AppCommandId.NewFolderWithSelection or AppCommandId.CreateShortcut
             or AppCommandId.CompressZip or AppCommandId.Compress7z or AppCommandId.CompressNew
@@ -83,13 +83,11 @@ internal sealed partial class PaneFileActions
         using var lifetime = mutates ? FileOperationLifetime.Begin() : null;
         try
         {
+            if (NewDocumentCommands.IsDocument(id)) { CreateDocument(NewDocumentCommands.Kind(id)); return; }
             switch (id)
             {
                 case AppCommandId.NewFolder:
                     Create("Command_NewFolder", directory: true);
-                    break;
-                case AppCommandId.NewFile:
-                    Create("NewFileName", directory: false);
                     break;
                 case AppCommandId.NewFolderWithSelection:
                     await GroupSelectionAsync();
@@ -208,6 +206,18 @@ internal sealed partial class PaneFileActions
         NewItemCreated?.Invoke(path);
     }
 
+    private void CreateDocument(NewDocumentKind kind)
+    {
+        var folder = RequireFolder();
+        var name = StringTable.Get("NewDocumentName_" + kind) + NewDocumentTemplate.Extension(kind);
+        var path = UniquePath.CombineAvailable(folder, name, Path.Exists);
+        var content = NewDocumentTemplate.Content(kind);
+        using (var file = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None)) file.Write(content);
+        RecordCreated([path]);
+        _refresh();
+        NewItemCreated?.Invoke(path);
+    }
+
     private IReadOnlyList<string> SelectedOrFolder()
     {
         var paths = _selectedPaths();
@@ -230,6 +240,7 @@ internal sealed partial class PaneFileActions
             await DeviceTransferUI.SetItemsAsync(package, paths.Select(p => { PortableDeviceLocation.TryParse(p, out var device); return device; }));
             Clipboard.SetContent(package);
             Clipboard.Flush();
+            ShowClipboardNotice(false, paths.Count);
             return;
         }
         if (paths.Count == 0)
@@ -252,7 +263,11 @@ internal sealed partial class PaneFileActions
         data.SetStorageItems(items);
         data.SetData(ClipboardTokenFormat, Guid.NewGuid().ToString("N"));
         Clipboard.SetContent(data);
+        ShowClipboardNotice(cut, items.Count);
     }
+
+    private void ShowClipboardNotice(bool cut, int count) => App.WindowForElement(_host)?.ShowActionNotice(
+        Loc.Format(cut ? "Clipboard_CutCount" : "Clipboard_CopiedCount", count));
 
     private Task PasteAsync() => PasteItemsAsync(Clipboard.GetContent());
 
@@ -413,9 +428,9 @@ internal sealed partial class PaneFileActions
         finally { _refresh(); }
     }
 
-    public void Undo() => ApplyUndo(redo: false);
+    public void Undo() => _ = ApplyUndoAsync(redo: false);
 
-    public void Redo() => ApplyUndo(redo: true);
+    public void Redo() => _ = ApplyUndoAsync(redo: true);
 
     private async Task RecycleSelectedAsync()
     {
@@ -446,9 +461,10 @@ internal sealed partial class PaneFileActions
         }
     }
 
-    private async void ApplyUndo(bool redo)
+    internal async Task ApplyUndoAsync(bool redo, Action<string>? reportError = null)
     {
-        if (_fileWorkActive || FileOperationLifetime.IsBusy) { _reportError(Loc.Get("Files_Busy")); return; }
+        var report = reportError ?? _reportError;
+        if (_fileWorkActive || FileOperationLifetime.IsBusy) { report(Loc.Get("Files_Busy")); return; }
         using var lifetime = FileOperationLifetime.Begin();
         _fileWorkActive = true;
         try
@@ -457,20 +473,20 @@ internal sealed partial class PaneFileActions
         }
         catch (UndoStateChangedException)
         {
-            _reportError(Loc.Get("Files_UndoChanged"));
+            report(Loc.Get("Files_UndoChanged"));
         }
         catch (IrreversibleDeletionException error)
         {
             if (_host is NavigatorPage page) page.ShowPermanentDeletionFeedback(error.Count, null);
-            _reportError(Loc.Format("Files_PermanentlyDeletedCount", error.Count));
+            report(Loc.Format("Files_PermanentlyDeletedCount", error.Count));
         }
         catch (OperationCanceledException)
         {
-            _reportError(Loc.Get("Files_OperationCancelled"));
+            report(Loc.Get("Files_OperationCancelled"));
         }
         catch (Exception ex)
         {
-            _reportError(ex.Message);
+            report(ex.Message);
         }
         finally { _fileWorkActive = false; _refresh(); }
     }

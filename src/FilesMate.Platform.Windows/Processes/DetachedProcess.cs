@@ -40,29 +40,32 @@ public static class DetachedProcess
     {
         var directory = Path.GetDirectoryName(executable);
         var flags = hidden ? Kernel32.CreateNoWindow : 0u;
-        if (TryCreateProcess(executable, arguments, directory, flags | Kernel32.CreateBreakawayFromJob, out var pid, out var error)) return pid;
+        if (TryCreateProcess(executable, arguments, directory, flags | Kernel32.CreateBreakawayFromJob, !hidden, out var pid, out var error)) return pid;
         // A successful CREATE_BREAKAWAY_FROM_JOB can leave the child inside an outer job. The child is
         // checked while suspended below, before it can execute user code. Delegate to the desktop shell
         // if any job remains; never silently retry with inherited lifetime.
         if (error != Kernel32.ErrorAccessDenied || !IsInJob()) throw new Win32Exception(error);
-        if (TryOpenViaExplorer(executable, JoinArguments(arguments), directory: directory)) return 0;
+        if (TryOpenViaExplorer(executable, JoinArguments(arguments), directory: directory, activate: !hidden)) return 0;
         throw new Win32Exception(error);
     }
 
     /// <summary>
     /// Opens a shell target (file, folder, URL, shortcut or <c>shell:AppsFolder\…</c> item) with its default
-    /// verb. Inside a job the launch is delegated to Explorer so the target does not inherit our lifetime.
+    /// verb through the desktop shell, retaining its activation/association behavior and independent lifetime.
     /// </summary>
     public static void Open(string target, string? arguments = null, string? directory = null)
     {
+        // Use the desktop's long-lived shell apartment for file associations as
+        // well as job isolation. Classic viewers can use DDE or reuse a running
+        // dialog process; activation must not depend on a short-lived STA worker.
+        if (TryOpenViaExplorer(target, arguments, directory: directory)) return;
         // QueryInformationJobObject only describes the immediate job, not every ancestor. Shell targets
         // cannot be suspended and checked like executables, so delegate whenever any job is present.
         if (IsInJob())
         {
-            if (TryOpenViaExplorer(target, arguments, directory: directory)) return;
             throw new Win32Exception(Kernel32.ErrorAccessDenied, "Could not start the application independently through Windows Explorer.");
         }
-        var start = new ProcessStartInfo(target) { UseShellExecute = true };
+        var start = new ProcessStartInfo(target) { UseShellExecute = true, WindowStyle = ProcessWindowStyle.Normal };
         if (arguments is not null) start.Arguments = arguments;
         if (directory is not null) start.WorkingDirectory = directory;
         using var process = Process.Start(start);
@@ -72,13 +75,16 @@ public static class DetachedProcess
     /// Asks the desktop's Explorer to ShellExecute the target. The new process becomes Explorer's child and
     /// therefore leaves any job the caller is confined to. Returns false when Explorer is unavailable.
     /// </summary>
-    public static bool TryOpenViaExplorer(string file, string? arguments = null, string? verb = null, string? directory = null)
+    public static bool TryOpenViaExplorer(string file, string? arguments = null, string? verb = null, string? directory = null, bool activate = true)
     {
         try
         {
             var shell = DesktopShell();
             if (shell is null) return false;
-            shell.ShellExecute(file, arguments ?? string.Empty, directory ?? string.Empty, verb ?? string.Empty, (int)Shell32.SwShownormal);
+            // Explorer launches on our behalf. Transfer only our current foreground
+            // privilege to that COM server; do not grant every running process focus.
+            if (activate) _ = CoAllowSetForegroundWindow(shell, 0);
+            shell.ShellExecute(file, arguments ?? string.Empty, directory ?? string.Empty, verb ?? string.Empty, activate ? (int)Shell32.SwShownormal : 0);
             return true;
         }
         catch (Exception e) when (e is COMException or InvalidCastException or InvalidComObjectException or Win32Exception
@@ -107,7 +113,7 @@ public static class DetachedProcess
         return ((IShellFolderViewDual)background).Application as IShellDispatch2;
     }
 
-    private static bool TryCreateProcess(string executable, IReadOnlyList<string> arguments, string? directory, uint flags, out int pid, out int error)
+    private static bool TryCreateProcess(string executable, IReadOnlyList<string> arguments, string? directory, uint flags, bool activate, out int pid, out int error)
     {
         var startup = new STARTUPINFOW { cb = Marshal.SizeOf<STARTUPINFOW>() };
         var commandLine = new StringBuilder(BuildCommandLine(executable, arguments));
@@ -131,6 +137,9 @@ public static class DetachedProcess
                 error = Kernel32.ErrorAccessDenied;
                 return false;
             }
+            // Authorize the child before it can create its first window (7-Zip
+            // and other classic dialog applications may show it immediately).
+            if (activate) _ = AllowSetForegroundWindow(process.dwProcessId);
             if (Kernel32.ResumeThread(process.hThread) == uint.MaxValue)
             {
                 error = Marshal.GetLastWin32Error();
@@ -167,4 +176,11 @@ public static class DetachedProcess
     {
         return WindowsCommandLine.Quote(value);
     }
+
+    [DllImport("ole32.dll")]
+    private static extern int CoAllowSetForegroundWindow([MarshalAs(UnmanagedType.IUnknown)] object server, nint reserved);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool AllowSetForegroundWindow(int processId);
 }

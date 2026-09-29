@@ -124,6 +124,31 @@ public sealed partial class PreviewPane : UserControl
         Surface.Shadow = null;
     }
 
+    internal void UseAsQuickPreview()
+    {
+        UseAsCardContent();
+        if (Surface.Content is Grid layout) layout.RowSpacing = 4;
+        foreach (var button in new[] { ContentTab, InfoTab, CompatiblePreviewButton })
+        {
+            button.FontSize = 13;
+            button.MinHeight = 28;
+            button.Padding = new Thickness(10, 4, 10, 4);
+        }
+    }
+
+    internal FrameworkElement PreviewViewport => ContentHost;
+    internal IEnumerable<FrameworkElement> HeaderControls => [ContentTab, InfoTab, CompatiblePreviewButton];
+    internal bool OwnsNativeWindow(nint window) => _nativeOffice?.OwnsWindow(window) == true;
+
+    public void UseForComparison()
+    {
+        UseAsCardContent();
+        // The comparison already supplies each file's metadata above the content.
+        ContentTab.Visibility = Visibility.Collapsed;
+        InfoTab.Visibility = Visibility.Collapsed;
+        if (Surface.Content is Grid layout) layout.RowSpacing = 0;
+    }
+
     public void Attach(PreviewService service) => _service = service ?? throw new ArgumentNullException(nameof(service));
 
     public void SetVisible(bool visible)
@@ -658,13 +683,15 @@ public sealed partial class PreviewPane : UserControl
                 var dark = ActualTheme == ElementTheme.Dark;
                 string Color(string key, string fallback)
                 {
-                    if (Application.Current.Resources.TryGetValue(key, out var resource) && resource is Microsoft.UI.Xaml.Media.SolidColorBrush brush)
+                    if (Theming.ThemeResources.Resolve(this, key) is Microsoft.UI.Xaml.Media.SolidColorBrush brush)
                         return $"#{brush.Color.R:X2}{brush.Color.G:X2}{brush.Color.B:X2}";
                     return fallback;
                 }
-                var background = Color("FilesMate.SearchPanel.BackgroundBrush", dark ? "#282828" : "#F9F9F9");
-                var foreground = Color("FilesMate.Text.PrimaryBrush", dark ? "#F2F2F2" : "#202020");
-                var accent = Color("FilesMate.AccentBrush", dark ? "#60CDFF" : "#0067C0");
+                var palette = Models.SkinPalette.For(dark);
+                string Rgb(uint color) => $"#{color & 0xFFFFFF:X6}";
+                var background = Color("FilesMate.SearchPanel.BackgroundBrush", Rgb(palette.Floating));
+                var foreground = Color("FilesMate.Text.PrimaryBrush", Rgb(palette.Text));
+                var accent = Color("FilesMate.Glass.AccentBrush", Rgb(palette.Accent));
                 var rendered = await Task.Run(() => MarkdownPreview.Render(markdown, dark, background, foreground, accent), cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
                 if (generation != _generation || !ReferenceEquals(_pdfContent, view)) return;
@@ -696,10 +723,8 @@ public sealed partial class PreviewPane : UserControl
         PaneScroll.Visibility = information ? Visibility.Visible : Visibility.Collapsed;
         ContentHost.Visibility = information ? Visibility.Collapsed : Visibility.Visible;
         UpdateNativeOfficeBounds();
-        var selected = Application.Current.Resources["FilesMate.Item.SelectedBrush"] as Microsoft.UI.Xaml.Media.Brush;
-        var transparent = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent);
-        ContentTab.Background = information ? transparent : selected;
-        InfoTab.Background = information ? selected : transparent;
+        Theming.ThemeResources.Bind(ContentTab, Control.BackgroundProperty, information ? "FilesMate.TransparentBrush" : "FilesMate.Item.SelectedBrush");
+        Theming.ThemeResources.Bind(InfoTab, Control.BackgroundProperty, information ? "FilesMate.Item.SelectedBrush" : "FilesMate.TransparentBrush");
     }
 
     private static void ConfigureOfficeDocument(Microsoft.Web.WebView2.Core.CoreWebView2 core, string html)

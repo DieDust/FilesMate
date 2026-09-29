@@ -1,5 +1,12 @@
 # Public release checks
 
+## 1.1.120-preview.19 — 2026-09-30
+
+- The independent public source export builds with zero warnings and errors. App 1,056, Core 173, Integration 20, and Windows platform 365 tests pass (1,614 total). Bounded PDF layout and both resource checks also pass.
+- Native UI checks cover 96 menu/radio-button states across light, dark, and theme transitions; 61 browsing/gap-selection cases; and nine navigation-position cases. Breadcrumb drops and archive-drop conflict replacement/undo use isolated files and the production transfer handlers.
+- Release preflight corrected the settings-search targets for the compact font-size controls, updated obsolete layout assertions, and bounded retries for transient sharing violations in the directory-lifecycle test. The producer-disposal timeout remains enforced.
+- The production installer disables UI-test entry points and excludes test profiles. GitHub Releases and the signed update feed distribute the same installer; its checksum is published in the release assets.
+
 ## 1.1.119-preview.9 — 2026-09-28
 
 - The public source export builds independently with zero warnings and errors. App 969, Core 155, Integration 20, and Windows platform 354 tests pass (1,498 total).

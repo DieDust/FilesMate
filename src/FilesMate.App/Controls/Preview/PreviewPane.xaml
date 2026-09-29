@@ -54,7 +54,7 @@
                                     <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListViewItem"><ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"/></ControlTemplate></Setter.Value></Setter>
                                 </Style></ListView.ItemContainerStyle>
                                 <ListView.ItemTemplate><DataTemplate>
-                                    <TextBlock Text="{Binding}" FontFamily="Consolas" FontSize="13" MinHeight="20" LineHeight="20" TextWrapping="NoWrap" IsTextSelectionEnabled="True"/>
+                                    <TextBlock Text="{Binding}" Tag="FilesMate.ContentTypography" FontFamily="Consolas" FontSize="13" MinHeight="20" LineHeight="20" TextWrapping="NoWrap" IsTextSelectionEnabled="True"/>
                                 </DataTemplate></ListView.ItemTemplate>
                             </ListView>
                         </Grid>

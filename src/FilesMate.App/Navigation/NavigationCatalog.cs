@@ -85,6 +85,7 @@ public sealed class NavigationSection : INotifyPropertyChanged
     public string Title { get; }
 
     public bool ShowTitle => Title.Length > 0;
+    public bool ShowSeparator => ShowTitle && IsExpanded;
 
     public bool AllowReorder => Id is not "home";
 
@@ -100,6 +101,7 @@ public sealed class NavigationSection : INotifyPropertyChanged
 
             _expanded = value;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsExpanded)));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowSeparator)));
         }
     }
 
@@ -189,27 +191,15 @@ public static class NavigationCatalog
             item.Selected = ReferenceEquals(item, selected);
         }
 
-        if (selected is null)
-        {
-            return;
-        }
+        // Selection must not undo a user's collapsed section, including during session restore.
+    }
 
+    public static void ApplyCollapsedSections(IEnumerable<NavigationSection> sections,
+        IReadOnlyList<string>? collapsed, bool compact = false)
+    {
+        var ids = (collapsed ?? []).ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var section in sections)
-        {
-            if (!section.ShowTitle)
-            {
-                continue;
-            }
-
-            foreach (var item in section.Items)
-            {
-                if (ReferenceEquals(item, selected) || item.Children.Contains(selected))
-                {
-                    section.IsExpanded = true;
-                    break;
-                }
-            }
-        }
+            section.IsExpanded = compact || !section.ShowTitle || !ids.Contains(section.Id);
     }
 
     public static IEnumerable<NavigationItem> Enumerate(IReadOnlyList<NavigationSection> sections)

@@ -109,14 +109,9 @@ public sealed partial class FileLockNodeView : UserControl
         var fill = selected
             ? hover ? "FilesMate.Item.SelectedHoverBrush" : "FilesMate.Item.SelectedBrush"
             : hover ? "FilesMate.Item.HoverBrush" : null;
-        Root.Background = fill is null ? null : Theme(fill);
-        Root.BorderBrush = selected ? Theme("FilesMate.Glass.BorderStrongBrush") : null;
+        Theming.ThemeResources.Bind(Root, Panel.BackgroundProperty, fill ?? "FilesMate.TransparentBrush");
+        Theming.ThemeResources.Bind(Root, Grid.BorderBrushProperty, selected ? "FilesMate.Glass.BorderStrongBrush" : "FilesMate.TransparentBrush");
     }
-
-    private static Brush? Theme(string key) =>
-        Application.Current.Resources.TryGetValue(key, out var value) && value is Brush brush
-            ? brush
-            : null;
 
     private void Detach()
     {

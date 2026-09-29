@@ -81,6 +81,7 @@ public sealed partial class NavigationSidebar : UserControl
         _sections = new ObservableCollection<NavigationSection>(
             sections);
         NavigationCatalog.SelectPath(_sections, _selectedPath);
+        RestoreSectionExpansion();
         SectionRepeater.ItemsSource = _sections;
     }
 
@@ -197,7 +198,15 @@ public sealed partial class NavigationSidebar : UserControl
             return;
         }
 
-        _ = DispatcherQueue.TryEnqueue(() => section.IsExpanded = !section.IsExpanded);
+        _ = DispatcherQueue.TryEnqueue(() =>
+        {
+            try
+            {
+                _pinnedLocations.SetSectionExpanded(section.Id, !section.IsExpanded);
+                App.NotifySidebarExpansionChanged();
+            }
+            catch (Exception error) { App.LogFailure("SidebarExpansion", error); }
+        });
     }
 
     private void SectionHeader_PointerPressed(object sender, PointerRoutedEventArgs e)
@@ -294,16 +303,13 @@ public sealed partial class NavigationSidebar : UserControl
 
     private static void OnIsCompactChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not NavigationSidebar sidebar || e.NewValue is not true)
-        {
-            return;
-        }
-
-        foreach (var section in sidebar._sections)
-        {
-            section.IsExpanded = true;
-        }
+        if (d is NavigationSidebar sidebar) sidebar.RestoreSectionExpansion();
     }
+
+    private void RestoreSectionExpansion() => NavigationCatalog.ApplyCollapsedSections(
+        _sections, _pinnedLocations.LoadState().CollapsedSections, IsCompact);
+
+    private void SidebarExpansionChanged(object? sender, EventArgs e) => RestoreSectionExpansion();
 
     private void SectionAction_Click(object sender, RoutedEventArgs e)
     {
@@ -684,6 +690,8 @@ public sealed partial class NavigationSidebar : UserControl
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
         SectionRepeater.ItemsSource = _sections;
+        App.SidebarExpansionChanged -= SidebarExpansionChanged;
+        App.SidebarExpansionChanged += SidebarExpansionChanged;
         App.PinnedLocationsChanged -= App_PinnedLocationsChanged;
         App.PinnedLocationsChanged += App_PinnedLocationsChanged;
         App.TagsChanged -= App_TagsChanged;
@@ -704,6 +712,7 @@ public sealed partial class NavigationSidebar : UserControl
         Interlocked.Increment(ref _reloadGeneration);
         // Keep lightweight navigation state, not per-tab realized item templates.
         SectionRepeater.ItemsSource = null;
+        App.SidebarExpansionChanged -= SidebarExpansionChanged;
         App.PinnedLocationsChanged -= App_PinnedLocationsChanged;
         App.TagsChanged -= App_TagsChanged;
         App.DevicesChanged -= App_DevicesChanged;

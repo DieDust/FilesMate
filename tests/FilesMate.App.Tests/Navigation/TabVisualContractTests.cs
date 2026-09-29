@@ -19,6 +19,7 @@ public sealed class TabVisualContractTests
                 "Themes/NavigationStyles.xaml",
                 "Themes/TabStyles.xaml",
                 "Themes/FileSurfaceStyles.xaml",
+                "Themes/MenuItemTemplates.xaml",
                 "Themes/MenuStyles.xaml",
             ],
             ThemeXaml.MergeOrder);

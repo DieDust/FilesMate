@@ -112,10 +112,9 @@ public sealed partial class NavigatorPage
                 var toolbar = new AdaptiveCommandToolbar { Width = 250, HorizontalAlignment = HorizontalAlignment.Left };
                 host.Content = toolbar;
                 await Task.Delay(100);
-                var normal = (MenuFlyout)((Button)toolbar.FindName("SortButton")).Flyout;
                 var more = (MenuFlyout)((Button)toolbar.FindName("MoreButton")).Flyout;
-                var sorts = more.Items.OfType<MenuFlyoutItem>().Count(i => i.Name.StartsWith("OverflowSort", StringComparison.Ordinal));
-                Require(sorts == normal.Items.OfType<MenuFlyoutItem>().Count(), $"Compact sort has {sorts} of {normal.Items.Count} fields");
+                var sortPanelItem = (MenuFlyoutItem)typeof(AdaptiveCommandToolbar).GetField("_overflowSortPanel", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(toolbar)!;
+                Require(sortPanelItem.Visibility == Visibility.Visible, "Compact toolbar must open the same sorting panel");
                 Require(((Button)toolbar.FindName("MoreButton")).Visibility == Visibility.Visible, "Narrow toolbar uses the window width instead of its own width");
                 var copiedPaths = 0;
                 var invoked = new List<AppCommandId>();

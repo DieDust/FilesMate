@@ -36,6 +36,8 @@ public sealed class NavigationController
 
     public bool Allows(long generation) => _gate.Allows(PaneId, generation);
 
+    public event EventHandler<NavigationIntent>? Navigating;
+
     public NavigationHistoryState CaptureHistory() => new(_back.ToArray(), _forward.ToArray());
 
     public NavigationHistoryState HistoryForNewTab(string target) => CurrentPath is not null && !_paths.IsSamePath(CurrentPath, target)
@@ -58,9 +60,11 @@ public sealed class NavigationController
             _forward.Clear();
         }
 
-        CurrentPath = normalizedPath;
         var generation = _gate.Begin();
-        return new NavigationIntent(PaneId, generation, normalizedPath);
+        var intent = new NavigationIntent(PaneId, generation, normalizedPath);
+        Navigating?.Invoke(this, intent);
+        CurrentPath = normalizedPath;
+        return intent;
     }
 
     public NavigationIntent? Back()

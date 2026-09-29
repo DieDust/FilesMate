@@ -102,8 +102,8 @@ public sealed partial class SearchSettingsPage : UserControl
         }
         GlobalSearchStatus.Text = text;
         GlobalSearchStateIcon.Glyph = glyph;
-        GlobalSearchStateIcon.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[
-            !muted && host is { HotkeyRegistered: true } ? "FilesMate.Selection.AccentBrush" : "FilesMate.Text.SecondaryBrush"];
+        Theming.ThemeResources.Bind(GlobalSearchStateIcon, IconElement.ForegroundProperty,
+            !muted && host is { HotkeyRegistered: true } ? "FilesMate.Selection.AccentBrush" : "FilesMate.Text.SecondaryBrush");
         GlobalSearchStartupHint.Text = saved.StartAtLogin && saved.Enabled && FilesMate.Search.GlobalSearchStartup.IsDisabledByWindows()
             ? Loc.Get("Search_StartupDisabledByWindows")
             : Loc.Get("Search_StartupHint");

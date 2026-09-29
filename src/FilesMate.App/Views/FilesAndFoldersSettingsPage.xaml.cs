@@ -28,6 +28,7 @@ public sealed partial class FilesAndFoldersSettingsPage : UserControl
         StartupViewCard.Description = StringTable.Get("DefaultViewDescription");
         ViewIconsItem.Content = StringTable.Get("Layout_Icons");
         ViewDetailsItem.Content = StringTable.Get("Layout_Details");
+        ViewListItem.Content = StringTable.Get("Layout_List");
         ExtensionsCard.Title = StringTable.Get("ShowExtensionsTitle");
         ExtensionsCard.Description = StringTable.Get("ShowExtensionsDescription");
         DateFormatCard.Title = StringTable.Get("DateFormatTitle");
@@ -61,6 +62,26 @@ public sealed partial class FilesAndFoldersSettingsPage : UserControl
             UpdateViewScopeHint(global);
             _syncing = false;
         };
+    }
+
+    private async void OpeningMode_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_syncing || FileOpeningModeBox.SelectedIndex < 0 || FolderOpeningModeBox.SelectedIndex < 0) return;
+        try
+        {
+            ErrorText.Visibility = Visibility.Collapsed;
+            await App.SetExplorerPreferencesAsync(App.ExplorerPreferences with
+            {
+                FileOpeningMode = (ItemOpeningMode)FileOpeningModeBox.SelectedIndex,
+                FolderOpeningMode = (ItemOpeningMode)FolderOpeningModeBox.SelectedIndex,
+            });
+        }
+        catch
+        {
+            ErrorText.Text = StringTable.Get("Error_SaveAppearance");
+            ErrorText.Visibility = Visibility.Visible;
+            Sync();
+        }
     }
 
     private async void ViewScope_Changed(object sender, SelectionChangedEventArgs e)
@@ -148,6 +169,12 @@ public sealed partial class FilesAndFoldersSettingsPage : UserControl
     private async void MixedNameSortToggle_Toggled(object sender, RoutedEventArgs e) =>
         await UpdateAsync(App.ExplorerPreferences with { MixChineseAndLatin = MixedNameSortToggle.IsOn });
 
+    private async void AlternatingRowsToggle_Toggled(object sender, RoutedEventArgs e) =>
+        await UpdateAsync(App.ExplorerPreferences with { ShowAlternatingRows = AlternatingRowsToggle.IsOn });
+
+    private async void DefaultSortDirection_Changed(object sender, SelectionChangedEventArgs e) =>
+        await UpdateAsync(App.ExplorerPreferences with { DefaultSortAscending = DefaultSortDirectionBox.SelectedIndex != 1 });
+
     private async void DefaultViewBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_syncing || DefaultViewBox.SelectedItem is not ComboBoxItem { Tag: string tag })
@@ -195,9 +222,18 @@ public sealed partial class FilesAndFoldersSettingsPage : UserControl
         }
     }
 
+    private async void DefaultGrouping_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_syncing || DefaultGroupingBox.SelectedItem is not ComboBoxItem { Tag: string tag }) return;
+        if (Enum.TryParse<FilesMate.Core.Entries.EntryGrouping>(tag, out var grouping))
+            await UpdateAsync(App.ExplorerPreferences with { DefaultEntryGrouping = grouping });
+    }
+
     private void Sync()
     {
         _syncing = true;
+        FileOpeningModeBox.SelectedIndex = (int)App.ExplorerPreferences.FileOpeningMode;
+        FolderOpeningModeBox.SelectedIndex = (int)App.ExplorerPreferences.FolderOpeningMode;
         HiddenFilesToggle.IsOn = App.ExplorerPreferences.ShowHiddenFiles;
         ConfirmDeleteToggle.IsOn = App.ExplorerPreferences.ConfirmPermanentDelete;
         ExtensionsToggle.IsOn = App.ExplorerPreferences.ShowFileExtensions;
@@ -208,6 +244,9 @@ public sealed partial class FilesAndFoldersSettingsPage : UserControl
         AlphabetMinimumItemsBox.IsEnabled = AlphabetToggle.IsOn;
         AlphabetDualPaneToggle.IsEnabled = AlphabetToggle.IsOn;
         MixedNameSortToggle.IsOn = App.ExplorerPreferences.MixChineseAndLatin;
+        AlternatingRowsToggle.IsOn = App.ExplorerPreferences.ShowAlternatingRows;
+        DefaultSortDirectionBox.SelectedIndex = App.ExplorerPreferences.DefaultSortAscending ? 0 : 1;
+        SelectTag(DefaultGroupingBox, App.ExplorerPreferences.DefaultEntryGrouping.ToString());
         SelectTag(DefaultViewBox, App.ExplorerPreferences.DefaultView.ToString());
         SelectTag(DateFormatBox, App.ExplorerPreferences.DateFormat.ToString());
         _syncing = false;

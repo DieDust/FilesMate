@@ -1,0 +1,58 @@
+<UserControl x:Class="FilesMate.App.Controls.Status.OperationHistoryButton"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:loc="using:FilesMate.App.Localization">
+    <Button x:Name="HistoryButton" Height="24" MinHeight="0" Padding="9,0" CornerRadius="6"
+            Style="{StaticResource QuietButtonStyle}" AutomationProperties.Name="{loc:LocalizedText Key=History_Title}">
+        <StackPanel Orientation="Horizontal" Spacing="6">
+            <FontIcon Glyph="&#xE81C;" FontSize="14"/>
+            <TextBlock Text="{loc:LocalizedText Key=History_Title}" FontSize="12" VerticalAlignment="Center"/>
+        </StackPanel>
+        <Button.Flyout>
+            <Flyout x:Name="HistoryFlyout" Placement="TopEdgeAlignedRight" Opening="History_Opening" Closed="History_Closed">
+                <StackPanel Width="356" Padding="18" Spacing="14">
+                    <Grid ColumnSpacing="6">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="{loc:LocalizedText Key=History_Title}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        <Button x:Name="UndoButton" Grid.Column="1" Click="Undo_Click" Width="32" Height="32" MinHeight="0" MinWidth="0" Padding="0" Style="{StaticResource QuietButtonStyle}" AutomationProperties.Name="{loc:LocalizedText Key=Undo}"><FontIcon Glyph="&#xE7A7;" FontSize="15"/></Button>
+                        <Button x:Name="RedoButton" Grid.Column="2" Click="Redo_Click" Width="32" Height="32" MinHeight="0" MinWidth="0" Padding="0" Style="{StaticResource QuietButtonStyle}" AutomationProperties.Name="{loc:LocalizedText Key=History_Redo}"><FontIcon Glyph="&#xE7A6;" FontSize="15"/></Button>
+                    </Grid>
+                    <StackPanel x:Name="EmptyText" Margin="0,14,0,22" Spacing="10" HorizontalAlignment="Center">
+                        <FontIcon Glyph="&#xE81C;" FontSize="28" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" Margin="0,0,0,6"/>
+                        <TextBlock Text="{loc:LocalizedText Key=History_Empty}" FontSize="13" TextAlignment="Center" TextWrapping="Wrap"/>
+                        <TextBlock Text="{loc:LocalizedText Key=History_EmptyHint}" FontSize="12" TextAlignment="Center" TextWrapping="Wrap" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"/>
+                    </StackPanel>
+                    <ListView x:Name="HistoryList" MaxHeight="240" SelectionMode="Single" SelectionChanged="History_SelectionChanged"
+                              AutomationProperties.Name="{loc:LocalizedText Key=History_Title}" HorizontalContentAlignment="Stretch">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Spacing="5" Padding="8,10">
+                                    <TextBlock Text="{Binding Title}" FontSize="13" TextTrimming="CharacterEllipsis"/>
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding FileSummary}" FontSize="12" TextTrimming="CharacterEllipsis"
+                                                   ToolTipService.ToolTip="{Binding FileSummary}" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Detail}" FontSize="11" VerticalAlignment="Center"
+                                                   Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"/>
+                                    </Grid>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <StackPanel x:Name="FileActions" Spacing="8">
+                        <ComboBox x:Name="PathsBox" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                  MaxDropDownHeight="240" SelectionChanged="Path_SelectionChanged" AutomationProperties.Name="{loc:LocalizedText Key=History_Files}">
+                            <ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{Binding}"/></DataTemplate></ComboBox.ItemTemplate>
+                        </ComboBox>
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Button x:Name="OpenButton" Content="{loc:LocalizedText Key=Command_Open}" Click="Open_Click" HorizontalAlignment="Stretch"/>
+                            <Button x:Name="LocateButton" Grid.Column="1" Content="{loc:LocalizedText Key=History_Locate}" Click="Locate_Click" HorizontalAlignment="Stretch"/>
+                        </Grid>
+                    </StackPanel>
+                    <TextBlock x:Name="ErrorText" FontSize="12" TextWrapping="Wrap" Visibility="Collapsed" Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"/>
+                </StackPanel>
+            </Flyout>
+        </Button.Flyout>
+    </Button>
+</UserControl>

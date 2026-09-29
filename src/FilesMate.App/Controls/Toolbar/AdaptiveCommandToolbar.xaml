@@ -1,10 +1,11 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <UserControl
     x:Class="FilesMate.App.Controls.Toolbar.AdaptiveCommandToolbar"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:toolbar="using:FilesMate.App.Controls.Toolbar"
     SizeChanged="Root_SizeChanged">
-    <Grid Height="{StaticResource FilesMate.Control.Height.Toolbar}">
+    <Grid Height="{StaticResource FilesMate.Control.Height.Toolbar}" Background="Transparent" RightTapped="Toolbar_RightTapped">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
@@ -106,6 +107,12 @@
                     <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE74D;" />
                 </Button>
                 <Button
+                    x:Name="HiddenFilesButton"
+                    Click="HiddenFilesButton_Click"
+                    Style="{StaticResource CommandBarButtonStyle}">
+                    <FontIcon x:Name="HiddenFilesIcon" FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xED1A;" />
+                </Button>
+                <Button
                     x:Name="CopyPathButton"
                     Click="CopyPathItem_Click"
                     AutomationProperties.Name="Copy path"
@@ -156,6 +163,14 @@
                         Visibility="Collapsed" />
                 </StackPanel>
             </Button>
+            <StackPanel x:Name="GroupingGroup" Orientation="Horizontal">
+                <Button x:Name="GroupingButton" Click="GroupingButton_Click" Style="{StaticResource CommandBarButtonStyle}">
+                    <toolbar:EntryGroupingIcon x:Name="GroupingIcon" />
+                </Button>
+                <Button x:Name="GroupingMenuButton" Width="20" MinWidth="0" Padding="0" Style="{StaticResource CommandBarButtonStyle}">
+                    <FontIcon Glyph="&#xE70D;" FontSize="9"/>
+                </Button>
+            </StackPanel>
             <Button
                 x:Name="FolderSizesButton"
                 Click="FolderSizesButton_Click"
@@ -178,21 +193,12 @@
                 Height="16"
                 Margin="4,0"
                 Background="{ThemeResource FilesMate.Divider.Brush}" />
-            <Button
-                x:Name="DetailsViewButton"
-                Click="DetailsViewButton_Click"
-                AutomationProperties.Name="Details view"
-                Style="{StaticResource CommandBarButtonStyle}"
-                ToolTipService.ToolTip="Details">
-                <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE8FD;" />
-            </Button>
-            <Button
-                x:Name="GridViewButton"
-                Click="GridViewButton_Click"
-                AutomationProperties.Name="Grid view"
-                Style="{StaticResource CommandBarButtonStyle}"
-                ToolTipService.ToolTip="Large icons">
-                <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xF0E2;" />
+            <Button x:Name="ViewMenuButton" Style="{StaticResource CommandBarButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon x:Name="ViewIcon" FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE8FD;" />
+                    <TextBlock x:Name="ViewLabel" FontSize="13" VerticalAlignment="Center" />
+                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE70D;" FontSize="9" />
+                </StackPanel>
             </Button>
             <Button
                 x:Name="MoreButton"
@@ -234,6 +240,7 @@
                             Click="GridViewButton_Click"
                             Text="Large icons"
                             Visibility="Collapsed" />
+                        <MenuFlyoutItem x:Name="OverflowList" Click="ListViewButton_Click" Visibility="Collapsed" />
                     </MenuFlyout>
                 </Button.Flyout>
                 <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE712;" />

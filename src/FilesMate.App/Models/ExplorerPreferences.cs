@@ -27,8 +27,25 @@ public sealed record ExplorerPreferences(
     int AlphabetNavigationMinimumItemCount = 20,
     bool ShowAlphabetNavigationInDualPane = false,
     int PaneCount = 0,
-    PaneArrangement PaneArrangement = PaneArrangement.Columns)
+    PaneArrangement PaneArrangement = PaneArrangement.Columns,
+    ItemOpeningMode FileOpeningMode = ItemOpeningMode.DoubleClick,
+    ItemOpeningMode FolderOpeningMode = ItemOpeningMode.DoubleClick,
+    bool ShowAlternatingRows = true,
+    bool DefaultSortAscending = true,
+    IReadOnlyList<ToolbarTool>? HiddenToolbarTools = null,
+    FilesMate.Core.Entries.EntryGrouping DefaultEntryGrouping = FilesMate.Core.Entries.EntryGrouping.FoldersFirst,
+    IReadOnlyList<FilesMate.Core.Entries.EntryGrouping>? GroupingClickCycle = null)
 {
+    public IReadOnlyList<FilesMate.Core.Entries.EntryGrouping> EffectiveGroupingCycle => GroupingClickCycle is { Count: > 0 }
+        ? GroupingClickCycle : [FilesMate.Core.Entries.EntryGrouping.FoldersFirst, FilesMate.Core.Entries.EntryGrouping.Mixed];
+    public FilesMate.Core.Entries.EntryGrouping NextGrouping(FilesMate.Core.Entries.EntryGrouping current)
+    {
+        var cycle = EffectiveGroupingCycle;
+        for (var i = 0; i < cycle.Count; i++)
+            if (cycle[i] == current) return cycle[(i + 1) % cycle.Count];
+        return cycle[0];
+    }
+    public ItemOpeningMode OpeningMode(bool isFolder) => isFolder ? FolderOpeningMode : FileOpeningMode;
     public int EffectivePaneCount => DualPane ? (PaneCount == 3 ? 3 : 2) : 1;
 
     public const double SidebarWidthMin = 52;
@@ -89,7 +106,14 @@ public sealed record ExplorerPreferences(
         int? alphabetNavigationMinimumItemCount = null,
         bool? showAlphabetNavigationInDualPane = null,
         int? paneCount = null,
-        string? paneArrangement = null) =>
+        string? paneArrangement = null,
+        string? fileOpeningMode = null,
+        string? folderOpeningMode = null,
+        bool? showAlternatingRows = null,
+        bool? defaultSortAscending = null,
+        string[]? hiddenToolbarTools = null,
+        string? defaultEntryGrouping = null,
+        string[]? groupingClickCycle = null) =>
         new(
             showHiddenFiles ?? Default.ShowHiddenFiles,
             confirmPermanentDelete ?? Default.ConfirmPermanentDelete,
@@ -114,7 +138,32 @@ public sealed record ExplorerPreferences(
             ClampAlphabetNavigationMinimumItemCount(alphabetNavigationMinimumItemCount ?? Default.AlphabetNavigationMinimumItemCount),
             showAlphabetNavigationInDualPane ?? Default.ShowAlphabetNavigationInDualPane,
             paneCount is >= 1 and <= 3 ? paneCount.Value : 0,
-            Parse(paneArrangement, PaneArrangement.Columns));
+            Parse(paneArrangement, PaneArrangement.Columns),
+            Parse(fileOpeningMode, Default.FileOpeningMode),
+            Parse(folderOpeningMode, Default.FolderOpeningMode),
+            showAlternatingRows ?? Default.ShowAlternatingRows,
+            defaultSortAscending ?? Default.DefaultSortAscending,
+            ParseHiddenToolbarTools(hiddenToolbarTools),
+            Parse(defaultEntryGrouping, Default.DefaultEntryGrouping),
+            ParseGroupingCycle(groupingClickCycle));
+
+    private static IReadOnlyList<FilesMate.Core.Entries.EntryGrouping>? ParseGroupingCycle(string[]? values)
+    {
+        var valid = (values ?? []).Where(value => !int.TryParse(value, out _))
+            .Select(value => Enum.TryParse<FilesMate.Core.Entries.EntryGrouping>(value, true, out var mode) && Enum.IsDefined(mode)
+                ? (FilesMate.Core.Entries.EntryGrouping?)mode : null).OfType<FilesMate.Core.Entries.EntryGrouping>().ToHashSet();
+        var modes = new[] { FilesMate.Core.Entries.EntryGrouping.FoldersFirst, FilesMate.Core.Entries.EntryGrouping.Mixed, FilesMate.Core.Entries.EntryGrouping.FilesFirst }
+            .Where(valid.Contains).ToArray();
+        return modes.Length == 0 ? null : modes;
+    }
+
+    private static IReadOnlyList<ToolbarTool>? ParseHiddenToolbarTools(string[]? values)
+    {
+        var tools = (values ?? []).Where(value => !int.TryParse(value, out _))
+            .Select(value => Enum.TryParse<ToolbarTool>(value, true, out var tool) && Enum.IsDefined(tool) ? (ToolbarTool?)tool : null)
+            .OfType<ToolbarTool>().Distinct().ToArray();
+        return tools.Length == 0 ? null : tools;
+    }
 
     public static double ClampDetailsName(double width) => Math.Clamp(width, 96, 560);
 
@@ -142,6 +191,13 @@ public enum FolderViewKind
 {
     Details,
     Icons,
+    List,
+}
+
+public enum ToolbarTool
+{
+    New, Cut, Copy, Paste, Rename, Share, Delete, CopyPath, HiddenFiles,
+    Shelf, Sort, FolderSizes, DetailsView, GridView, ListView, SplitView, Preview, Grouping, ViewMenu,
 }
 
 public enum DateFormatKind

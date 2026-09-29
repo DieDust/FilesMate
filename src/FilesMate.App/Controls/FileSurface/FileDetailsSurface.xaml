@@ -20,6 +20,7 @@
     Drop="OnDrop"
     RightTapped="OnRightTapped">
     <UserControl.Resources>
+        <x:Double x:Key="ScrollBarSize">12</x:Double>
         <Style x:Key="AlphabetButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />

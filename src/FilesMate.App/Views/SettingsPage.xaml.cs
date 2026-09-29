@@ -96,12 +96,15 @@ public sealed partial class SettingsPage : Page
             }
 
             _sections[tag] = section;
+            if (section is FrameworkElement element) Theming.AppTypography.Track(element);
         }
 
         if (!ReferenceEquals(SectionHost.Content, section))
         {
             SectionHost.Content = section;
+            SectionScroller.ChangeView(null, 0, null, disableAnimation: true);
         }
+        RevealSearchTarget(tag, section);
     }
 
     private static string NormalizeCategory(string tag) => tag switch

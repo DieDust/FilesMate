@@ -1,9 +1,15 @@
 namespace FilesMate.Core.Operations;
 
 public enum FileConflictAction { Skip, KeepBoth, Merge, Cancel, Replace, ReplaceWithoutUndo }
+public enum FileCopyCollisionPolicy { Ask, KeepBoth, KeepBothForSamePath }
 
 public sealed record FileConflict(string Source, string Destination, bool CanMerge, string NumberedName)
 {
+    // Source can be a friendly archive caption; previews must read the actual staged file.
+    public string? SourcePreviewPath { get; init; }
+    public bool IsMove { get; init; }
+    public bool IsBatch { get; init; }
+    public bool ChangedSinceDecision { get; init; }
     public bool CanReplace { get; init; }
     public bool IsSameItem { get; init; }
     public bool DestinationIsLink { get; init; }

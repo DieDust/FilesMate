@@ -1,4 +1,4 @@
-﻿using Loc = FilesMate.App.Localization.StringTable;
+using Loc = FilesMate.App.Localization.StringTable;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -128,6 +128,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         _leftVm = ViewModel;
         InitializeComponent();
         Omni.SearchDeviceFolder = SearchCurrentDeviceFolder;
+        Omni.DropRequested = request => HandleFileDropAsync(request, ViewModel);
         App.DevicesChanged += DevicesChanged;
         FavoritesSlot.Visibility = App.Features.FavoritesBarEnabled ? Visibility.Visible : Visibility.Collapsed;
         ShellRoot.AddHandler(
@@ -215,6 +216,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         PaneChrome.StatusText = ViewModel.StatusText;
         RefreshLayoutChrome();
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
+        ViewModel.Navigation.Navigating += Navigation_Navigating;
         ViewModel.OpenFileRequested += ViewModel_OpenFileRequested;
         App.AppearanceChanged += OnAppearanceChanged;
         ApplyAppearance(App.AppearanceViewModel?.Current ?? AppearanceSettings.Default);
@@ -299,6 +301,11 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         Clipboard.ContentChanged -= Clipboard_ContentChanged;
         App.DevicesChanged -= DevicesChanged;
         _leftVm.PropertyChanged -= ViewModel_PropertyChanged;
+        _leftVm.Navigation.Navigating -= Navigation_Navigating;
+        if (_rightVm is not null) _rightVm.Navigation.Navigating -= Navigation_Navigating;
+        if (_thirdVm is not null) _thirdVm.Navigation.Navigating -= Navigation_Navigating;
+        _navigationViewports.Clear();
+        _pendingNavigationViewports.Clear();
         App.FolderCoversChanged -= FolderCoversChanged;
         App.FolderCustomizations.ViewSettingsChanged -= FolderViewScopeChanged;
         _leftVm.OpenFileRequested -= ViewModel_OpenFileRequested;
@@ -386,7 +393,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     }
 
     private static FileLayoutKind ToFileLayout(FolderViewKind view) =>
-        view == FolderViewKind.Details ? FileLayoutKind.Details : FileLayoutKind.Grid;
+        view == FolderViewKind.List ? FileLayoutKind.List : view == FolderViewKind.Details ? FileLayoutKind.Details : FileLayoutKind.Grid;
 
     private void ApplyAppearance(AppearanceSettings settings)
     {
@@ -434,6 +441,9 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         }
 
         HookWidthStates();
+        TryRestoreNavigationViewport(_leftVm);
+        if (_rightVm is not null) TryRestoreNavigationViewport(_rightVm);
+        if (_thirdVm is not null) TryRestoreNavigationViewport(_thirdVm);
         RefreshNavigationToggle();
         if (_startupPath is null) SelectSidebarPath(ViewModel.AddressText);
         UpdateShellWindow();
@@ -968,8 +978,24 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private void FileSurface_SortRequested(object? sender, EntrySortColumn column)
     {
         ActivateFromSurface(sender as FileDetailsSurface);
-        ViewModel.SetSortColumn(column);
+        ViewModel.SetSortColumn(column, App.ExplorerPreferences.DefaultSortAscending);
     }
+
+    private void FileSurface_SortSpecificationRequested(object? sender, EntrySort sort)
+    {
+        ActivateFromSurface(sender as FileDetailsSurface);
+        ViewModel.RestoreSort(sort);
+    }
+
+    private void Commands_SortSpecificationRequested(object? sender, EntrySort sort) => ViewModel.RestoreSort(sort);
+    private void Commands_GridSizeRequested(object? sender, GridSizePreset preset) => ActiveSurface.SetGridSize(preset);
+    private void Commands_ListZoomRequested(object? sender, int zoom) => ActiveSurface.SetListZoom(zoom);
+
+    private void Commands_SortDirectionRequested(object? sender, bool ascending) =>
+        ViewModel.RestoreSort(ViewModel.Sort with { Ascending = ascending });
+
+    private void Commands_GroupingRequested(object? sender, EntryGrouping grouping) =>
+        ViewModel.RestoreSort(ViewModel.Sort with { Grouping = grouping, DirectoriesFirst = grouping == EntryGrouping.FoldersFirst });
 
     private void FileSurface_CopyPathRequested(object? sender, EventArgs e)
     {
@@ -1015,6 +1041,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "selection-test.log"), $"{DateTime.Now:HH:mm:ss} Selection {e.GetType().Name} preview={_previewVisible}\n");
 #endif
         _selectionPreviewRequested = e is not ContextSelectionChangedEventArgs;
+        if (!_selectionPreviewRequested) CloseQuickPreview();
         if (!_selectionPreviewRequested && _pinnedPreviewPath is null)
         {
             _previewHost?.CancelAndClear();
@@ -1048,6 +1075,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         if (_rightSurface is not null && _rightChrome is not null)
             UpdateSelectionStatus(_rightSurface, _rightChrome);
         if (ActiveSurface.IsMarqueeSelecting) return;
+        _shelfPanel?.RefreshSourceSelection();
         SyncCommandBar();
         if (_selectionPreviewRequested) RefreshQuickPreview();
         if (_previewVisible && _selectionPreviewRequested)
@@ -1776,7 +1804,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         Omni.IsEditing || FocusManager.GetFocusedElement() is TextBox || _shelfPanel?.ContainsFocus() == true;
 
     private void Commands_SortRequested(object? sender, EntrySortColumn column) =>
-        ViewModel.SetSortColumn(column);
+        ViewModel.SetSortColumn(column, App.ExplorerPreferences.DefaultSortAscending);
 
     private void Commands_LayoutChanged(object? sender, FileLayoutKind kind)
     {
@@ -1907,6 +1935,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         var data = new DataPackage();
         data.SetText(text);
         Clipboard.SetContent(data);
+        App.WindowForElement(this)?.ShowActionNotice(Loc.Get("Path_Copied"));
     }
 
     private async void ViewModel_OpenFileRequested(object? sender, string path)
@@ -1982,15 +2011,16 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
                 surface.Bind(vm.Store, vm.ViewIndex, vm.Navigation.CurrentGeneration);
                 surface.SetSort(vm.Sort);
                 ScheduleChrome();
+                TryRestoreNavigationViewport(vm);
                 TryApplyPendingSelection(vm);
             }
         }
 
         if (e.PropertyName is nameof(PaneViewModel.IsLoading)
-            && !vm.IsLoading
-            && isActive)
+            && !vm.IsLoading)
         {
-            TryApplyPendingSelection(vm);
+            TryRestoreNavigationViewport(vm);
+            if (isActive) TryApplyPendingSelection(vm);
         }
 
         if (e.PropertyName is null
@@ -2211,7 +2241,9 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private void RefreshLayoutChrome()
     {
+        Commands.SetSort(ViewModel.Sort);
         Commands.SetLayout(ActiveSurface.LayoutKind);
+        Commands.SetViewSize(ActiveSurface.GridPreset, ActiveSurface.ListZoomPercent);
         UpdateFolderStatus(ViewModel);
     }
 
@@ -2412,6 +2444,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
         _rightVm = CreatePaneViewModel();
         _rightVm.PropertyChanged += ViewModel_PropertyChanged;
+        _rightVm.Navigation.Navigating += Navigation_Navigating;
         _rightVm.OpenFileRequested += ViewModel_OpenFileRequested;
 
         _rightSurface = new FileDetailsSurface();
@@ -2442,6 +2475,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         _rightSurface.RefreshRequested += FileSurface_RefreshRequested;
         _rightSurface.SelectionChanged += FileSurface_SelectionChanged;
         _rightSurface.SortRequested += FileSurface_SortRequested;
+        _rightSurface.SortSpecificationRequested += FileSurface_SortSpecificationRequested;
         _rightSurface.UpRequested += FileSurface_UpRequested;
         _rightSurface.BackRequested += FileSurface_BackRequested;
         _rightSurface.ForwardRequested += FileSurface_ForwardRequested;
@@ -2487,6 +2521,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
         _thirdVm = CreatePaneViewModel();
         _thirdVm.PropertyChanged += ViewModel_PropertyChanged;
+        _thirdVm.Navigation.Navigating += Navigation_Navigating;
         _thirdVm.OpenFileRequested += ViewModel_OpenFileRequested;
 
         _thirdSurface = new FileDetailsSurface();
@@ -2517,6 +2552,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         _thirdSurface.RefreshRequested += FileSurface_RefreshRequested;
         _thirdSurface.SelectionChanged += FileSurface_SelectionChanged;
         _thirdSurface.SortRequested += FileSurface_SortRequested;
+        _thirdSurface.SortSpecificationRequested += FileSurface_SortSpecificationRequested;
         _thirdSurface.UpRequested += FileSurface_UpRequested;
         _thirdSurface.BackRequested += FileSurface_BackRequested;
         _thirdSurface.ForwardRequested += FileSurface_ForwardRequested;

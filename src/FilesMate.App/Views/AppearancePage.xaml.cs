@@ -23,6 +23,7 @@ public sealed partial class AppearancePage : UserControl
     {
         InitializeComponent();
         ApplyStrings();
+        InitializeFileTypography();
         BuildAccentSwatches();
         ActualThemeChanged += (_, _) => PaintAccentSwatches(_viewModel?.Current.Accent ?? AccentKind.Default);
         _viewModel = App.AppearanceViewModel;
@@ -236,6 +237,7 @@ public sealed partial class AppearancePage : UserControl
 
         _syncing = true;
         var settings = _viewModel.Current;
+        SyncFileTypography(settings);
         SelectTheme(settings.Theme);
         SelectCombo(BackdropBox, settings.Backdrop.ToString());
         StatusBarToggle.IsOn = settings.ShowStatusBar;
@@ -265,13 +267,9 @@ public sealed partial class AppearancePage : UserControl
     private static void PaintPill(Button button, bool selected)
     {
         button.BorderThickness = new Thickness(selected ? 2 : 1);
-        button.BorderBrush = Theme(selected ? "FilesMate.Glass.AccentBrush" : "FilesMate.Glass.BorderBrush");
+        Theming.ThemeResources.Bind(button, Control.BorderBrushProperty, selected ? "FilesMate.Glass.AccentBrush" : "FilesMate.Glass.BorderBrush");
     }
 
-    private static Brush? Theme(string key) =>
-        Application.Current.Resources.TryGetValue(key, out var value) && value is Brush brush
-            ? brush
-            : null;
 
     private static void SelectCombo(ComboBox box, string tag)
     {
@@ -312,8 +310,8 @@ public sealed partial class AppearancePage : UserControl
                 CornerRadius = new CornerRadius(18),
                 Background = new SolidColorBrush(color),
                 BorderThickness = new Thickness(2),
-                BorderBrush = Theme("FilesMate.Glass.BorderBrush"),
             };
+            Theming.ThemeResources.Bind(button, Control.BorderBrushProperty, "FilesMate.Glass.BorderBrush");
             AutomationProperties.SetName(button, StringTable.Get(swatch.NameKey));
             ToolTipService.SetToolTip(button, StringTable.Get(swatch.NameKey));
             button.Click += Accent_Click;
@@ -345,7 +343,7 @@ public sealed partial class AppearancePage : UserControl
                 }
                 var isSelected = button.Tag is AccentKind kind && kind == selected;
                 button.BorderThickness = new Thickness(isSelected ? 3 : 2);
-                button.BorderBrush = Theme(isSelected ? "FilesMate.Glass.AccentBrush" : "FilesMate.Glass.BorderBrush");
+                Theming.ThemeResources.Bind(button, Control.BorderBrushProperty, isSelected ? "FilesMate.Glass.AccentBrush" : "FilesMate.Glass.BorderBrush");
             }
         }
     }

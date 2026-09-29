@@ -6,6 +6,7 @@ namespace FilesMate.App.Services;
 
 public sealed class AppearanceSettingsService : IAppearanceSettingsService
 {
+    private readonly SemaphoreSlim _saveGate = new(1, 1);
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -57,7 +58,8 @@ public sealed class AppearanceSettingsService : IAppearanceSettingsService
                 dto.Accent,
                 dto.CustomAccent,
                 dto.TransparencyPercent,
-                dto.UseBundledFileIcons);
+                dto.UseBundledFileIcons,
+                dto.FileFontFamily, dto.FileNameFontSize, dto.FileDetailsFontSize);
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
         {
@@ -81,25 +83,13 @@ public sealed class AppearanceSettingsService : IAppearanceSettingsService
                 CustomAccent = settings.CustomAccent,
                 TransparencyPercent = settings.TransparencyPercent,
                 UseBundledFileIcons = settings.UseBundledFileIcons,
+                FileFontFamily = settings.FileFontFamily,
+                FileNameFontSize = settings.FileNameFontSize,
+                FileDetailsFontSize = settings.FileDetailsFontSize,
             },
             JsonOptions);
 
-        var directory = Path.GetDirectoryName(FilePath);
-        if (!string.IsNullOrEmpty(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
-        var temp = FilePath + ".tmp";
-        await File.WriteAllTextAsync(temp, json, cancellationToken).ConfigureAwait(false);
-        if (File.Exists(FilePath))
-        {
-            File.Replace(temp, FilePath, destinationBackupFileName: null);
-        }
-        else
-        {
-            File.Move(temp, FilePath);
-        }
+        await SettingsFileWriter.WriteAsync(FilePath, json, _saveGate, cancellationToken).ConfigureAwait(false);
     }
 
     private sealed class AppearanceDto
@@ -121,5 +111,8 @@ public sealed class AppearanceSettingsService : IAppearanceSettingsService
         public string? CustomAccent { get; set; }
         public int? TransparencyPercent { get; set; }
         public bool? UseBundledFileIcons { get; set; }
+        public string? FileFontFamily { get; set; }
+        public double? FileNameFontSize { get; set; }
+        public double? FileDetailsFontSize { get; set; }
     }
 }

@@ -138,7 +138,7 @@ public sealed partial class FileDetailsSurface
     private void RefreshAlphabet()
     {
         HideAlphabet();
-        var show = AlphabetNavigationPolicy.ShouldShow(
+        var show = _layout != FileLayoutKind.List && AlphabetNavigationPolicy.ShouldShow(
             _alphabetEnabled,
             _items.Count,
             _alphabetMinimumItemCount,
@@ -148,7 +148,8 @@ public sealed partial class FileDetailsSurface
         _alphabet = new AlphabetNavigation(_nameSections, _items.Count);
         _activeNameSection = -1;
         AlphabetOverlay.Visibility = _nameSections.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-        Scroller.VerticalScrollBarVisibility = _nameSections.Count > 0 ? ScrollBarVisibility.Hidden : ScrollBarVisibility.Auto;
+        Scroller.VerticalScrollBarVisibility = _layout == FileLayoutKind.List ? ScrollBarVisibility.Disabled
+            : _nameSections.Count > 0 ? ScrollBarVisibility.Hidden : ScrollBarVisibility.Auto;
         foreach (var (label, button) in _alphabetButtons)
         {
             button.IsEnabled = _alphabet.Contains(label);
@@ -361,8 +362,8 @@ public sealed partial class FileDetailsSurface
                 RestoreAlphabetButtonVisual(_nameSections[_activeNameSection].Label);
             _activeNameSection = section;
             var button = _alphabetButtons[label];
-            button.Background = (Brush)Application.Current.Resources["FilesMate.Selection.AccentBrush"];
-            button.Foreground = new SolidColorBrush(Microsoft.UI.Colors.White);
+            Theming.ThemeResources.Bind(button, Control.BackgroundProperty, "FilesMate.Selection.AccentBrush");
+            Theming.ThemeResources.Bind(button, Control.ForegroundProperty, "FilesMate.Glass.AccentForegroundBrush");
         }
         AlphabetBubbleText.Text = label;
         AlignAlphabetBubble();
@@ -371,11 +372,11 @@ public sealed partial class FileDetailsSurface
     private void RestoreAlphabetButtonVisual(string label)
     {
         var button = _alphabetButtons[label];
-        button.ClearValue(Control.BackgroundProperty);
-        button.ClearValue(Control.ForegroundProperty);
+        Theming.ThemeResources.Clear(button, Control.BackgroundProperty);
+        Theming.ThemeResources.Clear(button, Control.ForegroundProperty);
         if (!_alphabet.HasBothKinds(label)) return;
 
         // A small, separated fill signals that both folders and files are available.
-        button.Background = (Brush)Application.Current.Resources["FilesMate.Item.HoverBrush"];
+        Theming.ThemeResources.Bind(button, Control.BackgroundProperty, "FilesMate.Item.HoverBrush");
     }
 }

@@ -84,8 +84,11 @@ public partial class App : Application
     internal static void NotifyDevicesChanged() => DevicesChanged?.Invoke(null, EventArgs.Empty);
 
     public static ExplorerPreferences ExplorerPreferences { get; private set; } = ExplorerPreferences.Default;
+    private static long _explorerPreferencesVersion;
 
     public static event EventHandler<ExplorerPreferences>? ExplorerPreferencesChanged;
+    public static event EventHandler? SidebarExpansionChanged;
+    internal static void NotifySidebarExpansionChanged() => SidebarExpansionChanged?.Invoke(null, EventArgs.Empty);
     internal static event EventHandler? FolderHandlerChanged;
     internal static void NotifyFolderHandlerChanged() => FolderHandlerChanged?.Invoke(null, EventArgs.Empty);
 
@@ -171,7 +174,7 @@ public partial class App : Application
         var settings = store.Load();
         AppearanceViewModel = new AppearanceSettingsViewModel(store, settings, ApplyAppearance);
         StartSystemThemeWatcher();
-        MetadataStore = new SqliteFileMetadataStore(SqliteFileMetadataStore.DefaultFilePath);
+        MetadataStore = new SqliteFileMetadataStore(Program.SettingsPath(SqliteFileMetadataStore.DefaultFilePath));
         SearchIndexSettingsStore = new SearchIndexSettingsService(Program.SettingsPath(SearchIndexSettingsService.DefaultFilePath));
         SearchIndex = new FileNameIndexService(SearchIndexSettingsStore.Load().ResolveDatabasePath(),
             () => SearchExecutableConfiguration.Load(Path.GetDirectoryName(SearchIndexSettingsStore.FilePath)));
@@ -438,6 +441,7 @@ public partial class App : Application
 
     private static void ApplyApplicationTheme(AppearanceSettings settings)
     {
+        Theming.AppTypography.Configure(settings);
         try
         {
             Application.Current.RequestedTheme = settings.Theme switch
@@ -485,6 +489,7 @@ public partial class App : Application
 
     private static void ApplyAppearance(AppearanceSettings settings)
     {
+        Theming.AppTypography.Configure(settings);
         ApplyApplicationTheme(settings);
         Icons.ShellIconBinder.SetUseBundledIcons(settings.UseBundledFileIcons);
 
@@ -618,6 +623,7 @@ public partial class App : Application
     internal static async Task SetExplorerPreferencesAsync(ExplorerPreferences preferences)
     {
         ArgumentNullException.ThrowIfNull(preferences);
+        var version = Interlocked.Increment(ref _explorerPreferencesVersion);
         var previous = ExplorerPreferences;
         ExplorerPreferences = preferences;
         try
@@ -627,12 +633,16 @@ public partial class App : Application
                 await ExplorerPreferencesStore.SaveAsync(preferences).ConfigureAwait(true);
             }
 
-            ExplorerPreferencesChanged?.Invoke(null, preferences);
+            if (version == Volatile.Read(ref _explorerPreferencesVersion))
+                ExplorerPreferencesChanged?.Invoke(null, preferences);
         }
         catch
         {
-            ExplorerPreferences = previous;
-            ExplorerPreferencesChanged?.Invoke(null, previous);
+            if (version == Volatile.Read(ref _explorerPreferencesVersion))
+            {
+                ExplorerPreferences = previous;
+                ExplorerPreferencesChanged?.Invoke(null, previous);
+            }
             throw;
         }
     }

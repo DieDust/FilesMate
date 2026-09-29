@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Windows.System;
 
 namespace FilesMate.App.Controls.FileSurface;
@@ -16,6 +17,7 @@ public sealed partial class FileDetailsSurface
     private FrameworkElement? _renameRow;
     private string? _renamePath;
     private int _renameSequence;
+    private UIElement? _renameInputRoot;
     public bool IsRenaming => _renameEditor is not null;
     public Func<string, string, Task<string?>>? RenameRequested { get; set; }
 
@@ -40,7 +42,7 @@ public sealed partial class FileDetailsSurface
             _renameLabel = label;
             _renameRow = row;
             var editor = new TextBox { Text = entry.Name, MinWidth = 0, MinHeight = 0,
-                Padding = new Thickness(2, 0, 2, 0), FontSize = label.FontSize,
+                Padding = new Thickness(2, 0, 2, 0), FontSize = label.FontSize, FontFamily = label.FontFamily,
                 VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Stretch };
             AutomationProperties.SetName(editor, Loc.Get("FileName"));
             Grid.SetColumn(editor, Grid.GetColumn(label));
@@ -51,6 +53,8 @@ public sealed partial class FileDetailsSurface
             parent.Children.Add(editor);
             editor.PreviewKeyDown += RenameEditor_KeyDown;
             editor.LostFocus += RenameEditor_LostFocus;
+            _renameInputRoot = XamlRoot?.Content;
+            _renameInputRoot?.AddHandler(PointerPressedEvent, new PointerEventHandler(RenameRoot_PointerPressed), true);
             editor.Focus(FocusState.Programmatic);
             editor.Select(0, FileNameRules.StemLength(entry.Name, entry.Kind == EntryKind.Directory));
             return;
@@ -66,7 +70,37 @@ public sealed partial class FileDetailsSurface
             _ = CommitInlineRenameAsync(e.Key == VirtualKey.Tab ? (IsModifier(VirtualKey.Shift) ? -1 : 1) : 0);
         }
     }
-    private void RenameEditor_LostFocus(object sender, RoutedEventArgs e) => _ = CommitInlineRenameAsync(0);
+    private void RenameRoot_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        CancelRenameOutside(e.OriginalSource as DependencyObject);
+    }
+
+    internal void CancelRenameOutside(DependencyObject? source)
+    {
+        if (_renameEditor is not { } editor || IsInside(source, editor)) return;
+        CancelInlineRename();
+    }
+
+    private void RenameEditor_LostFocus(object sender, RoutedEventArgs e)
+    {
+        var editor = _renameEditor;
+        // A TextBox's context menu may temporarily own focus. Pointer dismissal is
+        // handled at the root; keyboard focus leaving the editor cancels as well.
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (editor is null || !ReferenceEquals(editor, _renameEditor) || XamlRoot is null) return;
+            if (IsInside(FocusManager.GetFocusedElement(XamlRoot) as DependencyObject, editor)) return;
+            if (VisualTreeHelper.GetOpenPopupsForXamlRoot(XamlRoot).Count > 0) return;
+            CancelInlineRename();
+        });
+    }
+
+    private static bool IsInside(DependencyObject? element, DependencyObject ancestor)
+    {
+        for (; element is not null; element = VisualTreeHelper.GetParent(element))
+            if (ReferenceEquals(element, ancestor)) return true;
+        return false;
+    }
 
     private async Task CommitInlineRenameAsync(int direction)
     {
@@ -101,6 +135,8 @@ public sealed partial class FileDetailsSurface
     private void CancelInlineRename()
     {
         ++_renameSequence;
+        _renameInputRoot?.RemoveHandler(PointerPressedEvent, new PointerEventHandler(RenameRoot_PointerPressed));
+        _renameInputRoot = null;
         if (_renameEditor is { } editor)
         {
             editor.PreviewKeyDown -= RenameEditor_KeyDown;

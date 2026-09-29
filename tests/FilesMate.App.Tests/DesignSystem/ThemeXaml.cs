@@ -72,6 +72,7 @@ internal static class ThemeXaml
         "Themes/NavigationStyles.xaml",
         "Themes/TabStyles.xaml",
         "Themes/FileSurfaceStyles.xaml",
+        "Themes/MenuItemTemplates.xaml",
         "Themes/MenuStyles.xaml",
     ];
 
@@ -136,6 +137,21 @@ internal static class ThemeXaml
         }
 
         return keys;
+    }
+
+    internal static XElement Resolve(XElement theme, string key)
+    {
+        var visited = new HashSet<string>(StringComparer.Ordinal);
+        while (visited.Add(key))
+        {
+            var resource = theme.Elements().Concat(theme.Document!.Root!.Elements())
+                .FirstOrDefault(element => (string?)element.Attribute(Xaml + "Key") == key);
+            Assert.NotNull(resource);
+            if (resource.Attribute("ResourceKey") is not { } target ||
+                target.Value.StartsWith("SystemColor", StringComparison.Ordinal)) return resource;
+            key = target.Value;
+        }
+        throw new InvalidOperationException($"Theme resource cycle: {key}");
     }
 
     private static string FindRepoRoot()

@@ -46,7 +46,7 @@ public sealed class FileTileVisualStateTests
         var dragging = code.IndexOf("public void SetDragging", StringComparison.Ordinal);
         var dropTarget = code.IndexOf("public void SetDropTarget", dragging, StringComparison.Ordinal);
         Assert.Contains("_pressed = false", code[dragging..dropTarget], StringComparison.Ordinal);
-        Assert.Contains("showNames: false", code, StringComparison.Ordinal);
+        Assert.Contains("showNames: _preset.ShowsTagNames", code, StringComparison.Ordinal);
         Assert.Contains("NameText.Width", code, StringComparison.Ordinal);
         Assert.DoesNotContain("Placeholder.Visibility", code, StringComparison.Ordinal);
         Assert.Contains("UniformToFill", code, StringComparison.Ordinal);

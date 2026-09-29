@@ -202,6 +202,7 @@
 
         <Grid
             x:Name="SettingsOverlay"
+            Tapped="SettingsOverlay_Tapped"
             Grid.Row="1"
             Canvas.ZIndex="100"
             Background="{ThemeResource FilesMate.SettingsOverlay.ScrimBrush}"

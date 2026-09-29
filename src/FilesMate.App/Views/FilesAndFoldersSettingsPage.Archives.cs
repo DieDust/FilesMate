@@ -47,6 +47,7 @@ public sealed partial class FilesAndFoldersSettingsPage
         var provider = _archivePreferences.Preferred;
         ArchiveProviderHint.Text = ArchiveProviderNames.Hint(provider);
         var external = provider is not (ArchiveProvider.Automatic or ArchiveProvider.BuiltIn);
+        ArchiveProviderPath.Visibility = ArchiveProviderActions.Visibility = external ? Visibility.Visible : Visibility.Collapsed;
         ArchiveBrowse.Visibility = ArchiveReset.Visibility = external ? Visibility.Visible : Visibility.Collapsed;
         ArchiveProviderPath.Text = external ? StringTable.Get("Archive_Detecting") : "";
         if (!external) return;

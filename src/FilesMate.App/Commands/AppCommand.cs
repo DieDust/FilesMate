@@ -54,6 +54,14 @@ public enum AppCommandId
     SearchCommands,
     OpenInArchiveApp,
     RevealInFolder,
+    NewWordFile,
+    NewSpreadsheetFile,
+    NewPresentationFile,
+    NewMarkdownFile,
+    NewCsvFile,
+    NewRichTextFile,
+    NewHtmlFile,
+    NewJsonFile,
 }
 
 public enum CommandSurface

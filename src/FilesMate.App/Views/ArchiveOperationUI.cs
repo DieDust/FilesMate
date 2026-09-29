@@ -204,6 +204,7 @@ internal static class ArchiveOperationUI
     private sealed class ArchiveProgressDialog
     {
         private readonly FrameworkElement _host;
+        private readonly FileConflictResolver _resolveConflict;
         private readonly CancellationTokenSource _cancellation;
         private readonly ContentDialog _dialog;
         private readonly ProgressBar _bar = new() { Minimum = 0, Maximum = 100, IsIndeterminate = true };
@@ -216,6 +217,7 @@ internal static class ArchiveOperationUI
         public ArchiveProgressDialog(FrameworkElement host, bool compress, CancellationTokenSource cancellation, string? hint = null)
         {
             _host = host; _cancellation = cancellation;
+            _resolveConflict = FileConflictDialog.For(host);
             var content = new StackPanel { Spacing = 12, MinWidth = 300 };
             content.Children.Add(_current); content.Children.Add(_bar); content.Children.Add(_summary);
             if (hint is not null) content.Children.Add(new TextBlock { Text = hint, TextWrapping = TextWrapping.Wrap, MaxWidth = 420, FontSize = 12 });
@@ -277,7 +279,7 @@ internal static class ArchiveOperationUI
                 try
                 {
                     await PauseAsync();
-                    var choice = await FileConflictDialog.For(_host)(conflict, token);
+                    var choice = await _resolveConflict(conflict, token);
                     if (choice.Action != FileConflictAction.Cancel && !token.IsCancellationRequested && _host.IsLoaded)
                         await ShowAsync();
                     completion.TrySetResult(choice);

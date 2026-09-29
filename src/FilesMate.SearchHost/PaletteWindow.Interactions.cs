@@ -86,10 +86,15 @@ public partial class PaletteWindow
         _pressedRow = null;
         _pressedApplication = null;
         _collapseSelectionOnUp = false;
+        _openingMoved = false;
+        _pressedModified = Keyboard.Modifiers != ModifierKeys.None;
+        if (_pressedModified || e.ChangedButton != MouseButton.Left || Ancestor<ButtonBase>(e.OriginalSource as DependencyObject) is not null)
+            _openingClicks.CancelPendingClick();
         if (e.ChangedButton == MouseButton.Right) ClearPreview();
         if (_pending || Ancestor<ButtonBase>(e.OriginalSource as DependencyObject) is not null) return;
         var item = Ancestor<ListBoxItem>(e.OriginalSource as DependencyObject);
-        if (item?.DataContext is not SearchRow row) { if (e.ChangedButton == MouseButton.Right) Results.UnselectAll(); return; }
+        if (item?.DataContext is not SearchRow row)
+        { _openingClicks.CancelPendingClick(); if (e.ChangedButton == MouseButton.Right) Results.UnselectAll(); return; }
         if (e.ChangedButton == MouseButton.Right)
         {
             _suppressPreviewSelection = true;
@@ -101,6 +106,8 @@ public partial class PaletteWindow
             finally { _suppressPreviewSelection = false; }
         }
         if (e.ChangedButton != MouseButton.Left) return;
+        _pressedOpeningMode = OpeningMode(row);
+        _pressedName = OnResultName(e.OriginalSource);
         _pressedRow = row.IsApplication ? null : row;
         _pressedApplication = row.IsApplication && Keyboard.Modifiers == ModifierKeys.None ? row : null;
         _dragStart = e.GetPosition(Results);
@@ -111,21 +118,26 @@ public partial class PaletteWindow
     private void Results_MouseUp(object sender, MouseButtonEventArgs e)
     {
         var application = _pressedApplication;
+        var file = _pressedRow;
         _pressedApplication = null;
         if (_collapseSelectionOnUp && _pressedRow is { } row && e.ChangedButton == MouseButton.Left)
         { Results.SelectedItems.Clear(); Results.SelectedItems.Add(row); }
         _pressedRow = null;
         _collapseSelectionOnUp = false;
-        // Application entries are launcher actions. Ordinary files retain their
-        // selection/double-click behavior, and modifier clicks never launch.
         var delta = e.GetPosition(Results) - _dragStart;
-        if (ShouldLaunchApplicationClick(application, Ancestor<ListBoxItem>(e.OriginalSource as DependencyObject)?.DataContext,
-            e.ChangedButton, Keyboard.Modifiers, delta))
+        var released = Ancestor<ListBoxItem>(e.OriginalSource as DependencyObject)?.DataContext;
+        if (!_openingMoved && ShouldLaunchApplicationClick(application, released, e.ChangedButton, Keyboard.Modifiers, delta))
         {
             Results.SelectedItem = application;
             OpenSelected(false);
             e.Handled = true;
         }
+        else if (file is not null && ReferenceEquals(file, released) && e.ChangedButton == MouseButton.Left
+            && Ancestor<ButtonBase>(e.OriginalSource as DependencyObject) is null && !_pending
+            && Math.Abs(delta.X) < SystemParameters.MinimumHorizontalDragDistance
+            && Math.Abs(delta.Y) < SystemParameters.MinimumVerticalDragDistance && ShouldOpenResult(file, e))
+        { Results.SelectedItem = file; OpenSelected(false); e.Handled = true; }
+        else if (file is null || !ReferenceEquals(file, released)) _openingClicks.CancelPendingClick();
     }
 
     private static bool ShouldLaunchApplicationClick(SearchRow? pressed, object? released,
@@ -137,6 +149,15 @@ public partial class PaletteWindow
 
     private void Results_MouseMove(object sender, MouseEventArgs e)
     {
+        var hovering = Ancestor<ListBoxItem>(e.OriginalSource as DependencyObject)?.DataContext as SearchRow;
+        Results.Cursor = hovering is not null && (hovering.IsApplication || OpeningMode(hovering) == FilesMate.App.Models.ItemOpeningMode.SingleClick)
+            ? Cursors.Hand : null;
+        if (e.LeftButton == MouseButtonState.Pressed && (_pressedRow is not null || _pressedApplication is not null))
+        {
+            var moved = e.GetPosition(Results) - _dragStart;
+            if (Math.Abs(moved.X) >= SystemParameters.MinimumHorizontalDragDistance || Math.Abs(moved.Y) >= SystemParameters.MinimumVerticalDragDistance)
+            { _openingMoved = true; _openingClicks.CancelPendingClick(); }
+        }
         if (_pending || _dragging || _pressedRow is null || e.LeftButton != MouseButtonState.Pressed) return;
         var delta = e.GetPosition(Results) - _dragStart;
         if (Math.Abs(delta.X) < SystemParameters.MinimumHorizontalDragDistance && Math.Abs(delta.Y) < SystemParameters.MinimumVerticalDragDistance) return;

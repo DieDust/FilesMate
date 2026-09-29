@@ -44,7 +44,15 @@ internal sealed class TrayMenu : Forms.ContextMenuStrip
     private void RefreshTheme()
     {
         var resources = new ResourceDictionary();
-        PaletteAppearance.Apply(resources, PaletteAppearance.Load(_profile));
+        var appearance = PaletteAppearance.Load(_profile);
+        PaletteAppearance.Apply(resources, appearance);
+        var family = appearance.FileFontFamily ?? SystemFonts.MessageBoxFont!.FontFamily.Name;
+        if (Font.FontFamily.Name != family)
+        {
+            var previous = Font;
+            Font = new Font(family, 10);
+            previous.Dispose();
+        }
         Color Read(string key)
         {
             var c = ((SolidColorBrush)resources[key]).Color;

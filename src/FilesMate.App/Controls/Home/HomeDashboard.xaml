@@ -7,19 +7,22 @@
     xmlns:nav="using:FilesMate.App.Navigation"
     xmlns:sidebar="using:FilesMate.App.Controls.Navigation">
     <UserControl.Resources>
+        <Style x:Key="SelectableHomePlaceStyle" TargetType="home:HomeItemButton" BasedOn="{StaticResource HomePlaceButtonStyle}">
+            <Setter Property="SelectionBrush" Value="{ThemeResource FilesMate.Item.SelectedBrush}"/>
+        </Style>
         <sidebar:BoolToVisibilityConverter x:Key="BoolToVisibility" />
         <sidebar:BoolToVisibilityConverter x:Key="InverseBoolToVisibility" Invert="True" />
         <sidebar:PercentToStarConverter x:Key="PercentToStar" />
         <sidebar:PercentToStarConverter x:Key="InversePercentToStar" Invert="True" />
         <DataTemplate x:Key="HomePlaceCard" x:DataType="nav:HomeFolderItem">
-            <Button
-                Click="Place_Click"
+            <home:HomeItemButton
+                ItemInvoked="Place_Click" SelectionRequested="Place_Selected"
                 ContextRequested="Place_ContextRequested"
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Stretch"
                 Padding="12,10"
                 CornerRadius="{StaticResource FilesMate.Corner.Card}"
-                Style="{StaticResource HomePlaceButtonStyle}"
+                Style="{StaticResource SelectableHomePlaceStyle}"
                 Tag="{x:Bind}"
                 AutomationProperties.Name="{x:Bind Label}">
                 <StackPanel Orientation="Horizontal" Spacing="10">
@@ -27,18 +30,18 @@
                         Background="{ThemeResource FilesMate.Home.IconBackgroundBrush}">
                         <sidebar:PlaceGlyph Glyph="{x:Bind Glyph}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
-                    <TextBlock
+                    <TextBlock Tag="ItemName" HorizontalAlignment="Left"
                         VerticalAlignment="Center"
                         FontSize="14"
                         FontWeight="SemiBold"
                         Text="{x:Bind Label}"
                         TextTrimming="CharacterEllipsis" />
                 </StackPanel>
-            </Button>
+            </home:HomeItemButton>
         </DataTemplate>
         <DataTemplate x:Key="HomeTagChip" x:DataType="nav:HomeFolderItem">
-            <Button
-                Click="Place_Click"
+            <home:HomeItemButton
+                ItemInvoked="Place_Click" SelectionRequested="Place_Selected"
                 ContextRequested="Place_ContextRequested"
                 HorizontalAlignment="Left"
                 HorizontalContentAlignment="Left"
@@ -46,18 +49,18 @@
                 MinHeight="36"
                 Padding="12,6"
                 CornerRadius="18"
-                Style="{StaticResource HomePlaceButtonStyle}"
+                Style="{StaticResource SelectableHomePlaceStyle}"
                 Tag="{x:Bind}"
                 AutomationProperties.Name="{x:Bind Label}">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <sidebar:PlaceGlyph Glyph="{x:Bind Glyph}" VerticalAlignment="Center" />
-                    <TextBlock
+                    <TextBlock Tag="ItemName" HorizontalAlignment="Left"
                         VerticalAlignment="Center"
                         FontSize="13"
                         Text="{x:Bind Label}"
                         TextTrimming="CharacterEllipsis" />
                 </StackPanel>
-            </Button>
+            </home:HomeItemButton>
         </DataTemplate>
     </UserControl.Resources>
     <ScrollViewer
@@ -130,14 +133,14 @@
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate x:DataType="nav:HomeDriveItem">
-                        <Button
-                            Click="Place_Click"
+                        <home:HomeItemButton
+                            ItemInvoked="Place_Click" SelectionRequested="Place_Selected"
                             ContextRequested="Place_ContextRequested"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Stretch"
                             Padding="14,12"
                             CornerRadius="{StaticResource FilesMate.Corner.Card}"
-                            Style="{StaticResource HomePlaceButtonStyle}"
+                            Style="{StaticResource SelectableHomePlaceStyle}"
                             Tag="{x:Bind}"
                             AutomationProperties.Name="{x:Bind Label}">
                             <Grid ColumnSpacing="12">
@@ -159,12 +162,12 @@
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock
+                                        <TextBlock Tag="ItemName" HorizontalAlignment="Left"
                                             FontSize="14"
                                             FontWeight="SemiBold"
                                             Text="{x:Bind VolumeName}"
                                             TextTrimming="CharacterEllipsis" />
-                                        <TextBlock
+                                        <TextBlock Tag="ItemName" HorizontalAlignment="Left"
                                             Grid.Column="1"
                                             VerticalAlignment="Center"
                                             FontSize="12"
@@ -200,7 +203,7 @@
                                         TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
                             </Grid>
-                        </Button>
+                        </home:HomeItemButton>
                     </DataTemplate>
                     </ItemsRepeater.ItemTemplate>
                     </ItemsRepeater>

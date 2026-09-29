@@ -5,6 +5,26 @@ namespace FilesMate.App.Tests.Navigation;
 public sealed class PinnedLocationStoreTests
 {
     [Fact]
+    public void Collapsed_sections_survive_reload_other_sidebar_edits_and_compact_mode()
+    {
+        using var temp = new TemporaryFile();
+        var store = new PinnedLocationStore(temp.Path);
+        foreach (var id in new[] { "pinned", "drives", "cloud", "tags" }) store.SetSectionExpanded(id, false);
+        store.Add(@"C:\Pinned");
+        store.SaveSectionOrder(["tags", "pinned", "cloud", "drives"]);
+        var loaded = new PinnedLocationStore(temp.Path);
+        var sections = NavigationCatalog.Build([], [], [], tags: []);
+        NavigationCatalog.ApplyCollapsedSections(sections, loaded.LoadState().CollapsedSections);
+        Assert.All(sections, section => Assert.False(section.IsExpanded));
+        NavigationCatalog.ApplyCollapsedSections(sections, loaded.LoadState().CollapsedSections, compact: true);
+        Assert.All(sections, section => Assert.True(section.IsExpanded));
+        loaded.SetSectionExpanded("cloud", true);
+        NavigationCatalog.ApplyCollapsedSections(sections, loaded.LoadState().CollapsedSections);
+        Assert.All(sections, section => Assert.Equal(section.Id == "cloud", section.IsExpanded));
+        Assert.Equal(@"C:\Pinned", Assert.Single(loaded.Load()));
+        Assert.Equal(["tags", "pinned", "cloud", "drives"], loaded.LoadState().SectionOrder);
+    }
+    [Fact]
     public void Cloud_edit_hide_and_readd_survive_reload_and_do_not_change_pins()
     {
         using var temp = new TemporaryFile();

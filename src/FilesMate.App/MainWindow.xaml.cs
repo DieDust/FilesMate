@@ -155,6 +155,36 @@ public sealed partial class MainWindow : Window
         {
             InitializeTabs(launch, restartSession);
 #if FILESMATE_UI_TEST
+            if (Environment.GetEnvironmentVariable("FILESMATE_POPUP_INTERACTION_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunPopupInteractionSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_NAVIGATION_VIEWPORT_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunNavigationViewportSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_SELECTION_VISUALS_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunSelectionVisualsSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_BROWSING_POLISH_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunBrowsingPolishSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_INTEGRATION_REVIEW_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunIntegrationReviewSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_PREVIEW_POLISH_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunPreviewPolishSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_TRANSFER_REDESIGN_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunTransferRedesignSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_TOOLBAR_REFINEMENT_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunToolbarRefinementSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_DATABASE_STARTUP_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunDatabaseStartupSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_TAG_LAYOUT_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunTagLayoutSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_OPENING_SETTINGS_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunOpeningSettingsSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_COMPATIBILITY_POLISH_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunCompatibilityPolishSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_DETAILS_TYPOGRAPHY_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunDetailsTypographySmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_BROWSING_PREFERENCES_SMOKE") is "1" or "restore")
+                DispatcherQueue.TryEnqueue(async () => await RunBrowsingPreferencesSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_SHELF_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunShelfSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_PUBLIC_SCREENSHOTS") == "1")
                 DispatcherQueue.TryEnqueue(async () => await CapturePublicScreenshotsAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_VISUAL_REFRESH_SMOKE") == "1")
@@ -1058,7 +1088,9 @@ public sealed partial class MainWindow : Window
         }
 
         ApplyAccent(settings);
+        AppTypography.Apply(Content);
         SynchronizeOverlayTheme();
+        if (Content is FrameworkElement themeRoot) FlyoutTheme.RefreshOpenPopups(themeRoot);
         if (_appliedGlass != settings.GlassEffect || _appliedTransparency != settings.EffectiveTransparencyPercent
             || _glassScene.State.SurfaceOpacity != Animations.GlassSceneState.Resolve(settings).SurfaceOpacity)
         {
@@ -1148,12 +1180,18 @@ public sealed partial class MainWindow : Window
             "FilesMate.Item.DropTargetBrush", "AccentFillColorDefaultBrush", "ToggleSwitchFillOn", "ToggleSwitchStrokeOn",
             "FilesMate.Glass.AccentHoverBrush", "AccentFillColorSecondaryBrush", "AccentFillColorTertiaryBrush",
             "ToggleSwitchFillOnPointerOver", "ToggleSwitchFillOnPressed", "ToggleSwitchStrokeOnPointerOver", "ToggleSwitchStrokeOnPressed",
-            "FilesMate.Glass.AccentSoftBrush", "FilesMate.Item.SelectedBrush", "FilesMate.Item.SelectedHoverBrush",
+            "FilesMate.Glass.AccentSoftBrush", "FilesMate.Compare.SourceFillBrush", "FilesMate.Item.SelectedBrush", "FilesMate.Item.SelectedHoverBrush",
+            "FilesMate.Item.HoverBrush", "FilesMate.IconFrame.FillBrush", "FilesMate.Home.IconBackgroundBrush",
+            "ComboBoxItemBackgroundPointerOver", "ComboBoxItemBackgroundPressed", "ComboBoxItemBackgroundSelectedPointerOver",
             "FilesMate.Glass.AccentForegroundBrush", "TextOnAccentFillColorPrimaryBrush",
             "AccentButtonBackground", "AccentButtonBackgroundPointerOver", "AccentButtonBackgroundPressed",
             "AccentButtonForeground", "AccentButtonForegroundPointerOver", "AccentButtonForegroundPressed",
             "ToggleButtonBackgroundChecked", "ToggleButtonBackgroundCheckedPointerOver", "ToggleButtonBackgroundCheckedPressed",
             "ToggleButtonForegroundChecked", "ToggleButtonForegroundCheckedPointerOver", "ToggleButtonForegroundCheckedPressed",
+            "RadioButtonOuterEllipseCheckedStroke", "RadioButtonOuterEllipseCheckedFill",
+            "RadioButtonOuterEllipseCheckedStrokePointerOver", "RadioButtonOuterEllipseCheckedStrokePressed",
+            "RadioButtonOuterEllipseCheckedFillPointerOver", "RadioButtonOuterEllipseCheckedFillPressed",
+            "RadioButtonCheckGlyphFill", "RadioButtonCheckGlyphFillPointerOver", "RadioButtonCheckGlyphFillPressed",
             "SystemAccentColor", "SystemAccentColorLight1", "SystemAccentColorLight2", "SystemAccentColorLight3",
             "SystemAccentColorDark1", "SystemAccentColorDark2", "SystemAccentColorDark3"];
 
@@ -1170,6 +1208,8 @@ public sealed partial class MainWindow : Window
                 case "ToggleSwitchStrokeOn":
                 case "AccentButtonBackground":
                 case "ToggleButtonBackgroundChecked":
+                case "RadioButtonOuterEllipseCheckedStroke":
+                case "RadioButtonOuterEllipseCheckedFill":
                     AssignBrush(value, color);
                     break;
                 case "FilesMate.Glass.AccentHoverBrush":
@@ -1183,10 +1223,22 @@ public sealed partial class MainWindow : Window
                 case "AccentButtonBackgroundPressed":
                 case "ToggleButtonBackgroundCheckedPointerOver":
                 case "ToggleButtonBackgroundCheckedPressed":
+                case "RadioButtonOuterEllipseCheckedStrokePointerOver":
+                case "RadioButtonOuterEllipseCheckedStrokePressed":
+                case "RadioButtonOuterEllipseCheckedFillPointerOver":
+                case "RadioButtonOuterEllipseCheckedFillPressed":
                     AssignBrush(value, hover);
                     break;
                 case "FilesMate.Glass.AccentSoftBrush":
+                case "FilesMate.Compare.SourceFillBrush":
+                case "ComboBoxItemBackgroundPressed":
                     AssignBrush(value, soft);
+                    break;
+                case "FilesMate.Item.HoverBrush":
+                case "FilesMate.IconFrame.FillBrush":
+                case "FilesMate.Home.IconBackgroundBrush":
+                case "ComboBoxItemBackgroundPointerOver":
+                    AssignBrush(value, Color.FromArgb(0x10, color.R, color.G, color.B));
                     break;
                 case "FilesMate.Glass.AccentForegroundBrush":
                 case "TextOnAccentFillColorPrimaryBrush":
@@ -1196,6 +1248,9 @@ public sealed partial class MainWindow : Window
                 case "ToggleButtonForegroundChecked":
                 case "ToggleButtonForegroundCheckedPointerOver":
                 case "ToggleButtonForegroundCheckedPressed":
+                case "RadioButtonCheckGlyphFill":
+                case "RadioButtonCheckGlyphFillPointerOver":
+                case "RadioButtonCheckGlyphFillPressed":
                     AssignBrush(value, foreground);
                     break;
                 case "FilesMate.Item.SelectedBrush":
@@ -1203,6 +1258,7 @@ public sealed partial class MainWindow : Window
                     break;
                 case "FilesMate.Item.SelectedHoverBrush":
                 case "FilesMate.Item.DropTargetBrush":
+                case "ComboBoxItemBackgroundSelectedPointerOver":
                     AssignBrush(value, selectedHover);
                     break;
                 case "SystemAccentColor" when value is Color:
@@ -1368,18 +1424,11 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        var foreground = dark
-            ? Windows.UI.Color.FromArgb(228, 255, 255, 255)
-            : Windows.UI.Color.FromArgb(228, 0, 0, 0);
-        var inactiveForeground = dark
-            ? Windows.UI.Color.FromArgb(160, 255, 255, 255)
-            : Windows.UI.Color.FromArgb(145, 32, 32, 32);
-        var hoverBackground = dark
-            ? Windows.UI.Color.FromArgb(28, 255, 255, 255)
-            : Windows.UI.Color.FromArgb(18, 0, 0, 0);
-        var pressedBackground = dark
-            ? Windows.UI.Color.FromArgb(46, 255, 255, 255)
-            : Windows.UI.Color.FromArgb(30, 0, 0, 0);
+        var palette = SkinPalette.For(dark);
+        var foreground = Themes.ShellStyleResources.FromArgb(palette.Text);
+        var inactiveForeground = Themes.ShellStyleResources.FromArgb(palette.Muted);
+        var hoverBackground = Themes.ShellStyleResources.FromArgb(SkinPalette.Alpha(palette.Text, 0x12));
+        var pressedBackground = Themes.ShellStyleResources.FromArgb(SkinPalette.Alpha(palette.Text, 0x20));
         var transparent = Windows.UI.Color.FromArgb(0, 0, 0, 0);
         var titleBar = AppWindow.TitleBar;
         titleBar.PreferredTheme = dark ? TitleBarTheme.Dark : TitleBarTheme.Light;
@@ -1432,6 +1481,7 @@ public sealed partial class MainWindow : Window
 
     public void OpenSettings(string? section = null)
     {
+        if (TabHost.Content is NavigatorPage previewOwner) previewOwner.CloseQuickPreview();
         if (SettingsOverlay.Visibility == Visibility.Visible)
         {
             if (section is null)
@@ -1467,6 +1517,22 @@ public sealed partial class MainWindow : Window
         ScheduleSettingsLoad();
     }
 
+    private void SettingsOverlay_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
+    {
+        if (!ReferenceEquals(e.OriginalSource, SettingsOverlay)) return;
+        e.Handled = true;
+        TryLightDismissSettings(e.OriginalSource);
+    }
+
+    private bool TryLightDismissSettings(object originalSource)
+    {
+        if (!ReferenceEquals(originalSource, SettingsOverlay)) return false;
+        // A flyout gets the first outside click to dismiss itself.
+        if (Microsoft.UI.Xaml.Media.VisualTreeHelper.GetOpenPopupsForXamlRoot(SettingsOverlay.XamlRoot).Count > 0) return false;
+        CloseSettings();
+        return true;
+    }
+
     public void CloseSettings()
     {
         if (SettingsOverlay.Visibility != Visibility.Visible)
@@ -1474,6 +1540,7 @@ public sealed partial class MainWindow : Window
             return;
         }
 
+        _settingsPage?.DismissSearch();
         SettingsOverlay.Visibility = Visibility.Collapsed;
         _pendingSettingsSection = null;
         var previousFocus = _settingsPreviousFocus;
@@ -1523,6 +1590,7 @@ public sealed partial class MainWindow : Window
             }
 
             SettingsHost.Content = page;
+            if (page is FrameworkElement fontRoot) Theming.AppTypography.Track(fontRoot);
             _settingsLoadPending = false;
             if (SettingsOverlay.Visibility == Visibility.Visible && page is Control control)
             {
@@ -1565,6 +1633,7 @@ public sealed partial class MainWindow : Window
         }
 
         TabHost.Content = content;
+        if (content is FrameworkElement fontRoot) Theming.AppTypography.Track(fontRoot);
         if (content is SearchResultsPage searchPage) NavigationSidebar.SelectPath(searchPage.Request.Scope ?? "");
         if (content is NavigatorPage favoritesPage) UpdateFavoritesPlacement(favoritesPage);
         else WindowFavorites.Visibility = Visibility.Collapsed;
@@ -1620,6 +1689,12 @@ public sealed partial class MainWindow : Window
         AddNonClientRect(passthrough, FindDescendant<ListView>(Tabs, static _ => true), scale);
         AddNonClientRect(passthrough, NewTabButton, scale);
         AddTabStripPassthrough(passthrough, scale);
+        // A tall context menu can overlap the title bar. Native caption hit
+        // testing must not swallow the popup's first row of command buttons.
+        if (_inputPopups.Count > 0)
+            passthrough.Add(new RectInt32(0, 0,
+                Math.Max(1, (int)Math.Ceiling(root.Size.Width * scale)),
+                Math.Max(1, (int)Math.Ceiling(AppTitleBar.ActualHeight * scale))));
         var source = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
         if (_shellHost is not null)
         {
@@ -1779,6 +1854,7 @@ public sealed partial class MainWindow : Window
         }
 
         flyout.Opening += TabFlyout_Opening;
+        Theming.FlyoutTheme.FollowHost(flyout);
         item.ContextFlyout = flyout;
     }
 
@@ -1931,26 +2007,8 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private static SolidColorBrush TabInk(FrameworkElement element)
-    {
-        var dark = element.RequestedTheme == ElementTheme.Dark
-            || (element.RequestedTheme == ElementTheme.Default && element.ActualTheme == ElementTheme.Dark);
-        var fallback = dark
-            ? Windows.UI.Color.FromArgb(228, 255, 255, 255)
-            : Windows.UI.Color.FromArgb(228, 0, 0, 0);
-        if (Application.Current.Resources.TryGetValue("FilesMate.Text.PrimaryBrush", out var resource)
-            && resource is SolidColorBrush themed)
-        {
-            var color = themed.Color;
-            var resourceIsDarkInk = color.R < 80 && color.G < 80 && color.B < 80;
-            if (dark == !resourceIsDarkInk)
-            {
-                return new SolidColorBrush(color);
-            }
-        }
-
-        return new SolidColorBrush(fallback);
-    }
+    private static SolidColorBrush TabInk(FrameworkElement element) =>
+        (SolidColorBrush)ThemeResources.Resolve(element, "FilesMate.Text.PrimaryBrush")!;
 
     private void RasterizeBrandIcon()
     {

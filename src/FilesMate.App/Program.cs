@@ -101,6 +101,19 @@ public static class Program
             return;
         }
 
+        try
+        {
+            SqliteRuntime.InitializeBeforeUi();
+            Diagnostics.StartupClock.Mark("DatabaseRuntimeReady");
+            AppLifecycle.TraceInternal("DatabaseRuntime ready before XAML startup");
+        }
+        catch (Exception error)
+        {
+            App.LogFailure("DatabaseRuntimeStartup", error);
+            Environment.ExitCode = 1;
+            return;
+        }
+
         Application.Start(_ =>
         {
             var context = new DispatcherQueueSynchronizationContext(

@@ -62,6 +62,46 @@ public sealed class GridLayoutTests
     }
 
     [Fact]
+    public void Tag_rows_fit_below_two_line_names_and_participate_in_pointer_and_marquee_selection()
+    {
+        foreach (var preset in GridSizePreset.All)
+        {
+            Assert.True(preset.TagTop + preset.TagHeight + GridSizePreset.HighlightPad <= preset.ItemHeight);
+            var x = preset.ChromeLeft + 8;
+            var y = preset.TagTop + 2;
+            Assert.Equal(-1, GridSizePreset.IndexFromPoint(x, y, 3, 3, preset));
+            Assert.Equal(0, GridSizePreset.IndexFromPoint(x, y, 3, 3, preset, _ => true));
+            Assert.Equal(-1, GridSizePreset.IndexFromPoint(x, preset.TagTop - 1, 3, 3, preset, _ => true));
+            var selected = new List<int>();
+            GridSizePreset.CollectIndicesInRect(x, y, x + 4, y + 4, 3, 3, preset, selected);
+            Assert.Empty(selected);
+            GridSizePreset.CollectIndicesInRect(x, y, x + 4, y + 4, 3, 3, preset, selected, _ => true);
+            Assert.Equal([0], selected);
+        }
+        Assert.False(GridSizePreset.Medium.ShowsTagNames);
+        Assert.True(GridSizePreset.Large.ShowsTagNames);
+    }
+
+    [Theory]
+    [InlineData(13)]
+    [InlineData(20)]
+    public void Empty_space_below_names_starts_a_marquee_and_only_crossed_items_are_selected(double fontSize)
+    {
+        foreach (var size in GridSizePreset.All)
+        {
+            var preset = size.WithFontSize(fontSize);
+            var gapY = preset.ChromeHeight + 3;
+            Assert.Equal(-1, GridSizePreset.IndexFromPoint(20, gapY, 10, 3, preset));
+            var hits = new List<int>();
+            GridSizePreset.CollectIndicesInRect(20, 10, preset.ItemWidth + preset.Gutter + 30, gapY, 10, 3, preset, hits);
+            Assert.Equal([0, 1], hits);
+            hits.Clear();
+            GridSizePreset.CollectIndicesInRect(20, preset.ChromeHeight + 1, 50, preset.TagTop - 1, 10, 3, preset, hits, _ => true);
+            Assert.Empty(hits);
+        }
+    }
+
+    [Fact]
     public void Column_count_is_stable_for_the_same_viewport()
     {
         const double viewport = 1100;
@@ -75,6 +115,18 @@ public sealed class GridLayoutTests
         Assert.True(GridSizePreset.ItemWidthFor(viewport, GridSizePreset.Medium) >= GridSizePreset.Medium.ItemWidth);
         Assert.Equal(GridSizePreset.Medium.ItemWidth, GridSizePreset.ItemWidthFor(viewport, GridSizePreset.Medium));
         Assert.Equal(GridSizePreset.Medium.ItemWidth, GridSizePreset.ItemWidthFor(1920, GridSizePreset.Medium));
+    }
+
+    [Fact]
+    public void Hit_testing_uses_the_same_column_count_as_a_fully_fitting_uniform_grid()
+    {
+        foreach (var preset in GridSizePreset.All)
+        foreach (var columns in new[] { 2, 3, 7, 11 })
+        {
+            var width = columns * preset.ItemWidth + (columns - 1) * preset.Gutter;
+            Assert.Equal(columns, GridSizePreset.Columns(width, preset));
+            Assert.Equal(columns - 1, GridSizePreset.Columns(width - 1, preset));
+        }
     }
 
     [Fact]
@@ -92,7 +144,8 @@ public sealed class GridLayoutTests
             "FileDetailsSurface.xaml"));
         var start = surface.IndexOf("public void SetLayout", StringComparison.Ordinal);
         Assert.True(start >= 0);
-        var chunk = surface[start..Math.Min(surface.Length, start + 1400)];
+        var end = surface.IndexOf("public void ", start + 20, StringComparison.Ordinal);
+        var chunk = surface[start..(end >= 0 ? end : surface.Length)];
         Assert.Contains("Repeater.Layout", chunk, StringComparison.Ordinal);
         Assert.Contains("ItemTemplate", chunk, StringComparison.Ordinal);
         Assert.Contains("Repeater.ItemsSource = null", chunk, StringComparison.Ordinal);

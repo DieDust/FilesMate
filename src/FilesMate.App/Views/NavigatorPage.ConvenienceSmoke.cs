@@ -85,10 +85,8 @@ public sealed partial class NavigatorPage
                     var pending = WindowsFileTransfer.RunAsync(new WindowsLocalFileOperations(), [new(source, target)],
                         false, FileConflictDialog.For(this), backupBudget: budget);
                     var dialog = await Dialog();
+                    Require(dialog.DefaultButton == ContentDialogButton.None, "Enter authorized irreversible replacement");
                     ChooseConflict(dialog, FileConflictAction.ReplaceWithoutUndo);
-                    Require(!Descendants(dialog).OfType<CheckBox>().Single().IsEnabled, "irreversible choice allowed apply-all");
-                    Require(dialog.DefaultButton == ContentDialogButton.Close, "Enter authorized irreversible replacement");
-                    InvokePrimary(dialog);
                     await Wait(() => !dialog.IsLoaded);
                     var confirmation = await Dialog();
                     Require(!ReferenceEquals(confirmation, dialog) && confirmation.DefaultButton == ContentDialogButton.Close,
@@ -208,17 +206,15 @@ public sealed partial class NavigatorPage
                 Field<TextBox>(surface, "_renameEditor").Text = "existing-folder";
                 var pending = (Task)Call(surface, "CommitInlineRenameAsync", 0)!;
                 var dialog = await Dialog();
-                Require(dialog.DefaultButton == ContentDialogButton.Primary
-                    && Descendants(dialog).OfType<RadioButton>().Single(r => r.IsChecked == true).Tag is FileConflictAction.Skip,
-                    "Enter implicitly merges folders");
+                Require(dialog.DefaultButton == ContentDialogButton.None, "Enter implicitly merges folders");
                 await Capture(dialog, "folder-name-conflict.png");
-                ChooseConflict(dialog, FileConflictAction.Skip); InvokePrimary(dialog); await pending;
+                ChooseConflict(dialog, FileConflictAction.Skip); await pending;
                 Require(Directory.Exists(fresh) && File.ReadAllText(Path.Combine(existing, "keep.txt")) == "keep", "skip changed content");
                 Require(surface.SelectedPaths().Contains(fresh), "skip lost the original selection");
                 surface.BeginInlineRename(); await Wait(() => surface.IsRenaming);
                 Field<TextBox>(surface, "_renameEditor").Text = "existing-folder";
                 pending = (Task)Call(surface, "CommitInlineRenameAsync", 0)!;
-                dialog = await Dialog(); ChooseConflict(dialog, FileConflictAction.Merge); InvokePrimary(dialog);
+                dialog = await Dialog(); ChooseConflict(dialog, FileConflictAction.Merge);
                 await pending;
                 Require(!Directory.Exists(fresh) && surface.SelectedPaths().Contains(existing), "merge did not select the existing folder");
                 Require(File.ReadAllText(Path.Combine(existing, "keep.txt")) == "keep", "merge altered existing content");
@@ -234,7 +230,7 @@ public sealed partial class NavigatorPage
                     "operation failure replaced the directory state");
                 return Task.CompletedTask;
             });
-            await check("PasteConflictSkipAndKeepBoth", async () =>
+            await check("CopyPasteCreatesNumberedCopies", async () =>
             {
                 var incoming = Directory.CreateDirectory(Path.Combine(folder, "paste-source")).FullName;
                 File.WriteAllText(Path.Combine(incoming, "b.txt"), "incoming b");
@@ -242,20 +238,14 @@ public sealed partial class NavigatorPage
                 var data = new DataPackage { RequestedOperation = DataPackageOperation.Copy };
                 data.SetStorageItems(new[] { await Windows.Storage.StorageFile.GetFileFromPathAsync(Path.Combine(incoming, "b.txt")) });
                 var pending = (Task)Call(actions, "PasteItemsAsync", data.GetView())!;
-                var dialog = await Dialog();
-                ChooseConflict(dialog, FileConflictAction.Skip); InvokePrimary(dialog); await pending;
-                Require(File.ReadAllText(Path.Combine(folder, "b.txt")) == "beta" && !File.Exists(Path.Combine(folder, "b (2).txt")), "skip copied or changed a file");
-                await Task.Delay(150);
-                Require(_transferResultNotice is { IsOpen: true } && _transferResultNotice.Title.Contains("1"), "skip result disappeared after refresh");
+                await pending.WaitAsync(TimeSpan.FromSeconds(10));
+                Require(File.ReadAllText(Path.Combine(folder, "b.txt")) == "beta" && File.ReadAllText(Path.Combine(folder, "b (2).txt")) == "incoming b", "copy did not preserve both versions");
                 data.SetStorageItems(new[] {
                     await Windows.Storage.StorageFile.GetFileFromPathAsync(Path.Combine(incoming, "b.txt")),
                     await Windows.Storage.StorageFile.GetFileFromPathAsync(Path.Combine(incoming, "renamed.txt")) });
                 pending = (Task)Call(actions, "PasteItemsAsync", data.GetView())!;
-                dialog = await Dialog(); ChooseConflict(dialog, FileConflictAction.KeepBoth);
-                Descendants(dialog).OfType<CheckBox>().Single().IsChecked = true;
-                await Capture(dialog, "paste-file-conflict.png");
-                InvokePrimary(dialog); await pending.WaitAsync(TimeSpan.FromSeconds(10));
-                Require(File.ReadAllText(Path.Combine(folder, "b (2).txt")) == "incoming b", "keep-both result missing");
+                await pending.WaitAsync(TimeSpan.FromSeconds(10));
+                Require(File.ReadAllText(Path.Combine(folder, "b (3).txt")) == "incoming b", "keep-both result missing");
                 Require(File.ReadAllText(Path.Combine(folder, "renamed (2).txt")) == "incoming renamed", "apply-all did not cover the second conflict");
                 Require(File.ReadAllText(Path.Combine(folder, "b.txt")) == "beta" && File.Exists(Path.Combine(incoming, "b.txt")), "copy altered existing or source data");
             });
@@ -263,16 +253,17 @@ public sealed partial class NavigatorPage
             {
                 var incoming = Path.Combine(folder, "paste-source", "b.txt");
                 var target = Path.Combine(folder, "b.txt");
-                var data = new DataPackage { RequestedOperation = DataPackageOperation.Copy };
+                var data = new DataPackage { RequestedOperation = DataPackageOperation.Move };
                 data.SetStorageItems(new[] { await Windows.Storage.StorageFile.GetFileFromPathAsync(incoming) });
                 var pending = (Task)Call(actions, "PasteItemsAsync", data.GetView())!;
                 var dialog = await Dialog();
-                Require(Descendants(dialog).OfType<RadioButton>().Count() == 3, "missing replace/skip/keep-both choices");
-                Require(Descendants(dialog).OfType<TextBlock>().Any(t => t.Text == incoming), "source comparison missing");
-                Require(Descendants(dialog).OfType<TextBlock>().Any(t => t.Text == target), "target comparison missing");
-                ChooseConflict(dialog, FileConflictAction.Replace);
+                var compare = Descendants(dialog).OfType<Button>().Single(b => Microsoft.UI.Xaml.Automation.AutomationProperties.GetAutomationId(b) == "ConflictCompare");
+                ((IInvokeProvider)new ButtonAutomationPeer(compare).GetPattern(PatternInterface.Invoke)).Invoke();
+                await Task.Delay(150);
+                Require(Descendants(dialog).OfType<TextBlock>().Any(t => ToolTipService.GetToolTip(t) as string == incoming), "source comparison missing");
+                Require(Descendants(dialog).OfType<TextBlock>().Any(t => ToolTipService.GetToolTip(t) as string == target), "target comparison missing");
                 await Capture(dialog, "paste-replace-conflict.png");
-                InvokePrimary(dialog); await pending.WaitAsync(TimeSpan.FromSeconds(10));
+                ChooseConflict(dialog, FileConflictAction.Replace); await pending.WaitAsync(TimeSpan.FromSeconds(10));
                 Require(File.ReadAllText(target) == "incoming b", "replace did not publish source content");
                 Require(App.FileUndo.TryUndo(new WindowsLocalFileOperations()), "replace missing undo");
                 Require(File.ReadAllText(target) == "beta", "undo did not recover original");
@@ -280,25 +271,15 @@ public sealed partial class NavigatorPage
                 Require(File.ReadAllText(target) == "incoming b", "redo failed");
                 Require(App.FileUndo.TryUndo(new WindowsLocalFileOperations()), "second undo failed");
             });
-            await check("SelfPasteExplainsMissingReplace", async () =>
+            await check("SelfPasteCreatesCopyWithoutPrompt", async () =>
             {
                 var target = Path.Combine(folder, "b.txt");
                 var data = new DataPackage { RequestedOperation = DataPackageOperation.Copy };
                 data.SetStorageItems(new[] { await Windows.Storage.StorageFile.GetFileFromPathAsync(target) });
+                var expected = UniquePath.CombineAvailable(folder, "b.txt", Path.Exists);
                 var pending = (Task)Call(actions, "PasteItemsAsync", data.GetView())!;
-                var dialog = await Dialog();
-                Require(dialog.Title as string == Localization.StringTable.Get("Transfer_SameItemTitle"), "self-copy reason missing");
-                Require(!Descendants(dialog).OfType<RadioButton>().Any(r => r.Tag is FileConflictAction.Replace), "self-replacement offered");
-                Require(Descendants(dialog).OfType<TextBlock>().Count(t => t.Text == target) == 1, "same path displayed twice");
-                Require(((ScrollViewer)dialog.Content).ActualHeight < 300, "self-copy layout is too tall");
-                await Capture(dialog, "paste-self-conflict.png");
-                InvokePrimary(dialog); await pending;
-                Require(File.ReadAllText(target) == "beta", "default skip changed the original");
-                pending = (Task)Call(actions, "PasteItemsAsync", data.GetView())!;
-                dialog = await Dialog(); ChooseConflict(dialog, FileConflictAction.KeepBoth);
-                Require(dialog.PrimaryButtonText == Localization.StringTable.Get("Transfer_CreateCopy"), "copy action label incorrect");
-                InvokePrimary(dialog); await pending;
-                Require(File.ReadAllText(Path.Combine(folder, "b (3).txt")) == "beta", "self-copy did not allocate a numbered copy");
+                await pending.WaitAsync(TimeSpan.FromSeconds(10));
+                Require(File.ReadAllText(expected) == "beta", "self-copy did not allocate a numbered copy");
                 Require(File.ReadAllText(target) == "beta", "self-copy changed the original");
             });
             await check("MergePromptsForNestedFileConflicts", async () =>
@@ -308,13 +289,12 @@ public sealed partial class NavigatorPage
                 File.WriteAllText(Path.Combine(source, "same.txt"), "incoming");
                 File.WriteAllText(Path.Combine(target, "same.txt"), "existing");
                 var pending = actions.RenamePathAsync(source, "merge-existing");
-                var dialog = await Dialog(); ChooseConflict(dialog, FileConflictAction.Merge);
-                Descendants(dialog).OfType<CheckBox>().Single().IsChecked = true;
-                await Capture(dialog, "paste-folder-conflict.png"); InvokePrimary(dialog);
+                var dialog = await Dialog();
+                await Capture(dialog, "paste-folder-conflict.png"); ChooseConflict(dialog, FileConflictAction.Merge);
                 await Wait(() => !dialog.IsLoaded);
                 dialog = await Dialog();
                 Require(!Descendants(dialog).OfType<RadioButton>().Any(r => r.Tag is FileConflictAction.Merge), "folder rule leaked into file conflict");
-                ChooseConflict(dialog, FileConflictAction.KeepBoth); InvokePrimary(dialog);
+                ChooseConflict(dialog, FileConflictAction.KeepBoth);
                 Require(await pending == target, "merged folder selection incorrect");
                 Require(File.ReadAllText(Path.Combine(target, "same.txt")) == "existing", "merge overwrote existing file");
                 Require(File.ReadAllText(Path.Combine(target, "same (2).txt")) == "incoming", "nested numbering missing");
@@ -492,8 +472,13 @@ public sealed partial class NavigatorPage
             var button = Descendants(dialog).OfType<Button>().First(b => b.Name == "PrimaryButton");
             ((IInvokeProvider)new ButtonAutomationPeer(button).GetPattern(PatternInterface.Invoke)).Invoke();
         }
-        static void ChooseConflict(ContentDialog dialog, FileConflictAction action) =>
-            Descendants(dialog).OfType<RadioButton>().Single(r => r.Tag is FileConflictAction value && value == action).IsChecked = true;
+        static void ChooseConflict(ContentDialog dialog, FileConflictAction action)
+        {
+            var button = Descendants(dialog).OfType<Button>().First(b =>
+                Microsoft.UI.Xaml.Automation.AutomationProperties.GetAutomationId(b) is var id
+                && (id == "Conflict" + action || id == "ConflictChoose" + action));
+            ((IInvokeProvider)new ButtonAutomationPeer(button).GetPattern(PatternInterface.Invoke)).Invoke();
+        }
         static IEnumerable<DependencyObject> Descendants(DependencyObject root)
         {
             yield return root;

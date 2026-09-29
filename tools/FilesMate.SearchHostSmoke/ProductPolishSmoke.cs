@@ -46,9 +46,11 @@ internal static class ProductPolishSmoke
         Set(host, "<Profile>k__BackingField", output);
         Set(host, "<Settings>k__BackingField", new GlobalSearchSettings(StartAtLogin: false, PreviewEnabled: false));
         Set(host, "_app", Application.Current);
+        File.WriteAllText(Path.Combine(output, "appearance.json"), "{\"fileFontFamily\":\"Microsoft YaHei UI\"}");
         var allocatedBefore = GC.GetTotalAllocatedBytes(true);
         var warmClock = System.Diagnostics.Stopwatch.StartNew();
         var window = (PaletteWindow)Activator.CreateInstance(typeof(PaletteWindow), Flags, null, [host, new Provider(output)], null)!;
+        Check(window.FontFamily.Source == "Microsoft YaHei UI", "Global font did not reach search window");
         // Off-screen, inactive window: exercise real WPF layout without mouse,
         // hotkeys, tray registration, or a connection to the user's profile.
         var area = RuntimeHelpers.GetUninitializedObject(typeof(PaletteWindow).GetField("_workArea", Flags)!.FieldType);
@@ -112,6 +114,38 @@ internal static class ProductPolishSmoke
         Check(!Click(rows[0], MouseButton.Left, ModifierKeys.None, new Vector())
             && !Click(appRow, MouseButton.Right, ModifierKeys.None, new Vector())
             && !Click(appRow, MouseButton.Left, ModifierKeys.None, new Vector(100, 0)), "Different row, context click or drag would launch application");
+        foreach (var fileMode in Enum.GetValues<ItemOpeningMode>())
+        foreach (var folderMode in Enum.GetValues<ItemOpeningMode>())
+        {
+            File.WriteAllText(Path.Combine(output, "explorer.json"), System.Text.Json.JsonSerializer.Serialize(new
+                { fileOpeningMode = fileMode.ToString(), folderOpeningMode = folderMode.ToString() }));
+            Call(window, "LoadOpeningPreferences");
+            Check((ItemOpeningMode)Field(window, "_fileOpeningMode") == fileMode
+                && (ItemOpeningMode)Field(window, "_folderOpeningMode") == folderMode, "Search opening preferences are not independent");
+            Check(window.SelectionCheckboxes == (fileMode == ItemOpeningMode.SingleClick || folderMode == ItemOpeningMode.SingleClick), "Single click has no selection control");
+        }
+        File.WriteAllText(Path.Combine(output, "explorer.json"), "{\"fileOpeningMode\":\"invalid\",\"folderOpeningMode\":\"2\"}");
+        Call(window, "LoadOpeningPreferences");
+        Check((ItemOpeningMode)Field(window, "_fileOpeningMode") == ItemOpeningMode.DoubleClick
+            && (ItemOpeningMode)Field(window, "_folderOpeningMode") == ItemOpeningMode.DoubleClick, "Invalid opening preference did not fall back safely");
+        var fileRow = rows.First(row => !row.IsApplication && !row.Hit.IsDirectory);
+        var filename = new TextBlock { Name = "ResultName", Text = fileRow.DisplayName, DataContext = fileRow };
+        foreach (var mode in Enum.GetValues<ItemOpeningMode>())
+        foreach (var onName in new[] { true, false })
+        {
+            Set(window, "_fileOpeningMode", mode); Set(window, "_pressedOpeningMode", mode);
+            Set(window, "_pressedName", onName); Set(window, "_pressedModified", false); Set(window, "_openingMoved", false);
+            Set(window, "_openingClicks", new ItemClickTracker());
+            var up = new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+                { RoutedEvent = UIElement.MouseLeftButtonUpEvent, Source = onName ? filename : results };
+            Check((bool)Call(window, "ShouldOpenResult", fileRow, up)! == (mode == ItemOpeningMode.SingleClick || mode == ItemOpeningMode.NameClick && onName), "Search mode/name activation mismatch");
+            Set(window, "_pressedModified", true);
+            Check(!(bool)Call(window, "ShouldOpenResult", fileRow, up)!, "Modified search click opened a file");
+            Set(window, "_pressedModified", false); Set(window, "_openingMoved", true);
+            Check(!(bool)Call(window, "ShouldOpenResult", fileRow, up)!, "Dragged search result opened a file");
+        }
+        Set(window, "_openingMoved", false);
+        File.WriteAllText(Path.Combine(output, "explorer.json"), "{}"); Call(window, "LoadOpeningPreferences");
         bool Loaded(SearchRow row) => (bool)typeof(SearchRow).GetProperty("IconLoaded", Flags)!.GetValue(row)!;
         var initialLoaded = rows.Count(Loaded);
         Check(rows.Length == 40 && initialLoaded > 0 && initialLoaded < 12, $"Unexpected viewport: rows={rows.Length}, loaded={initialLoaded}, height={results.ActualHeight}, pending={Field(window, "_pending")}");
@@ -142,6 +176,11 @@ internal static class ProductPolishSmoke
         {
             appearance.GetMethod("Apply", BindingFlags.Static | BindingFlags.NonPublic)!.Invoke(null, [window.Resources, AppearanceSettings.Default with { Theme = theme }]);
             Check(((SolidColorBrush)window.Resources["CloseHover"]).Color == (SystemParameters.HighContrast ? SystemColors.HighlightColor : Color.FromRgb(232, 17, 35)), "Close feedback drifted from main theme");
+            if (!SystemParameters.HighContrast)
+            {
+                Check(((SolidColorBrush)window.Resources["Ink"]).Color == (theme == AppThemeKind.Light ? Color.FromRgb(48, 59, 55) : Color.FromRgb(232, 232, 232)), "Shared primary text aliases did not resolve for the current theme");
+                Check(((SolidColorBrush)window.Resources["Muted"]).Color == (theme == AppThemeKind.Light ? Color.FromRgb(96, 109, 102) : Color.FromRgb(172, 172, 172)), "Shared secondary text aliases did not resolve for the current theme");
+            }
             window.UpdateLayout();
             var surface = (Border)Field(window, "Shell");
             var shot = new RenderTargetBitmap((int)Math.Ceiling(surface.ActualWidth), (int)Math.Ceiling(surface.ActualHeight), 96, 96, PixelFormats.Pbgra32);

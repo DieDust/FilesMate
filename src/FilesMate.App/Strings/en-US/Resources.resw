@@ -595,11 +595,14 @@
   <data name="Clipboard_BusyShort" xml:space="preserve">
     <value>Clipboard is busy. Try again.</value>
   </data>
+  <data name="Clipboard_CopiedCount" xml:space="preserve">
+    <value>Copied {0} items to clipboard</value>
+  </data>
   <data name="Clipboard_CopyCount" xml:space="preserve">
     <value>Copied {0} items</value>
   </data>
   <data name="Clipboard_CutCount" xml:space="preserve">
-    <value>Cut {0} items</value>
+    <value>Cut {0} items · Ready to paste</value>
   </data>
   <data name="Clipboard_DimensionsTooLarge" xml:space="preserve">
     <value>The image dimensions are too large. Save it from an image app.</value>
@@ -643,8 +646,56 @@
   <data name="Column_Type" xml:space="preserve">
     <value>Type</value>
   </data>
+  <data name="Columns_Category_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Columns_Category_Common" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Columns_Category_Document" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="Columns_Category_Media" xml:space="preserve">
+    <value>Audio &amp; video</value>
+  </data>
+  <data name="Columns_Category_Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="Columns_Category_Photo" xml:space="preserve">
+    <value>Photos</value>
+  </data>
+  <data name="Columns_Choose" xml:space="preserve">
+    <value>Choose details…</value>
+  </data>
+  <data name="Columns_ChooseHint" xml:space="preserve">
+    <value>Choose the details to show. Select a column on the right to change its order or width.</value>
+  </data>
+  <data name="Columns_Fit" xml:space="preserve">
+    <value>Fit this column to content</value>
+  </data>
+  <data name="Columns_FitAll" xml:space="preserve">
+    <value>Fit all columns to content</value>
+  </data>
+  <data name="Columns_MoveDown" xml:space="preserve">
+    <value>Move column down</value>
+  </data>
+  <data name="Columns_MoveUp" xml:space="preserve">
+    <value>Move column up</value>
+  </data>
   <data name="Columns_Reset" xml:space="preserve">
     <value>Restore default columns</value>
+  </data>
+  <data name="Columns_Search" xml:space="preserve">
+    <value>Search columns</value>
+  </data>
+  <data name="Columns_Selected" xml:space="preserve">
+    <value>Visible columns</value>
+  </data>
+  <data name="Columns_Title" xml:space="preserve">
+    <value>Choose details</value>
+  </data>
+  <data name="Columns_Width" xml:space="preserve">
+    <value>Width</value>
   </data>
   <data name="CommandPalette" xml:space="preserve">
     <value>Search commands</value>
@@ -783,6 +834,129 @@
   </data>
   <data name="ConfirmRemove" xml:space="preserve">
     <value>Confirm removal</value>
+  </data>
+  <data name="Conflict_ApplyRemaining" xml:space="preserve">
+    <value>Use this choice for the remaining conflicts of this kind</value>
+  </data>
+  <data name="Conflict_BackupUnavailable" xml:space="preserve">
+    <value>The undo backup limit is reached. Replacing this file cannot be undone and requires a separate confirmation.</value>
+  </data>
+  <data name="Conflict_BatchScope" xml:space="preserve">
+    <value>For this operation only. Other kinds of conflicts are confirmed separately.</value>
+  </data>
+  <data name="Conflict_ChangeCounts" xml:space="preserve">
+    <value>+ {0} added · − {1} deleted · ~ {2} modified</value>
+  </data>
+  <data name="Conflict_Changed" xml:space="preserve">
+    <value>A file changed while you were deciding. Review the updated information before continuing.</value>
+  </data>
+  <data name="Conflict_Coarse" xml:space="preserve">
+    <value>Large changes are grouped; use WinMerge for finer alignment.</value>
+  </data>
+  <data name="Conflict_Compare" xml:space="preserve">
+    <value>Compare info for both files</value>
+  </data>
+  <data name="Conflict_CompareFailed" xml:space="preserve">
+    <value>The content could not be compared. The file may be busy, unavailable or changed. You can still skip or keep both.</value>
+  </data>
+  <data name="Conflict_CompareHint" xml:space="preserve">
+    <value>View details, content previews and text changes side by side.</value>
+  </data>
+  <data name="Conflict_Continue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="Conflict_DecideEach" xml:space="preserve">
+    <value>Let me decide for each file</value>
+  </data>
+  <data name="Conflict_DeletedAnnotation" xml:space="preserve">
+    <value>Deleted from the new version</value>
+  </data>
+  <data name="Conflict_Different" xml:space="preserve">
+    <value>File data differs.</value>
+  </data>
+  <data name="Conflict_EncodingDiffers" xml:space="preserve">
+    <value>The visible text matches, but the bytes differ (for example, encoding or line endings).</value>
+  </data>
+  <data name="Conflict_Exists" xml:space="preserve">
+    <value>An item with this name exists</value>
+  </data>
+  <data name="Conflict_Identical" xml:space="preserve">
+    <value>File data is identical. Dates and other properties may differ.</value>
+  </data>
+  <data name="Conflict_KeepAll" xml:space="preserve">
+    <value>Keep both for all</value>
+  </data>
+  <data name="Conflict_KeepExisting" xml:space="preserve">
+    <value>Keep destination (skip)</value>
+  </data>
+  <data name="Conflict_KeepFiles" xml:space="preserve">
+    <value>Keep both files</value>
+  </data>
+  <data name="Conflict_LineCounts" xml:space="preserve">
+    <value>Incoming version: +{0} / −{1} lines</value>
+  </data>
+  <data name="Conflict_Loading" xml:space="preserve">
+    <value>Loading comparison…</value>
+  </data>
+  <data name="Conflict_Merge" xml:space="preserve">
+    <value>Merge these folders</value>
+  </data>
+  <data name="Conflict_MergeHint" xml:space="preserve">
+    <value>Combine folder contents. Conflicting files will be confirmed separately.</value>
+  </data>
+  <data name="Conflict_NewItem" xml:space="preserve">
+    <value>New item</value>
+  </data>
+  <data name="Conflict_OriginalItem" xml:space="preserve">
+    <value>Original item</value>
+  </data>
+  <data name="Conflict_Partial" xml:space="preserve">
+    <value>Partial text preview (up to 256 KB / 2,000 lines per file). This does not compare the entire file.</value>
+  </data>
+  <data name="Conflict_Preview" xml:space="preserve">
+    <value>Content previews</value>
+  </data>
+  <data name="Conflict_PreviewHint" xml:space="preserve">
+    <value>Previews are for reference. Matching size and date do not prove that content is identical.</value>
+  </data>
+  <data name="Conflict_ReplaceAll" xml:space="preserve">
+    <value>Replace the files in the destination</value>
+  </data>
+  <data name="Conflict_ReplaceFile" xml:space="preserve">
+    <value>Replace the file in the destination</value>
+  </data>
+  <data name="Conflict_ReplaceHint" xml:space="preserve">
+    <value>Use the incoming file in place of the destination version.</value>
+  </data>
+  <data name="Conflict_SkipAll" xml:space="preserve">
+    <value>Skip these files</value>
+  </data>
+  <data name="Conflict_SkipFile" xml:space="preserve">
+    <value>Skip this file</value>
+  </data>
+  <data name="Conflict_SkipHint" xml:space="preserve">
+    <value>Keep the destination version and leave the source in its original location.</value>
+  </data>
+  <data name="Conflict_TextChanges" xml:space="preserve">
+    <value>Text changes</value>
+  </data>
+  <data name="Conflict_Title" xml:space="preserve">
+    <value>Replace or skip</value>
+  </data>
+  <data name="Conflict_UndoHint" xml:space="preserve">
+    <value>The previous version is retained for undo during this session.</value>
+  </data>
+  <data name="Conflict_UseIncoming" xml:space="preserve">
+    <value>Use incoming</value>
+  </data>
+  <data name="Conflict_Verify" xml:space="preserve">
+    <value>Compare full content</value>
+  </data>
+  <data name="Conflict_Verifying" xml:space="preserve">
+    <value>Comparing file data…</value>
+  </data>
+  <data name="Conflict_WinMerge" xml:space="preserve">
+    <value>WinMerge (read-only)</value>
   </data>
   <data name="CopyDiagnostics" xml:space="preserve">
     <value>Copy diagnostics</value>
@@ -1336,6 +1510,30 @@ Destination folder:
   <data name="FoldersSection" xml:space="preserve">
     <value>Folders</value>
   </data>
+  <data name="Font_Default" xml:space="preserve">
+    <value>System default</value>
+  </data>
+  <data name="Font_DetailsSize" xml:space="preserve">
+    <value>Details text size</value>
+  </data>
+  <data name="Font_Family" xml:space="preserve">
+    <value>Font</value>
+  </data>
+  <data name="Font_Hint" xml:space="preserve">
+    <value>Used throughout the app, menus and search. File name and detail sizes are independent.</value>
+  </data>
+  <data name="Font_NameSize" xml:space="preserve">
+    <value>File and folder name size</value>
+  </data>
+  <data name="Font_Preview" xml:space="preserve">
+    <value>Project materials · Summer photos 2026.png</value>
+  </data>
+  <data name="Font_Reset" xml:space="preserve">
+    <value>Restore default text settings</value>
+  </data>
+  <data name="Font_Section" xml:space="preserve">
+    <value>Fonts and text</value>
+  </data>
   <data name="FullPath" xml:space="preserve">
     <value>Full path</value>
   </data>
@@ -1375,8 +1573,56 @@ Destination folder:
   <data name="GroupSelection" xml:space="preserve">
     <value>Move selection into a new folder</value>
   </data>
+  <data name="Grouping_Cycle" xml:space="preserve">
+    <value>Include in button cycle</value>
+  </data>
+  <data name="Grouping_Default" xml:space="preserve">
+    <value>Default file order</value>
+  </data>
+  <data name="Grouping_DefaultHint" xml:space="preserve">
+    <value>Used for folders without a saved arrangement. Mixed sorts files and folders together by the selected field.</value>
+  </data>
+  <data name="Grouping_Options" xml:space="preserve">
+    <value>File order</value>
+  </data>
+  <data name="HiddenFiles_Hidden" xml:space="preserve">
+    <value>Hidden files: hidden · Click to show</value>
+  </data>
+  <data name="HiddenFiles_Shown" xml:space="preserve">
+    <value>Hidden files: shown · Click to hide</value>
+  </data>
   <data name="HideSettings" xml:space="preserve">
     <value>Hide settings</value>
+  </data>
+  <data name="History_Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="History_Empty" xml:space="preserve">
+    <value>No recent undoable operations</value>
+  </data>
+  <data name="History_EmptyHint" xml:space="preserve">
+    <value>Recent operations you can undo appear here</value>
+  </data>
+  <data name="History_Files" xml:space="preserve">
+    <value>Related files</value>
+  </data>
+  <data name="History_Hint" xml:space="preserve">
+    <value>Undo in order. Keeps up to 5 undoable operations in this session.</value>
+  </data>
+  <data name="History_Locate" xml:space="preserve">
+    <value>Show in folder</value>
+  </data>
+  <data name="History_Missing" xml:space="preserve">
+    <value>This location is no longer available.</value>
+  </data>
+  <data name="History_Redo" xml:space="preserve">
+    <value>Redo</value>
+  </data>
+  <data name="History_Title" xml:space="preserve">
+    <value>History</value>
+  </data>
+  <data name="History_Undone" xml:space="preserve">
+    <value>Undone</value>
   </data>
   <data name="Home" xml:space="preserve">
     <value>Home</value>
@@ -1467,6 +1713,9 @@ Destination folder:
   </data>
   <data name="Layout_LargeIcons" xml:space="preserve">
     <value>Large icons</value>
+  </data>
+  <data name="Layout_List" xml:space="preserve">
+    <value>List</value>
   </data>
   <data name="Layout_MaximumIcons" xml:space="preserve">
     <value>Maximum icons (256)</value>
@@ -1612,6 +1861,60 @@ Destination folder:
   <data name="NetworkDrive" xml:space="preserve">
     <value>Network drive</value>
   </data>
+  <data name="NewDocumentName_Csv" xml:space="preserve">
+    <value>New CSV table</value>
+  </data>
+  <data name="NewDocumentName_Html" xml:space="preserve">
+    <value>New HTML document</value>
+  </data>
+  <data name="NewDocumentName_Json" xml:space="preserve">
+    <value>New JSON file</value>
+  </data>
+  <data name="NewDocumentName_Markdown" xml:space="preserve">
+    <value>New Markdown document</value>
+  </data>
+  <data name="NewDocumentName_Presentation" xml:space="preserve">
+    <value>New PowerPoint presentation</value>
+  </data>
+  <data name="NewDocumentName_RichText" xml:space="preserve">
+    <value>New rich text document</value>
+  </data>
+  <data name="NewDocumentName_Spreadsheet" xml:space="preserve">
+    <value>New Excel workbook</value>
+  </data>
+  <data name="NewDocumentName_Text" xml:space="preserve">
+    <value>New text document</value>
+  </data>
+  <data name="NewDocumentName_Word" xml:space="preserve">
+    <value>New Word document</value>
+  </data>
+  <data name="NewDocument_Csv" xml:space="preserve">
+    <value>CSV table (.csv)</value>
+  </data>
+  <data name="NewDocument_Html" xml:space="preserve">
+    <value>HTML document (.html)</value>
+  </data>
+  <data name="NewDocument_Json" xml:space="preserve">
+    <value>JSON file (.json)</value>
+  </data>
+  <data name="NewDocument_Markdown" xml:space="preserve">
+    <value>Markdown document (.md)</value>
+  </data>
+  <data name="NewDocument_Presentation" xml:space="preserve">
+    <value>PowerPoint presentation (.pptx)</value>
+  </data>
+  <data name="NewDocument_RichText" xml:space="preserve">
+    <value>Rich text document (.rtf)</value>
+  </data>
+  <data name="NewDocument_Spreadsheet" xml:space="preserve">
+    <value>Excel workbook (.xlsx)</value>
+  </data>
+  <data name="NewDocument_Text" xml:space="preserve">
+    <value>Text document (.txt)</value>
+  </data>
+  <data name="NewDocument_Word" xml:space="preserve">
+    <value>Word document (.docx)</value>
+  </data>
   <data name="NewFileName" xml:space="preserve">
     <value>New file.txt</value>
   </data>
@@ -1683,6 +1986,30 @@ Destination folder:
   </data>
   <data name="Opening" xml:space="preserve">
     <value>Opening…</value>
+  </data>
+  <data name="Opening_DoubleClick" xml:space="preserve">
+    <value>Double-click</value>
+  </data>
+  <data name="Opening_FileTitle" xml:space="preserve">
+    <value>Open files</value>
+  </data>
+  <data name="Opening_FolderHint" xml:space="preserve">
+    <value>Also applies to drives and locations on Home. Files and folders can use different opening modes.</value>
+  </data>
+  <data name="Opening_FolderTitle" xml:space="preserve">
+    <value>Open folders</value>
+  </data>
+  <data name="Opening_Hint" xml:space="preserve">
+    <value>Click the name: the name opens an item; its icon and other areas select it. Use Ctrl / Shift + click or drag from empty space to select multiple items.</value>
+  </data>
+  <data name="Opening_NameClick" xml:space="preserve">
+    <value>Click the name</value>
+  </data>
+  <data name="Opening_SelectItem" xml:space="preserve">
+    <value>Select item</value>
+  </data>
+  <data name="Opening_SingleClick" xml:space="preserve">
+    <value>Single-click</value>
   </data>
   <data name="Order_SaveFailed" xml:space="preserve">
     <value>Could not save. Previous order restored: </value>
@@ -2354,6 +2681,9 @@ Regex mode uses the entire query as a regular expression. Filters still apply. F
   <data name="SearchPage_Loaded" xml:space="preserve">
     <value>{0:N0} items loaded</value>
   </data>
+  <data name="SearchPage_LoadedSort" xml:space="preserve">
+    <value>Sorting loaded results</value>
+  </data>
   <data name="SearchPage_LoadingMore" xml:space="preserve">
     <value>{0:N0} loaded · Loading more…</value>
   </data>
@@ -2843,6 +3173,12 @@ Regex mode uses the entire query as a regular expression. Filters still apply. F
   <data name="SettingsTags" xml:space="preserve">
     <value>Tags</value>
   </data>
+  <data name="Settings_Find" xml:space="preserve">
+    <value>Search settings</value>
+  </data>
+  <data name="Settings_NoMatches" xml:space="preserve">
+    <value>No matching settings</value>
+  </data>
   <data name="Settings_SaveFailed" xml:space="preserve">
     <value>Could not save settings</value>
   </data>
@@ -2888,6 +3224,12 @@ Regex mode uses the entire query as a regular expression. Filters still apply. F
   <data name="Shelf_Add" xml:space="preserve">
     <value>Add to file shelf</value>
   </data>
+  <data name="Shelf_AddSelection" xml:space="preserve">
+    <value>Add selected</value>
+  </data>
+  <data name="Shelf_AddSelectionHint" xml:space="preserve">
+    <value>Add the selected items from the file list to the shelf.</value>
+  </data>
   <data name="Shelf_Browse" xml:space="preserve">
     <value>Choose destination folder</value>
   </data>
@@ -2912,6 +3254,9 @@ Regex mode uses the entire query as a regular expression. Filters still apply. F
   <data name="Shelf_CopyTo" xml:space="preserve">
     <value>Copy selected to...</value>
   </data>
+  <data name="Shelf_CopyToShort" xml:space="preserve">
+    <value>Copy to…</value>
+  </data>
   <data name="Shelf_Count" xml:space="preserve">
     <value>{0} items</value>
   </data>
@@ -2921,8 +3266,14 @@ Regex mode uses the entire query as a regular expression. Filters still apply. F
   <data name="Shelf_Empty" xml:space="preserve">
     <value>Shelf is empty</value>
   </data>
+  <data name="Shelf_EmptyHint" xml:space="preserve">
+    <value>Drop files here, or paste copied items.</value>
+  </data>
   <data name="Shelf_InvalidDestination" xml:space="preserve">
     <value>Choose an existing destination folder.</value>
+  </data>
+  <data name="Shelf_More" xml:space="preserve">
+    <value>More</value>
   </data>
   <data name="Shelf_Move" xml:space="preserve">
     <value>Move selected to destination</value>
@@ -2930,17 +3281,38 @@ Regex mode uses the entire query as a regular expression. Filters still apply. F
   <data name="Shelf_MoveTo" xml:space="preserve">
     <value>Move selected to...</value>
   </data>
+  <data name="Shelf_MoveToShort" xml:space="preserve">
+    <value>Move to…</value>
+  </data>
   <data name="Shelf_Progress" xml:space="preserve">
     <value>Transferring: {0} completed</value>
   </data>
   <data name="Shelf_Remove" xml:space="preserve">
-    <value>Remove selected references</value>
+    <value>Remove selected from shelf; keep original files</value>
+  </data>
+  <data name="Shelf_RemoveShort" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Shelf_Removed" xml:space="preserve">
+    <value>Removed {0} items from the shelf. Original files are kept.</value>
+  </data>
+  <data name="Shelf_Reveal" xml:space="preserve">
+    <value>Open containing folder</value>
+  </data>
+  <data name="Shelf_SelectNone" xml:space="preserve">
+    <value>Deselect all</value>
+  </data>
+  <data name="Shelf_SelectedCount" xml:space="preserve">
+    <value>{0} selected</value>
   </data>
   <data name="Shelf_Short" xml:space="preserve">
     <value>Shelf</value>
   </data>
   <data name="Shelf_Title" xml:space="preserve">
     <value>File shelf</value>
+  </data>
+  <data name="Shelf_UndoRemove" xml:space="preserve">
+    <value>Undo</value>
   </data>
   <data name="Shortcut_Change" xml:space="preserve">
     <value>Change shortcut</value>
@@ -3130,6 +3502,33 @@ Ctrl+T new tab. Ctrl+W closes a tab. Ctrl+L path. Ctrl+F filter. F5 refresh. Ctr
   </data>
   <data name="SortByType" xml:space="preserve">
     <value>Sort by type</value>
+  </data>
+  <data name="Sort_Ascending" xml:space="preserve">
+    <value>Ascending</value>
+  </data>
+  <data name="Sort_DefaultDirection" xml:space="preserve">
+    <value>Default sort direction</value>
+  </data>
+  <data name="Sort_DefaultDirectionHint" xml:space="preserve">
+    <value>Used when choosing a different sort column. Click the same column again to reverse its order.</value>
+  </data>
+  <data name="Sort_Descending" xml:space="preserve">
+    <value>Descending</value>
+  </data>
+  <data name="Sort_Direction" xml:space="preserve">
+    <value>Sort direction</value>
+  </data>
+  <data name="Sort_FilesFirst" xml:space="preserve">
+    <value>Files first</value>
+  </data>
+  <data name="Sort_FoldersFirst" xml:space="preserve">
+    <value>Folders first</value>
+  </data>
+  <data name="Sort_Grouping" xml:space="preserve">
+    <value>Files and folders</value>
+  </data>
+  <data name="Sort_Mixed" xml:space="preserve">
+    <value>Mixed</value>
   </data>
   <data name="Sort_MixedPinyin" xml:space="preserve">
     <value>Sort Chinese and Latin names together by pinyin</value>
@@ -3393,6 +3792,18 @@ Sleeping — select to restore</value>
   <data name="ToolbarDescription" xml:space="preserve">
     <value>Show sort and view buttons next to the address bar.</value>
   </data>
+  <data name="Toolbar_Customize" xml:space="preserve">
+    <value>Customize toolbar</value>
+  </data>
+  <data name="Toolbar_FileTools" xml:space="preserve">
+    <value>File tools</value>
+  </data>
+  <data name="Toolbar_Restore" xml:space="preserve">
+    <value>Restore default toolbar</value>
+  </data>
+  <data name="Toolbar_ViewTools" xml:space="preserve">
+    <value>Navigation and view tools</value>
+  </data>
   <data name="Transfer_ApplyAll" xml:space="preserve">
     <value>Apply to remaining conflicts of this kind</value>
   </data>
@@ -3608,6 +4019,21 @@ Sleeping — select to restore</value>
   </data>
   <data name="Videos" xml:space="preserve">
     <value>Videos</value>
+  </data>
+  <data name="View_AlternatingRows" xml:space="preserve">
+    <value>Alternating row backgrounds</value>
+  </data>
+  <data name="View_AlternatingRowsHint" xml:space="preserve">
+    <value>Use a subtle shade on alternate rows in details view to make files easier to follow.</value>
+  </data>
+  <data name="View_IconSize" xml:space="preserve">
+    <value>Icon size</value>
+  </data>
+  <data name="View_ListZoom" xml:space="preserve">
+    <value>List size</value>
+  </data>
+  <data name="View_Options" xml:space="preserve">
+    <value>View options</value>
   </data>
   <data name="View_PerFolder" xml:space="preserve">
     <value>Remember for each folder</value>

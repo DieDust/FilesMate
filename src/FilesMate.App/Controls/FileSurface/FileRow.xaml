@@ -20,8 +20,7 @@
         x:Name="Root"
         Margin="12,1,16,1"
         Background="Transparent"
-        BorderThickness="0"
-        CornerRadius="{StaticResource FilesMate.Corner.Small}">
+        BorderThickness="0">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="CommonStates">
                 <VisualStateGroup.Transitions>
@@ -133,9 +132,11 @@
         <Border
             x:Name="AccentBar"
             Width="3"
-            Margin="0,4"
+            Height="16"
             Opacity="0"
-            VerticalAlignment="Stretch"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            UseLayoutRounding="True"
             Background="{ThemeResource FilesMate.Selection.AccentBrush}"
             CornerRadius="1.5"
             IsHitTestVisible="False" />
@@ -165,23 +166,17 @@
             </Grid>
         </Border>
         <Grid x:Name="NameCell" Grid.Column="2" Padding="4,0,8,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
             <TextBlock
                 x:Name="NameText"
+                HorizontalAlignment="Left"
                 VerticalAlignment="Center"
                 TextWrapping="NoWrap"
                 Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
                 Style="{StaticResource BodyTextBlockStyle}"
                 TextTrimming="CharacterEllipsis" />
-            <StackPanel
-                x:Name="TagHost"
-                Grid.Column="1"
-                Margin="8,0,0,0"
-                Orientation="Horizontal"
-                Spacing="4" />
+        </Grid>
+        <Grid x:Name="TagCell" Padding="8,0" Visibility="Collapsed">
+            <StackPanel x:Name="TagHost" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center"/>
         </Grid>
         <TextBlock
             x:Name="ModifiedText"

@@ -11,7 +11,8 @@ public sealed record PinnedLocationState(
     IReadOnlyList<string>? DriveOrder = null,
     IReadOnlyList<string>? SectionOrder = null,
     IReadOnlyList<string>? HiddenCloudPaths = null,
-    IReadOnlyList<CloudLocationOverride>? CloudOverrides = null);
+    IReadOnlyList<CloudLocationOverride>? CloudOverrides = null,
+    IReadOnlyList<string>? CollapsedSections = null);
 
 public sealed record CloudLocationOverride(string Id, string Label, string Target, string? OriginalTarget = null);
 
@@ -81,7 +82,8 @@ public sealed class PinnedLocationStore
                     NormalizeIds(stored.DriveOrder ?? []),
                     NormalizeIds(stored.SectionOrder ?? []),
                     NormalizeDistinct(stored.HiddenCloudPaths ?? []),
-                    NormalizeCloudOverrides(stored.CloudOverrides ?? []));
+                    NormalizeCloudOverrides(stored.CloudOverrides ?? []),
+                    NormalizeIds(stored.CollapsedSections ?? []));
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
         {
@@ -236,6 +238,7 @@ public sealed class PinnedLocationStore
             SectionOrder = NormalizeIds(state.SectionOrder ?? []),
             HiddenCloudPaths = NormalizeDistinct(state.HiddenCloudPaths ?? []),
             CloudOverrides = NormalizeCloudOverrides(state.CloudOverrides ?? []),
+            CollapsedSections = NormalizeIds(state.CollapsedSections ?? []),
         };
         var json = JsonSerializer.Serialize(stored, JsonOptions);
         var directory = Path.GetDirectoryName(FilePath);
@@ -384,6 +387,15 @@ public sealed class PinnedLocationStore
             && LoadState().CloudPaths.Contains(normalized, StringComparer.OrdinalIgnoreCase);
     }
 
+    public void SetSectionExpanded(string id, bool expanded)
+    {
+        id = NormalizeId(id);
+        if (id == "home" || !NavigationCatalog.SectionOrder.Contains(id)) return;
+        var state = LoadState();
+        var collapsed = (state.CollapsedSections ?? []).Where(item => item != id);
+        SaveState(state with { CollapsedSections = NormalizeIds(expanded ? collapsed : collapsed.Append(id)) });
+    }
+
     private static PinnedLocationState EmptyState() => new([], [], []);
 
     private static string[] NormalizeDistinct(IEnumerable<string> paths) =>
@@ -405,6 +417,7 @@ public sealed class PinnedLocationStore
 
     private sealed class PinnedLocationFile
     {
+        public string[] CollapsedSections { get; init; } = [];
         public string[] Paths { get; init; } = [];
 
         public string[] HiddenDefaultIds { get; init; } = [];

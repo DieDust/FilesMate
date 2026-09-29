@@ -5,6 +5,29 @@ namespace FilesMate.App.Tests.Navigation;
 public sealed class NavigationControllerTests
 {
     [Fact]
+    public void Navigation_notification_can_capture_the_departing_folder_before_up_back_and_forward()
+    {
+        var controller = new NavigationController(new WindowsPathService(), Core.Navigation.PaneId.New());
+        var transitions = new List<(string? From, string To)>();
+        controller.Navigating += (_, intent) =>
+        {
+            transitions.Add((controller.CurrentPath, intent.Path));
+            Assert.Equal(controller.CurrentGeneration, intent.Generation);
+        };
+        controller.Open(@"D:\parent", true);
+        controller.Open(@"D:\parent\child", true);
+        controller.Up();
+        controller.Back();
+        controller.Forward();
+        Assert.Equal(new (string?, string)[]
+        {
+            (null, @"D:\parent"), (@"D:\parent", @"D:\parent\child"),
+            (@"D:\parent\child", @"D:\parent"), (@"D:\parent", @"D:\parent\child"),
+            (@"D:\parent\child", @"D:\parent")
+        }, transitions);
+    }
+
+    [Fact]
     public void HibernationSnapshotRestoresBackAndForwardOrder()
     {
         var original = new NavigationController(new WindowsPathService(), Core.Navigation.PaneId.New());

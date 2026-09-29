@@ -44,7 +44,8 @@ public sealed class ColumnHeaderContractTests
     {
         var code = File.ReadAllText(Path.Combine(
             ThemeXaml.AppRoot, "Controls", "FileSurface", "FileDetailsSurface.xaml.cs"))
-            + File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Controls", "FileSurface", "FileDetailsSurface.Columns.cs"));
+            + File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Controls", "FileSurface", "FileDetailsSurface.Columns.cs"))
+            + File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Controls", "FileSurface", "FileDetailsSurface.List.cs"));
         Assert.DoesNotContain("DisplayNameWidth", code, StringComparison.Ordinal);
         Assert.Contains("new GridLength(column.Visible ? column.Width : 0)", code, StringComparison.Ordinal);
         Assert.Contains("row.ApplyColumns(_detailColumns)", code, StringComparison.Ordinal);

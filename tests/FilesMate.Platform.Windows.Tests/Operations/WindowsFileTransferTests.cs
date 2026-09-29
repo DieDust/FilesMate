@@ -11,6 +11,114 @@ public sealed class WindowsFileTransferTests : IDisposable
     private string Target => Path.Combine(_root, "target");
     public WindowsFileTransferTests() { Directory.CreateDirectory(Source); Directory.CreateDirectory(Target); }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Copy_policy_keeps_both_without_a_prompt_even_with_no_backup_budget(bool sameFolder)
+    {
+        var source = Write(Source, "image.png", "incoming");
+        var destination = sameFolder ? source : Write(Target, "image.png", "existing");
+        var budget = new ReplacementBackupBudget(0, 0);
+        var result = await WindowsFileTransfer.RunAsync(_operations, [new(source, destination)], false,
+            (_, _) => throw new InvalidOperationException("Copy must not ask"), backupBudget: budget,
+            copyCollisionPolicy: FileCopyCollisionPolicy.KeepBoth);
+        Assert.Empty(result.Errors); Assert.False(result.Cancelled);
+        var pair = Assert.Single(result.Completed);
+        Assert.Equal("image (2).png", Path.GetFileName(pair.Destination));
+        Assert.Equal("incoming", File.ReadAllText(source));
+        Assert.Equal(sameFolder ? "incoming" : "existing", File.ReadAllText(destination));
+        Assert.Equal("incoming", File.ReadAllText(pair.Destination));
+        Assert.NotNull(result.Undo); Assert.Empty(result.Undo.Replacements); Assert.Equal(0, budget.UsedBytes);
+    }
+
+    [Fact]
+    public async Task Repeated_same_names_in_one_copy_batch_allocate_distinct_files()
+    {
+        var first = Write(Source, "first/a.txt", "one");
+        var second = Write(Source, "second/a.txt", "two");
+        var third = Write(Source, "third/a.txt", "three");
+        var target = Path.Combine(Target, "a.txt");
+        var result = await WindowsFileTransfer.RunAsync(_operations, [new(first, target), new(second, target), new(third, target)], false,
+            copyCollisionPolicy: FileCopyCollisionPolicy.KeepBoth);
+        Assert.Empty(result.Errors); Assert.Equal(3, result.Completed.Count);
+        Assert.Equal(new[] { "one", "two", "three" }, result.Completed.Select(p => File.ReadAllText(p.Destination)));
+        Assert.Equal(new[] { "a.txt", "a (2).txt", "a (3).txt" }, result.Completed.Select(p => Path.GetFileName(p.Destination)));
+    }
+
+    [Fact]
+    public async Task Copying_a_folder_duplicates_the_whole_folder_instead_of_merging_it()
+    {
+        Write(Source, "report.v1/nested/item.txt", "incoming"); Write(Target, "report.v1/keep.txt", "existing");
+        var result = await WindowsFileTransfer.RunAsync(_operations, [new(Path.Combine(Source, "report.v1"), Path.Combine(Target, "report.v1"))], false,
+            copyCollisionPolicy: FileCopyCollisionPolicy.KeepBoth);
+        Assert.Empty(result.Errors); Assert.False(result.Cancelled);
+        Assert.Equal("incoming", File.ReadAllText(Path.Combine(Target, "report.v1 (2)/nested/item.txt")));
+        Assert.False(File.Exists(Path.Combine(Target, "report.v1/nested/item.txt")));
+        Assert.Equal("existing", File.ReadAllText(Path.Combine(Target, "report.v1/keep.txt")));
+    }
+
+    [Fact]
+    public async Task Copy_over_a_directory_with_the_same_name_allocates_a_file_sibling()
+    {
+        var source = Write(Source, "name", "file"); var target = Path.Combine(Target, "name");
+        Directory.CreateDirectory(target);
+        var result = await WindowsFileTransfer.RunAsync(_operations, [new(source, target)], false,
+            copyCollisionPolicy: FileCopyCollisionPolicy.KeepBoth);
+        Assert.Empty(result.Errors); Assert.True(Directory.Exists(target));
+        Assert.Equal("file", File.ReadAllText(Assert.Single(result.Completed).Destination));
+        Assert.Equal("name (2)", Path.GetFileName(result.Completed[0].Destination));
+    }
+
+    [Fact]
+    public async Task Copy_retries_if_another_writer_takes_the_numbered_name_before_publication()
+    {
+        var source = Write(Source, "item.txt", new string('a', 64 * 1024));
+        var target = Write(Target, "item.txt", "existing"); var raced = Path.Combine(Target, "item (2).txt");
+        var claimed = false;
+        var result = await WindowsFileTransfer.RunAsync(_operations, [new(source, target)], false,
+            byteProgress: new InlineProgress(_ => { if (!claimed) { claimed = true; File.WriteAllText(raced, "other writer"); } }),
+            copyCollisionPolicy: FileCopyCollisionPolicy.KeepBoth);
+        Assert.True(claimed); Assert.Empty(result.Errors);
+        Assert.Equal("item (3).txt", Path.GetFileName(Assert.Single(result.Completed).Destination));
+        Assert.Equal("other writer", File.ReadAllText(raced)); Assert.Equal("existing", File.ReadAllText(target));
+        Assert.Empty(Directory.GetFiles(Target, ".filesmate-copy-*"));
+    }
+
+    [Fact]
+    public async Task Copy_policy_never_suppresses_move_conflicts_and_batch_skip_leaves_sources()
+    {
+        var first = Write(Source, "a", "incoming a"); var second = Write(Source, "b", "incoming b");
+        var a = Write(Target, "a", "old a"); var b = Write(Target, "b", "old b"); var calls = 0;
+        var result = await WindowsFileTransfer.RunAsync(_operations, [new(first, a), new(second, b)], true,
+            (conflict, _) =>
+            {
+                calls++; Assert.True(conflict.IsMove); Assert.True(conflict.IsBatch);
+                Assert.Equal(conflict.Source, conflict.SourcePreviewPath);
+                return Task.FromResult(new FileConflictChoice(FileConflictAction.Skip, true));
+            }, copyCollisionPolicy: FileCopyCollisionPolicy.KeepBoth);
+        Assert.Equal(1, calls); Assert.Equal(2, result.Skipped); Assert.Empty(result.Completed);
+        Assert.True(File.Exists(first)); Assert.True(File.Exists(second));
+        Assert.Equal("old a", File.ReadAllText(a)); Assert.Equal("old b", File.ReadAllText(b));
+    }
+
+    [Fact]
+    public async Task Files_changed_during_comparison_are_flagged_for_a_new_decision()
+    {
+        var source = Write(Source, "a", "incoming"); var target = Write(Target, "a", "existing"); var calls = 0;
+        var result = await WindowsFileTransfer.RunAsync(_operations, [new(source, target)], true, (conflict, _) =>
+        {
+            if (++calls == 1)
+            {
+                Assert.False(conflict.ChangedSinceDecision); File.WriteAllText(target, "a new unapproved version");
+                return Task.FromResult(new FileConflictChoice(FileConflictAction.Replace, true));
+            }
+            Assert.True(conflict.ChangedSinceDecision);
+            return Task.FromResult(new FileConflictChoice(FileConflictAction.Cancel));
+        });
+        Assert.Equal(2, calls); Assert.True(result.Cancelled); Assert.Empty(result.Completed);
+        Assert.Equal("a new unapproved version", File.ReadAllText(target)); Assert.Equal("incoming", File.ReadAllText(source));
+    }
+
     [Fact]
     public async Task Cancellation_during_one_file_keeps_source_and_never_publishes_partial_destination()
     {

@@ -20,6 +20,7 @@ public sealed record FileUndoRecord(
     IReadOnlyList<string> Paths,
     IReadOnlyList<FilePathPair> Pairs)
 {
+    public DateTimeOffset RecordedAt { get; init; } = DateTimeOffset.Now;
     private FileUndoState _undoState = FileUndoState.Capture(
         Kind is FileUndoKind.Relocated or FileUndoKind.Merged or FileUndoKind.Grouped
             ? Pairs.Select(pair => pair.Destination)

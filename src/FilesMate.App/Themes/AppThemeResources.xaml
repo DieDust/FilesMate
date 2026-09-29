@@ -1,114 +1,204 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<ResourceDictionary
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Skin colors are generated from Models/SkinPalette.cs. Run tools/FilesMate.ThemeGenerator
+         after changing a coordinated palette; do not hand-edit component skin colors here.
+         Functional colors (diffs, warnings, file types) and HighContrast remain independent.
+         Unique palette keys keep static aliases independent of the startup theme. -->
+    <SolidColorBrush x:Key="FilesMate.Palette.Light.Text.PrimaryBrush" Color="#FF303B37" />
+    <SolidColorBrush x:Key="FilesMate.Palette.Light.Text.SecondaryBrush" Color="#FF606D66" />
+    <SolidColorBrush x:Key="FilesMate.Palette.Light.Text.DisabledBrush" Color="#66303B37" />
+    <SolidColorBrush x:Key="FilesMate.Palette.Dark.Text.PrimaryBrush" Color="#FFE8E8E8" />
+    <SolidColorBrush x:Key="FilesMate.Palette.Dark.Text.SecondaryBrush" Color="#FFACACAC" />
+    <SolidColorBrush x:Key="FilesMate.Palette.Dark.Text.DisabledBrush" Color="#66E8E8E8" />
+    <StaticResource x:Key="FilesMate.Palette.HighContrast.Text.PrimaryBrush" ResourceKey="SystemColorWindowTextColorBrush" />
+    <StaticResource x:Key="FilesMate.Palette.HighContrast.Text.SecondaryBrush" ResourceKey="SystemColorGrayTextColorBrush" />
+    <SolidColorBrush x:Key="FilesMate.Palette.HighContrast.Text.DisabledBrush" Color="{ThemeResource SystemColorGrayTextColor}" />
+    <SolidColorBrush x:Key="FilesMate.Palette.Light.AddressBar.BorderBrush" Color="#18505E55" />
+    <SolidColorBrush x:Key="FilesMate.Palette.Light.ComboBox.BackgroundBrush" Color="#FFF6F4EE" />
+    <SolidColorBrush x:Key="FilesMate.Palette.Light.ComboBox.BorderBrush" Color="#30505E55" />
+    <SolidColorBrush x:Key="FilesMate.Palette.Light.Tab.BackgroundBrush" Color="#00FFFFFF" />
+    <SolidColorBrush x:Key="FilesMate.Palette.Light.Tab.SelectedBrush" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="FilesMate.Palette.Dark.AddressBar.BorderBrush" Color="#1CFFFFFF" />
+    <SolidColorBrush x:Key="FilesMate.Palette.Dark.ComboBox.BackgroundBrush" Color="#FF323232" />
+    <SolidColorBrush x:Key="FilesMate.Palette.Dark.ComboBox.BorderBrush" Color="#3AFFFFFF" />
+    <SolidColorBrush x:Key="FilesMate.Palette.Dark.Tab.BackgroundBrush" Color="#00323232" />
+    <SolidColorBrush x:Key="FilesMate.Palette.Dark.Tab.SelectedBrush" Color="#FF323232" />
+    <StaticResource x:Key="FilesMate.Palette.HighContrast.Glass.AccentBrush" ResourceKey="SystemColorHighlightColorBrush" />
+    <StaticResource x:Key="FilesMate.Palette.HighContrast.Glass.AccentForegroundBrush" ResourceKey="SystemColorHighlightTextColorBrush" />
+    <StaticResource x:Key="FilesMate.Palette.HighContrast.Glass.AccentHoverBrush" ResourceKey="SystemColorHighlightColorBrush" />
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
+            <!-- Semantic text roles: all controls share these inks for this skin. -->
+            <StaticResource x:Key="FilesMate.Text.PrimaryBrush" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="FilesMate.Text.SecondaryBrush" ResourceKey="FilesMate.Palette.Light.Text.SecondaryBrush" />
+            <StaticResource x:Key="FilesMate.Text.DisabledBrush" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <SolidColorBrush x:Key="FilesMate.TransparentBrush" Color="Transparent" />
+            <StaticResource x:Key="MenuFlyoutItemForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutItemForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutItemForegroundPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutItemForegroundDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemForegroundPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemForegroundDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemForegroundSubMenuOpened" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemChevron" ResourceKey="FilesMate.Palette.Light.Text.SecondaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemChevronPointerOver" ResourceKey="FilesMate.Palette.Light.Text.SecondaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemChevronPressed" ResourceKey="FilesMate.Palette.Light.Text.SecondaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemChevronSubMenuOpened" ResourceKey="FilesMate.Palette.Light.Text.SecondaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemChevronDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="FilesMate.Menu.ItemActiveForegroundBrush" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <SolidColorBrush x:Key="FilesMate.Menu.ItemHoverBrush" Color="#FFE8E8E4" />
+            <SolidColorBrush x:Key="FilesMate.Menu.ItemPressedBrush" Color="#FFDCDCD8" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedStroke" Color="#FF4F786C" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedFill" Color="#FF4F786C" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedStrokePointerOver" Color="#FF476C61" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedStrokePressed" Color="#FF476C61" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedFillPointerOver" Color="#FF476C61" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedFillPressed" Color="#FF476C61" />
+            <SolidColorBrush x:Key="RadioButtonCheckGlyphFill" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="RadioButtonCheckGlyphFillPointerOver" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="RadioButtonCheckGlyphFillPressed" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="ToggleMenuFlyoutItemBackgroundPointerOver" Color="#FFE8E8E4" />
+            <SolidColorBrush x:Key="ToggleMenuFlyoutItemBackgroundPressed" Color="#FFDCDCD8" />
+            <SolidColorBrush x:Key="MenuFlyoutSubItemBackgroundPointerOver" Color="#FFE8E8E4" />
+            <SolidColorBrush x:Key="MenuFlyoutSubItemBackgroundPressed" Color="#FFDCDCD8" />
+            <SolidColorBrush x:Key="MenuFlyoutSubItemBackgroundSubMenuOpened" Color="#FFE8E8E4" />
+            <SolidColorBrush x:Key="MenuFlyoutSeparatorBackground" Color="#FFD1D4CF" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseStroke" Color="#FF606D66" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseStrokePointerOver" Color="#FF303B37" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseStrokePressed" Color="#FF303B37" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseFill" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseFillPointerOver" Color="#FFE8E8E4" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseFillPressed" Color="#FFDCDCD8" />
+            <StaticResource x:Key="ToggleMenuFlyoutItemForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleMenuFlyoutItemForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleMenuFlyoutItemForegroundPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleMenuFlyoutItemForegroundDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="RadioMenuFlyoutItemForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioMenuFlyoutItemForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioMenuFlyoutItemForegroundPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioMenuFlyoutItemForegroundDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="ToggleButtonForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleButtonForegroundPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleButtonForegroundDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="ToolTipForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToolTipForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToolTipForegroundPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToolTipForegroundDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
             <SolidColorBrush x:Key="FilesMate.Update.SurfaceBrush" Color="#FFFAF9F5" />
-            <SolidColorBrush x:Key="ListViewItemForeground" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ListViewItemForegroundPointerOver" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ListViewItemForegroundPressed" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ListViewItemForegroundSelected" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ListViewItemForegroundSelectedPointerOver" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ListViewItemForegroundSelectedPressed" Color="#FF303B37" />
-            <SolidColorBrush x:Key="TextControlButtonForeground" Color="#FF303B37" />
-            <SolidColorBrush x:Key="TextControlButtonForegroundPointerOver" Color="#FF303B37" />
-            <SolidColorBrush x:Key="TextControlButtonForegroundPressed" Color="#FF303B37" />
-            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="#8A000000" />
-            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="#8A000000" />
-            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPressed" Color="#8A000000" />
-            <SolidColorBrush x:Key="TextControlBorderBrush" Color="#33000000" />
-            <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#33000000" />
+            <StaticResource x:Key="ListViewItemForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ListViewItemForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ListViewItemForegroundPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ListViewItemForegroundSelected" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ListViewItemForegroundSelectedPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ListViewItemForegroundSelectedPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlButtonForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlButtonForegroundPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="#FF606D66" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="#FF606D66" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPressed" Color="#FF606D66" />
+            <SolidColorBrush x:Key="TextControlBorderBrush" Color="#30505E55" />
+            <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#30505E55" />
             <!-- Explicit common-control brushes also follow runtime theme changes in popups. -->
-            <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ContentDialogForeground" Color="#FF303B37" />
-            <SolidColorBrush x:Key="TextControlHeaderForeground" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ComboBoxHeaderForeground" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ButtonForeground" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#FF303B37" />
-            <SolidColorBrush x:Key="RepeatButtonForeground" Color="#FF303B37" />
-            <SolidColorBrush x:Key="RepeatButtonForegroundPointerOver" Color="#FF303B37" />
-            <SolidColorBrush x:Key="RadioButtonForeground" Color="#FF303B37" />
-            <SolidColorBrush x:Key="RadioButtonForegroundPointerOver" Color="#FF303B37" />
-            <SolidColorBrush x:Key="RadioButtonForegroundPressed" Color="#FF303B37" />
-            <SolidColorBrush x:Key="CheckBoxForegroundUnchecked" Color="#FF303B37" />
-            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPointerOver" Color="#FF303B37" />
-            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPressed" Color="#FF303B37" />
-            <SolidColorBrush x:Key="CheckBoxForegroundChecked" Color="#FF303B37" />
-            <SolidColorBrush x:Key="CheckBoxForegroundCheckedPointerOver" Color="#FF303B37" />
-            <SolidColorBrush x:Key="CheckBoxForegroundCheckedPressed" Color="#FF303B37" />
-            <SolidColorBrush x:Key="CheckBoxForegroundIndeterminate" Color="#FF303B37" />
-            <SolidColorBrush x:Key="CheckBoxForegroundIndeterminatePointerOver" Color="#FF303B37" />
-            <SolidColorBrush x:Key="CheckBoxForegroundIndeterminatePressed" Color="#FF303B37" />
-            <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#B0000000" />
-            <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="#B0000000" />
-            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#B0000000" />
-            <SolidColorBrush x:Key="RepeatButtonForegroundPressed" Color="#B0000000" />
-            <SolidColorBrush x:Key="NumberBoxPopupIndicatorForeground" Color="#B0000000" />
-            <SolidColorBrush x:Key="TextFillColorDisabledBrush" Color="#66000000" />
-            <SolidColorBrush x:Key="TextControlHeaderForegroundDisabled" Color="#66000000" />
-            <SolidColorBrush x:Key="ComboBoxHeaderForegroundDisabled" Color="#66000000" />
-            <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="#66000000" />
-            <SolidColorBrush x:Key="RepeatButtonForegroundDisabled" Color="#66000000" />
-            <SolidColorBrush x:Key="RadioButtonForegroundDisabled" Color="#66000000" />
-            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedDisabled" Color="#66000000" />
-            <SolidColorBrush x:Key="CheckBoxForegroundCheckedDisabled" Color="#66000000" />
-            <SolidColorBrush x:Key="CheckBoxForegroundIndeterminateDisabled" Color="#66000000" />
+            <StaticResource x:Key="TextFillColorPrimaryBrush" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ContentDialogForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlHeaderForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxHeaderForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ButtonForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="RepeatButtonForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="RepeatButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioButtonForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioButtonForegroundPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundUnchecked" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundUncheckedPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundUncheckedPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundChecked" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundCheckedPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundCheckedPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundIndeterminate" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundIndeterminatePointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundIndeterminatePressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextFillColorSecondaryBrush" ResourceKey="FilesMate.Palette.Light.Text.SecondaryBrush" />
+            <StaticResource x:Key="TextFillColorTertiaryBrush" ResourceKey="FilesMate.Palette.Light.Text.SecondaryBrush" />
+            <StaticResource x:Key="ButtonForegroundPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="RepeatButtonForegroundPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="NumberBoxPopupIndicatorForeground" ResourceKey="FilesMate.Palette.Light.Text.SecondaryBrush" />
+            <StaticResource x:Key="TextFillColorDisabledBrush" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="TextControlHeaderForegroundDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="ComboBoxHeaderForegroundDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="ButtonForegroundDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="RepeatButtonForegroundDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="RadioButtonForegroundDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="CheckBoxForegroundUncheckedDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="CheckBoxForegroundCheckedDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="CheckBoxForegroundIndeterminateDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
             <SolidColorBrush x:Key="ContentDialogTopOverlay" Color="#FFFFFFFF" />
             <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="#FFFFFFFF" />
-            <SolidColorBrush x:Key="ContentDialogBackground" Color="#FFF3F4F6" />
-            <SolidColorBrush x:Key="ContentDialogBorderBrush" Color="#1F000000" />
-            <SolidColorBrush x:Key="ContentDialogSeparatorBorderBrush" Color="#1F000000" />
-            <SolidColorBrush x:Key="DividerStrokeColorDefaultBrush" Color="#1F000000" />
-            <SolidColorBrush x:Key="ButtonBorderBrush" Color="#1F000000" />
-            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#1F000000" />
-            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#1F000000" />
+            <SolidColorBrush x:Key="ContentDialogBackground" Color="#FFFAF9F5" />
+            <SolidColorBrush x:Key="ContentDialogBorderBrush" Color="#18505E55" />
+            <SolidColorBrush x:Key="ContentDialogSeparatorBorderBrush" Color="#18505E55" />
+            <SolidColorBrush x:Key="DividerStrokeColorDefaultBrush" Color="#18505E55" />
+            <SolidColorBrush x:Key="ButtonBorderBrush" Color="#18505E55" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#18505E55" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#18505E55" />
             <SolidColorBrush x:Key="ButtonBackground" Color="#FFFFFFFF" />
             <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="#FFFFFFFF" />
-            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#FFF0F1F4" />
-            <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#FFF0F1F4" />
-            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#FFE5E7EB" />
-            <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#FFE5E7EB" />
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#FFF4F4F4" />
+            <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#FFE8E8E4" />
+            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#FFEAEBEB" />
+            <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#FFDCDCD8" />
             <SolidColorBrush x:Key="SystemFillColorCriticalBrush" Color="#FFC42B1C" />
             <!-- Explicit scrollbar colors also cover compact indicators and expanded tracks. -->
-            <SolidColorBrush x:Key="ScrollBarThumbFill" Color="#FF7B8189" />
-            <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="#FF606872" />
-            <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="#FF414953" />
-            <SolidColorBrush x:Key="ScrollBarThumbFillDisabled" Color="#FFBBC1C9" />
-            <SolidColorBrush x:Key="ScrollBarThumbBackground" Color="#FF7B8189" />
-            <SolidColorBrush x:Key="ScrollBarPanningThumbBackground" Color="#FF7B8189" />
-            <SolidColorBrush x:Key="ScrollBarPanningThumbBackgroundDisabled" Color="#FFBBC1C9" />
-            <SolidColorBrush x:Key="ScrollBarButtonArrowForeground" Color="#FF7B8189" />
-            <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPointerOver" Color="#FF606872" />
-            <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPressed" Color="#FF414953" />
-            <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundDisabled" Color="#FFBBC1C9" />
-            <SolidColorBrush x:Key="ScrollBarTrackFill" Color="#FFE6EAF0" />
-            <SolidColorBrush x:Key="ScrollBarTrackFillPointerOver" Color="#FFE6EAF0" />
-            <SolidColorBrush x:Key="ScrollBarTrackFillDisabled" Color="#FFE6EAF0" />
-            <SolidColorBrush x:Key="ScrollBarTrackStroke" Color="#FFE6EAF0" />
-            <SolidColorBrush x:Key="ScrollBarTrackStrokePointerOver" Color="#FFE6EAF0" />
-            <SolidColorBrush x:Key="ScrollBarTrackStrokeDisabled" Color="#FFE6EAF0" />
-            <Color x:Key="ScrollBarThumbBackgroundColor">#FF7B8189</Color>
-            <Color x:Key="ScrollBarPanningThumbBackgroundColor">#FF7B8189</Color>
-            <SolidColorBrush x:Key="FilesMate.Shell.SeparatorBrush" Color="#FFE1E7DF" />
-            <SolidColorBrush x:Key="FilesMate.Sidebar.SeparatorBrush" Color="#FFE1E7DF" />
-            <SolidColorBrush x:Key="FilesMate.Favorites.BackgroundBrush" Color="#FFF4F2EB" />
+            <SolidColorBrush x:Key="ScrollBarThumbFill" Color="#FF606D66" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="#FF303B37" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="#FF303B37" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillDisabled" Color="#FFBBBFB9" />
+            <SolidColorBrush x:Key="ScrollBarThumbBackground" Color="#FF606D66" />
+            <SolidColorBrush x:Key="ScrollBarPanningThumbBackground" Color="#FF606D66" />
+            <SolidColorBrush x:Key="ScrollBarPanningThumbBackgroundDisabled" Color="#FFBBBFB9" />
+            <SolidColorBrush x:Key="ScrollBarButtonArrowForeground" Color="#FF606D66" />
+            <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPointerOver" Color="#FF303B37" />
+            <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPressed" Color="#FF303B37" />
+            <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundDisabled" Color="#FFBBBFB9" />
+            <SolidColorBrush x:Key="ScrollBarTrackFill" Color="#FFECEBE5" />
+            <SolidColorBrush x:Key="ScrollBarTrackFillPointerOver" Color="#FFECEBE5" />
+            <SolidColorBrush x:Key="ScrollBarTrackFillDisabled" Color="#FFECEBE5" />
+            <SolidColorBrush x:Key="ScrollBarTrackStroke" Color="#FFECEBE5" />
+            <SolidColorBrush x:Key="ScrollBarTrackStrokePointerOver" Color="#FFECEBE5" />
+            <SolidColorBrush x:Key="ScrollBarTrackStrokeDisabled" Color="#FFECEBE5" />
+            <Color x:Key="ScrollBarThumbBackgroundColor">#FF606D66</Color>
+            <Color x:Key="ScrollBarPanningThumbBackgroundColor">#FF606D66</Color>
+            <SolidColorBrush x:Key="FilesMate.Shell.SeparatorBrush" Color="#FFE3E3DC" />
+            <SolidColorBrush x:Key="FilesMate.Sidebar.SeparatorBrush" Color="#FFE3E3DC" />
+            <SolidColorBrush x:Key="FilesMate.Favorites.BackgroundBrush" Color="#FFF5F3EC" />
             <SolidColorBrush x:Key="FilesMate.FileContent.BackgroundBrush" Color="#FFFFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.FileContent.BorderBrush" Color="#FFDEE5DC" />
+            <SolidColorBrush x:Key="FilesMate.FileContent.BorderBrush" Color="#20505E55" />
             <SolidColorBrush x:Key="FilesMate.Close.HoverBrush" Color="#E81123" />
             <SolidColorBrush x:Key="FilesMate.Close.PressedBrush" Color="#C50F1F" />
             <SolidColorBrush x:Key="FilesMate.Close.ForegroundBrush" Color="White" />
-            <SolidColorBrush x:Key="FilesMate.App.SolidBackgroundBrush" Color="#FFF5F3ED" />
+            <SolidColorBrush x:Key="FilesMate.App.SolidBackgroundBrush" Color="#FFF8F6F0" />
             <SolidColorBrush x:Key="FilesMate.Glass.SurfaceBrush" Color="#B8FFFFFF" />
             <SolidColorBrush x:Key="FilesMate.Glass.SurfaceHoverBrush" Color="#DFFFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.Glass.SurfacePressedBrush" Color="#FFE9EFE8" />
+            <SolidColorBrush x:Key="FilesMate.Glass.SurfacePressedBrush" Color="#FFEAEBEB" />
             <SolidColorBrush x:Key="FilesMate.Glass.BorderBrush" Color="#18505E55" />
             <SolidColorBrush x:Key="FilesMate.Glass.BorderStrongBrush" Color="#30505E55" />
             <SolidColorBrush x:Key="FilesMate.Glass.HighlightBrush" Color="#99FFFFFF" />
             <SolidColorBrush x:Key="FilesMate.Glass.CardBrush" Color="#78FFFFFF" />
             <SolidColorBrush x:Key="FilesMate.Glass.AccentBrush" Color="#FF4F786C" />
-            <SolidColorBrush x:Key="FilesMate.Glass.AccentHoverBrush" Color="#FF456A5F" />
-            <SolidColorBrush x:Key="FilesMate.Glass.AccentSoftBrush" Color="#1C4F786C" />
+            <SolidColorBrush x:Key="FilesMate.Glass.AccentHoverBrush" Color="#FF476C61" />
+            <SolidColorBrush x:Key="FilesMate.Glass.AccentSoftBrush" Color="#2B4F786C" />
+            <SolidColorBrush x:Key="FilesMate.Compare.SourceFillBrush" Color="#2B4F786C" />
+            <SolidColorBrush x:Key="FilesMate.Compare.AddedFillBrush" Color="#DFF3E5" />
+            <SolidColorBrush x:Key="FilesMate.Compare.AddedTextBrush" Color="#176B39" />
+            <SolidColorBrush x:Key="FilesMate.Compare.DeletedFillBrush" Color="#FCE4E3" />
+            <SolidColorBrush x:Key="FilesMate.Compare.DeletedTextBrush" Color="#A3252C" />
+            <SolidColorBrush x:Key="FilesMate.Compare.ModifiedFillBrush" Color="#FFF0BF" />
+            <SolidColorBrush x:Key="FilesMate.Compare.ModifiedTextBrush" Color="#785500" />
             <SolidColorBrush x:Key="FilesMate.Glass.AccentForegroundBrush" Color="#FFFFFFFF" />
             <SolidColorBrush x:Key="FilesMate.Chrome.FillBrush" Color="#FFF1EFE8" />
             <SolidColorBrush x:Key="FilesMate.Glass.SheenBrush" Color="#59FFFFFF" />
@@ -118,95 +208,73 @@
                 <GradientStop Offset="1" Color="#00FFFFFF" />
             </LinearGradientBrush>
             <SolidColorBrush x:Key="FilesMate.IconFrame.FillBrush" Color="#104F786C" />
-            <SolidColorBrush x:Key="FilesMate.IconFrame.BorderBrush" Color="#12505E55" />
+            <SolidColorBrush x:Key="FilesMate.IconFrame.BorderBrush" Color="#18505E55" />
             <SolidColorBrush x:Key="FilesMate.IconFrame.HighlightBrush" Color="#62FFFFFF" />
             <SolidColorBrush x:Key="FilesMate.FolderPreview.BodyBrush" Color="#F7BE50" />
             <SolidColorBrush x:Key="FilesMate.FolderPreview.TabBrush" Color="#FFD86B" />
             <SolidColorBrush x:Key="FilesMate.LiquidGlass.SolidFillBrush" Color="#FFFAF9F5" />
-            <AcrylicBrush
-                x:Key="FilesMate.LiquidGlass.FillBrush"
-                FallbackColor="#EEF1F5"
-                TintColor="#F8FAFC"
-                TintLuminosityOpacity="0.64"
-                TintOpacity="0.32" />
-            <SolidColorBrush x:Key="FilesMate.LiquidGlass.BorderBrush" Color="#24505E55" />
+            <AcrylicBrush x:Key="FilesMate.LiquidGlass.FillBrush" FallbackColor="#FFFAF9F5" TintColor="#FFFAF9F5" TintLuminosityOpacity="0.64" TintOpacity="0.32" />
+            <SolidColorBrush x:Key="FilesMate.LiquidGlass.BorderBrush" Color="#18505E55" />
             <SolidColorBrush x:Key="FilesMate.LiquidGlass.InnerHighlightBrush" Color="#59FFFFFF" />
             <SolidColorBrush x:Key="FilesMate.LiquidGlass.ShadowBrush" Color="#24000000" />
-            <SolidColorBrush x:Key="FilesMate.ThemePreview.LightFill" Color="#FFF3F3F3" />
+            <SolidColorBrush x:Key="FilesMate.ThemePreview.LightFill" Color="#FFF8F6F0" />
             <SolidColorBrush x:Key="FilesMate.ThemePreview.DarkFill" Color="#FF242424" />
-            <AcrylicBrush
-                x:Key="FilesMate.Menu.BackgroundBrush"
-                FallbackColor="#FAFAFC"
-                TintColor="#FAFAFC"
-                TintLuminosityOpacity="0.96"
-                TintOpacity="0.75" />
+            <AcrylicBrush x:Key="FilesMate.Menu.BackgroundBrush" FallbackColor="#FFFAF9F5" TintColor="#FFFAF9F5" TintLuminosityOpacity="0.96" TintOpacity="0.75" />
             <SolidColorBrush x:Key="FilesMate.SettingsOverlay.ScrimBrush" Color="#1A000000" />
-            <SolidColorBrush x:Key="FilesMate.SettingsPanel.BackgroundBrush" Color="#40FFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.SettingsNav.BackgroundBrush" Color="#2EFFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.SettingsCard.BackgroundBrush" Color="#78FFFFFF" />
-            <AcrylicBrush
-                x:Key="FilesMate.App.BackgroundBrush"
-                FallbackColor="#EDF0F4"
-                TintColor="#F8FAFC"
-                TintLuminosityOpacity="0.60"
-                TintOpacity="0.24" />
+            <SolidColorBrush x:Key="FilesMate.SettingsPanel.BackgroundBrush" Color="#FFFAF9F5" />
+            <SolidColorBrush x:Key="FilesMate.SettingsNav.BackgroundBrush" Color="#FFF2F0E9" />
+            <SolidColorBrush x:Key="FilesMate.SettingsCard.BackgroundBrush" Color="#FFFFFFFF" />
+            <AcrylicBrush x:Key="FilesMate.App.BackgroundBrush" FallbackColor="#FFFAF9F5" TintColor="#FFFAF9F5" TintLuminosityOpacity="0.60" TintOpacity="0.24" />
             <SolidColorBrush x:Key="FilesMate.AddressBar.BackgroundBrush" Color="#F0FFFFFF" />
             <SolidColorBrush x:Key="FilesMate.SearchPanel.BackgroundBrush" Color="#FFFAF9F5" />
-            <SolidColorBrush x:Key="FilesMate.AddressBar.BorderBrush" Color="#18505E55" />
-            <SolidColorBrush x:Key="FilesMate.TextControl.CaretHostBrush" Color="#01000000" />
+            <StaticResource x:Key="FilesMate.AddressBar.BorderBrush" ResourceKey="FilesMate.Palette.Light.AddressBar.BorderBrush" />
+            <SolidColorBrush x:Key="FilesMate.TextControl.CaretHostBrush" Color="#01303B37" />
             <SolidColorBrush x:Key="FilesMate.Toolbar.BackgroundBrush" Color="Transparent" />
             <SolidColorBrush x:Key="FilesMate.CommandBar.BackgroundBrush" Color="#FFF8F6F0" />
             <SolidColorBrush x:Key="FilesMate.Sidebar.BackgroundBrush" Color="#FFF2F0E9" />
             <SolidColorBrush x:Key="FilesMate.FileArea.BackgroundBrush" Color="#FFF8F6F0" />
-            <SolidColorBrush x:Key="FilesMate.FileArea.InactiveBackgroundBrush" Color="#0A000000" />
-            <AcrylicBrush
-                x:Key="FilesMate.InfoPane.BackgroundBrush"
-                FallbackColor="#EEF1F5"
-                TintColor="#FFFFFF"
-                TintLuminosityOpacity="0.62"
-                TintOpacity="0.28" />
-            <SolidColorBrush x:Key="FilesMate.Card.BorderBrush" Color="#14000000" />
-            <SolidColorBrush x:Key="FilesMate.Floating.OutlineBrush" Color="#FFD4D8D2" />
+            <SolidColorBrush x:Key="FilesMate.FileArea.InactiveBackgroundBrush" Color="#0A303B37" />
+            <AcrylicBrush x:Key="FilesMate.InfoPane.BackgroundBrush" FallbackColor="#FFFAF9F5" TintColor="#FFFAF9F5" TintLuminosityOpacity="0.62" TintOpacity="0.28" />
+            <SolidColorBrush x:Key="FilesMate.Card.BorderBrush" Color="#20505E55" />
+            <SolidColorBrush x:Key="FilesMate.Floating.OutlineBrush" Color="#FFD1D4CF" />
             <SolidColorBrush x:Key="FilesMate.Item.HoverBrush" Color="#104F786C" />
-            <SolidColorBrush x:Key="FilesMate.Item.SelectedBrush" Color="#1C4F786C" />
-            <SolidColorBrush x:Key="FilesMate.Item.SelectedHoverBrush" Color="#2B4F786C" />
-            <SolidColorBrush x:Key="FilesMate.Tab.BackgroundBrush" Color="#00FFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.Tab.SelectedBrush" Color="#FFFFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.ComboBox.BackgroundBrush" Color="#FFF6F4EE" />
-            <SolidColorBrush x:Key="FilesMate.ComboBox.BorderBrush" Color="#30505E55" />
-            <SolidColorBrush x:Key="FilesMate.Item.DropTargetBrush" Color="#2B4F786C" />
+            <SolidColorBrush x:Key="FilesMate.Item.SelectedBrush" Color="#2B4F786C" />
+            <SolidColorBrush x:Key="FilesMate.Item.SelectedHoverBrush" Color="#384F786C" />
+            <StaticResource x:Key="FilesMate.Tab.BackgroundBrush" ResourceKey="FilesMate.Palette.Light.Tab.BackgroundBrush" />
+            <StaticResource x:Key="FilesMate.Tab.SelectedBrush" ResourceKey="FilesMate.Palette.Light.Tab.SelectedBrush" />
+            <StaticResource x:Key="FilesMate.ComboBox.BackgroundBrush" ResourceKey="FilesMate.Palette.Light.ComboBox.BackgroundBrush" />
+            <StaticResource x:Key="FilesMate.ComboBox.BorderBrush" ResourceKey="FilesMate.Palette.Light.ComboBox.BorderBrush" />
+            <SolidColorBrush x:Key="FilesMate.Item.DropTargetBrush" Color="#384F786C" />
             <SolidColorBrush x:Key="FilesMate.Selection.AccentBrush" Color="#FF4F786C" />
-            <SolidColorBrush x:Key="FilesMate.Text.PrimaryBrush" Color="#FF303B37" />
-            <SolidColorBrush x:Key="FilesMate.Text.SecondaryBrush" Color="#FF606D66" />
             <SolidColorBrush x:Key="FilesMate.Divider.Brush" Color="#18505E55" />
-            <StaticResource x:Key="TabViewItemHeaderBackground" ResourceKey="FilesMate.Tab.BackgroundBrush" />
-            <StaticResource x:Key="TabViewItemHeaderBackgroundSelected" ResourceKey="FilesMate.Tab.SelectedBrush" />
-            <StaticResource x:Key="TabViewItemHeaderForeground" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderForegroundPointerOver" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderForegroundPressed" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderForegroundSelected" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderForegroundDisabled" ResourceKey="FilesMate.Text.SecondaryBrush" />
-            <StaticResource x:Key="TabViewItemIconForeground" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemIconForegroundPointerOver" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemIconForegroundPressed" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemIconForegroundSelected" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderCloseButtonForeground" ResourceKey="FilesMate.Text.SecondaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderPointerOverCloseButtonForeground" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderPressedCloseButtonForeground" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderSelectedCloseButtonForeground" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderCloseButtonForegroundPointerOver" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderCloseButtonForegroundPressed" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <SolidColorBrush x:Key="ComboBoxForeground" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ComboBoxForegroundPointerOver" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ComboBoxForegroundPressed" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ComboBoxForegroundFocused" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ComboBoxForegroundDisabled" Color="#9A000000" />
-            <SolidColorBrush x:Key="ComboBoxPlaceHolderForeground" Color="#9A000000" />
-            <SolidColorBrush x:Key="ComboBoxPlaceHolderForegroundPointerOver" Color="#FF303B37" />
+            <StaticResource x:Key="TabViewItemHeaderBackground" ResourceKey="FilesMate.Palette.Light.Tab.BackgroundBrush" />
+            <StaticResource x:Key="TabViewItemHeaderBackgroundSelected" ResourceKey="FilesMate.Palette.Light.Tab.SelectedBrush" />
+            <StaticResource x:Key="TabViewItemHeaderForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderForegroundPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderForegroundSelected" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderForegroundDisabled" ResourceKey="FilesMate.Palette.Light.Text.SecondaryBrush" />
+            <StaticResource x:Key="TabViewItemIconForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemIconForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemIconForegroundPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemIconForegroundSelected" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderCloseButtonForeground" ResourceKey="FilesMate.Palette.Light.Text.SecondaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderPointerOverCloseButtonForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderPressedCloseButtonForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderSelectedCloseButtonForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderCloseButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderCloseButtonForegroundPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxForegroundPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxForegroundFocused" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxForegroundDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="ComboBoxPlaceHolderForeground" ResourceKey="FilesMate.Palette.Light.Text.SecondaryBrush" />
+            <StaticResource x:Key="ComboBoxPlaceHolderForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.SecondaryBrush" />
             <SolidColorBrush x:Key="ComboBoxDropDownGlyphForeground" Color="#FF303B37" />
             <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundFocused" Color="#FF303B37" />
             <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundPointerOver" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ComboBoxItemForeground" Color="#FF303B37" />
+            <StaticResource x:Key="ComboBoxItemForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
             <SolidColorBrush x:Key="CalendarDatePickerForeground" Color="#FF303B37" />
             <SolidColorBrush x:Key="CalendarDatePickerTextForeground" Color="#FF303B37" />
             <SolidColorBrush x:Key="CalendarDatePickerTextForegroundSelected" Color="#FF303B37" />
@@ -218,55 +286,55 @@
             <SolidColorBrush x:Key="CalendarDatePickerCalendarGlyphForegroundPressed" Color="#FF303B37" />
             <SolidColorBrush x:Key="CalendarDatePickerBackground" Color="#FFFFFFFF" />
             <SolidColorBrush x:Key="CalendarDatePickerBackgroundFocused" Color="#FFFFFFFF" />
-            <SolidColorBrush x:Key="CalendarDatePickerBackgroundPointerOver" Color="#FFF2F1ED" />
-            <SolidColorBrush x:Key="CalendarDatePickerBackgroundPressed" Color="#FFF2F1ED" />
-            <SolidColorBrush x:Key="CalendarDatePickerBorderBrush" Color="#FFD4D8D2" />
-            <SolidColorBrush x:Key="CalendarDatePickerBorderBrushPointerOver" Color="#FFD4D8D2" />
-            <SolidColorBrush x:Key="CalendarDatePickerBorderBrushPressed" Color="#FFD4D8D2" />
-            <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#144F786C" />
-            <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="#254F786C" />
-            <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver" Color="#2C4F786C" />
-            <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedUnfocused" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPointerOver" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPressed" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="#FF303B37" />
-            <SolidColorBrush x:Key="ComboBoxItemForegroundPressed" Color="#FF303B37" />
-            <SolidColorBrush x:Key="TextControlForeground" Color="#FF303B37" />
-            <SolidColorBrush x:Key="TextControlBackground" Color="#FAFFFFFF" />
+            <SolidColorBrush x:Key="CalendarDatePickerBackgroundPointerOver" Color="#FFF4F4F4" />
+            <SolidColorBrush x:Key="CalendarDatePickerBackgroundPressed" Color="#FFEAEBEB" />
+            <SolidColorBrush x:Key="CalendarDatePickerBorderBrush" Color="#FFD1D4CF" />
+            <SolidColorBrush x:Key="CalendarDatePickerBorderBrushPointerOver" Color="#FFD1D4CF" />
+            <SolidColorBrush x:Key="CalendarDatePickerBorderBrushPressed" Color="#FFD1D4CF" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#104F786C" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="#2B4F786C" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver" Color="#384F786C" />
+            <StaticResource x:Key="ComboBoxItemForegroundSelected" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxItemForegroundSelectedUnfocused" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxItemForegroundSelectedPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxItemForegroundSelectedPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxItemForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxItemForegroundPressed" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <SolidColorBrush x:Key="TextControlBackground" Color="#FFFFFFFF" />
             <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#FFFFFFFF" />
             <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FFFFFFFF" />
-            <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="#FFEDEFF2" />
-            <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#FF303B37" />
-            <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#FF303B37" />
-            <SolidColorBrush x:Key="TextControlForegroundDisabled" Color="#9A000000" />
-            <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#9A000000" />
-            <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#9A000000" />
-            <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#9A000000" />
-            <SolidColorBrush x:Key="TextControlPlaceholderForegroundDisabled" Color="#5C000000" />
-            <StaticResource x:Key="ComboBoxBackground" ResourceKey="FilesMate.ComboBox.BackgroundBrush" />
-            <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#FFE6E6EC" />
-            <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#FFDADAE0" />
-            <StaticResource x:Key="ComboBoxBackgroundUnfocused" ResourceKey="FilesMate.ComboBox.BackgroundBrush" />
-            <SolidColorBrush x:Key="ComboBoxBackgroundDisabled" Color="#66F2F2F7" />
-            <StaticResource x:Key="ComboBoxBorderBrush" ResourceKey="FilesMate.ComboBox.BorderBrush" />
-            <StaticResource x:Key="ComboBoxBorderBrushPointerOver" ResourceKey="FilesMate.ComboBox.BorderBrush" />
-            <StaticResource x:Key="ComboBoxBorderBrushPressed" ResourceKey="FilesMate.ComboBox.BorderBrush" />
-            <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#FFF2F2F7" />
-            <StaticResource x:Key="ComboBoxDropDownBorderBrush" ResourceKey="FilesMate.AddressBar.BorderBrush" />
-            <SolidColorBrush x:Key="ToggleSwitchContentForeground" Color="#FF28332F" />
-            <SolidColorBrush x:Key="ToggleSwitchHeaderForeground" Color="#FF28332F" />
+            <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="#FFFCFAF8" />
+            <StaticResource x:Key="TextControlForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlForegroundFocused" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlForegroundDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="TextControlPlaceholderForeground" ResourceKey="FilesMate.Palette.Light.Text.SecondaryBrush" />
+            <StaticResource x:Key="TextControlPlaceholderForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.SecondaryBrush" />
+            <StaticResource x:Key="TextControlPlaceholderForegroundFocused" ResourceKey="FilesMate.Palette.Light.Text.SecondaryBrush" />
+            <StaticResource x:Key="TextControlPlaceholderForegroundDisabled" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="ComboBoxBackground" ResourceKey="FilesMate.Palette.Light.ComboBox.BackgroundBrush" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#FFF4F4F4" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#FFEAEBEB" />
+            <StaticResource x:Key="ComboBoxBackgroundUnfocused" ResourceKey="FilesMate.Palette.Light.ComboBox.BackgroundBrush" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundDisabled" Color="#FFFCFAF8" />
+            <StaticResource x:Key="ComboBoxBorderBrush" ResourceKey="FilesMate.Palette.Light.ComboBox.BorderBrush" />
+            <StaticResource x:Key="ComboBoxBorderBrushPointerOver" ResourceKey="FilesMate.Palette.Light.ComboBox.BorderBrush" />
+            <StaticResource x:Key="ComboBoxBorderBrushPressed" ResourceKey="FilesMate.Palette.Light.ComboBox.BorderBrush" />
+            <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#FFFAF9F5" />
+            <StaticResource x:Key="ComboBoxDropDownBorderBrush" ResourceKey="FilesMate.Palette.Light.AddressBar.BorderBrush" />
+            <StaticResource x:Key="ToggleSwitchContentForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleSwitchHeaderForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
             <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#FF4F786C" />
             <SolidColorBrush x:Key="ToggleSwitchStrokeOn" Color="#FF4F786C" />
-            <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#FF4F786C" />
-            <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#FF4F786C" />
-            <SolidColorBrush x:Key="ToggleSwitchStrokeOnPointerOver" Color="#FF4F786C" />
-            <SolidColorBrush x:Key="ToggleSwitchStrokeOnPressed" Color="#FF4F786C" />
+            <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#FF476C61" />
+            <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#FF476C61" />
+            <SolidColorBrush x:Key="ToggleSwitchStrokeOnPointerOver" Color="#FF476C61" />
+            <SolidColorBrush x:Key="ToggleSwitchStrokeOnPressed" Color="#FF476C61" />
 
             <!-- Quiet surfaces and semantic color accents; high contrast uses system colors. -->
-            <SolidColorBrush x:Key="FilesMate.Item.StripeBrush" Color="#0C766C51" />
-            <SolidColorBrush x:Key="FilesMate.Tab.BorderBrush" Color="#1A505E55" />
-            <SolidColorBrush x:Key="FilesMate.Home.IconBackgroundBrush" Color="#EEF3ED" />
+            <SolidColorBrush x:Key="FilesMate.Item.StripeBrush" Color="#08303B37" />
+            <SolidColorBrush x:Key="FilesMate.Tab.BorderBrush" Color="#18505E55" />
+            <SolidColorBrush x:Key="FilesMate.Home.IconBackgroundBrush" Color="#104F786C" />
             <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#FFFFFFFF" />
             <SolidColorBrush x:Key="FilesMate.Type.Neutral.BackgroundBrush" Color="#EEF1EE" />
             <SolidColorBrush x:Key="FilesMate.Type.Neutral.ForegroundBrush" Color="#526158" />
@@ -301,94 +369,153 @@
             <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPressed" Color="#FFFFFFFF" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
+            <!-- Semantic text roles: all controls share these inks for this skin. -->
+            <StaticResource x:Key="FilesMate.Text.PrimaryBrush" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="FilesMate.Text.SecondaryBrush" ResourceKey="FilesMate.Palette.Dark.Text.SecondaryBrush" />
+            <StaticResource x:Key="FilesMate.Text.DisabledBrush" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <SolidColorBrush x:Key="FilesMate.TransparentBrush" Color="Transparent" />
+            <StaticResource x:Key="MenuFlyoutItemForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutItemForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutItemForegroundPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutItemForegroundDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemForegroundPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemForegroundDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemForegroundSubMenuOpened" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemChevron" ResourceKey="FilesMate.Palette.Dark.Text.SecondaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemChevronPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.SecondaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemChevronPressed" ResourceKey="FilesMate.Palette.Dark.Text.SecondaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemChevronSubMenuOpened" ResourceKey="FilesMate.Palette.Dark.Text.SecondaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemChevronDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="FilesMate.Menu.ItemActiveForegroundBrush" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <SolidColorBrush x:Key="FilesMate.Menu.ItemHoverBrush" Color="#FF3D3D3D" />
+            <SolidColorBrush x:Key="FilesMate.Menu.ItemPressedBrush" Color="#FF484848" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedStroke" Color="#FF96ABC7" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedFill" Color="#FF96ABC7" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedStrokePointerOver" Color="#FFAABFDB" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedStrokePressed" Color="#FFAABFDB" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedFillPointerOver" Color="#FFAABFDB" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedFillPressed" Color="#FFAABFDB" />
+            <SolidColorBrush x:Key="RadioButtonCheckGlyphFill" Color="#FF000000" />
+            <SolidColorBrush x:Key="RadioButtonCheckGlyphFillPointerOver" Color="#FF000000" />
+            <SolidColorBrush x:Key="RadioButtonCheckGlyphFillPressed" Color="#FF000000" />
+            <SolidColorBrush x:Key="ToggleMenuFlyoutItemBackgroundPointerOver" Color="#FF3D3D3D" />
+            <SolidColorBrush x:Key="ToggleMenuFlyoutItemBackgroundPressed" Color="#FF484848" />
+            <SolidColorBrush x:Key="MenuFlyoutSubItemBackgroundPointerOver" Color="#FF3D3D3D" />
+            <SolidColorBrush x:Key="MenuFlyoutSubItemBackgroundPressed" Color="#FF484848" />
+            <SolidColorBrush x:Key="MenuFlyoutSubItemBackgroundSubMenuOpened" Color="#FF3D3D3D" />
+            <SolidColorBrush x:Key="MenuFlyoutSeparatorBackground" Color="#FF5F5F5F" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseStroke" Color="#FFACACAC" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseStrokePointerOver" Color="#FFE8E8E8" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseStrokePressed" Color="#FFE8E8E8" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseFill" Color="#FF323232" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseFillPointerOver" Color="#FF3D3D3D" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseFillPressed" Color="#FF484848" />
+            <StaticResource x:Key="ToggleMenuFlyoutItemForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleMenuFlyoutItemForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleMenuFlyoutItemForegroundPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleMenuFlyoutItemForegroundDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="RadioMenuFlyoutItemForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioMenuFlyoutItemForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioMenuFlyoutItemForegroundPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioMenuFlyoutItemForegroundDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="ToggleButtonForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleButtonForegroundPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleButtonForegroundDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="ToolTipForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToolTipForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToolTipForegroundPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToolTipForegroundDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
             <SolidColorBrush x:Key="FilesMate.Update.SurfaceBrush" Color="#FF2C2C2C" />
-            <SolidColorBrush x:Key="ListViewItemForeground" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ListViewItemForegroundPointerOver" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ListViewItemForegroundPressed" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ListViewItemForegroundSelected" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ListViewItemForegroundSelectedPointerOver" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ListViewItemForegroundSelectedPressed" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="TextControlButtonForeground" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="TextControlButtonForegroundPointerOver" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="TextControlButtonForegroundPressed" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="#A0FFFFFF" />
-            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="#A0FFFFFF" />
-            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPressed" Color="#A0FFFFFF" />
-            <SolidColorBrush x:Key="TextControlBorderBrush" Color="#40FFFFFF" />
-            <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#40FFFFFF" />
+            <StaticResource x:Key="ListViewItemForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ListViewItemForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ListViewItemForegroundPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ListViewItemForegroundSelected" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ListViewItemForegroundSelectedPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ListViewItemForegroundSelectedPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlButtonForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlButtonForegroundPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="#FFACACAC" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="#FFACACAC" />
+            <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPressed" Color="#FFACACAC" />
+            <SolidColorBrush x:Key="TextControlBorderBrush" Color="#3AFFFFFF" />
+            <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#3AFFFFFF" />
             <!-- Explicit common-control brushes also follow runtime theme changes in popups. -->
-            <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ContentDialogForeground" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="TextControlHeaderForeground" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ComboBoxHeaderForeground" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ButtonForeground" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="RepeatButtonForeground" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="RepeatButtonForegroundPointerOver" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="RadioButtonForeground" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="RadioButtonForegroundPointerOver" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="RadioButtonForegroundPressed" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="CheckBoxForegroundUnchecked" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPointerOver" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPressed" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="CheckBoxForegroundChecked" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="CheckBoxForegroundCheckedPointerOver" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="CheckBoxForegroundCheckedPressed" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="CheckBoxForegroundIndeterminate" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="CheckBoxForegroundIndeterminatePointerOver" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="CheckBoxForegroundIndeterminatePressed" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#FFB6B6B6" />
-            <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="#FFB6B6B6" />
-            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#FFB6B6B6" />
-            <SolidColorBrush x:Key="RepeatButtonForegroundPressed" Color="#FFB6B6B6" />
-            <SolidColorBrush x:Key="NumberBoxPopupIndicatorForeground" Color="#FFB6B6B6" />
-            <SolidColorBrush x:Key="TextFillColorDisabledBrush" Color="#66FFFFFF" />
-            <SolidColorBrush x:Key="TextControlHeaderForegroundDisabled" Color="#66FFFFFF" />
-            <SolidColorBrush x:Key="ComboBoxHeaderForegroundDisabled" Color="#66FFFFFF" />
-            <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="#66FFFFFF" />
-            <SolidColorBrush x:Key="RepeatButtonForegroundDisabled" Color="#66FFFFFF" />
-            <SolidColorBrush x:Key="RadioButtonForegroundDisabled" Color="#66FFFFFF" />
-            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedDisabled" Color="#66FFFFFF" />
-            <SolidColorBrush x:Key="CheckBoxForegroundCheckedDisabled" Color="#66FFFFFF" />
-            <SolidColorBrush x:Key="CheckBoxForegroundIndeterminateDisabled" Color="#66FFFFFF" />
+            <StaticResource x:Key="TextFillColorPrimaryBrush" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ContentDialogForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlHeaderForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxHeaderForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ButtonForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="RepeatButtonForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="RepeatButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioButtonForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioButtonForegroundPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundUnchecked" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundUncheckedPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundUncheckedPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundChecked" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundCheckedPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundCheckedPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundIndeterminate" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundIndeterminatePointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundIndeterminatePressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextFillColorSecondaryBrush" ResourceKey="FilesMate.Palette.Dark.Text.SecondaryBrush" />
+            <StaticResource x:Key="TextFillColorTertiaryBrush" ResourceKey="FilesMate.Palette.Dark.Text.SecondaryBrush" />
+            <StaticResource x:Key="ButtonForegroundPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="RepeatButtonForegroundPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="NumberBoxPopupIndicatorForeground" ResourceKey="FilesMate.Palette.Dark.Text.SecondaryBrush" />
+            <StaticResource x:Key="TextFillColorDisabledBrush" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="TextControlHeaderForegroundDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="ComboBoxHeaderForegroundDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="ButtonForegroundDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="RepeatButtonForegroundDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="RadioButtonForegroundDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="CheckBoxForegroundUncheckedDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="CheckBoxForegroundCheckedDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="CheckBoxForegroundIndeterminateDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
             <SolidColorBrush x:Key="ContentDialogTopOverlay" Color="#FF323232" />
             <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="#FF323232" />
             <SolidColorBrush x:Key="ContentDialogBackground" Color="#FF2C2C2C" />
-            <SolidColorBrush x:Key="ContentDialogBorderBrush" Color="#24FFFFFF" />
-            <SolidColorBrush x:Key="ContentDialogSeparatorBorderBrush" Color="#24FFFFFF" />
-            <SolidColorBrush x:Key="DividerStrokeColorDefaultBrush" Color="#24FFFFFF" />
-            <SolidColorBrush x:Key="ButtonBorderBrush" Color="#24FFFFFF" />
-            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#24FFFFFF" />
-            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#24FFFFFF" />
+            <SolidColorBrush x:Key="ContentDialogBorderBrush" Color="#1CFFFFFF" />
+            <SolidColorBrush x:Key="ContentDialogSeparatorBorderBrush" Color="#1CFFFFFF" />
+            <SolidColorBrush x:Key="DividerStrokeColorDefaultBrush" Color="#1CFFFFFF" />
+            <SolidColorBrush x:Key="ButtonBorderBrush" Color="#1CFFFFFF" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="#1CFFFFFF" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="#1CFFFFFF" />
             <SolidColorBrush x:Key="ButtonBackground" Color="#FF323232" />
             <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="#FF323232" />
-            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#FF3A3A3A" />
-            <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#FF3A3A3A" />
-            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#FF282828" />
-            <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#FF282828" />
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#FF3C3C3C" />
+            <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPointerOver" Color="#FF3D3D3D" />
+            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#FF444444" />
+            <SolidColorBrush x:Key="MenuFlyoutItemBackgroundPressed" Color="#FF484848" />
             <SolidColorBrush x:Key="SystemFillColorCriticalBrush" Color="#FFFF99A4" />
             <!-- Explicit scrollbar colors also cover compact indicators and expanded tracks. -->
-            <SolidColorBrush x:Key="ScrollBarThumbFill" Color="#FF949494" />
-            <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="#FFB8B8B8" />
-            <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="#FFDEDEDE" />
-            <SolidColorBrush x:Key="ScrollBarThumbFillDisabled" Color="#FF565656" />
-            <SolidColorBrush x:Key="ScrollBarThumbBackground" Color="#FF949494" />
-            <SolidColorBrush x:Key="ScrollBarPanningThumbBackground" Color="#FF949494" />
-            <SolidColorBrush x:Key="ScrollBarPanningThumbBackgroundDisabled" Color="#FF565656" />
-            <SolidColorBrush x:Key="ScrollBarButtonArrowForeground" Color="#FF949494" />
-            <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPointerOver" Color="#FFB8B8B8" />
-            <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPressed" Color="#FFDEDEDE" />
-            <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundDisabled" Color="#FF565656" />
-            <SolidColorBrush x:Key="ScrollBarTrackFill" Color="#FF2C2C2C" />
-            <SolidColorBrush x:Key="ScrollBarTrackFillPointerOver" Color="#FF2C2C2C" />
-            <SolidColorBrush x:Key="ScrollBarTrackFillDisabled" Color="#FF2C2C2C" />
-            <SolidColorBrush x:Key="ScrollBarTrackStroke" Color="#FF2C2C2C" />
-            <SolidColorBrush x:Key="ScrollBarTrackStrokePointerOver" Color="#FF2C2C2C" />
-            <SolidColorBrush x:Key="ScrollBarTrackStrokeDisabled" Color="#FF2C2C2C" />
-            <Color x:Key="ScrollBarThumbBackgroundColor">#FF949494</Color>
-            <Color x:Key="ScrollBarPanningThumbBackgroundColor">#FF949494</Color>
+            <SolidColorBrush x:Key="ScrollBarThumbFill" Color="#FFACACAC" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillPointerOver" Color="#FFE8E8E8" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillPressed" Color="#FFE8E8E8" />
+            <SolidColorBrush x:Key="ScrollBarThumbFillDisabled" Color="#FF5A5A5A" />
+            <SolidColorBrush x:Key="ScrollBarThumbBackground" Color="#FFACACAC" />
+            <SolidColorBrush x:Key="ScrollBarPanningThumbBackground" Color="#FFACACAC" />
+            <SolidColorBrush x:Key="ScrollBarPanningThumbBackgroundDisabled" Color="#FF5A5A5A" />
+            <SolidColorBrush x:Key="ScrollBarButtonArrowForeground" Color="#FFACACAC" />
+            <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPointerOver" Color="#FFE8E8E8" />
+            <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundPressed" Color="#FFE8E8E8" />
+            <SolidColorBrush x:Key="ScrollBarButtonArrowForegroundDisabled" Color="#FF5A5A5A" />
+            <SolidColorBrush x:Key="ScrollBarTrackFill" Color="#FF333333" />
+            <SolidColorBrush x:Key="ScrollBarTrackFillPointerOver" Color="#FF333333" />
+            <SolidColorBrush x:Key="ScrollBarTrackFillDisabled" Color="#FF333333" />
+            <SolidColorBrush x:Key="ScrollBarTrackStroke" Color="#FF333333" />
+            <SolidColorBrush x:Key="ScrollBarTrackStrokePointerOver" Color="#FF333333" />
+            <SolidColorBrush x:Key="ScrollBarTrackStrokeDisabled" Color="#FF333333" />
+            <Color x:Key="ScrollBarThumbBackgroundColor">#FFACACAC</Color>
+            <Color x:Key="ScrollBarPanningThumbBackgroundColor">#FFACACAC</Color>
             <SolidColorBrush x:Key="FilesMate.Shell.SeparatorBrush" Color="#FF343434" />
-            <SolidColorBrush x:Key="FilesMate.Sidebar.SeparatorBrush" Color="#FF303030" />
+            <SolidColorBrush x:Key="FilesMate.Sidebar.SeparatorBrush" Color="#FF343434" />
             <SolidColorBrush x:Key="FilesMate.Favorites.BackgroundBrush" Color="#FF202020" />
             <SolidColorBrush x:Key="FilesMate.FileContent.BackgroundBrush" Color="#FF2D2D2D" />
             <SolidColorBrush x:Key="FilesMate.FileContent.BorderBrush" Color="#14FFFFFF" />
@@ -396,114 +523,99 @@
             <SolidColorBrush x:Key="FilesMate.Close.PressedBrush" Color="#C50F1F" />
             <SolidColorBrush x:Key="FilesMate.Close.ForegroundBrush" Color="White" />
             <SolidColorBrush x:Key="FilesMate.App.SolidBackgroundBrush" Color="#FF242424" />
-            <SolidColorBrush x:Key="FilesMate.Glass.SurfaceBrush" Color="#0FFFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.Glass.SurfaceHoverBrush" Color="#19FFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.Glass.SurfacePressedBrush" Color="#24FFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.Glass.BorderBrush" Color="#1AFFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.Glass.BorderStrongBrush" Color="#33FFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.Glass.HighlightBrush" Color="#17FFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.Glass.CardBrush" Color="#1AFFFFFF" />
+            <SolidColorBrush x:Key="FilesMate.Glass.SurfaceBrush" Color="#0FE8E8E8" />
+            <SolidColorBrush x:Key="FilesMate.Glass.SurfaceHoverBrush" Color="#19E8E8E8" />
+            <SolidColorBrush x:Key="FilesMate.Glass.SurfacePressedBrush" Color="#FF444444" />
+            <SolidColorBrush x:Key="FilesMate.Glass.BorderBrush" Color="#1CFFFFFF" />
+            <SolidColorBrush x:Key="FilesMate.Glass.BorderStrongBrush" Color="#3AFFFFFF" />
+            <SolidColorBrush x:Key="FilesMate.Glass.HighlightBrush" Color="#17E8E8E8" />
+            <SolidColorBrush x:Key="FilesMate.Glass.CardBrush" Color="#1AE8E8E8" />
             <SolidColorBrush x:Key="FilesMate.Glass.AccentBrush" Color="#FF96ABC7" />
             <SolidColorBrush x:Key="FilesMate.Glass.AccentHoverBrush" Color="#FFAABFDB" />
-            <SolidColorBrush x:Key="FilesMate.Glass.AccentSoftBrush" Color="#2096ABC7" />
+            <SolidColorBrush x:Key="FilesMate.Glass.AccentSoftBrush" Color="#3096ABC7" />
+            <SolidColorBrush x:Key="FilesMate.Compare.SourceFillBrush" Color="#3096ABC7" />
+            <SolidColorBrush x:Key="FilesMate.Compare.AddedFillBrush" Color="#233F30" />
+            <SolidColorBrush x:Key="FilesMate.Compare.AddedTextBrush" Color="#8CE5AE" />
+            <SolidColorBrush x:Key="FilesMate.Compare.DeletedFillBrush" Color="#492A2D" />
+            <SolidColorBrush x:Key="FilesMate.Compare.DeletedTextBrush" Color="#FFA5AA" />
+            <SolidColorBrush x:Key="FilesMate.Compare.ModifiedFillBrush" Color="#443B20" />
+            <SolidColorBrush x:Key="FilesMate.Compare.ModifiedTextBrush" Color="#F8D77A" />
             <SolidColorBrush x:Key="FilesMate.Glass.AccentForegroundBrush" Color="#FF000000" />
             <SolidColorBrush x:Key="FilesMate.Chrome.FillBrush" Color="#FF1B1B1B" />
-            <SolidColorBrush x:Key="FilesMate.Glass.SheenBrush" Color="#10FFFFFF" />
+            <SolidColorBrush x:Key="FilesMate.Glass.SheenBrush" Color="#10E8E8E8" />
             <LinearGradientBrush x:Key="FilesMate.LiquidGlass.TopSheenBrush" StartPoint="0,0" EndPoint="0,1">
-                <GradientStop Offset="0" Color="#00FFFFFF" />
-                <GradientStop Offset="0.24" Color="#00FFFFFF" />
-                <GradientStop Offset="1" Color="#00FFFFFF" />
+                <GradientStop Offset="0" Color="#00E8E8E8" />
+                <GradientStop Offset="0.24" Color="#00E8E8E8" />
+                <GradientStop Offset="1" Color="#00E8E8E8" />
             </LinearGradientBrush>
-            <SolidColorBrush x:Key="FilesMate.IconFrame.FillBrush" Color="#10FFFFFF" />
+            <SolidColorBrush x:Key="FilesMate.IconFrame.FillBrush" Color="#1096ABC7" />
             <SolidColorBrush x:Key="FilesMate.IconFrame.BorderBrush" Color="#1CFFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.IconFrame.HighlightBrush" Color="#20FFFFFF" />
+            <SolidColorBrush x:Key="FilesMate.IconFrame.HighlightBrush" Color="#20E8E8E8" />
             <SolidColorBrush x:Key="FilesMate.FolderPreview.BodyBrush" Color="#D99A32" />
             <SolidColorBrush x:Key="FilesMate.FolderPreview.TabBrush" Color="#F0C45A" />
             <SolidColorBrush x:Key="FilesMate.LiquidGlass.SolidFillBrush" Color="#FF2C2C2C" />
-            <AcrylicBrush
-                x:Key="FilesMate.LiquidGlass.FillBrush"
-                FallbackColor="#2C2C2C"
-                TintColor="#2C2C2C"
-                TintLuminosityOpacity="0.46"
-                TintOpacity="0.26" />
-            <SolidColorBrush x:Key="FilesMate.LiquidGlass.BorderBrush" Color="#26FFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.LiquidGlass.InnerHighlightBrush" Color="#1FFFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.LiquidGlass.ShadowBrush" Color="#66000000" />
-            <SolidColorBrush x:Key="FilesMate.ThemePreview.LightFill" Color="#FFF3F3F3" />
+            <AcrylicBrush x:Key="FilesMate.LiquidGlass.FillBrush" FallbackColor="#FF2C2C2C" TintColor="#FF2C2C2C" TintLuminosityOpacity="0.46" TintOpacity="0.26" />
+            <SolidColorBrush x:Key="FilesMate.LiquidGlass.BorderBrush" Color="#1CFFFFFF" />
+            <SolidColorBrush x:Key="FilesMate.LiquidGlass.InnerHighlightBrush" Color="#10E8E8E8" />
+            <SolidColorBrush x:Key="FilesMate.LiquidGlass.ShadowBrush" Color="#24000000" />
+            <SolidColorBrush x:Key="FilesMate.ThemePreview.LightFill" Color="#FFF8F6F0" />
             <SolidColorBrush x:Key="FilesMate.ThemePreview.DarkFill" Color="#FF242424" />
-            <AcrylicBrush
-                x:Key="FilesMate.Menu.BackgroundBrush"
-                FallbackColor="#2C2C2C"
-                TintColor="#2C2C2C"
-                TintLuminosityOpacity="0.96"
-                TintOpacity="0.15" />
-            <SolidColorBrush x:Key="FilesMate.SettingsOverlay.ScrimBrush" Color="#59000000" />
-            <SolidColorBrush x:Key="FilesMate.SettingsPanel.BackgroundBrush" Color="#66000000" />
-            <SolidColorBrush x:Key="FilesMate.SettingsNav.BackgroundBrush" Color="#1A000000" />
+            <AcrylicBrush x:Key="FilesMate.Menu.BackgroundBrush" FallbackColor="#FF2C2C2C" TintColor="#FF2C2C2C" TintLuminosityOpacity="0.96" TintOpacity="0.15" />
+            <SolidColorBrush x:Key="FilesMate.SettingsOverlay.ScrimBrush" Color="#26000000" />
+            <SolidColorBrush x:Key="FilesMate.SettingsPanel.BackgroundBrush" Color="#FF2C2C2C" />
+            <SolidColorBrush x:Key="FilesMate.SettingsNav.BackgroundBrush" Color="#FF202020" />
             <SolidColorBrush x:Key="FilesMate.SettingsCard.BackgroundBrush" Color="#FF323232" />
-            <AcrylicBrush
-                x:Key="FilesMate.App.BackgroundBrush"
-                FallbackColor="#242424"
-                TintColor="#272727"
-                TintLuminosityOpacity="0.44"
-                TintOpacity="0.22" />
-            <SolidColorBrush x:Key="FilesMate.AddressBar.BackgroundBrush" Color="#0EFFFFFF" />
+            <AcrylicBrush x:Key="FilesMate.App.BackgroundBrush" FallbackColor="#FF2C2C2C" TintColor="#FF2C2C2C" TintLuminosityOpacity="0.44" TintOpacity="0.22" />
+            <SolidColorBrush x:Key="FilesMate.AddressBar.BackgroundBrush" Color="#F0323232" />
             <SolidColorBrush x:Key="FilesMate.SearchPanel.BackgroundBrush" Color="#FF2C2C2C" />
-            <SolidColorBrush x:Key="FilesMate.AddressBar.BorderBrush" Color="#1CFFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.TextControl.CaretHostBrush" Color="#01FFFFFF" />
+            <StaticResource x:Key="FilesMate.AddressBar.BorderBrush" ResourceKey="FilesMate.Palette.Dark.AddressBar.BorderBrush" />
+            <SolidColorBrush x:Key="FilesMate.TextControl.CaretHostBrush" Color="#01E8E8E8" />
             <SolidColorBrush x:Key="FilesMate.Toolbar.BackgroundBrush" Color="Transparent" />
             <SolidColorBrush x:Key="FilesMate.CommandBar.BackgroundBrush" Color="#FF242424" />
             <SolidColorBrush x:Key="FilesMate.Sidebar.BackgroundBrush" Color="#FF202020" />
             <SolidColorBrush x:Key="FilesMate.FileArea.BackgroundBrush" Color="#FF242424" />
-            <SolidColorBrush x:Key="FilesMate.FileArea.InactiveBackgroundBrush" Color="#12FFFFFF" />
-            <AcrylicBrush
-                x:Key="FilesMate.InfoPane.BackgroundBrush"
-                FallbackColor="#2C2C2C"
-                TintColor="#323232"
-                TintLuminosityOpacity="0.44"
-                TintOpacity="0.22" />
-            <SolidColorBrush x:Key="FilesMate.Card.BorderBrush" Color="#1CFFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.Floating.OutlineBrush" Color="#FF3D3D3D" />
-            <SolidColorBrush x:Key="FilesMate.Item.HoverBrush" Color="#0CFFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.Item.SelectedBrush" Color="#2096ABC7" />
-            <SolidColorBrush x:Key="FilesMate.Item.SelectedHoverBrush" Color="#2E96ABC7" />
-            <SolidColorBrush x:Key="FilesMate.Tab.BackgroundBrush" Color="#00FFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.Tab.SelectedBrush" Color="#FF323232" />
-            <SolidColorBrush x:Key="FilesMate.ComboBox.BackgroundBrush" Color="#FF323232" />
-            <SolidColorBrush x:Key="FilesMate.ComboBox.BorderBrush" Color="#3AFFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.Item.DropTargetBrush" Color="#2E96ABC7" />
+            <SolidColorBrush x:Key="FilesMate.FileArea.InactiveBackgroundBrush" Color="#0AE8E8E8" />
+            <AcrylicBrush x:Key="FilesMate.InfoPane.BackgroundBrush" FallbackColor="#FF2C2C2C" TintColor="#FF2C2C2C" TintLuminosityOpacity="0.44" TintOpacity="0.22" />
+            <SolidColorBrush x:Key="FilesMate.Card.BorderBrush" Color="#14FFFFFF" />
+            <SolidColorBrush x:Key="FilesMate.Floating.OutlineBrush" Color="#FF434343" />
+            <SolidColorBrush x:Key="FilesMate.Item.HoverBrush" Color="#1096ABC7" />
+            <SolidColorBrush x:Key="FilesMate.Item.SelectedBrush" Color="#3096ABC7" />
+            <SolidColorBrush x:Key="FilesMate.Item.SelectedHoverBrush" Color="#3C96ABC7" />
+            <StaticResource x:Key="FilesMate.Tab.BackgroundBrush" ResourceKey="FilesMate.Palette.Dark.Tab.BackgroundBrush" />
+            <StaticResource x:Key="FilesMate.Tab.SelectedBrush" ResourceKey="FilesMate.Palette.Dark.Tab.SelectedBrush" />
+            <StaticResource x:Key="FilesMate.ComboBox.BackgroundBrush" ResourceKey="FilesMate.Palette.Dark.ComboBox.BackgroundBrush" />
+            <StaticResource x:Key="FilesMate.ComboBox.BorderBrush" ResourceKey="FilesMate.Palette.Dark.ComboBox.BorderBrush" />
+            <SolidColorBrush x:Key="FilesMate.Item.DropTargetBrush" Color="#3C96ABC7" />
             <SolidColorBrush x:Key="FilesMate.Selection.AccentBrush" Color="#FF96ABC7" />
-            <SolidColorBrush x:Key="FilesMate.Text.PrimaryBrush" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="FilesMate.Text.SecondaryBrush" Color="#FFACACAC" />
-            <SolidColorBrush x:Key="FilesMate.Divider.Brush" Color="#18FFFFFF" />
-            <StaticResource x:Key="TabViewItemHeaderBackground" ResourceKey="FilesMate.Tab.BackgroundBrush" />
-            <StaticResource x:Key="TabViewItemHeaderBackgroundSelected" ResourceKey="FilesMate.Tab.SelectedBrush" />
-            <StaticResource x:Key="TabViewItemHeaderForeground" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderForegroundPointerOver" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderForegroundPressed" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderForegroundSelected" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderForegroundDisabled" ResourceKey="FilesMate.Text.SecondaryBrush" />
-            <StaticResource x:Key="TabViewItemIconForeground" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemIconForegroundPointerOver" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemIconForegroundPressed" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemIconForegroundSelected" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderCloseButtonForeground" ResourceKey="FilesMate.Text.SecondaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderPointerOverCloseButtonForeground" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderPressedCloseButtonForeground" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderSelectedCloseButtonForeground" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderCloseButtonForegroundPointerOver" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <StaticResource x:Key="TabViewItemHeaderCloseButtonForegroundPressed" ResourceKey="FilesMate.Text.PrimaryBrush" />
-            <SolidColorBrush x:Key="ComboBoxForeground" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ComboBoxForegroundPointerOver" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ComboBoxForegroundPressed" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ComboBoxForegroundFocused" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ComboBoxForegroundDisabled" Color="#9AFFFFFF" />
-            <SolidColorBrush x:Key="ComboBoxPlaceHolderForeground" Color="#9AFFFFFF" />
-            <SolidColorBrush x:Key="ComboBoxPlaceHolderForegroundPointerOver" Color="#FFE8E8E8" />
+            <SolidColorBrush x:Key="FilesMate.Divider.Brush" Color="#1CFFFFFF" />
+            <StaticResource x:Key="TabViewItemHeaderBackground" ResourceKey="FilesMate.Palette.Dark.Tab.BackgroundBrush" />
+            <StaticResource x:Key="TabViewItemHeaderBackgroundSelected" ResourceKey="FilesMate.Palette.Dark.Tab.SelectedBrush" />
+            <StaticResource x:Key="TabViewItemHeaderForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderForegroundPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderForegroundSelected" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderForegroundDisabled" ResourceKey="FilesMate.Palette.Dark.Text.SecondaryBrush" />
+            <StaticResource x:Key="TabViewItemIconForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemIconForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemIconForegroundPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemIconForegroundSelected" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderCloseButtonForeground" ResourceKey="FilesMate.Palette.Dark.Text.SecondaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderPointerOverCloseButtonForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderPressedCloseButtonForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderSelectedCloseButtonForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderCloseButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TabViewItemHeaderCloseButtonForegroundPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxForegroundPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxForegroundFocused" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxForegroundDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="ComboBoxPlaceHolderForeground" ResourceKey="FilesMate.Palette.Dark.Text.SecondaryBrush" />
+            <StaticResource x:Key="ComboBoxPlaceHolderForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.SecondaryBrush" />
             <SolidColorBrush x:Key="ComboBoxDropDownGlyphForeground" Color="#FFE8E8E8" />
             <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundFocused" Color="#FFE8E8E8" />
             <SolidColorBrush x:Key="ComboBoxDropDownGlyphForegroundPointerOver" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ComboBoxItemForeground" Color="#FFE8E8E8" />
+            <StaticResource x:Key="ComboBoxItemForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
             <SolidColorBrush x:Key="CalendarDatePickerForeground" Color="#FFE8E8E8" />
             <SolidColorBrush x:Key="CalendarDatePickerTextForeground" Color="#FFE8E8E8" />
             <SolidColorBrush x:Key="CalendarDatePickerTextForegroundSelected" Color="#FFE8E8E8" />
@@ -515,55 +627,55 @@
             <SolidColorBrush x:Key="CalendarDatePickerCalendarGlyphForegroundPressed" Color="#FFE8E8E8" />
             <SolidColorBrush x:Key="CalendarDatePickerBackground" Color="#FF323232" />
             <SolidColorBrush x:Key="CalendarDatePickerBackgroundFocused" Color="#FF323232" />
-            <SolidColorBrush x:Key="CalendarDatePickerBackgroundPointerOver" Color="#FF3A3A3A" />
-            <SolidColorBrush x:Key="CalendarDatePickerBackgroundPressed" Color="#FF3A3A3A" />
-            <SolidColorBrush x:Key="CalendarDatePickerBorderBrush" Color="#FF525252" />
-            <SolidColorBrush x:Key="CalendarDatePickerBorderBrushPointerOver" Color="#FF525252" />
-            <SolidColorBrush x:Key="CalendarDatePickerBorderBrushPressed" Color="#FF525252" />
-            <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#18FFFFFF" />
-            <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="#24FFFFFF" />
-            <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver" Color="#3896ABC7" />
-            <SolidColorBrush x:Key="ComboBoxItemForegroundSelected" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedUnfocused" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPointerOver" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ComboBoxItemForegroundSelectedPressed" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ComboBoxItemForegroundPointerOver" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ComboBoxItemForegroundPressed" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="TextControlForeground" Color="#FFE8E8E8" />
+            <SolidColorBrush x:Key="CalendarDatePickerBackgroundPointerOver" Color="#FF3C3C3C" />
+            <SolidColorBrush x:Key="CalendarDatePickerBackgroundPressed" Color="#FF444444" />
+            <SolidColorBrush x:Key="CalendarDatePickerBorderBrush" Color="#FF434343" />
+            <SolidColorBrush x:Key="CalendarDatePickerBorderBrushPointerOver" Color="#FF434343" />
+            <SolidColorBrush x:Key="CalendarDatePickerBorderBrushPressed" Color="#FF434343" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundPointerOver" Color="#1096ABC7" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundPressed" Color="#3096ABC7" />
+            <SolidColorBrush x:Key="ComboBoxItemBackgroundSelectedPointerOver" Color="#3C96ABC7" />
+            <StaticResource x:Key="ComboBoxItemForegroundSelected" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxItemForegroundSelectedUnfocused" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxItemForegroundSelectedPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxItemForegroundSelectedPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxItemForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxItemForegroundPressed" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
             <SolidColorBrush x:Key="TextControlBackground" Color="#FF323232" />
-            <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#FF393939" />
-            <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FF202020" />
-            <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="#FF2C2C2C" />
-            <SolidColorBrush x:Key="TextControlForegroundPointerOver" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="TextControlForegroundFocused" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="TextControlForegroundDisabled" Color="#9AFFFFFF" />
-            <SolidColorBrush x:Key="TextControlPlaceholderForeground" Color="#9AFFFFFF" />
-            <SolidColorBrush x:Key="TextControlPlaceholderForegroundPointerOver" Color="#9AFFFFFF" />
-            <SolidColorBrush x:Key="TextControlPlaceholderForegroundFocused" Color="#9AFFFFFF" />
-            <SolidColorBrush x:Key="TextControlPlaceholderForegroundDisabled" Color="#66FFFFFF" />
-            <StaticResource x:Key="ComboBoxBackground" ResourceKey="FilesMate.ComboBox.BackgroundBrush" />
-            <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#FF3A3A3A" />
-            <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#FF282828" />
-            <StaticResource x:Key="ComboBoxBackgroundUnfocused" ResourceKey="FilesMate.ComboBox.BackgroundBrush" />
-            <SolidColorBrush x:Key="ComboBoxBackgroundDisabled" Color="#66303030" />
-            <StaticResource x:Key="ComboBoxBorderBrush" ResourceKey="FilesMate.ComboBox.BorderBrush" />
-            <StaticResource x:Key="ComboBoxBorderBrushPointerOver" ResourceKey="FilesMate.ComboBox.BorderBrush" />
-            <StaticResource x:Key="ComboBoxBorderBrushPressed" ResourceKey="FilesMate.ComboBox.BorderBrush" />
-            <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#FF282828" />
-            <StaticResource x:Key="ComboBoxDropDownBorderBrush" ResourceKey="FilesMate.AddressBar.BorderBrush" />
-            <SolidColorBrush x:Key="ToggleSwitchContentForeground" Color="#FFE8E8E8" />
-            <SolidColorBrush x:Key="ToggleSwitchHeaderForeground" Color="#FFE8E8E8" />
+            <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#FF323232" />
+            <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#FF323232" />
+            <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="#FF2B2B2B" />
+            <StaticResource x:Key="TextControlForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlForegroundFocused" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlForegroundDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="TextControlPlaceholderForeground" ResourceKey="FilesMate.Palette.Dark.Text.SecondaryBrush" />
+            <StaticResource x:Key="TextControlPlaceholderForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.SecondaryBrush" />
+            <StaticResource x:Key="TextControlPlaceholderForegroundFocused" ResourceKey="FilesMate.Palette.Dark.Text.SecondaryBrush" />
+            <StaticResource x:Key="TextControlPlaceholderForegroundDisabled" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="ComboBoxBackground" ResourceKey="FilesMate.Palette.Dark.ComboBox.BackgroundBrush" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#FF3C3C3C" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#FF444444" />
+            <StaticResource x:Key="ComboBoxBackgroundUnfocused" ResourceKey="FilesMate.Palette.Dark.ComboBox.BackgroundBrush" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundDisabled" Color="#FF2B2B2B" />
+            <StaticResource x:Key="ComboBoxBorderBrush" ResourceKey="FilesMate.Palette.Dark.ComboBox.BorderBrush" />
+            <StaticResource x:Key="ComboBoxBorderBrushPointerOver" ResourceKey="FilesMate.Palette.Dark.ComboBox.BorderBrush" />
+            <StaticResource x:Key="ComboBoxBorderBrushPressed" ResourceKey="FilesMate.Palette.Dark.ComboBox.BorderBrush" />
+            <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#FF2C2C2C" />
+            <StaticResource x:Key="ComboBoxDropDownBorderBrush" ResourceKey="FilesMate.Palette.Dark.AddressBar.BorderBrush" />
+            <StaticResource x:Key="ToggleSwitchContentForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleSwitchHeaderForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
             <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#FF96ABC7" />
             <SolidColorBrush x:Key="ToggleSwitchStrokeOn" Color="#FF96ABC7" />
-            <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#FF96ABC7" />
-            <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#FF96ABC7" />
-            <SolidColorBrush x:Key="ToggleSwitchStrokeOnPointerOver" Color="#FF96ABC7" />
-            <SolidColorBrush x:Key="ToggleSwitchStrokeOnPressed" Color="#FF96ABC7" />
+            <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#FFAABFDB" />
+            <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#FFAABFDB" />
+            <SolidColorBrush x:Key="ToggleSwitchStrokeOnPointerOver" Color="#FFAABFDB" />
+            <SolidColorBrush x:Key="ToggleSwitchStrokeOnPressed" Color="#FFAABFDB" />
 
             <!-- Quiet surfaces and semantic color accents; high contrast uses system colors. -->
-            <SolidColorBrush x:Key="FilesMate.Item.StripeBrush" Color="#04FFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.Tab.BorderBrush" Color="#20FFFFFF" />
-            <SolidColorBrush x:Key="FilesMate.Home.IconBackgroundBrush" Color="#FF333333" />
+            <SolidColorBrush x:Key="FilesMate.Item.StripeBrush" Color="#08E8E8E8" />
+            <SolidColorBrush x:Key="FilesMate.Tab.BorderBrush" Color="#1CFFFFFF" />
+            <SolidColorBrush x:Key="FilesMate.Home.IconBackgroundBrush" Color="#1096ABC7" />
             <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#FF000000" />
             <SolidColorBrush x:Key="FilesMate.Type.Neutral.BackgroundBrush" Color="#383838" />
             <SolidColorBrush x:Key="FilesMate.Type.Neutral.ForegroundBrush" Color="#CFCFCF" />
@@ -598,56 +710,115 @@
             <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPressed" Color="#FF000000" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="HighContrast">
+            <!-- Semantic text roles: all controls share these inks for this skin. -->
+            <StaticResource x:Key="FilesMate.Text.PrimaryBrush" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="FilesMate.Text.SecondaryBrush" ResourceKey="FilesMate.Palette.HighContrast.Text.SecondaryBrush" />
+            <StaticResource x:Key="FilesMate.Text.DisabledBrush" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <SolidColorBrush x:Key="FilesMate.TransparentBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <StaticResource x:Key="MenuFlyoutItemForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutItemForegroundPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutItemForegroundPressed" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutItemForegroundDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemForegroundPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemForegroundPressed" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemForegroundDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemForegroundSubMenuOpened" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemChevron" ResourceKey="FilesMate.Palette.HighContrast.Text.SecondaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemChevronPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.SecondaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemChevronPressed" ResourceKey="FilesMate.Palette.HighContrast.Text.SecondaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemChevronSubMenuOpened" ResourceKey="FilesMate.Palette.HighContrast.Text.SecondaryBrush" />
+            <StaticResource x:Key="MenuFlyoutSubItemChevronDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <StaticResource x:Key="FilesMate.Menu.ItemActiveForegroundBrush" ResourceKey="SystemColorHighlightTextColorBrush" />
+            <SolidColorBrush x:Key="FilesMate.Menu.ItemHoverBrush" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="FilesMate.Menu.ItemPressedBrush" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedStroke" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedFill" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedStrokePointerOver" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedStrokePressed" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedFillPointerOver" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseCheckedFillPressed" Color="{ThemeResource SystemColorHighlightColor}" />
+            <SolidColorBrush x:Key="RadioButtonCheckGlyphFill" Color="{ThemeResource SystemColorHighlightTextColor}" />
+            <SolidColorBrush x:Key="RadioButtonCheckGlyphFillPointerOver" Color="{ThemeResource SystemColorHighlightTextColor}" />
+            <SolidColorBrush x:Key="RadioButtonCheckGlyphFillPressed" Color="{ThemeResource SystemColorHighlightTextColor}" />
+            <SolidColorBrush x:Key="ToggleMenuFlyoutItemBackgroundPointerOver" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="ToggleMenuFlyoutItemBackgroundPressed" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="MenuFlyoutSubItemBackgroundPointerOver" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="MenuFlyoutSubItemBackgroundPressed" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="MenuFlyoutSubItemBackgroundSubMenuOpened" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="MenuFlyoutSeparatorBackground" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseStroke" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseStrokePointerOver" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseStrokePressed" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseFill" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseFillPointerOver" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="RadioButtonOuterEllipseFillPressed" Color="{ThemeResource SystemColorWindowColor}" />
+            <StaticResource x:Key="ToggleMenuFlyoutItemForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleMenuFlyoutItemForegroundPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleMenuFlyoutItemForegroundPressed" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleMenuFlyoutItemForegroundDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <StaticResource x:Key="RadioMenuFlyoutItemForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioMenuFlyoutItemForegroundPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioMenuFlyoutItemForegroundPressed" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioMenuFlyoutItemForegroundDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <StaticResource x:Key="ToggleButtonForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleButtonForegroundPressed" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToggleButtonForegroundDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <StaticResource x:Key="ToolTipForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToolTipForegroundPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToolTipForegroundPressed" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ToolTipForegroundDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
             <StaticResource x:Key="FilesMate.Update.SurfaceBrush" ResourceKey="SystemColorWindowColorBrush" />
-            <SolidColorBrush x:Key="ListViewItemForeground" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="ListViewItemForegroundPointerOver" Color="{ThemeResource SystemColorHighlightTextColor}" />
-            <SolidColorBrush x:Key="ListViewItemForegroundPressed" Color="{ThemeResource SystemColorHighlightTextColor}" />
-            <SolidColorBrush x:Key="ListViewItemForegroundSelected" Color="{ThemeResource SystemColorHighlightTextColor}" />
-            <SolidColorBrush x:Key="ListViewItemForegroundSelectedPointerOver" Color="{ThemeResource SystemColorHighlightTextColor}" />
-            <SolidColorBrush x:Key="ListViewItemForegroundSelectedPressed" Color="{ThemeResource SystemColorHighlightTextColor}" />
-            <SolidColorBrush x:Key="TextControlButtonForeground" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="TextControlButtonForegroundPointerOver" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="TextControlButtonForegroundPressed" Color="{ThemeResource SystemColorWindowTextColor}" />
+            <StaticResource x:Key="ListViewItemForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ListViewItemForegroundPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ListViewItemForegroundPressed" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ListViewItemForegroundSelected" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ListViewItemForegroundSelectedPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ListViewItemForegroundSelectedPressed" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlButtonForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlButtonForegroundPressed" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
             <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUnchecked" Color="{ThemeResource SystemColorWindowTextColor}" />
             <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" Color="{ThemeResource SystemColorWindowTextColor}" />
             <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeUncheckedPressed" Color="{ThemeResource SystemColorWindowTextColor}" />
             <SolidColorBrush x:Key="TextControlBorderBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
             <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="{ThemeResource SystemColorWindowTextColor}" />
             <!-- Explicit common-control brushes also follow runtime theme changes in popups. -->
-            <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="ContentDialogForeground" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="TextControlHeaderForeground" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="ComboBoxHeaderForeground" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="ButtonForeground" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="RepeatButtonForeground" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="RepeatButtonForegroundPointerOver" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="RadioButtonForeground" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="RadioButtonForegroundPointerOver" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="RadioButtonForegroundPressed" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="CheckBoxForegroundUnchecked" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPointerOver" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedPressed" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="CheckBoxForegroundChecked" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="CheckBoxForegroundCheckedPointerOver" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="CheckBoxForegroundCheckedPressed" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="CheckBoxForegroundIndeterminate" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="CheckBoxForegroundIndeterminatePointerOver" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="CheckBoxForegroundIndeterminatePressed" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="RepeatButtonForegroundPressed" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="NumberBoxPopupIndicatorForeground" Color="{ThemeResource SystemColorWindowTextColor}" />
-            <SolidColorBrush x:Key="TextFillColorDisabledBrush" Color="{ThemeResource SystemColorGrayTextColor}" />
-            <SolidColorBrush x:Key="TextControlHeaderForegroundDisabled" Color="{ThemeResource SystemColorGrayTextColor}" />
-            <SolidColorBrush x:Key="ComboBoxHeaderForegroundDisabled" Color="{ThemeResource SystemColorGrayTextColor}" />
-            <SolidColorBrush x:Key="ButtonForegroundDisabled" Color="{ThemeResource SystemColorGrayTextColor}" />
-            <SolidColorBrush x:Key="RepeatButtonForegroundDisabled" Color="{ThemeResource SystemColorGrayTextColor}" />
-            <SolidColorBrush x:Key="RadioButtonForegroundDisabled" Color="{ThemeResource SystemColorGrayTextColor}" />
-            <SolidColorBrush x:Key="CheckBoxForegroundUncheckedDisabled" Color="{ThemeResource SystemColorGrayTextColor}" />
-            <SolidColorBrush x:Key="CheckBoxForegroundCheckedDisabled" Color="{ThemeResource SystemColorGrayTextColor}" />
-            <SolidColorBrush x:Key="CheckBoxForegroundIndeterminateDisabled" Color="{ThemeResource SystemColorGrayTextColor}" />
+            <StaticResource x:Key="TextFillColorPrimaryBrush" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ContentDialogForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlHeaderForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ComboBoxHeaderForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ButtonForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="ButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="RepeatButtonForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="RepeatButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioButtonForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="RadioButtonForegroundPressed" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundUnchecked" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundUncheckedPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundUncheckedPressed" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundChecked" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundCheckedPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundCheckedPressed" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundIndeterminate" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundIndeterminatePointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="CheckBoxForegroundIndeterminatePressed" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextFillColorSecondaryBrush" ResourceKey="FilesMate.Palette.HighContrast.Text.SecondaryBrush" />
+            <StaticResource x:Key="TextFillColorTertiaryBrush" ResourceKey="FilesMate.Palette.HighContrast.Text.SecondaryBrush" />
+            <StaticResource x:Key="ButtonForegroundPressed" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="RepeatButtonForegroundPressed" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="NumberBoxPopupIndicatorForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.SecondaryBrush" />
+            <StaticResource x:Key="TextFillColorDisabledBrush" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <StaticResource x:Key="TextControlHeaderForegroundDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <StaticResource x:Key="ComboBoxHeaderForegroundDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <StaticResource x:Key="ButtonForegroundDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <StaticResource x:Key="RepeatButtonForegroundDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <StaticResource x:Key="RadioButtonForegroundDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <StaticResource x:Key="CheckBoxForegroundUncheckedDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <StaticResource x:Key="CheckBoxForegroundCheckedDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <StaticResource x:Key="CheckBoxForegroundIndeterminateDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
             <SolidColorBrush x:Key="ContentDialogTopOverlay" Color="{ThemeResource SystemColorWindowColor}" />
             <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="{ThemeResource SystemColorWindowColor}" />
             <SolidColorBrush x:Key="ContentDialogBackground" Color="{ThemeResource SystemColorWindowColor}" />
@@ -700,10 +871,17 @@
             <StaticResource x:Key="FilesMate.Glass.BorderStrongBrush" ResourceKey="SystemColorWindowTextColorBrush" />
             <StaticResource x:Key="FilesMate.Glass.HighlightBrush" ResourceKey="SystemColorWindowTextColorBrush" />
             <StaticResource x:Key="FilesMate.Glass.CardBrush" ResourceKey="SystemColorWindowColorBrush" />
-            <StaticResource x:Key="FilesMate.Glass.AccentBrush" ResourceKey="SystemColorHighlightColorBrush" />
-            <StaticResource x:Key="FilesMate.Glass.AccentHoverBrush" ResourceKey="SystemColorHighlightColorBrush" />
+            <StaticResource x:Key="FilesMate.Glass.AccentBrush" ResourceKey="FilesMate.Palette.HighContrast.Glass.AccentBrush" />
+            <StaticResource x:Key="FilesMate.Glass.AccentHoverBrush" ResourceKey="FilesMate.Palette.HighContrast.Glass.AccentHoverBrush" />
             <StaticResource x:Key="FilesMate.Glass.AccentSoftBrush" ResourceKey="SystemColorHighlightColorBrush" />
-            <StaticResource x:Key="FilesMate.Glass.AccentForegroundBrush" ResourceKey="SystemColorHighlightTextColorBrush" />
+            <StaticResource x:Key="FilesMate.Compare.SourceFillBrush" ResourceKey="SystemColorWindowColorBrush" />
+            <StaticResource x:Key="FilesMate.Compare.AddedFillBrush" ResourceKey="SystemColorWindowColorBrush" />
+            <StaticResource x:Key="FilesMate.Compare.AddedTextBrush" ResourceKey="SystemColorWindowTextColorBrush" />
+            <StaticResource x:Key="FilesMate.Compare.DeletedFillBrush" ResourceKey="SystemColorWindowColorBrush" />
+            <StaticResource x:Key="FilesMate.Compare.DeletedTextBrush" ResourceKey="SystemColorWindowTextColorBrush" />
+            <StaticResource x:Key="FilesMate.Compare.ModifiedFillBrush" ResourceKey="SystemColorWindowColorBrush" />
+            <StaticResource x:Key="FilesMate.Compare.ModifiedTextBrush" ResourceKey="SystemColorWindowTextColorBrush" />
+            <StaticResource x:Key="FilesMate.Glass.AccentForegroundBrush" ResourceKey="FilesMate.Palette.HighContrast.Glass.AccentForegroundBrush" />
             <StaticResource x:Key="FilesMate.Chrome.FillBrush" ResourceKey="SystemColorWindowColorBrush" />
             <StaticResource x:Key="FilesMate.Glass.SheenBrush" ResourceKey="SystemColorWindowColorBrush" />
             <StaticResource x:Key="FilesMate.LiquidGlass.TopSheenBrush" ResourceKey="SystemColorWindowColorBrush" />
@@ -746,21 +924,19 @@
             <StaticResource x:Key="FilesMate.ComboBox.BorderBrush" ResourceKey="SystemColorWindowTextColorBrush" />
             <StaticResource x:Key="FilesMate.Item.DropTargetBrush" ResourceKey="SystemColorHotlightColorBrush" />
             <StaticResource x:Key="FilesMate.Selection.AccentBrush" ResourceKey="SystemColorHighlightColorBrush" />
-            <StaticResource x:Key="FilesMate.Text.PrimaryBrush" ResourceKey="SystemColorWindowTextColorBrush" />
-            <StaticResource x:Key="FilesMate.Text.SecondaryBrush" ResourceKey="SystemColorGrayTextColorBrush" />
             <StaticResource x:Key="FilesMate.Divider.Brush" ResourceKey="SystemColorWindowTextColorBrush" />
-            <StaticResource x:Key="TextControlForeground" ResourceKey="SystemColorWindowTextColorBrush" />
+            <StaticResource x:Key="TextControlForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
             <StaticResource x:Key="TextControlBackground" ResourceKey="SystemColorWindowColorBrush" />
             <StaticResource x:Key="TextControlBackgroundPointerOver" ResourceKey="SystemColorWindowColorBrush" />
             <StaticResource x:Key="TextControlBackgroundFocused" ResourceKey="SystemColorWindowColorBrush" />
             <StaticResource x:Key="TextControlBackgroundDisabled" ResourceKey="SystemColorWindowColorBrush" />
-            <StaticResource x:Key="TextControlForegroundPointerOver" ResourceKey="SystemColorWindowTextColorBrush" />
-            <StaticResource x:Key="TextControlForegroundFocused" ResourceKey="SystemColorWindowTextColorBrush" />
-            <StaticResource x:Key="TextControlForegroundDisabled" ResourceKey="SystemColorGrayTextColorBrush" />
-            <StaticResource x:Key="TextControlPlaceholderForeground" ResourceKey="SystemColorGrayTextColorBrush" />
-            <StaticResource x:Key="TextControlPlaceholderForegroundPointerOver" ResourceKey="SystemColorGrayTextColorBrush" />
-            <StaticResource x:Key="TextControlPlaceholderForegroundFocused" ResourceKey="SystemColorGrayTextColorBrush" />
-            <StaticResource x:Key="TextControlPlaceholderForegroundDisabled" ResourceKey="SystemColorGrayTextColorBrush" />
+            <StaticResource x:Key="TextControlForegroundPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlForegroundFocused" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="TextControlForegroundDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <StaticResource x:Key="TextControlPlaceholderForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.SecondaryBrush" />
+            <StaticResource x:Key="TextControlPlaceholderForegroundPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.SecondaryBrush" />
+            <StaticResource x:Key="TextControlPlaceholderForegroundFocused" ResourceKey="FilesMate.Palette.HighContrast.Text.SecondaryBrush" />
+            <StaticResource x:Key="TextControlPlaceholderForegroundDisabled" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
 
             <!-- Quiet surfaces and semantic color accents; high contrast uses system colors. -->
             <SolidColorBrush x:Key="FilesMate.Item.StripeBrush" Color="{ThemeResource SystemColorWindowColor}" />
@@ -786,18 +962,18 @@
             <SolidColorBrush x:Key="FilesMate.Type.Rose.ForegroundBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
             <SolidColorBrush x:Key="FilesMate.Place.RoseBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
             <!-- Keep stock accent controls on the same live fill/ink pair as our primary actions. -->
-            <StaticResource x:Key="AccentButtonBackground" ResourceKey="FilesMate.Glass.AccentBrush" />
-            <StaticResource x:Key="AccentButtonBackgroundPointerOver" ResourceKey="FilesMate.Glass.AccentHoverBrush" />
-            <StaticResource x:Key="AccentButtonBackgroundPressed" ResourceKey="FilesMate.Glass.AccentHoverBrush" />
-            <StaticResource x:Key="AccentButtonForeground" ResourceKey="FilesMate.Glass.AccentForegroundBrush" />
-            <StaticResource x:Key="AccentButtonForegroundPointerOver" ResourceKey="FilesMate.Glass.AccentForegroundBrush" />
-            <StaticResource x:Key="AccentButtonForegroundPressed" ResourceKey="FilesMate.Glass.AccentForegroundBrush" />
-            <StaticResource x:Key="ToggleButtonBackgroundChecked" ResourceKey="FilesMate.Glass.AccentBrush" />
-            <StaticResource x:Key="ToggleButtonBackgroundCheckedPointerOver" ResourceKey="FilesMate.Glass.AccentHoverBrush" />
-            <StaticResource x:Key="ToggleButtonBackgroundCheckedPressed" ResourceKey="FilesMate.Glass.AccentHoverBrush" />
-            <StaticResource x:Key="ToggleButtonForegroundChecked" ResourceKey="FilesMate.Glass.AccentForegroundBrush" />
-            <StaticResource x:Key="ToggleButtonForegroundCheckedPointerOver" ResourceKey="FilesMate.Glass.AccentForegroundBrush" />
-            <StaticResource x:Key="ToggleButtonForegroundCheckedPressed" ResourceKey="FilesMate.Glass.AccentForegroundBrush" />
+            <StaticResource x:Key="AccentButtonBackground" ResourceKey="FilesMate.Palette.HighContrast.Glass.AccentBrush" />
+            <StaticResource x:Key="AccentButtonBackgroundPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Glass.AccentHoverBrush" />
+            <StaticResource x:Key="AccentButtonBackgroundPressed" ResourceKey="FilesMate.Palette.HighContrast.Glass.AccentHoverBrush" />
+            <StaticResource x:Key="AccentButtonForeground" ResourceKey="FilesMate.Palette.HighContrast.Glass.AccentForegroundBrush" />
+            <StaticResource x:Key="AccentButtonForegroundPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Glass.AccentForegroundBrush" />
+            <StaticResource x:Key="AccentButtonForegroundPressed" ResourceKey="FilesMate.Palette.HighContrast.Glass.AccentForegroundBrush" />
+            <StaticResource x:Key="ToggleButtonBackgroundChecked" ResourceKey="FilesMate.Palette.HighContrast.Glass.AccentBrush" />
+            <StaticResource x:Key="ToggleButtonBackgroundCheckedPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Glass.AccentHoverBrush" />
+            <StaticResource x:Key="ToggleButtonBackgroundCheckedPressed" ResourceKey="FilesMate.Palette.HighContrast.Glass.AccentHoverBrush" />
+            <StaticResource x:Key="ToggleButtonForegroundChecked" ResourceKey="FilesMate.Palette.HighContrast.Glass.AccentForegroundBrush" />
+            <StaticResource x:Key="ToggleButtonForegroundCheckedPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Glass.AccentForegroundBrush" />
+            <StaticResource x:Key="ToggleButtonForegroundCheckedPressed" ResourceKey="FilesMate.Palette.HighContrast.Glass.AccentForegroundBrush" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>

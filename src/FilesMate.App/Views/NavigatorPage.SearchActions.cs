@@ -32,8 +32,8 @@ public sealed partial class NavigatorPage
         }
         else if (command == AppCommandId.AddToShelf)
         {
-            await App.FileShelf.AddAsync(paths);
             await ShowShelfAsync();
+            if (_shelfPanel is not null) await _shelfPanel.AddPathsAsync(paths);
         }
         else if (command == AppCommandId.AddTags)
         {

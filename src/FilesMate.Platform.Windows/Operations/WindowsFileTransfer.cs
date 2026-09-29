@@ -15,7 +15,8 @@ public static class WindowsFileTransfer
 {
     public static Task<FileTransferResult> RunAsync(ILocalFileOperations operations, IReadOnlyList<FilePathPair> requests,
         bool move, FileConflictResolver? resolveConflict = null, IProgress<int>? progress = null, CancellationToken token = default,
-        ReplacementBackupBudget? backupBudget = null, IProgress<FileCopyProgress>? byteProgress = null) =>
+        ReplacementBackupBudget? backupBudget = null, IProgress<FileCopyProgress>? byteProgress = null,
+        FileCopyCollisionPolicy copyCollisionPolicy = FileCopyCollisionPolicy.Ask) =>
         Task.Run(async () =>
         {
             var completed = new List<FilePathPair>();
@@ -77,7 +78,10 @@ public static class WindowsFileTransfer
                     throw new IOException("Linked items cannot be transferred by this operation.");
                 var directory = (attributes & FileAttributes.Directory) != 0;
                 var target = originalTarget;
-                var numberOnCollision = false;
+                var numberOnCollision = !move && (copyCollisionPolicy == FileCopyCollisionPolicy.KeepBoth
+                    || copyCollisionPolicy == FileCopyCollisionPolicy.KeepBothForSamePath
+                        && string.Equals(source, originalTarget, StringComparison.OrdinalIgnoreCase));
+                var changedSinceDecision = false;
                 for (var attempt = 0; attempt < 10_000; attempt++)
                 {
                     if (cancelled || token.IsCancellationRequested) return;
@@ -107,7 +111,9 @@ public static class WindowsFileTransfer
                                 var suggestion = NumberedPath(originalTarget, directory);
                                 choice = resolveConflict is null ? new(FileConflictAction.Cancel)
                                     : await resolveConflict(new(source, target, canMerge, Path.GetFileName(suggestion))
-                                    { CanReplace = canReplace, IsSameItem = sameItem, DestinationIsLink = destinationIsLink,
+                                    { SourcePreviewPath = source, IsMove = move, IsBatch = requests.Count > 1 || depth > 0 || directory,
+                                        ChangedSinceDecision = changedSinceDecision,
+                                        CanReplace = canReplace, IsSameItem = sameItem, DestinationIsLink = destinationIsLink,
                                         Incoming = incoming, Existing = existing, BackupBytes = backupBytes,
                                         BackupUsedBytes = budget.UsedBytes, BackupUnavailable = backupUnavailable }, token).ConfigureAwait(false);
                                 if (choice.ApplyToAll && choice.Action is not (FileConflictAction.Cancel or FileConflictAction.ReplaceWithoutUndo)
@@ -123,6 +129,7 @@ public static class WindowsFileTransfer
                                     || identity.Resolve(target).StableKey != existingIdentity || identity.Resolve(source).StableKey != sourceIdentity)
                                 {
                                     remembered.Remove(kind); // A changed comparison needs a fresh decision.
+                                    changedSinceDecision = true;
                                     continue;
                                 }
                                 var replacement = await ReplaceFileAsync(source, target, move, incoming!, existing!, sourceIdentity!, existingIdentity!, token,

@@ -1,6 +1,7 @@
 using Loc = FilesMate.App.Localization.StringTable;
 using FilesMate.App.Animations;
 using FilesMate.App.Icons;
+using FilesMate.App.Input;
 using FilesMate.App.Controls.Tags;
 using FilesMate.App.Models;
 using FilesMate.App.Navigation;
@@ -17,6 +18,7 @@ namespace FilesMate.App.Controls.FileSurface;
 public sealed partial class FileRow : UserControl
 {
     private bool _selected;
+    private bool _singleSelection;
     private bool _pointerOver;
     private bool _pressed;
     private bool _focused;
@@ -26,14 +28,20 @@ public sealed partial class FileRow : UserControl
     private CancellationTokenSource? _sizeRequest;
     private long _sizeVersion;
     private DetailsColumn[]? _columns;
+    private TagDefinition[] _tags = [];
     private string? _entryPath;
-    private readonly Dictionary<DetailsColumnId, TextBlock> _extraCells = [];
-    private readonly Dictionary<DetailsColumnId, int> _columnSlots = [];
+    private double _glyphWidth = FileColumnLayout.GlyphWidth;
+    private ItemOpeningMode OpeningMode => App.ExplorerPreferences.OpeningMode(Entry.Kind == EntryKind.Directory);
+    private readonly Dictionary<string, TextBlock> _extraCells = [];
+    private readonly Dictionary<string, int> _columnSlots = [];
 
     public FileRow()
     {
         InitializeComponent();
-        Unloaded += (_, _) => CancelFolderSize();
+        ItemActivation.BindName(NameText, () => OpeningMode, cursor => ProtectedCursor = cursor);
+        Loaded += (_, _) => UpdateAccentGeometry();
+        Root.SizeChanged += (_, _) => UpdateAccentGeometry();
+        Unloaded += (_, _) => { CancelFolderSize(); CancelPropertyRead(); };
         ResetVisual();
     }
 
@@ -43,9 +51,10 @@ public sealed partial class FileRow : UserControl
 
     public FileEntryCore Entry { get; private set; }
 
-    public void Bind(int viewIndex, in FileEntryCore entry, bool selected, string? path, CancellationToken cancellationToken = default)
+    public void Bind(int viewIndex, in FileEntryCore entry, bool selected, string? path, CancellationToken cancellationToken = default, bool singleSelection = true)
     {
         CancelFolderSize();
+        CancelPropertyRead();
         ViewIndex = viewIndex;
         EntryId = entry.Id;
         Entry = entry;
@@ -62,8 +71,10 @@ public sealed partial class FileRow : UserControl
         ShellIconBinder.Bind(IconImage, Glyph, entry, path, (int)FileColumnLayout.DetailsIconSize);
         _hidden = content.IsHidden;
         _selected = content.IsSelected;
+        _singleSelection = singleSelection;
         UpdateState(animate: false);
         RequestFolderSize(path, cancellationToken);
+        RefreshProperties();
     }
 
     private void BindFileType(in FileEntryCore entry, string description)
@@ -79,7 +90,7 @@ public sealed partial class FileRow : UserControl
 
     private void RequestFolderSize(string? path, CancellationToken cancellationToken)
     {
-        if (Entry.Kind != EntryKind.Directory
+        if (_compact || Entry.Kind != EntryKind.Directory
             || !App.ExplorerPreferences.ShowFolderSizes
               || string.IsNullOrEmpty(path)
               || FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out _)
@@ -153,21 +164,26 @@ public sealed partial class FileRow : UserControl
         var sameLayout = _columns?.Length == columns.Length;
         if (sameLayout)
             for (var i = 0; i < columns.Length; i++)
-                if (_columns![i].Id != columns[i].Id || _columns[i].Visible != columns[i].Visible) { sameLayout = false; break; }
+                if (_columns![i].Key != columns[i].Key || _columns[i].Visible != columns[i].Visible) { sameLayout = false; break; }
+        var tagsWidthChanged = _columns?.FirstOrDefault(c => c.Id == DetailsColumnId.Tags)?.Width
+            != columns.FirstOrDefault(c => c.Id == DetailsColumnId.Tags)?.Width;
         _columns = columns;
         if (sameLayout)
         {
             // Width drags update only the changed definition, without rebuilding every realized row.
             foreach (var column in columns)
-                if (_columnSlots.TryGetValue(column.Id, out var slot))
+                if (_columnSlots.TryGetValue(column.Key, out var slot))
                 {
                     var width = column.Visible ? column.Width : 0;
                     if (Root.ColumnDefinitions[slot].Width.Value != width) Root.ColumnDefinitions[slot].Width = new GridLength(width);
                 }
-            Width = FileColumnLayout.RowWidth(columns.Where(c => c.Visible).Sum(c => c.Width), 0, 0, 0);
+            Width = FileColumnLayout.RowWidth(columns.Where(c => c.Visible).Sum(c => c.Width) + _glyphWidth - FileColumnLayout.GlyphWidth, 0, 0, 0);
+            if (tagsWidthChanged) RenderTags();
             return;
         }
+        CancelPropertyRead();
         _columnSlots.Clear();
+        foreach (var cell in _extraCells.Values) cell.Visibility = Visibility.Collapsed;
         Root.ColumnDefinitions.Clear();
         Root.ColumnDefinitions.Add(new() { Width = new GridLength(FileColumnLayout.AccentWidth) });
         foreach (var column in columns)
@@ -175,7 +191,7 @@ public sealed partial class FileRow : UserControl
             var position = Root.ColumnDefinitions.Count;
             if (column.Id == DetailsColumnId.Name)
             {
-                Root.ColumnDefinitions.Add(new() { Width = new GridLength(FileColumnLayout.GlyphWidth) });
+                Root.ColumnDefinitions.Add(new() { Width = new GridLength(_glyphWidth) });
                 Grid.SetColumn(IconFrame, position++);
                 Grid.SetColumn(NameCell, position);
             }
@@ -187,13 +203,14 @@ public sealed partial class FileRow : UserControl
                     case DetailsColumnId.Modified: cell = ModifiedText; break;
                     case DetailsColumnId.Type: cell = TypeCell; break;
                     case DetailsColumnId.Size: cell = SizeText; break;
+                    case DetailsColumnId.Tags: cell = TagCell; break;
                     default:
-                        if (!_extraCells.TryGetValue(column.Id, out var extra))
+                        if (!_extraCells.TryGetValue(column.Key, out var extra))
                         {
                             if (!column.Visible) continue;
                             extra = new TextBlock { Padding = new Thickness(8, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center,
                                 TextTrimming = TextTrimming.CharacterEllipsis, Style = (Style)Application.Current.Resources["FilesMate.DetailsMetadataTextStyle"] };
-                            _extraCells.Add(column.Id, extra);
+                            _extraCells.Add(column.Key, extra);
                             Root.Children.Add(extra);
                         }
                         cell = extra;
@@ -203,20 +220,47 @@ public sealed partial class FileRow : UserControl
                 cell.Visibility = column.Visible ? Visibility.Visible : Visibility.Collapsed;
             }
             Root.ColumnDefinitions.Add(new() { Width = new GridLength(column.Visible ? column.Width : 0) });
-            _columnSlots[column.Id] = position;
+            _columnSlots[column.Key] = position;
         }
+        Root.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         Grid.SetColumnSpan(Fill, Root.ColumnDefinitions.Count);
         Grid.SetColumnSpan(Stripe, Root.ColumnDefinitions.Count);
-        Width = FileColumnLayout.RowWidth(columns.Where(c => c.Visible).Sum(c => c.Width), 0, 0, 0);
+        Width = FileColumnLayout.RowWidth(columns.Where(c => c.Visible).Sum(c => c.Width) + _glyphWidth - FileColumnLayout.GlyphWidth, 0, 0, 0);
         HorizontalAlignment = HorizontalAlignment.Left;
         UpdateExtraCells();
+        RenderTags();
+        RefreshProperties();
+        ApplyTypography(App.AppearanceViewModel?.Current ?? AppearanceSettings.Default);
+    }
+
+    internal void ApplyTypography(AppearanceSettings settings, double? scale = null)
+    {
+        Height = settings.FileRowHeightForScale(scale ?? XamlRoot?.RasterizationScale ?? 1);
+        UseLayoutRounding = true;
+        UpdateAccentGeometry(scale);
+        FileTypography.Apply(NameText, settings, settings.FileNameFontSize);
+        TypeCell.Height = Math.Max(20, Math.Ceiling(settings.FileDetailsFontSize * 1.4) + 2);
+        foreach (var text in _extraCells.Values.Append(ModifiedText).Append(SizeText))
+            FileTypography.Apply(text, settings, settings.FileDetailsFontSize);
+        FileTypography.Apply(TypeText, settings, settings.FileDetailsFontSize - 1);
+    }
+
+    private void UpdateAccentGeometry(double? scale = null)
+    {
+        var contentHeight = Root.ActualHeight > 0 ? Root.ActualHeight : Math.Max(0, Height - Root.Margin.Top - Root.Margin.Bottom);
+        var bounds = FileColumnLayout.SelectionAccentBounds(contentHeight, scale ?? XamlRoot?.RasterizationScale ?? 1);
+        AccentBar.Width = bounds.Width;
+        AccentBar.Height = bounds.Height;
+        AccentBar.Margin = new Thickness(0, bounds.Top, 0, 0);
+        AccentBar.CornerRadius = new CornerRadius(bounds.Width / 2);
     }
 
     private void UpdateExtraCells()
     {
-        foreach (var (id, cell) in _extraCells)
+        foreach (var (key, cell) in _extraCells)
         {
             if (cell.Visibility != Visibility.Visible) continue;
+            var id = _columns?.FirstOrDefault(c => c.Key == key)?.Id;
             cell.Text = id switch
             {
                 DetailsColumnId.Created => FileRowFormatter.FormatModified(Entry.CreatedUtcTicks, App.ExplorerPreferences.DateFormat),
@@ -224,6 +268,7 @@ public sealed partial class FileRow : UserControl
                 DetailsColumnId.Location => _entryPath is null ? "" : Path.GetDirectoryName(_entryPath) ?? "",
                 DetailsColumnId.FullPath => _entryPath ?? "",
                 DetailsColumnId.Extension => Entry.Kind == EntryKind.Directory ? "" : Path.GetExtension(Entry.Name),
+                DetailsColumnId.ShellProperty => "",
                 _ => FormatAttributes(Entry.Attributes)
             };
             ToolTipService.SetToolTip(cell, cell.Text);
@@ -244,11 +289,37 @@ public sealed partial class FileRow : UserControl
         return string.Join("、", labels);
     }
 
-    public void SetTags(IEnumerable<TagDefinition>? tags) => TagVisuals.Apply(TagHost, tags);
+    public void SetTags(IEnumerable<TagDefinition>? tags)
+    {
+        _tags = tags?.ToArray() ?? [];
+        RenderTags();
+    }
 
-    public void SetSelected(bool selected)
+    private void RenderTags() => TagVisuals.Apply(TagHost, _tags,
+        availableWidth: Math.Max(0, (_columns?.FirstOrDefault(c => c.Id == DetailsColumnId.Tags)?.Width ?? 176) - 16));
+
+    private bool _compact;
+    internal void SetIconScale(double scale)
+    {
+        var size = FileColumnLayout.DetailsIconSize * scale;
+        IconFrame.Width = IconFrame.Height = IconImage.Width = IconImage.Height = size;
+        Glyph.FontSize = 16 * scale;
+        var width = Math.Max(FileColumnLayout.GlyphWidth, size + 4);
+        if (_glyphWidth == width) return;
+        _glyphWidth = width;
+        if (_columns is { } columns) { _columns = null; ApplyColumns(columns); }
+    }
+    public void SetCompact(bool compact)
+    {
+        if (_compact == compact) return;
+        _compact = compact;
+        UpdateState(animate: false);
+    }
+
+    public void SetSelected(bool selected, bool singleSelection = true)
     {
         _selected = selected;
+        _singleSelection = singleSelection;
         UpdateState();
     }
 
@@ -278,7 +349,10 @@ public sealed partial class FileRow : UserControl
 
     public void ResetVisual()
     {
+        NameText.TextDecorations = Windows.UI.Text.TextDecorations.None;
+        ProtectedCursor = null;
         _selected = false;
+        _singleSelection = false;
         _pointerOver = false;
         _pressed = false;
         _focused = false;
@@ -293,6 +367,7 @@ public sealed partial class FileRow : UserControl
     public void Clear()
     {
         CancelFolderSize();
+        CancelPropertyRead();
         ViewIndex = -1;
         EntryId = -1;
         Entry = default;
@@ -310,7 +385,8 @@ public sealed partial class FileRow : UserControl
         ToolTipService.SetToolTip(TypeCell, null);
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(TypeCell, "");
         SizeText.Text = string.Empty;
-        TagHost.Children.Clear();
+        _tags = [];
+        RenderTags();
         Glyph.Glyph = "\uE8A5";
         ShellIconBinder.Clear(IconImage, Glyph);
         ResetVisual();
@@ -318,6 +394,7 @@ public sealed partial class FileRow : UserControl
 
     private void OnPointerEntered(object sender, PointerRoutedEventArgs e)
     {
+        ProtectedCursor = OpeningMode == ItemOpeningMode.SingleClick ? ItemActivation.HandCursor : null;
         _pointerOver = true;
         UpdateState(animate: false);
     }
@@ -349,6 +426,7 @@ public sealed partial class FileRow : UserControl
 
     private void UpdateState(bool animate = true)
     {
+        AccentBar.Visibility = _selected && _singleSelection ? Visibility.Visible : Visibility.Collapsed;
         var state = FileRowVisualStates.Resolve(
             _selected,
             _pointerOver,
@@ -358,7 +436,7 @@ public sealed partial class FileRow : UserControl
             _dropTarget);
         var useTransitions = animate && App.Motion.Resolve(MotionDurations.Hover) > TimeSpan.Zero;
         VisualStateManager.GoToState(this, state, useTransitions);
-        Stripe.Visibility = ViewIndex >= 0 && (ViewIndex & 1) != 0
+        Stripe.Visibility = App.ExplorerPreferences.ShowAlternatingRows && !_compact && ViewIndex >= 0 && (ViewIndex & 1) != 0
             && state is FileRowVisualStates.Normal or FileRowVisualStates.Focused
             ? Visibility.Visible : Visibility.Collapsed;
         if (state != FileRowVisualStates.Dragging)

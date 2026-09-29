@@ -22,11 +22,9 @@ public sealed class ControlThemeContrastTests
     public void Dialog_text_headers_and_errors_remain_readable(string theme)
     {
         var dictionary = ThemeXaml.ThemeDictionaries(ThemeXaml.Load("Themes/AppThemeResources.xaml"))[theme];
-        var entries = dictionary.Elements().ToDictionary(e => (string)e.Attribute(ThemeXaml.Xaml + "Key")!);
         uint Color(string key)
         {
-            var element = entries[key];
-            if (element.Attribute("ResourceKey") is XAttribute target) return Color(target.Value);
+            var element = ThemeXaml.Resolve(dictionary, key);
             return Convert.ToUInt32(((string)element.Attribute("Color")!)[1..], 16);
         }
         static double Luminance(uint foreground, uint background)

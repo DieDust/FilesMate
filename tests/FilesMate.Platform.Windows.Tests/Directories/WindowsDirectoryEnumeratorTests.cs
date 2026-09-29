@@ -25,10 +25,24 @@ public sealed class WindowsDirectoryEnumeratorTests
             }
             finally { emergency.Cancel(); await dispose.WaitAsync(TimeSpan.FromSeconds(5)); }
             // The directory remains usable after the consumer stops early.
-            Directory.Move(root, root + "-released");
-            Directory.Move(root + "-released", root);
+            await MoveAfterTransientSharingAsync(root, root + "-released");
+            await MoveAfterTransientSharingAsync(root + "-released", root);
         }
         finally { Directory.Delete(root, recursive: true); }
+    }
+
+    private static async Task MoveAfterTransientSharingAsync(string source, string destination)
+    {
+        // The producer has already exited. A temporary external reader can still
+        // block renaming newly created fixtures during a parallel test run.
+        // A leaked enumeration handle must still fail within a bounded time.
+        var deadline = Environment.TickCount64 + 5000;
+        while (true)
+        {
+            try { Directory.Move(source, destination); return; }
+            catch (IOException error) when ((error.HResult & 0xffff) == 32 && Environment.TickCount64 < deadline)
+            { await Task.Delay(25); }
+        }
     }
 
     [Fact]

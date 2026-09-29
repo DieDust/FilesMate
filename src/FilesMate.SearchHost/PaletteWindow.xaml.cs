@@ -100,6 +100,7 @@ public partial class PaletteWindow : Window
 
     internal void Open(bool settings, string notice)
     {
+        LoadOpeningPreferences();
         _appearance = PaletteAppearance.Load(_host.Profile);
         if (_icons.UseBundledIcons != _appearance.UseBundledFileIcons)
         {
@@ -454,14 +455,6 @@ public partial class PaletteWindow : Window
         var viewport = FindChild<ScrollViewer>(Results)?.ViewportHeight ?? 0;
         var height = viewport > 0 ? viewport : Results.ActualHeight;
         return height > 0 ? Math.Max(1, (int)(height / rowHeight)) : 8;
-    }
-    private void Results_DoubleClick(object sender, MouseButtonEventArgs e)
-    {
-        if (_pending || e.ChangedButton != MouseButton.Left || e.OriginalSource is not DependencyObject source) return;
-        for (var node = source; node is not null && node != Results; node = node is Visual ? VisualTreeHelper.GetParent(node) : LogicalTreeHelper.GetParent(node))
-            if (node is System.Windows.Controls.Primitives.ButtonBase) return;
-        if (ItemsControl.ContainerFromElement(Results, source) is ListBoxItem { DataContext: SearchRow row })
-        { Results.SelectedItem = row; OpenSelected(false); e.Handled = true; }
     }
     private bool _launching;
 

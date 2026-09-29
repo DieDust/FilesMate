@@ -1,4 +1,4 @@
-﻿using FilesMate.App.Commands;
+using FilesMate.App.Commands;
 using FilesMate.App.Controls.FileSurface;
 using FilesMate.App.Controls.Tags;
 using FilesMate.App.Localization;
@@ -19,20 +19,9 @@ public static class FileContextFlyout
 {
     public static void ShowAt(Flyout menu, FrameworkElement anchor, Point position)
     {
-        // Clamp the desired center before WinUI chooses a side. Its fallback for a
-        // tall flyout near the bottom can otherwise move the menu all the way up.
-        if (anchor.XamlRoot?.Content is FrameworkElement root && menu.Content is FrameworkElement content)
-        {
-            var maximumWidth = Application.Current.Resources.TryGetValue("FilesMate.ContextMenu.MaxWidth", out var width)
-                && width is double value ? value : 320;
-            // ContextFlyoutPresenterStyle has 4x6 padding and a one-pixel border.
-            content.Measure(new Size(Math.Max(1, maximumWidth - 10), double.PositiveInfinity));
-            var height = Math.Min(content.DesiredSize.Height + 14, Math.Max(1, root.ActualHeight - 16));
-            var pointer = anchor.TransformToVisual(root).TransformPoint(position);
-            pointer.Y = Math.Clamp(pointer.Y, 8 + height / 2, Math.Max(8 + height / 2, root.ActualHeight - 8 - height / 2));
-            position = root.TransformToVisual(anchor).TransformPoint(pointer);
-        }
-        menu.ShowAt(anchor, new FlyoutShowOptions { Position = position, Placement = FlyoutPlacementMode.Right });
+        // Position is a point anchor: keep it at the menu's top-left corner.
+        // WinUI handles edge collisions and scrolling within the available window.
+        menu.ShowAt(anchor, new FlyoutShowOptions { Position = position, Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft });
     }
 
     public static Flyout Create(
@@ -41,14 +30,18 @@ public static class FileContextFlyout
         Action? showMoreNative = null,
         Action<EntrySortColumn>? sort = null,
         Action<FileLayoutKind>? changeLayout = null,
-        UIElement? tagPicker = null)
+        UIElement? tagPicker = null,
+        Func<EntrySort>? currentSort = null,
+        Action<bool>? sortDirection = null,
+        Action<GridSizePreset>? gridSize = null,
+        Action<EntryGrouping>? grouping = null)
     {
         ArgumentNullException.ThrowIfNull(layout);
         ArgumentNullException.ThrowIfNull(invoke);
 
         var flyout = new Flyout
         {
-            Placement = FlyoutPlacementMode.Right,
+            Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft,
             ShouldConstrainToRootBounds = true,
             AreOpenCloseAnimationsEnabled = false,
         };
@@ -94,7 +87,7 @@ public static class FileContextFlyout
                 sort,
                 changeLayout,
                 submenu,
-                tagPicker));
+                tagPicker, currentSort, sortDirection, gridSize, grouping));
         }
 
         flyout.Content = column;
@@ -111,8 +104,10 @@ public static class FileContextFlyout
         var button = new Button
         {
             IsEnabled = command.Enabled,
+            Tag = command.Id,
             Content = CreateGlyph(command.Glyph, 16),
         };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, command.Label);
         if (TryStyle("FilesMate.ContextCommandButtonStyle", out Style style))
         {
             button.Style = style;
@@ -136,7 +131,10 @@ public static class FileContextFlyout
         Action<EntrySortColumn>? sort,
         Action<FileLayoutKind>? changeLayout,
         SubmenuHost submenu,
-        UIElement? tagPicker)
+        UIElement? tagPicker,
+        Func<EntrySort>? currentSort,
+        Action<bool>? sortDirection,
+        Action<GridSizePreset>? gridSize, Action<EntryGrouping>? grouping)
     {
         var grid = new Grid();
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -232,13 +230,13 @@ public static class FileContextFlyout
 
         if (entry.Command is AppCommandId.Sort && sort is not null)
         {
-            OpenSubmenuOnHover(button, CreateSortFlyout(flyout, sort), submenu);
+            OpenSubmenuOnHover(button, CreateSortFlyout(flyout, sort, currentSort, sortDirection, grouping), submenu);
             return button;
         }
 
         if (entry.Command is AppCommandId.ChangeLayout && changeLayout is not null)
         {
-            OpenSubmenuOnHover(button, CreateLayoutFlyout(flyout, changeLayout), submenu);
+            OpenSubmenuOnHover(button, CreateLayoutFlyout(flyout, changeLayout, gridSize), submenu);
             return button;
         }
 
@@ -312,28 +310,46 @@ public static class FileContextFlyout
             ShowMode = FlyoutShowMode.TransientWithDismissOnPointerMoveAway,
         });
 
-    private static MenuFlyout CreateSortFlyout(Flyout parent, Action<EntrySortColumn> sort)
+    private static MenuFlyout CreateSortFlyout(Flyout parent, Action<EntrySortColumn> sort, Func<EntrySort>? currentSort, Action<bool>? sortDirection, Action<EntryGrouping>? grouping)
     {
         var menu = CreateSubmenu();
         AddSubItem(menu, parent, "Sort_Name", () => sort(EntrySortColumn.Name));
         AddSubItem(menu, parent, "Sort_Modified", () => sort(EntrySortColumn.Modified));
         AddSubItem(menu, parent, "Sort_Type", () => sort(EntrySortColumn.Type));
         AddSubItem(menu, parent, "Sort_Size", () => sort(EntrySortColumn.Size));
-        foreach (var column in FilesMate.App.Models.DetailsColumn.Defaults().Skip(4))
+        foreach (var column in FilesMate.App.Models.DetailsColumn.Defaults().Skip(4).Where(c => c.CanSort))
         {
             var item = new MenuFlyoutItem { Text = column.Title };
             if (TryStyle("FilesMate.MenuFlyoutItemStyle", out Style style)) item.Style = style;
             item.Click += (_, _) => { parent.Hide(); sort(column.Sort); };
             menu.Items.Add(item);
         }
+        if (currentSort is not null && sortDirection is not null)
+        {
+            menu.Items.Add(new MenuFlyoutSeparator());
+            menu.Items.Add(SortDirectionMenu.Create(currentSort, ascending => { parent.Hide(); sortDirection(ascending); }));
+        }
+        if (currentSort is not null && grouping is not null)
+            menu.Items.Add(EntryGroupingMenu.Create(currentSort, value => { parent.Hide(); grouping(value); }));
         return menu;
     }
 
-    private static MenuFlyout CreateLayoutFlyout(Flyout parent, Action<FileLayoutKind> changeLayout)
+    private static MenuFlyout CreateLayoutFlyout(Flyout parent, Action<FileLayoutKind> changeLayout, Action<GridSizePreset>? gridSize)
     {
         var menu = CreateSubmenu();
         AddSubItem(menu, parent, "Layout_Details", () => changeLayout(FileLayoutKind.Details));
-        AddSubItem(menu, parent, "Layout_LargeIcons", () => changeLayout(FileLayoutKind.Grid));
+        AddSubItem(menu, parent, "Layout_List", () => changeLayout(FileLayoutKind.List));
+        if (gridSize is null) AddSubItem(menu, parent, "Layout_LargeIcons", () => changeLayout(FileLayoutKind.Grid));
+        else
+        {
+            menu.Items.Add(new MenuFlyoutSeparator());
+            string[] keys = ["Small", "Medium", "Large", "ExtraLarge", "Huge", "Jumbo", "Maximum"];
+            for (var i = 0; i < GridSizePreset.All.Length; i++)
+            {
+                var preset = GridSizePreset.All[i];
+                AddSubItem(menu, parent, "Layout_" + keys[i] + "Icons", () => { gridSize(preset); changeLayout(FileLayoutKind.Grid); });
+            }
+        }
         return menu;
     }
 
@@ -450,10 +466,7 @@ public static class FileContextFlyout
             FontSize = size,
             VerticalAlignment = VerticalAlignment.Center,
         };
-        if (TryBrush("FilesMate.Selection.AccentBrush", out var accent))
-        {
-            icon.Foreground = accent;
-        }
+        ThemeResources.Bind(icon, IconElement.ForegroundProperty, "FilesMate.Selection.AccentBrush");
 
         return icon;
     }
@@ -541,15 +554,5 @@ public static class FileContextFlyout
         return false;
     }
 
-    private static bool TryBrush(string key, out Brush brush)
-    {
-        if (Application.Current.Resources.TryGetValue(key, out var value) && value is Brush found)
-        {
-            brush = found;
-            return true;
-        }
 
-        brush = null!;
-        return false;
-    }
 }

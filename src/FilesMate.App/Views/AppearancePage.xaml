@@ -247,6 +247,47 @@
                 </settings:SettingCard>
             </StackPanel>
         </glass:LiquidGlassSurface>
+        <TextBlock x:Name="FileTypographyHeader" Style="{StaticResource FilesMate.SettingsSectionHeaderStyle}" />
+        <glass:LiquidGlassSurface x:Name="TypographyCard" Padding="16" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <StackPanel Spacing="12">
+                <Grid x:Name="TypographyFields" ColumnSpacing="24" RowSpacing="12" SizeChanged="TypographyFields_SizeChanged">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <StackPanel x:Name="FileFontCard" Spacing="6">
+                        <TextBlock x:Name="FileFontLabel" FontSize="13" FontWeight="SemiBold" />
+                        <ComboBox x:Name="FileFontBox" HorizontalAlignment="Stretch" MaxDropDownHeight="320" IsTextSearchEnabled="True" SelectionChanged="FileTypography_Changed" />
+                        <TextBlock x:Name="FileFontHint" FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+                    </StackPanel>
+                    <Grid x:Name="TypographySizes" Grid.Column="1" ColumnSpacing="12" RowSpacing="10" VerticalAlignment="Top">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock x:Name="FileNameSizeLabel" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        <ComboBox x:Name="FileNameSizeBox" Grid.Column="1" Width="76" SelectionChanged="FileTypography_Changed" />
+                        <TextBlock x:Name="FileDetailsSizeLabel" Grid.Row="1" FontSize="13" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        <ComboBox x:Name="FileDetailsSizeBox" Grid.Row="1" Grid.Column="1" Width="76" SelectionChanged="FileTypography_Changed" />
+                    </Grid>
+                </Grid>
+                <Border Padding="12,10" CornerRadius="8" Background="{ThemeResource FilesMate.Item.HoverBrush}">
+                    <StackPanel Spacing="3">
+                        <TextBlock x:Name="FileFontPreview" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="FileDetailsPreview" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+                    </StackPanel>
+                </Border>
+                <Button x:Name="ResetFileTypographyButton" HorizontalAlignment="Right" FontSize="12" Padding="10,5" Click="ResetFileTypography_Click" />
+            </StackPanel>
+        </glass:LiquidGlassSurface>
         <TextBlock
             x:Name="AccentHeader"
             Style="{StaticResource FilesMate.SettingsSectionHeaderStyle}"

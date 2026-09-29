@@ -6,6 +6,7 @@ namespace FilesMate.App.Services;
 
 public sealed class ExplorerPreferencesService
 {
+    private readonly SemaphoreSlim _saveGate = new(1, 1);
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -76,7 +77,9 @@ public sealed class ExplorerPreferencesService
                     dto.ShowAlphabetNavigation,
                     dto.TabMemory,
                     dto.AlphabetNavigationMinimumItemCount,
-                    dto.ShowAlphabetNavigationInDualPane, dto.PaneCount, dto.PaneArrangement);
+                    dto.ShowAlphabetNavigationInDualPane, dto.PaneCount, dto.PaneArrangement,
+                    dto.FileOpeningMode, dto.FolderOpeningMode, dto.ShowAlternatingRows, dto.DefaultSortAscending, dto.HiddenToolbarTools,
+                    dto.DefaultEntryGrouping, dto.GroupingClickCycle);
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
         {
@@ -92,7 +95,14 @@ public sealed class ExplorerPreferencesService
             ShowHiddenFiles = settings.ShowHiddenFiles,
             ConfirmPermanentDelete = settings.ConfirmPermanentDelete,
             OpenFoldersInNewTab = settings.OpenFoldersInNewTab,
+            FileOpeningMode = settings.FileOpeningMode.ToString(),
+            FolderOpeningMode = settings.FolderOpeningMode.ToString(),
             ShowFileExtensions = settings.ShowFileExtensions,
+            ShowAlternatingRows = settings.ShowAlternatingRows,
+            DefaultEntryGrouping = settings.DefaultEntryGrouping.ToString(),
+            GroupingClickCycle = settings.GroupingClickCycle?.Select(mode => mode.ToString()).ToArray(),
+            DefaultSortAscending = settings.DefaultSortAscending,
+            HiddenToolbarTools = settings.HiddenToolbarTools?.Select(tool => tool.ToString()).ToArray(),
             DefaultView = settings.DefaultView.ToString(),
             DateFormat = settings.DateFormat.ToString(),
             StartupFolder = settings.StartupFolder.ToString(),
@@ -115,26 +125,18 @@ public sealed class ExplorerPreferencesService
             TabMemory = settings.TabMemory.ToString(),
         }, JsonOptions);
 
-        var directory = Path.GetDirectoryName(FilePath);
-        if (!string.IsNullOrEmpty(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
-        var temp = FilePath + ".tmp";
-        await File.WriteAllTextAsync(temp, json, cancellationToken).ConfigureAwait(false);
-        if (File.Exists(FilePath))
-        {
-            File.Replace(temp, FilePath, destinationBackupFileName: null);
-        }
-        else
-        {
-            File.Move(temp, FilePath);
-        }
+        await SettingsFileWriter.WriteAsync(FilePath, json, _saveGate, cancellationToken).ConfigureAwait(false);
     }
 
     private sealed class Dto
     {
+        public string? DefaultEntryGrouping { get; set; }
+        public string[]? GroupingClickCycle { get; set; }
+        public string[]? HiddenToolbarTools { get; set; }
+        public bool? ShowAlternatingRows { get; set; }
+        public bool? DefaultSortAscending { get; set; }
+        public string? FileOpeningMode { get; set; }
+        public string? FolderOpeningMode { get; set; }
         public string? TabMemory { get; set; }
         public bool? ShowAlphabetNavigation { get; set; }
         public int? AlphabetNavigationMinimumItemCount { get; set; }

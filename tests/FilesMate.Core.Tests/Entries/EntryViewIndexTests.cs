@@ -7,6 +7,88 @@ namespace FilesMate.Core.Tests.Entries;
 
 public sealed class EntryViewIndexTests
 {
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void New_sort_fields_use_configured_direction_and_repeated_clicks_toggle(bool ascending)
+    {
+        var sort = EntrySort.Name with { Grouping = EntryGrouping.FilesFirst };
+        foreach (var column in new[] { EntrySortColumn.Modified, EntrySortColumn.Size, EntrySortColumn.Type })
+        {
+            sort = sort.SelectColumn(column, ascending);
+            Assert.Equal(ascending, sort.Ascending);
+            Assert.Equal(EntryGrouping.FilesFirst, sort.EffectiveGrouping);
+            sort = sort.SelectColumn(column, ascending);
+            Assert.Equal(!ascending, sort.Ascending);
+        }
+        sort = sort.SelectColumn(EntrySortColumn.ShellProperty, ascending, "System.Author");
+        Assert.Equal(ascending, sort.Ascending);
+        Assert.Equal(!ascending, sort.SelectColumn(EntrySortColumn.ShellProperty, ascending, "System.Author").Ascending);
+        Assert.Equal(ascending, sort.SelectColumn(EntrySortColumn.ShellProperty, ascending, "System.Title").Ascending);
+    }
+    [Theory]
+    [InlineData(EntryGrouping.Mixed, true)]
+    [InlineData(EntryGrouping.Mixed, false)]
+    [InlineData(EntryGrouping.FoldersFirst, true)]
+    [InlineData(EntryGrouping.FoldersFirst, false)]
+    [InlineData(EntryGrouping.FilesFirst, true)]
+    [InlineData(EntryGrouping.FilesFirst, false)]
+    public void Three_way_grouping_keeps_alphabet_destinations_and_ranges_in_display_order(EntryGrouping grouping, bool ascending)
+    {
+        var entries = new[] { File("Aardvark.txt"), Dir("Apple"), File("Banana.txt"), Dir("Blue"), File("陈.txt"), Dir("测试"), File("Cherry.txt") };
+        var store = new EntryStore(); store.Append(entries);
+        var index = EntryViewIndex.Build(store, EntrySort.Name with { Grouping = grouping, Ascending = ascending, MixChineseAndLatin = true }, EntryFilter.None, NaturalStringComparer.Instance, 1);
+        var names = index.Select(i => store[i].Name).ToArray();
+        var sorted = new[] { "Aardvark.txt", "Apple", "Banana.txt", "Blue", "测试", "陈.txt", "Cherry.txt" };
+        if (!ascending) Array.Reverse(sorted);
+        if (grouping != EntryGrouping.Mixed)
+            sorted = sorted.OrderBy(name => (entries.Single(e => e.Name == name).Kind == EntryKind.Directory) == (grouping == EntryGrouping.FoldersFirst) ? 0 : 1).ToArray();
+        Assert.Equal(sorted, names);
+        var alphabet = new AlphabetNavigation(index.NameSections, index.Count);
+        for (var row = 0; row < index.Count; row++)
+        {
+            var section = alphabet.SectionAt(row);
+            var label = PinyinName.Initial(PinyinName.Key(store[index[row]].Name));
+            Assert.Equal(label, index.NameSections[section].Label);
+            var range = alphabet.Range(section);
+            Assert.InRange(row, range.Start, range.End - 1);
+            Assert.Equal(section, alphabet.Destination(label, row));
+        }
+        Assert.Equal(grouping != EntryGrouping.Mixed, alphabet.HasBothKinds("A"));
+        if (grouping != EntryGrouping.Mixed)
+            foreach (var directory in new[] { true, false })
+            {
+                var destination = alphabet.Destination("A", 0, directory);
+                Assert.Equal(directory, store[index[index.NameSections[destination].FirstIndex]].Kind == EntryKind.Directory);
+            }
+    }
+
+    [Fact]
+    public void Legacy_mixed_views_and_new_grouping_round_trip()
+    {
+        var legacy = System.Text.Json.JsonSerializer.Deserialize<EntrySort>("{\"DirectoriesFirst\":false}")!;
+        Assert.Equal(EntryGrouping.Mixed, legacy.EffectiveGrouping);
+        Assert.Equal(EntryGrouping.FoldersFirst, EntrySort.Name.EffectiveGrouping);
+        var current = legacy with { Grouping = EntryGrouping.FilesFirst };
+        Assert.Equal(current, System.Text.Json.JsonSerializer.Deserialize<EntrySort>(System.Text.Json.JsonSerializer.Serialize(current)));
+    }
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Property_sort_uses_typed_values_keeps_directories_first_and_missing_values_last(bool ascending)
+    {
+        var store = Store(File("a.jpg", id: 1), File("b.jpg", id: 2), File("c.jpg", id: 3), Dir("Folder"));
+        var properties = new Dictionary<int, EntryPropertyValue> { [1] = new("10 pixels", 10), [2] = new("2 pixels", 2) };
+        var sort = EntrySort.Name with { Column = EntrySortColumn.ShellProperty, PropertyName = "System.Image.HorizontalSize", Ascending = ascending };
+        var index = EntryViewIndex.Build(store, sort, EntryFilter.None, NaturalStringComparer.Instance, 4, null, propertyValues: properties);
+        Assert.Equal(ascending ? ["Folder", "b.jpg", "a.jpg", "c.jpg"] : new[] { "Folder", "a.jpg", "b.jpg", "c.jpg" }, Names(store, index));
+        Assert.Equal(sort, index.Sort);
+        properties[1] = new("January 2026", Timestamp: 200);
+        properties[2] = new("December 2025", Timestamp: 100);
+        var dates = EntryViewIndex.Build(store, sort, EntryFilter.None, NaturalStringComparer.Instance, 4, null, propertyValues: properties);
+        Assert.Equal(Names(store, index), Names(store, dates));
+    }
+
     [Fact]
     public void Source_order_preserves_ranked_page_and_selection_ids()
     {

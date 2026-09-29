@@ -32,6 +32,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
+## Microsoft UI XAML — menu template structure
+
+`src/FilesMate.App/Themes/MenuItemTemplates.xaml` adapts the standard menu template
+structure used by Microsoft UI XAML (WinUI 2.3.6 package), retaining its named parts,
+placeholder states and accessibility behavior while replacing state color resources.
+Upstream project: https://github.com/microsoft/microsoft-ui-xaml .
+Copyright (c) Microsoft Corporation. All rights reserved.
+The MIT license text for this adapted source is included in
+`installer/ThirdPartyNotices/Microsoft.UI.Xaml-Template-LICENSE.txt` and shipped with
+the installer. The separate Windows App SDK package redistribution terms still apply
+to the bundled Microsoft binaries.
+
 ## Bundled libraries and runtimes
 
 FilesMate's Apache-2.0 license does not replace the following licenses. Exact resolved package versions and package metadata are copied into the installer's ThirdPartyNotices directory. Full texts for libraries whose NuGet packages provide only an SPDX expression are kept in installer/ThirdPartyNotices.

@@ -53,6 +53,7 @@ public sealed partial class NavigatorPage
                 _restoringViews.Remove(vm);
         }
 
+        TryRestoreNavigationViewport(vm);
         TryApplyPendingSelection(vm);
     }
 
@@ -64,9 +65,10 @@ public sealed partial class NavigatorPage
             var surface = SurfaceOf(vm);
             surface.SetColumns(view?.Columns);
             surface.SetGridSize(GridSizePreset.All.FirstOrDefault(p => p.Slot == view?.GridSlot, GridSizePreset.Default));
+            surface.SetListZoom(view?.ListZoomPercent ?? 100);
             surface.SetLayout(view is null ? ToFileLayout(App.ExplorerPreferences.DefaultView)
-                : view.Details ? FileLayoutKind.Details : FileLayoutKind.Grid);
-            vm.RestoreSort((view?.Sort ?? EntrySort.Name) with { MixChineseAndLatin = App.ExplorerPreferences.MixChineseAndLatin });
+                : view.List ? FileLayoutKind.List : view.Details ? FileLayoutKind.Details : FileLayoutKind.Grid);
+            vm.RestoreSort((view?.Sort ?? EntrySort.Name with { Grouping = App.ExplorerPreferences.DefaultEntryGrouping }) with { MixChineseAndLatin = App.ExplorerPreferences.MixChineseAndLatin });
         }
         finally { _applyingView.Remove(vm); }
         if (ReferenceEquals(vm, ViewModel))
@@ -81,7 +83,7 @@ public sealed partial class NavigatorPage
         _viewRevisions[vm]++;
         var surface = SurfaceOf(vm);
         _ = SaveFolderViewAsync(vm.AddressText,
-            new(surface.LayoutKind == FileLayoutKind.Details, surface.GridPreset.Slot, vm.Sort, surface.GetColumns()));
+            new(surface.LayoutKind == FileLayoutKind.Details, surface.GridPreset.Slot, vm.Sort, surface.GetColumns(), surface.LayoutKind == FileLayoutKind.List, surface.ListZoomPercent));
     }
 
     private async Task SaveFolderViewAsync(string path, FolderViewSettings view)
@@ -110,8 +112,8 @@ public sealed partial class NavigatorPage
         {
             if (id == AppCommandId.AddToShelf)
             {
-                if (selected.Count > 0) await App.FileShelf.AddAsync(selected);
                 await ShowShelfAsync();
+                if (_shelfPanel is not null) await _shelfPanel.AddPathsAsync(selected);
                 return;
             }
             if (id == AppCommandId.ShowShelf)
@@ -160,7 +162,7 @@ public sealed partial class NavigatorPage
         if (_disposed || XamlRoot is null) return;
         if (_shelfPanel is null)
         {
-            _shelfPanel = new FileShelfPanel(this, RefreshFilePanes);
+            _shelfPanel = new FileShelfPanel(this, RefreshFilePanes, SelectedPaths);
             _shelfPanel.CloseRequested += (_, _) =>
             {
                 _shelfPanel.IsOpen = false;

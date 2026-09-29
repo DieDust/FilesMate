@@ -1,10 +1,25 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace FilesMate.App.Tests.DesignSystem;
 
 public sealed class ThemeResourceContractTests
 {
+    [Fact]
+    public void Static_aliases_cannot_capture_a_different_theme_at_startup()
+    {
+        var document = ThemeXaml.Load("Themes/AppThemeResources.xaml");
+        var sharedKeys = ThemeXaml.Keys(document.Root!);
+        foreach (var (name, theme) in ThemeXaml.ThemeDictionaries(document))
+        foreach (var entry in theme.Elements().Where(e => e.Name.LocalName == "StaticResource"))
+        {
+            var target = (string)entry.Attribute("ResourceKey")!;
+            if (target.StartsWith("SystemColor", StringComparison.Ordinal)) continue;
+            Assert.StartsWith($"FilesMate.Palette.{name}.", target, StringComparison.Ordinal);
+            Assert.Contains(target, sharedKeys);
+        }
+    }
+
     [Theory]
     [InlineData("Light")]
     [InlineData("Dark")]
@@ -111,22 +126,21 @@ public sealed class ThemeResourceContractTests
             .Where(element => element.Attribute(ThemeXaml.Xaml + "Key") is not null)
             .ToDictionary(
                 element => (string)element.Attribute(ThemeXaml.Xaml + "Key")!,
-                element => element,
+                element => ThemeXaml.Resolve(themes["Light"], (string)element.Attribute(ThemeXaml.Xaml + "Key")!),
                 StringComparer.Ordinal);
         var dark = themes["Dark"]
             .Elements()
             .Where(element => element.Attribute(ThemeXaml.Xaml + "Key") is not null)
             .ToDictionary(
                 element => (string)element.Attribute(ThemeXaml.Xaml + "Key")!,
-                element => element,
+                element => ThemeXaml.Resolve(themes["Dark"], (string)element.Attribute(ThemeXaml.Xaml + "Key")!),
                 StringComparer.Ordinal);
 
-        Assert.Equal("SolidColorBrush", light["FilesMate.Text.PrimaryBrush"].Name.LocalName);
-        Assert.Equal("#FF303B37", (string?)light["FilesMate.Text.PrimaryBrush"].Attribute("Color"));
-        Assert.Equal("#FF606D66", (string?)light["FilesMate.Text.SecondaryBrush"].Attribute("Color"));
-        Assert.Equal("#FFE8E8E8", (string?)dark["FilesMate.Text.PrimaryBrush"].Attribute("Color"));
-        Assert.Equal("#FFACACAC", (string?)dark["FilesMate.Text.SecondaryBrush"].Attribute("Color"));
-        Assert.Equal("#FFF3F3F3", (string?)light["FilesMate.ThemePreview.LightFill"].Attribute("Color"));
+        Assert.Equal("#FF303B37", (string?)ThemeXaml.Resolve(themes["Light"], "FilesMate.Text.PrimaryBrush").Attribute("Color"));
+        Assert.Equal("#FF606D66", (string?)ThemeXaml.Resolve(themes["Light"], "FilesMate.Text.SecondaryBrush").Attribute("Color"));
+        Assert.Equal("#FFE8E8E8", (string?)ThemeXaml.Resolve(themes["Dark"], "FilesMate.Text.PrimaryBrush").Attribute("Color"));
+        Assert.Equal("#FFACACAC", (string?)ThemeXaml.Resolve(themes["Dark"], "FilesMate.Text.SecondaryBrush").Attribute("Color"));
+        Assert.Equal(Models.AccentPalette.ToHex(Models.SkinPalette.Light.Canvas), (string?)light["FilesMate.ThemePreview.LightFill"].Attribute("Color"));
         Assert.Equal("#FF242424", (string?)light["FilesMate.ThemePreview.DarkFill"].Attribute("Color"));
         Assert.Equal(
             (string?)light["FilesMate.ThemePreview.LightFill"].Attribute("Color"),
@@ -141,12 +155,11 @@ public sealed class ThemeResourceContractTests
         Assert.NotEqual((string?)light["FilesMate.Tab.BackgroundBrush"].Attribute("Color"),
             (string?)light["FilesMate.Tab.SelectedBrush"].Attribute("Color"));
         Assert.Equal("#FFFFFFFF", (string?)light["FilesMate.Tab.SelectedBrush"].Attribute("Color"));
-        Assert.Equal("#FFF2F2F7", (string?)light["ComboBoxDropDownBackground"].Attribute("Color"));
-        Assert.Equal("#FF303B37", (string?)light["ComboBoxItemForegroundSelected"].Attribute("Color"));
-        Assert.Equal("#FF303B37", (string?)light["ComboBoxItemForegroundSelectedUnfocused"].Attribute("Color"));
-        Assert.Equal("#FF303B37", (string?)light["TextControlForegroundFocused"].Attribute("Color"));
-        Assert.Equal("#FF303B37", (string?)light["TextControlForeground"].Attribute("Color"));
-        Assert.Equal("#66000000", (string?)dark["FilesMate.SettingsPanel.BackgroundBrush"].Attribute("Color"));
+        Assert.Equal(Models.AccentPalette.ToHex(Models.SkinPalette.Light.Floating), (string?)light["ComboBoxDropDownBackground"].Attribute("Color"));
+        foreach (var key in new[] { "ComboBoxItemForegroundSelected", "ComboBoxItemForegroundSelectedUnfocused",
+            "TextControlForegroundFocused", "TextControlForeground", "TabViewItemHeaderForeground", "TabViewItemHeaderForegroundSelected" })
+            Assert.Same(ThemeXaml.Resolve(themes["Light"], "FilesMate.Text.PrimaryBrush"), ThemeXaml.Resolve(themes["Light"], key));
+        Assert.Equal(Models.AccentPalette.ToHex(Models.SkinPalette.DarkSkin.Floating), (string?)dark["FilesMate.SettingsPanel.BackgroundBrush"].Attribute("Color"));
         Assert.Equal("#FF323232", (string?)dark["FilesMate.SettingsCard.BackgroundBrush"].Attribute("Color"));
         Assert.Equal("#FF323232", (string?)dark["FilesMate.ComboBox.BackgroundBrush"].Attribute("Color"));
         Assert.Equal("#FFF6F4EE", (string?)light["FilesMate.ComboBox.BackgroundBrush"].Attribute("Color"));
@@ -156,12 +169,6 @@ public sealed class ThemeResourceContractTests
             (string?)light["FilesMate.AddressBar.BackgroundBrush"].Attribute("Color") +
             (string?)light["FilesMate.Tab.SelectedBrush"].Attribute("Color"),
             StringComparison.Ordinal);
-        Assert.Equal(
-            "FilesMate.Text.PrimaryBrush",
-            (string?)light["TabViewItemHeaderForeground"].Attribute("ResourceKey"));
-        Assert.Equal(
-            "FilesMate.Text.PrimaryBrush",
-            (string?)light["TabViewItemHeaderForegroundSelected"].Attribute("ResourceKey"));
     }
 
     [Fact]
@@ -177,16 +184,17 @@ public sealed class ThemeResourceContractTests
                 continue;
             }
 
-            if (entry.Name.LocalName == "StaticResource")
+            var resolved = ThemeXaml.Resolve(highContrast, key);
+            if (resolved.Name.LocalName == "StaticResource")
             {
-                var resourceKey = (string?)entry.Attribute("ResourceKey");
+                var resourceKey = (string?)resolved.Attribute("ResourceKey");
                 Assert.False(string.IsNullOrEmpty(resourceKey), $"{key} is missing ResourceKey.");
                 Assert.StartsWith("SystemColor", resourceKey, StringComparison.Ordinal);
                 continue;
             }
 
-            var color = (string?)entry.Attribute("Color")
-                ?? (string?)entry.Elements().FirstOrDefault()?.Attribute("Color");
+            var color = (string?)resolved.Attribute("Color")
+                ?? (string?)resolved.Elements().FirstOrDefault()?.Attribute("Color");
             Assert.False(string.IsNullOrEmpty(color), $"{key} has no Color or StaticResource alias.");
             Assert.DoesNotContain("Transparent", color, StringComparison.OrdinalIgnoreCase);
         }

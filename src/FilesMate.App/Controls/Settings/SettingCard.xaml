@@ -3,7 +3,7 @@
     x:Class="FilesMate.App.Controls.Settings.SettingCard"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid MinHeight="72">
+    <Grid x:Name="CardRoot" MinHeight="56">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />

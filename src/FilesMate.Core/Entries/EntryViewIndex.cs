@@ -96,7 +96,8 @@ public sealed class EntryViewIndex : IReadOnlyList<int>
         long generation,
         Func<FileEntryCore, bool>? additionalMatch,
         CancellationToken cancellationToken = default,
-        Func<FileEntryCore, ulong>? sizeOf = null)
+        Func<FileEntryCore, ulong>? sizeOf = null,
+        IReadOnlyDictionary<int, EntryPropertyValue>? propertyValues = null)
     {
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(sort);
@@ -131,7 +132,7 @@ public sealed class EntryViewIndex : IReadOnlyList<int>
                         keys[row] = PinyinName.Key(entries[row].Name);
                         chinese![row] = PinyinName.StartsWithHan(entries[row].Name);
                     }
-                Array.Sort(rented, 0, w, new RowComparer(entries, sort, nameComparer, sizeOf, keys, chinese));
+                Array.Sort(rented, 0, w, new RowComparer(entries, sort, nameComparer, sizeOf, keys, chinese, propertyValues));
                 var exact = w == 0 ? [] : new int[w];
                 if (w > 0)
                 {
@@ -145,7 +146,8 @@ public sealed class EntryViewIndex : IReadOnlyList<int>
                         cancellationToken.ThrowIfCancellationRequested();
                         var row = exact[i];
                         var label = PinyinName.Initial(keys[row]);
-                        var directory = sort.DirectoriesFirst && entries[row].Kind == EntryKind.Directory;
+                        // A mixed list has one alphabet stream, without a file/folder chooser.
+                        var directory = sort.EffectiveGrouping != EntryGrouping.Mixed && entries[row].Kind == EntryKind.Directory;
                         if (sections.Count == 0 || sections[^1].Label != label || sections[^1].IsDirectory != directory)
                             sections.Add(new(label, i, directory));
                     }
@@ -172,15 +174,31 @@ public sealed class EntryViewIndex : IReadOnlyList<int>
         IReadOnlyList<FileEntryCore> entries,
         EntrySort sort,
         IComparer<string> names,
-        Func<FileEntryCore, ulong>? sizeOf, string[]? keys, bool[]? chinese) : IComparer<int>
+        Func<FileEntryCore, ulong>? sizeOf, string[]? keys, bool[]? chinese,
+        IReadOnlyDictionary<int, EntryPropertyValue>? propertyValues) : IComparer<int>
     {
+        private readonly EntryGrouping _grouping = sort.EffectiveGrouping;
+
         public int Compare(int x, int y)
         {
             var left = entries[x];
             var right = entries[y];
-            if (sort.DirectoriesFirst && left.Kind != right.Kind)
+            if (_grouping != EntryGrouping.Mixed && left.Kind != right.Kind)
             {
-                return left.Kind == EntryKind.Directory ? -1 : 1;
+                var directoryOrder = left.Kind == EntryKind.Directory ? -1 : 1;
+                return _grouping == EntryGrouping.FoldersFirst ? directoryOrder : -directoryOrder;
+            }
+
+            if (sort.Column == EntrySortColumn.ShellProperty)
+            {
+                var a = propertyValues?.GetValueOrDefault(left.Id);
+                var b = propertyValues?.GetValueOrDefault(right.Id);
+                var result = EntryPropertyValue.Compare(a, b, names);
+                // Missing metadata belongs at the end in either direction.
+                if ((a is null) != (b is null)) return result;
+                if (result == 0) result = names.Compare(left.Name, right.Name);
+                if (result == 0) result = x.CompareTo(y);
+                return sort.Ascending ? result : -result;
             }
 
             var cmp = sort.Column switch

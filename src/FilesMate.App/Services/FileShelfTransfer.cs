@@ -34,7 +34,9 @@ public static class FileShelfTransfer
                 errors.Add($"{source}: {StringTable.Get("Transfer_InvalidDestination")}");
             else requests.Add(new(source, Path.Combine(destination, Path.GetFileName(Path.TrimEndingDirectorySeparator(source)))));
         }
-        var result = await WindowsFileTransfer.RunAsync(operations, requests, move, resolveConflict, progress, token, byteProgress: byteProgress).ConfigureAwait(false);
+        var result = await WindowsFileTransfer.RunAsync(operations, requests, move, resolveConflict, progress, token,
+            byteProgress: byteProgress, copyCollisionPolicy: allowSameDirectoryCopy
+                ? FileCopyCollisionPolicy.KeepBothForSamePath : FileCopyCollisionPolicy.Ask).ConfigureAwait(false);
         return new(result.Completed, errors.Concat(result.Errors).ToArray(), result.Cancelled)
         { Skipped = result.Skipped + unchanged, Undo = result.Undo, WithoutUndo = result.WithoutUndo,
             RemovedSourceDirectories = result.RemovedSourceDirectories };

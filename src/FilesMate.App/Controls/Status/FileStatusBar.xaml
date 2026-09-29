@@ -2,8 +2,10 @@
 <UserControl
     x:Class="FilesMate.App.Controls.Status.FileStatusBar"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:status="using:FilesMate.App.Controls.Status">
     <Grid Height="{StaticResource FilesMate.Control.Height.StatusBar}" Padding="12,0">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
         <TextBlock
             x:Name="SummaryBlock"
             VerticalAlignment="Center"
@@ -12,5 +14,6 @@
             Style="{StaticResource CaptionTextBlockStyle}"
             TextWrapping="NoWrap"
             TextTrimming="CharacterEllipsis" />
+        <status:OperationHistoryButton Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"/>
     </Grid>
 </UserControl>

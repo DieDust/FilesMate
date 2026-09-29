@@ -7,6 +7,39 @@ namespace FilesMate.App.Tests.Settings;
 public sealed class ExplorerPreferencesTests
 {
     [Fact]
+    public async Task Hidden_toolbar_tools_survive_reload_and_ignore_unknown_or_duplicate_names()
+    {
+        var file = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            var service = new ExplorerPreferencesService(file);
+            Assert.Null(service.Load().HiddenToolbarTools);
+            await service.SaveAsync(service.Load() with { HiddenToolbarTools = [ToolbarTool.Copy, ToolbarTool.SplitView, ToolbarTool.HiddenFiles] });
+            Assert.Equal([ToolbarTool.Copy, ToolbarTool.SplitView, ToolbarTool.HiddenFiles], service.Load().HiddenToolbarTools!);
+            File.WriteAllText(file, """{"hiddenToolbarTools":["Copy","copy","Unknown","999"]}""");
+            Assert.Equal([ToolbarTool.Copy], service.Load().HiddenToolbarTools!);
+            await service.SaveAsync(service.Load() with { HiddenToolbarTools = null });
+            Assert.Null(service.Load().HiddenToolbarTools);
+        }
+        finally { File.Delete(file); }
+    }
+    [Fact]
+    public async Task Alternating_rows_default_on_and_explicit_off_survive_restart()
+    {
+        var file = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".json");
+        try
+        {
+            File.WriteAllText(file, "{}");
+            var service = new ExplorerPreferencesService(file);
+            Assert.True(service.Load().ShowAlternatingRows);
+            Assert.True(service.Load().DefaultSortAscending);
+            await service.SaveAsync(service.Load() with { ShowAlternatingRows = false, DefaultSortAscending = false });
+            Assert.False(new ExplorerPreferencesService(file).Load().ShowAlternatingRows);
+            Assert.False(new ExplorerPreferencesService(file).Load().DefaultSortAscending);
+        }
+        finally { File.Delete(file); }
+    }
+    [Fact]
     public void Missing_or_corrupt_json_returns_defaults()
     {
         var missing = new ExplorerPreferencesService(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "explorer.json"));
@@ -83,6 +116,7 @@ public sealed class ExplorerPreferencesTests
             ShowAlphabetNavigationInDualPane = true,
         };
 
+        await service.SaveAsync(ExplorerPreferences.Default);
         await service.SaveAsync(settings);
 
         Assert.True(File.Exists(file));
@@ -95,9 +129,6 @@ public sealed class ExplorerPreferencesTests
         Assert.Contains("\"alphabetNavigationMinimumItemCount\": 35", json, StringComparison.Ordinal);
         Assert.Contains("\"showAlphabetNavigationInDualPane\": true", json, StringComparison.Ordinal);
         Assert.Equal(settings, service.Load());
-        Assert.Contains("File.Replace", File.ReadAllText(Path.Combine(
-            ThemeXaml.AppRoot,
-            "Services",
-            "ExplorerPreferencesService.cs")), StringComparison.Ordinal);
+        Assert.Equal([file], Directory.GetFiles(directory));
     }
 }

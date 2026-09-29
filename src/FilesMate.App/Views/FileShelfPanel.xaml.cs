@@ -1,4 +1,5 @@
 using FilesMate.App.Icons;
+using FilesMate.App.Commands;
 using FilesMate.App.Controls.FileSurface;
 using FilesMate.App.Localization;
 using FilesMate.App.Services;
@@ -30,6 +31,9 @@ public sealed partial class FileShelfPanel : UserControl
 
     private readonly FrameworkElement _host;
     private readonly Action _refresh;
+    private readonly Func<IReadOnlyList<string>> _sourceSelection;
+    private readonly PaneFileActions _fileActions;
+    private string[] _removedPaths = [];
     private readonly bool _ready;
     private CancellationTokenSource? _transfer;
     private bool _busy;
@@ -37,11 +41,17 @@ public sealed partial class FileShelfPanel : UserControl
     private bool _closeRequested;
     private long _reloadVersion;
     public event EventHandler? CloseRequested;
-    internal bool IsOpen { get; set; }
+    private bool _isOpen;
+    internal bool IsOpen
+    {
+        get => _isOpen;
+        set { _isOpen = value; if (value) _closeRequested = false; }
+    }
 
     internal bool ContainsFocus()
     {
         if (!IsOpen || XamlRoot is null) return false;
+        if (MoreButton.Flyout.IsOpen) return true;
         var current = FocusManager.GetFocusedElement(XamlRoot) as DependencyObject;
         while (current is not null)
         {
@@ -51,13 +61,25 @@ public sealed partial class FileShelfPanel : UserControl
         return false;
     }
 
-    internal FileShelfPanel(FrameworkElement host, Action refresh)
+    internal FileShelfPanel(FrameworkElement host, Action refresh, Func<IReadOnlyList<string>>? sourceSelection = null)
     {
         _host = host;
         _refresh = refresh;
+        _sourceSelection = sourceSelection ?? (() => []);
+        _fileActions = new(new WindowsLocalFileOperations(), Selected, () => null, () => Selected().FirstOrDefault(),
+            SetStatus, refresh, App.VacateFoldersAsync, host);
         InitializeComponent();
         TitleText.Text = StringTable.Get("Shelf_Title");
         EmptyText.Text = StringTable.Get("Shelf_Empty");
+        EmptyHint.Text = StringTable.Get("Shelf_EmptyHint");
+        CopyButton.Content = StringTable.Get("Shelf_CopyToShort");
+        MoveButton.Content = StringTable.Get("Shelf_MoveToShort");
+        RemoveButton.Content = StringTable.Get("Shelf_RemoveShort");
+        MoreButton.Content = StringTable.Get("Shelf_More");
+        AddSelectionLabel.Text = StringTable.Get("Shelf_AddSelection");
+        EmptyAddSelectionLabel.Text = StringTable.Get("Shelf_AddSelection");
+        UndoRemoveButton.Content = StringTable.Get("Shelf_UndoRemove");
+        CancelButton.Content = StringTable.Get("Cancel");
         Caption(ShelfCloseButton, "Close");
         Caption(CopyButton, "Shelf_CopyTo");
         Caption(MoveButton, "Shelf_MoveTo");
@@ -66,6 +88,14 @@ public sealed partial class FileShelfPanel : UserControl
         Caption(RemoveButton, "Shelf_Remove");
         Caption(ClearButton, "Shelf_Clear");
         Caption(CancelButton, "Shelf_Cancel");
+        Caption(AddSelectionButton, "Shelf_AddSelection");
+        ToolTipService.SetToolTip(AddSelectionButton, StringTable.Get("Shelf_AddSelectionHint"));
+        Caption(EmptyAddSelectionButton, "Shelf_AddSelection");
+        ToolTipService.SetToolTip(EmptyAddSelectionButton, StringTable.Get("Shelf_AddSelectionHint"));
+        Caption(CopyPathsButton, "Command_CopyPath");
+        Caption(RevealButton, "Shelf_Reveal");
+        Caption(UndoRemoveButton, "Shelf_UndoRemove");
+        Theming.FlyoutTheme.FollowHost(MoreButton.Flyout);
         Loaded += (_, _) =>
         {
             _closeRequested = false;
@@ -82,11 +112,12 @@ public sealed partial class FileShelfPanel : UserControl
         UpdateButtons();
     }
 
-    private static void Caption(Button button, string key)
+    private static void Caption(FrameworkElement button, string key)
     {
         var text = StringTable.Get(key);
         AutomationProperties.SetName(button, text);
         ToolTipService.SetToolTip(button, text);
+        if (button is MenuFlyoutItem item) item.Text = text;
     }
 
     private void ShelfChanged(object? sender, EventArgs args) => DispatcherQueue.TryEnqueue(() =>
@@ -96,18 +127,19 @@ public sealed partial class FileShelfPanel : UserControl
 
     private string[] Selected() => PathsList.SelectedItems.OfType<ShelfItem>().Select(item => item.Path).ToArray();
 
-    internal async Task ReloadAsync()
+    internal async Task ReloadAsync(IReadOnlyList<string>? selectPaths = null)
     {
         var revision = ++_reloadVersion;
-        var selected = Selected().ToHashSet(StringComparer.OrdinalIgnoreCase);
         var paths = await App.FileShelf.GetAsync();
         if (revision != _reloadVersion || _dragging) return;
+        // Read selection after the asynchronous load so a click made while loading is retained.
+        var selected = Selected().ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (selectPaths is not null) selected.UnionWith(selectPaths);
         var items = paths.Select(path => new ShelfItem(path)).ToArray();
         PathsList.ItemsSource = items;
         foreach (var item in items)
             if (selected.Contains(item.Path)) PathsList.SelectedItems.Add(item);
         CountText.Text = StringTable.Format("Shelf_Count", paths.Count);
-        EmptyState.Visibility = paths.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         UpdateButtons();
     }
 
@@ -119,18 +151,43 @@ public sealed partial class FileShelfPanel : UserControl
     private void UpdateButtons()
     {
         var selected = PathsList.SelectedItems.Count > 0;
+        var hasItems = PathsList.Items.Count > 0;
+        var canAdd = _sourceSelection().Count > 0;
+        SelectionRow.Visibility = ActionsRow.Visibility = MoreButton.Visibility = CountText.Visibility = PathsList.Visibility =
+            hasItems ? Visibility.Visible : Visibility.Collapsed;
+        EmptyState.Visibility = hasItems ? Visibility.Collapsed : Visibility.Visible;
+        EmptyAddSelectionButton.Visibility = canAdd ? Visibility.Visible : Visibility.Collapsed;
         CopyButton.IsEnabled = MoveButton.IsEnabled = CompressButton.IsEnabled =
             RemoveButton.IsEnabled = !_busy && !_dragging && selected;
         ClearButton.IsEnabled = SelectButton.IsEnabled = !_busy && !_dragging && PathsList.Items.Count > 0;
+        CopyPathsButton.IsEnabled = !_busy && !_dragging && selected;
+        RevealButton.IsEnabled = !_busy && !_dragging && PathsList.SelectedItems.Count == 1;
+        AddSelectionButton.IsEnabled = EmptyAddSelectionButton.IsEnabled = !_busy && !_dragging && canAdd;
+        UndoRemoveButton.IsEnabled = !_busy && !_dragging;
+        var all = PathsList.Items.Count > 0 && PathsList.SelectedItems.Count == PathsList.Items.Count;
+        SelectIndicator.IsChecked = all ? true : selected ? null : false;
+        SelectLabel.Text = StringTable.Get(all ? "Shelf_SelectNone" : "Command_SelectAll");
+        Caption(SelectButton, all ? "Shelf_SelectNone" : "Command_SelectAll");
+        SelectionText.Text = StringTable.Format("Shelf_SelectedCount", PathsList.SelectedItems.Count);
         PathsList.CanDragItems = !_busy;
-        CancelButton.Visibility = _busy ? Visibility.Visible : Visibility.Collapsed;
+        PathsList.IsEnabled = !_busy;
+        CancelButton.Visibility = _transfer is not null ? Visibility.Visible : Visibility.Collapsed;
+        UndoRemoveButton.Visibility = _removedPaths.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        UpdateFeedbackVisibility();
     }
+
+    internal void RefreshSourceSelection() => UpdateButtons();
+
+    private void UpdateFeedbackVisibility() => FeedbackRow.Visibility =
+        StatusHost.Visibility == Visibility.Visible || CancelButton.Visibility == Visibility.Visible || UndoRemoveButton.Visibility == Visibility.Visible
+            ? Visibility.Visible : Visibility.Collapsed;
 
     private void SetStatus(string message)
     {
         StatusText.Text = message;
         StatusText.Visibility = string.IsNullOrEmpty(message) ? Visibility.Collapsed : Visibility.Visible;
         StatusHost.Visibility = StatusText.Visibility;
+        UpdateFeedbackVisibility();
     }
 
     private void Schedule(Func<Task> action) => DispatcherQueue.TryEnqueue(() =>
@@ -161,11 +218,31 @@ public sealed partial class FileShelfPanel : UserControl
 
     private void Shelf_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (e.Key == Windows.System.VirtualKey.Delete)
+        var ctrl = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control)
+            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+        var shift = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Shift)
+            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+        if (TryHandleShortcut(e.Key, ctrl, shift)) e.Handled = true;
+    }
+
+    internal bool TryHandleShortcut(Windows.System.VirtualKey key, bool ctrl, bool shift)
+    {
+        if (key == Windows.System.VirtualKey.Escape) { RequestClose(); return true; }
+        if (_busy || _dragging) return key == Windows.System.VirtualKey.Delete || ctrl;
+        if (ctrl && key == Windows.System.VirtualKey.A)
+        { if (shift) PathsList.SelectedItems.Clear(); else PathsList.SelectAll(); return true; }
+        if (key == Windows.System.VirtualKey.Delete)
         {
-            Schedule(() => App.FileShelf.RemoveAsync(Selected()));
-            e.Handled = true;
+            var paths = Selected();
+            Schedule(() => RemovePathsAsync(paths));
+            return true;
         }
+        if (ctrl && key == Windows.System.VirtualKey.Z && _removedPaths.Length > 0)
+        { Schedule(UndoRemoveAsync); return true; }
+        if (ctrl && key is Windows.System.VirtualKey.C or Windows.System.VirtualKey.X)
+        { Schedule(() => _fileActions.RunAsync(key == Windows.System.VirtualKey.C ? AppCommandId.Copy : AppCommandId.Cut)); return true; }
+        if (ctrl && key == Windows.System.VirtualKey.V) { Schedule(AddClipboardAsync); return true; }
+        return false;
     }
 
     internal void RequestClose() => DispatcherQueue.TryEnqueue(() =>
@@ -178,15 +255,65 @@ public sealed partial class FileShelfPanel : UserControl
         }
     });
 
-    private void Select_Click(object sender, RoutedEventArgs e) => Schedule(() =>
+    private void Select_Click(object sender, RoutedEventArgs e)
     {
-        PathsList.SelectAll();
-        return Task.CompletedTask;
-    });
+        if (_busy || _dragging) return;
+        if (PathsList.SelectedItems.Count == PathsList.Items.Count) PathsList.SelectedItems.Clear();
+        else PathsList.SelectAll();
+    }
     private void Cancel_Click(object sender, RoutedEventArgs e) => _transfer?.Cancel();
-    private void Remove_Click(object sender, RoutedEventArgs e) => Schedule(() => App.FileShelf.RemoveAsync(Selected()));
-    private void Clear_Click(object sender, RoutedEventArgs e) => Schedule(async () =>
-        await App.FileShelf.RemoveAsync(await App.FileShelf.GetAsync()));
+    private void Remove_Click(object sender, RoutedEventArgs e)
+    { var paths = Selected(); Schedule(() => RemovePathsAsync(paths)); }
+    private void Clear_Click(object sender, RoutedEventArgs e) => Schedule(async () => await RemovePathsAsync(await App.FileShelf.GetAsync()));
+    private void UndoRemove_Click(object sender, RoutedEventArgs e) => Schedule(UndoRemoveAsync);
+    private async Task RemovePathsAsync(IReadOnlyList<string> paths)
+    {
+        if (paths.Count == 0) return;
+        await App.FileShelf.RemoveAsync(paths);
+        _removedPaths = paths.ToArray();
+        await ReloadAsync();
+        SetStatus(StringTable.Format("Shelf_Removed", paths.Count));
+    }
+    private async Task UndoRemoveAsync()
+    {
+        var paths = _removedPaths;
+        await AddPathsAsync(paths);
+        _removedPaths = [];
+        UpdateButtons();
+    }
+    internal async Task AddPathsAsync(IReadOnlyList<string> paths)
+    {
+        if (paths.Count == 0) return;
+        await App.FileShelf.AddAsync(paths);
+        await ReloadAsync(paths);
+        SetStatus("");
+    }
+    private void AddSelection_Click(object sender, RoutedEventArgs e)
+    { var paths = _sourceSelection().ToArray(); Schedule(() => AddPathsAsync(paths)); }
+    private async Task AddClipboardAsync()
+    {
+        await AddDataAsync(Clipboard.GetContent());
+    }
+    internal async Task AddDataAsync(DataPackageView data)
+    {
+        if (!data.Contains(StandardDataFormats.StorageItems)) return;
+        var items = await data.GetStorageItemsAsync();
+        await AddPathsAsync(items.Select(item => item.Path).ToArray());
+    }
+    private void CopyPaths_Click(object sender, RoutedEventArgs e)
+    {
+        var paths = Selected(); if (paths.Length == 0) return;
+        Schedule(() => { var data = new DataPackage(); data.SetText(string.Join(Environment.NewLine, paths)); Clipboard.SetContent(data); return Task.CompletedTask; });
+    }
+    private void Reveal_Click(object sender, RoutedEventArgs e)
+    {
+        if (Selected() is [var path] && Path.GetDirectoryName(path) is { } parent)
+        {
+            var window = App.WindowForElement(_host);
+            if (_host is SearchResultsPage search) window?.OpenSearchResultLocation(search, parent, path);
+            else window?.OpenFolderInNewTab(parent);
+        }
+    }
     private void Compress_Click(object sender, RoutedEventArgs e) => Schedule(CompressAsync);
     private void Copy_Click(object sender, RoutedEventArgs e) => Schedule(() => TransferAsync(false));
     private void Move_Click(object sender, RoutedEventArgs e) => Schedule(() => TransferAsync(true));
@@ -196,6 +323,7 @@ public sealed partial class FileShelfPanel : UserControl
         if (FileOperationLifetime.IsBusy) { SetStatus(StringTable.Get("Files_Busy")); return; }
         using var lifetime = FileOperationLifetime.Begin();
         _transfer = new CancellationTokenSource();
+        UpdateButtons();
         try
         {
             var result = await ArchiveOperationUI.RunAsync(_host, CompactMateVerb.CompressNew,
@@ -213,7 +341,6 @@ public sealed partial class FileShelfPanel : UserControl
     private async Task TransferAsync(bool move)
     {
         if (FileOperationLifetime.IsBusy) { SetStatus(StringTable.Get("Files_Busy")); return; }
-        using var lifetime = FileOperationLifetime.Begin();
         var sources = Selected();
         if (sources.Length == 0) return;
         var picker = new FolderPicker { SuggestedStartLocation = PickerLocationId.ComputerFolder };
@@ -221,13 +348,21 @@ public sealed partial class FileShelfPanel : UserControl
         InitializeWithWindow.Initialize(picker, App.WindowForElement(_host)!.NativeHandle);
         var folder = await picker.PickSingleFolderAsync();
         if (folder is null) return;
+        await TransferToFolderAsync(sources, folder.Path, move);
+    }
+
+    internal async Task TransferToFolderAsync(IReadOnlyList<string> sources, string destination, bool move)
+    {
+        if (FileOperationLifetime.IsBusy) { SetStatus(StringTable.Get("Files_Busy")); return; }
+        using var lifetime = FileOperationLifetime.Begin();
         _transfer = new CancellationTokenSource();
+        UpdateButtons();
         try
         {
             if (move) await App.VacateFoldersAsync(sources);
             SetStatus(StringTable.Format("Shelf_Progress", 0));
             var progress = new Progress<int>(count => SetStatus(StringTable.Format("Shelf_Progress", count)));
-            var result = await FileShelfTransfer.RunAsync(new WindowsLocalFileOperations(), sources, folder.Path, move,
+            var result = await FileShelfTransfer.RunAsync(new WindowsLocalFileOperations(), sources, destination, move,
                 progress, _transfer.Token, allowSameDirectoryCopy: !move, resolveConflict: FileConflictDialog.For(_host),
                 byteProgress: new Progress<FileCopyProgress>(value => SetStatus(StringTable.Format("Transfer_CopyByteProgress", Path.GetFileName(value.Source),
                     (value.Transferred / 1048576d).ToString("N1"), (value.Total / 1048576d).ToString("N1")))));
@@ -255,15 +390,14 @@ public sealed partial class FileShelfPanel : UserControl
             e.DragUIOverride.IsGlyphVisible = false;
             e.DragUIOverride.Caption = StringTable.Get("Shelf_Add");
             e.DragUIOverride.IsCaptionVisible = true;
-            DropBorder.BorderBrush = (Brush)Application.Current.Resources["SystemControlHighlightAccentBrush"];
+            Theming.ThemeResources.Bind(DropBorder, Border.BorderBrushProperty, "FilesMate.Selection.AccentBrush");
         }
         e.Handled = true;
     }
 
     private void Shelf_DragOver(object sender, DragEventArgs e) => PreviewDrop(e);
     private void Shelf_DragLeave(object sender, DragEventArgs e) => ClearDropHighlight();
-    private void ClearDropHighlight() => DropBorder.BorderBrush =
-        (Brush)Application.Current.Resources["FilesMate.Divider.Brush"];
+    private void ClearDropHighlight() => Theming.ThemeResources.Bind(DropBorder, Border.BorderBrushProperty, "FilesMate.Divider.Brush");
     private async void Shelf_Drop(object sender, DragEventArgs e) => await ReceiveDropAsync(e);
 
     internal async Task ReceiveDropAsync(DragEventArgs e)
@@ -278,10 +412,7 @@ public sealed partial class FileShelfPanel : UserControl
                 return;
             }
             e.AcceptedOperation = DataPackageOperation.Copy;
-            var items = await e.DataView.GetStorageItemsAsync();
-            await App.FileShelf.AddAsync(items.Select(item => item.Path));
-            SetStatus("");
-            await ReloadAsync();
+            await AddDataAsync(e.DataView);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException
             or InvalidOperationException or System.Runtime.InteropServices.COMException)

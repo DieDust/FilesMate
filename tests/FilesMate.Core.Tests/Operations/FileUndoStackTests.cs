@@ -4,6 +4,30 @@ namespace FilesMate.Core.Tests.Operations;
 
 public sealed class FileUndoStackTests
 {
+    [Fact]
+    public void History_snapshots_track_undo_redo_and_expiration_without_mutable_aliases()
+    {
+        var stack = new FileUndoStack();
+        var ops = new MemoryOperations();
+        var records = Enumerable.Range(0, 6).Select(i => FileUndoRecord.Created([@"D:\fixture\" + i + ".txt"])).ToArray();
+        foreach (var record in records) { ops.Live.Add(record.Paths[0]); stack.Push(record); }
+        var before = stack.UndoRecords;
+        Assert.Equal(5, before.Count);
+        Assert.Same(records[^1], before[0]);
+        Assert.DoesNotContain(records[0], before);
+        Assert.True(stack.TryUndo(ops));
+        Assert.Same(records[^1], stack.LatestRedo);
+        Assert.Single(stack.RedoRecords);
+        Assert.Equal(5, before.Count);
+        Assert.Equal(4, stack.UndoRecords.Count);
+        Assert.True(stack.TryRedo(ops));
+        Assert.Empty(stack.RedoRecords);
+        Assert.Same(records[^1], stack.Latest);
+        stack.Clear();
+        Assert.Empty(stack.UndoRecords);
+        Assert.Empty(stack.RedoRecords);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

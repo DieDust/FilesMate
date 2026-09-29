@@ -75,7 +75,7 @@ public sealed class AppearancePageContractTests
         Assert.Contains("SetThemeAsync", code, StringComparison.Ordinal);
         Assert.Contains("SetGlassEffectAsync", code, StringComparison.Ordinal);
         Assert.Contains("GlassEffectBalanced", code, StringComparison.Ordinal);
-        Assert.Contains("button.BorderBrush", code, StringComparison.Ordinal);
+        Assert.Contains("ThemeResources.Bind(button, Control.BorderBrushProperty", code, StringComparison.Ordinal);
         Assert.DoesNotContain("Glass.SurfaceBrush", code, StringComparison.Ordinal);
     }
 

@@ -103,11 +103,11 @@ public sealed class ToolbarPresentationTests
         Assert.True(sortStart >= 0 && folderSizesStart > sortStart && separatorStart > folderSizesStart);
         Assert.True(dualPaneStart > separatorStart);
 
-        var detailsStart = xaml.IndexOf("x:Name=\"DetailsViewButton\"", StringComparison.Ordinal);
-        var gridStart = xaml.IndexOf("x:Name=\"GridViewButton\"", StringComparison.Ordinal);
-        Assert.True(detailsStart >= 0 && gridStart > detailsStart);
-        Assert.Contains("Glyph=\"&#xE8FD;\"", xaml[detailsStart..gridStart], StringComparison.Ordinal);
-        Assert.Contains("Glyph=\"&#xF0E2;\"", xaml[gridStart..], StringComparison.Ordinal);
+        Assert.Contains("x:Name=\"ViewMenuButton\"", xaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("x:Name=\"DetailsViewButton\"", xaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("x:Name=\"GridViewButton\"", xaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("x:Name=\"ListViewButton\"", xaml, StringComparison.Ordinal);
+        Assert.DoesNotContain("x:Name=\"ViewSwitchGroup\"", xaml, StringComparison.Ordinal);
 
         var page = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "NavigatorPage.xaml"));
         Assert.Contains("AdaptiveCommandToolbar", page, StringComparison.Ordinal);

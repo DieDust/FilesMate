@@ -1,0 +1,19 @@
+<UserControl
+    x:Class="FilesMate.App.Controls.Toolbar.EntryGroupingIcon"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Width="20" Height="20" IsHitTestVisible="False">
+    <Viewbox>
+        <Grid Width="24" Height="24">
+            <Path x:Name="FoldersFirst" Stroke="{ThemeResource FilesMate.Text.PrimaryBrush}" StrokeThickness="1.5"
+                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                  Data="M2,9 V6 Q2,4 4,4 H8 L10,6 H14 Q16,6 16,8 V18 Q16,20 14,20 H4 Q2,20 2,18 Z M2,9 H16 M20,18 V6 M17,9 L20,6 L23,9 M17,3 H23" />
+            <Path x:Name="FilesFirst" Visibility="Collapsed" Stroke="{ThemeResource FilesMate.Text.PrimaryBrush}" StrokeThickness="1.5"
+                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                  Data="M3,3 H10 L15,8 V20 H3 Z M10,3 V8 H15 M6,12 H12 M6,16 H12 M20,18 V6 M17,9 L20,6 L23,9 M17,3 H23" />
+            <Path x:Name="Mixed" Visibility="Collapsed" Stroke="{ThemeResource FilesMate.Text.PrimaryBrush}" StrokeThickness="1.5"
+                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                  Data="M2,6 V3 H6 L8,5 H11 V11 H2 Z M2,6 H11 M15,5 H22 M15,9 H20 M3,15 H8 L11,18 V23 H3 Z M8,15 V18 H11 M15,17 H22 M15,21 H20" />
+        </Grid>
+    </Viewbox>
+</UserControl>

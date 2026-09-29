@@ -5,7 +5,7 @@ using FilesMate.App.Models;
 
 namespace FilesMate.App.Services;
 
-public sealed record FolderViewSettings(bool Details, int GridSlot, EntrySort Sort, DetailsColumn[]? Columns = null);
+public sealed record FolderViewSettings(bool Details, int GridSlot, EntrySort Sort, DetailsColumn[]? Columns = null, bool List = false, int ListZoomPercent = 100);
 public sealed record FolderCustomization(FolderViewSettings? View = null, string? CoverPath = null);
 public sealed record FolderViewScope(bool Global = false, FolderViewSettings? View = null, bool Initialized = false);
 

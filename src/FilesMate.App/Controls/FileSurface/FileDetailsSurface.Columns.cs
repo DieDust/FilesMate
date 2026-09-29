@@ -18,11 +18,12 @@ public sealed partial class FileDetailsSurface
     private const string ColumnDragFormat = "FilesMate.DetailsColumn";
     private readonly string _columnDragToken = Guid.NewGuid().ToString("N");
     private DetailsColumn[] _detailColumns = DetailsColumn.Defaults();
-    private readonly Dictionary<DetailsColumnId, (Button Button, Border Resize)> _columnHeaders = [];
-    private readonly Dictionary<DetailsColumnId, FontIcon> _extraSortGlyphs = [];
+    private readonly Dictionary<string, (Button Button, Border Resize)> _columnHeaders = [];
+    private readonly Dictionary<string, FontIcon> _extraSortGlyphs = [];
     private EntrySort _headerSort = EntrySort.Name;
     private bool _suppressHeaderClick;
     private bool _columnMenuOpen;
+    private MenuFlyout? _columnMenu;
     private Border? _headerDivider;
     private Border? _columnDropIndicator;
     private double VisibleColumnWidth => _detailColumns.Where(c => c.Visible).Sum(c => c.Width);
@@ -60,11 +61,13 @@ public sealed partial class FileDetailsSurface
                 DetailsColumnId.Size => (SizeHeader, SizeResize),
                 _ => CreateColumnHeader(column)
             };
-            resize.Tag = column.Id;
-            _columnHeaders.Add(column.Id, (button, resize));
+            resize.Tag = column.Key;
+            if (column.Id is DetailsColumnId.Name or DetailsColumnId.Modified or DetailsColumnId.Type or DetailsColumnId.Size)
+                resize.DoubleTapped += (_, e) => { FitColumn(column.Key); e.Handled = true; };
+            _columnHeaders.Add(column.Key, (button, resize));
             DetailsHeader.Children.Add(button);
             DetailsHeader.Children.Add(resize);
-            AttachColumnEditing(button, column.Id);
+            AttachColumnEditing(button, column.Key);
             AutomationProperties.SetName(button, column.Title);
         }
         // Buttons consume some routed right-click events; listen on the full header,
@@ -82,8 +85,9 @@ public sealed partial class FileDetailsSurface
         _headerDivider = new Border { Height = 1, VerticalAlignment = VerticalAlignment.Bottom, IsHitTestVisible = false,
             Background = ((Border)NameResize.Child).Background };
         DetailsHeader.Children.Add(_headerDivider);
-        _columnDropIndicator = new Border { Width = 2, IsHitTestVisible = false, Visibility = Visibility.Collapsed,
-            Background = (Brush)Application.Current.Resources["FilesMate.Selection.AccentBrush"] };
+        _columnDropIndicator = new Border { Width = 2, IsHitTestVisible = false, Visibility = Visibility.Collapsed };
+        Theming.ThemeResources.Bind(_headerDivider, Border.BackgroundProperty, "FilesMate.Divider.Brush");
+        Theming.ThemeResources.Bind(_columnDropIndicator, Border.BackgroundProperty, "FilesMate.Selection.AccentBrush");
         DetailsHeader.Children.Add(_columnDropIndicator);
         _detailColumns = DetailsColumn.Normalize(LegacyColumns());
         ApplyDetailsColumns(false);
@@ -93,28 +97,32 @@ public sealed partial class FileDetailsSurface
     {
         var glyph = new FontIcon { Glyph = "\uE70E", FontSize = 10, Visibility = Visibility.Collapsed,
             RenderTransform = new RotateTransform(), RenderTransformOrigin = new Point(.5, .5) };
-        _extraSortGlyphs.Add(column.Id, glyph);
+        if (column.CanSort) _extraSortGlyphs[column.Key] = glyph;
         var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
         content.Children.Add(new TextBlock { Text = column.Title });
         content.Children.Add(glyph);
         var button = new Button { Content = content, Style = NameHeader.Style };
-        button.Click += (_, _) => RequestColumnSort(column.Sort);
+        if (column.CanSort) button.Click += (_, _) => RequestColumnSort(column);
         var resize = new Border { Width = 12, Margin = new Thickness(0, 0, -6, 0), HorizontalAlignment = HorizontalAlignment.Right,
             Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent), ManipulationMode = ManipulationModes.None,
             Child = new Border { Width = 1, HorizontalAlignment = HorizontalAlignment.Center,
                 Background = ((Border)NameResize.Child).Background } };
+        Theming.ThemeResources.Bind((Border)resize.Child, Border.BackgroundProperty, "FilesMate.Divider.Brush");
         resize.PointerEntered += ColumnResize_PointerEntered;
         resize.PointerExited += ColumnResize_PointerExited;
         resize.PointerPressed += ColumnResize_PointerPressed;
         resize.PointerMoved += ColumnResize_PointerMoved;
         resize.PointerReleased += ColumnResize_PointerReleased;
         resize.PointerCaptureLost += ColumnResize_PointerCaptureLost;
+        resize.DoubleTapped += (_, e) => { FitColumn(column.Key); e.Handled = true; };
         return (button, resize);
     }
 
     private void ApplyDetailsColumns(bool persist)
     {
         HideColumnDropIndicator();
+        foreach (var controls in _columnHeaders.Values)
+            controls.Button.Visibility = controls.Resize.Visibility = Visibility.Collapsed;
         var contentWidth = FileColumnLayout.RowWidth(VisibleColumnWidth, 0, 0, 0);
         Repeater.MinWidth = _layout == FileLayoutKind.Details ? contentWidth : 0;
         DetailsHeader.Width = Math.Max(contentWidth, Scroller.ActualWidth);
@@ -122,7 +130,16 @@ public sealed partial class FileDetailsSurface
         DetailsHeader.ColumnDefinitions.Add(new() { Width = new GridLength(FileColumnLayout.AccentWidth) });
         foreach (var column in _detailColumns)
         {
-            if (!_columnHeaders.TryGetValue(column.Id, out var controls)) continue;
+            if (!_columnHeaders.TryGetValue(column.Key, out var controls))
+            {
+                controls = CreateColumnHeader(column);
+                controls.Resize.Tag = column.Key;
+                _columnHeaders[column.Key] = controls;
+                DetailsHeader.Children.Add(controls.Button);
+                DetailsHeader.Children.Add(controls.Resize);
+                AttachColumnEditing(controls.Button, column.Key);
+                AutomationProperties.SetName(controls.Button, column.Title);
+            }
             var position = DetailsHeader.ColumnDefinitions.Count;
             Grid.SetColumn(controls.Button, position);
             Grid.SetColumnSpan(controls.Button, 1);
@@ -137,10 +154,11 @@ public sealed partial class FileDetailsSurface
             DetailsHeader.ColumnDefinitions.Add(new() { Width = new GridLength(column.Visible ? column.Width : 0) });
             Grid.SetColumn(controls.Resize, position);
             controls.Button.Visibility = controls.Resize.Visibility = column.Visible ? Visibility.Visible : Visibility.Collapsed;
+            ApplyHeaderTypography(controls.Button);
         }
         DetailsHeader.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
         if (_headerDivider is not null) Grid.SetColumnSpan(_headerDivider, DetailsHeader.ColumnDefinitions.Count);
-        foreach (var row in _realized) row.ApplyColumns(_detailColumns);
+        foreach (var row in _realized) ApplyRowColumns(row);
         if (persist) PresentationChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -148,18 +166,31 @@ public sealed partial class FileDetailsSurface
     {
         if (_columnMenuOpen) return;
         var menu = new MenuFlyout();
-        menu.Closed += (_, _) => _columnMenuOpen = false;
-        foreach (var column in _detailColumns)
+        Theming.FlyoutTheme.FollowHost(menu);
+        _columnMenu = menu;
+        menu.Closed += (_, _) => { _columnMenuOpen = false; _columnMenu = null; };
+        var target = ColumnAt(position?.X);
+        var fit = new MenuFlyoutItem { Text = Loc.Get("Columns_Fit"), IsEnabled = target is not null };
+        fit.Click += (_, _) => { if (target is not null) FitColumn(target); };
+        menu.Items.Add(fit);
+        var fitAll = new MenuFlyoutItem { Text = Loc.Get("Columns_FitAll") };
+        fitAll.Click += (_, _) => FitColumn(null);
+        menu.Items.Add(fitAll);
+        menu.Items.Add(new MenuFlyoutSeparator());
+        foreach (var column in _detailColumns.Where(c => c.Id != DetailsColumnId.ShellProperty || c.Visible))
         {
             var item = new ToggleMenuFlyoutItem { Text = column.Title, IsChecked = column.Visible, IsEnabled = column.Id != DetailsColumnId.Name };
             item.Click += (_, _) =>
             {
-                _detailColumns = _detailColumns.Select(c => c.Id == column.Id ? c with { Visible = item.IsChecked } : c).ToArray();
+                _detailColumns = _detailColumns.Select(c => c.Key == column.Key ? c with { Visible = item.IsChecked } : c).ToArray();
                 ApplyDetailsColumns(true);
             };
             menu.Items.Add(item);
         }
         menu.Items.Add(new MenuFlyoutSeparator());
+        var choose = new MenuFlyoutItem { Text = Loc.Get("Columns_Choose") };
+        choose.Click += async (_, _) => await ChooseColumnsAsync();
+        menu.Items.Add(choose);
         var reset = new MenuFlyoutItem { Text = Loc.Get("Columns_Reset") };
         reset.Click += (_, _) => { _detailColumns = DetailsColumn.Defaults(); ApplyDetailsColumns(true); };
         menu.Items.Add(reset);
@@ -170,7 +201,7 @@ public sealed partial class FileDetailsSurface
         catch { _columnMenuOpen = false; throw; }
     }
 
-    private void AttachColumnEditing(Button button, DetailsColumnId id)
+    private void AttachColumnEditing(Button button, string id)
     {
         button.CanDrag = true;
         button.AllowDrop = true;
@@ -199,7 +230,7 @@ public sealed partial class FileDetailsSurface
         {
             _suppressHeaderClick = true;
             e.Data.Properties[ColumnDragFormat] = _columnDragToken;
-            e.Data.SetData(ColumnDragFormat, (int)id);
+            e.Data.SetData(ColumnDragFormat, id);
             e.Data.RequestedOperation = e.AllowedOperations = DataPackageOperation.Move;
         };
         button.DragOver += (_, e) =>
@@ -220,11 +251,11 @@ public sealed partial class FileDetailsSurface
             var deferral = e.GetDeferral();
             try
             {
-                var movingId = (DetailsColumnId)(int)await e.DataView.GetDataAsync(ColumnDragFormat);
+                var movingId = (string)await e.DataView.GetDataAsync(ColumnDragFormat);
                 if (movingId == id) return;
-                var moving = _detailColumns.Single(c => c.Id == movingId);
-                var ordered = _detailColumns.Where(c => c.Id != movingId).ToList();
-                ordered.Insert(ordered.FindIndex(c => c.Id == id) + (after ? 1 : 0), moving);
+                var moving = _detailColumns.Single(c => c.Key == movingId);
+                var ordered = _detailColumns.Where(c => c.Key != movingId).ToList();
+                ordered.Insert(ordered.FindIndex(c => c.Key == id) + (after ? 1 : 0), moving);
                 _detailColumns = ordered.ToArray();
                 ApplyDetailsColumns(true);
             }
@@ -250,7 +281,21 @@ public sealed partial class FileDetailsSurface
     private bool OwnColumnDrag(DragEventArgs e) => e.DataView.Properties.TryGetValue(ColumnDragFormat, out var token) && Equals(token, _columnDragToken);
     private void UpdateExtraSortGlyphs()
     {
-        foreach (var (id, glyph) in _extraSortGlyphs) ApplySortGlyph(glyph, _headerSort, _detailColumns.Single(c => c.Id == id).Sort);
+        foreach (var (key, glyph) in _extraSortGlyphs)
+        {
+            var column = _detailColumns.FirstOrDefault(c => c.Key == key);
+            glyph.Visibility = column?.IsSortedBy(_headerSort) == true ? Visibility.Visible : Visibility.Collapsed;
+            if (glyph.RenderTransform is RotateTransform rotate) rotate.Angle = _headerSort.Ascending ? 0 : 180;
+        }
+    }
+    public event EventHandler<EntrySort>? SortSpecificationRequested;
+    private void RequestColumnSort(DetailsColumn column)
+    {
+        if (_suppressHeaderClick) return;
+        if (column.Id == DetailsColumnId.ShellProperty)
+            SortSpecificationRequested?.Invoke(this, _headerSort.SelectColumn(column.Sort,
+                App.ExplorerPreferences.DefaultSortAscending, column.PropertyName));
+        else RequestColumnSort(column.Sort);
     }
     private void RequestColumnSort(EntrySortColumn column) { if (!_suppressHeaderClick) SortRequested?.Invoke(this, column); }
     private void NameHeader_Click(object sender, RoutedEventArgs e) => RequestColumnSort(EntrySortColumn.Name);
@@ -258,28 +303,28 @@ public sealed partial class FileDetailsSurface
     private void TypeHeader_Click(object sender, RoutedEventArgs e) => RequestColumnSort(EntrySortColumn.Type);
     private void SizeHeader_Click(object sender, RoutedEventArgs e) => RequestColumnSort(EntrySortColumn.Size);
     private void ColumnResize_PointerEntered(object sender, PointerRoutedEventArgs e) => ProtectedCursor = DesktopCursors.SizeWestEast;
-    private void ColumnResize_PointerExited(object sender, PointerRoutedEventArgs e) { if (_resizeColumn < 0) ProtectedCursor = null; }
+    private void ColumnResize_PointerExited(object sender, PointerRoutedEventArgs e) { if (_resizeColumn is null) ProtectedCursor = null; }
     private void ColumnResize_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        if (_resizeColumn >= 0 || !e.GetCurrentPoint(DetailsHeader).Properties.IsLeftButtonPressed || !((UIElement)sender).CapturePointer(e.Pointer)) return;
-        _resizeColumn = (int)(DetailsColumnId)((FrameworkElement)sender).Tag;
+        if (_resizeColumn is not null || !e.GetCurrentPoint(DetailsHeader).Properties.IsLeftButtonPressed || !((UIElement)sender).CapturePointer(e.Pointer)) return;
+        _resizeColumn = (string)((FrameworkElement)sender).Tag;
         _resizePointerId = e.Pointer.PointerId;
         _resizeOriginX = e.GetCurrentPoint(DetailsHeader).Position.X;
-        _resizeOriginWidth = _detailColumns.Single(c => (int)c.Id == _resizeColumn).Width;
+        _resizeOriginWidth = _detailColumns.Single(c => c.Key == _resizeColumn).Width;
         e.Handled = true;
     }
     private void ColumnResize_PointerMoved(object sender, PointerRoutedEventArgs e)
     {
-        if (_resizeColumn < 0 || _resizePointerId != e.Pointer.PointerId) return;
-        var width = Math.Clamp(_resizeOriginWidth + e.GetCurrentPoint(DetailsHeader).Position.X - _resizeOriginX, _resizeColumn == 0 ? 96 : 64, 560);
-        _detailColumns = _detailColumns.Select(c => (int)c.Id == _resizeColumn ? c with { Width = width } : c).ToArray();
+        if (_resizeColumn is null || _resizePointerId != e.Pointer.PointerId) return;
+        var width = Math.Clamp(_resizeOriginWidth + e.GetCurrentPoint(DetailsHeader).Position.X - _resizeOriginX, _resizeColumn == "Name" ? 96 : 64, 1200);
+        _detailColumns = _detailColumns.Select(c => c.Key == _resizeColumn ? c with { Width = width } : c).ToArray();
         ApplyDetailsColumns(false);
         e.Handled = true;
     }
     private void ColumnResize_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
-        if (_resizeColumn < 0 || _resizePointerId != e.Pointer.PointerId) return;
-        _resizeColumn = -1;
+        if (_resizeColumn is null || _resizePointerId != e.Pointer.PointerId) return;
+        _resizeColumn = null;
         _resizePointerId = null;
         ((UIElement)sender).ReleasePointerCapture(e.Pointer);
         ProtectedCursor = null;
@@ -288,8 +333,8 @@ public sealed partial class FileDetailsSurface
     }
     private void ColumnResize_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
     {
-        if (_resizeColumn < 0 || _resizePointerId != e.Pointer.PointerId) return;
-        _resizeColumn = -1;
+        if (_resizeColumn is null || _resizePointerId != e.Pointer.PointerId) return;
+        _resizeColumn = null;
         _resizePointerId = null;
         ProtectedCursor = null;
         ApplyDetailsColumns(true);

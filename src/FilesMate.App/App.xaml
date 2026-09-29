@@ -14,12 +14,27 @@
                 <ResourceDictionary Source="ms-appx:///Themes/NavigationStyles.xaml" />
                 <ResourceDictionary Source="ms-appx:///Themes/TabStyles.xaml" />
                 <ResourceDictionary Source="ms-appx:///Themes/FileSurfaceStyles.xaml" />
+                <ResourceDictionary Source="ms-appx:///Themes/MenuItemTemplates.xaml" />
                 <ResourceDictionary Source="ms-appx:///Themes/MenuStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <Style TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}"><Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" /></Style>
+            <Style TargetType="ToggleButton" BasedOn="{StaticResource DefaultToggleButtonStyle}"><Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" /></Style>
+            <Style TargetType="ToggleSwitch" BasedOn="{StaticResource DefaultToggleSwitchStyle}"><Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" /></Style>
+            <Style TargetType="TextBox" BasedOn="{StaticResource DefaultTextBoxStyle}"><Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" /></Style>
+            <Style TargetType="RichEditBox" BasedOn="{StaticResource DefaultRichEditBoxStyle}"><Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" /></Style>
+            <Style TargetType="AutoSuggestBox" BasedOn="{StaticResource DefaultAutoSuggestBoxStyle}"><Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" /></Style>
+            <Style TargetType="ComboBoxItem" BasedOn="{StaticResource DefaultComboBoxItemStyle}"><Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" /></Style>
+            <Style TargetType="CheckBox" BasedOn="{StaticResource DefaultCheckBoxStyle}"><Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" /></Style>
+            <Style TargetType="RadioButton" BasedOn="{StaticResource DefaultRadioButtonStyle}"><Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" /></Style>
+            <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}"><Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" /></Style>
+            <Style TargetType="ContentDialog" BasedOn="{StaticResource DefaultContentDialogStyle}"><Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" /></Style>
+            <Style TargetType="PasswordBox" BasedOn="{StaticResource DefaultPasswordBoxStyle}"><Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" /></Style>
             <Style TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
                 <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
             </Style>
             <Style x:Key="FilesMate.SecondaryTextStyle" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
                 <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.SecondaryBrush}" />
             </Style>
             <Style TargetType="FontIcon">

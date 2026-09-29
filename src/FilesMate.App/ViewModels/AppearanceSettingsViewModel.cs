@@ -8,6 +8,7 @@ public sealed class AppearanceSettingsViewModel
 {
     private readonly IAppearanceSettingsService _store;
     private readonly Action<AppearanceSettings>? _apply;
+    private long _commitVersion;
 
     public AppearanceSettingsViewModel(
         IAppearanceSettingsService store,
@@ -33,6 +34,11 @@ public sealed class AppearanceSettingsViewModel
 
     public Task SetBackdropAsync(BackdropKind backdrop, CancellationToken cancellationToken = default) =>
         CommitAsync(Current with { Backdrop = backdrop }, cancellationToken);
+
+    public Task SetFileTypographyAsync(string? family, double nameSize, double detailsSize, CancellationToken cancellationToken = default) =>
+        CommitAsync(Current with { FileFontFamily = AppearanceSettings.SanitizeFont(family),
+            FileNameFontSize = AppearanceSettings.SanitizeFontSize(nameSize, 13, 24),
+            FileDetailsFontSize = AppearanceSettings.SanitizeFontSize(detailsSize, 12, 20) }, cancellationToken);
 
     public Task SetShowStatusBarAsync(bool show, CancellationToken cancellationToken = default) =>
         CommitAsync(Current with { ShowStatusBar = show }, cancellationToken);
@@ -64,16 +70,19 @@ public sealed class AppearanceSettingsViewModel
 
     private async Task CommitAsync(AppearanceSettings next, CancellationToken cancellationToken)
     {
+        var version = Interlocked.Increment(ref _commitVersion);
         var previous = Current;
         Current = next;
         try
         {
             _apply?.Invoke(next);
             await _store.SaveAsync(next, cancellationToken).ConfigureAwait(false);
+            if (version != Volatile.Read(ref _commitVersion)) return;
             ErrorText = null;
         }
         catch (Exception)
         {
+            if (version != Volatile.Read(ref _commitVersion)) return;
             Current = previous;
             try
             {

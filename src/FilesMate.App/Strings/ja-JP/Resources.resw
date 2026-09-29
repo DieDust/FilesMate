@@ -595,11 +595,14 @@
   <data name="Clipboard_BusyShort" xml:space="preserve">
     <value>クリップボードが使用中です。再試行してください。</value>
   </data>
+  <data name="Clipboard_CopiedCount" xml:space="preserve">
+    <value>{0} 個の項目をコピーしました</value>
+  </data>
   <data name="Clipboard_CopyCount" xml:space="preserve">
     <value>{0} 項目をコピーしました</value>
   </data>
   <data name="Clipboard_CutCount" xml:space="preserve">
-    <value>{0} 項目を切り取りました</value>
+    <value>{0} 個の項目を切り取りました · 貼り付け待ち</value>
   </data>
   <data name="Clipboard_DimensionsTooLarge" xml:space="preserve">
     <value>画像の寸法が大きすぎます。画像アプリから保存してください。</value>
@@ -643,8 +646,56 @@
   <data name="Column_Type" xml:space="preserve">
     <value>種類</value>
   </data>
+  <data name="Columns_Category_All" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="Columns_Category_Common" xml:space="preserve">
+    <value>全般</value>
+  </data>
+  <data name="Columns_Category_Document" xml:space="preserve">
+    <value>文書</value>
+  </data>
+  <data name="Columns_Category_Media" xml:space="preserve">
+    <value>音声・動画</value>
+  </data>
+  <data name="Columns_Category_Other" xml:space="preserve">
+    <value>その他</value>
+  </data>
+  <data name="Columns_Category_Photo" xml:space="preserve">
+    <value>写真</value>
+  </data>
+  <data name="Columns_Choose" xml:space="preserve">
+    <value>詳細情報の選択…</value>
+  </data>
+  <data name="Columns_ChooseHint" xml:space="preserve">
+    <value>表示する情報を選び、右側で順序と幅を調整します。</value>
+  </data>
+  <data name="Columns_Fit" xml:space="preserve">
+    <value>この列を内容に合わせる</value>
+  </data>
+  <data name="Columns_FitAll" xml:space="preserve">
+    <value>すべての列を内容に合わせる</value>
+  </data>
+  <data name="Columns_MoveDown" xml:space="preserve">
+    <value>列を下へ移動</value>
+  </data>
+  <data name="Columns_MoveUp" xml:space="preserve">
+    <value>列を上へ移動</value>
+  </data>
   <data name="Columns_Reset" xml:space="preserve">
     <value>列を既定に戻す</value>
+  </data>
+  <data name="Columns_Search" xml:space="preserve">
+    <value>列を検索</value>
+  </data>
+  <data name="Columns_Selected" xml:space="preserve">
+    <value>表示する列</value>
+  </data>
+  <data name="Columns_Title" xml:space="preserve">
+    <value>詳細情報の選択</value>
+  </data>
+  <data name="Columns_Width" xml:space="preserve">
+    <value>幅</value>
   </data>
   <data name="CommandPalette" xml:space="preserve">
     <value>コマンドを検索</value>
@@ -783,6 +834,129 @@
   </data>
   <data name="ConfirmRemove" xml:space="preserve">
     <value>削除を確認</value>
+  </data>
+  <data name="Conflict_ApplyRemaining" xml:space="preserve">
+    <value>残りの同種の競合に同じ選択を適用</value>
+  </data>
+  <data name="Conflict_BackupUnavailable" xml:space="preserve">
+    <value>元に戻すためのバックアップ上限を超えています。置き換えは取り消せないため、別途確認します。</value>
+  </data>
+  <data name="Conflict_BatchScope" xml:space="preserve">
+    <value>今回の操作にのみ適用します。異なる種類の競合は別途確認します。</value>
+  </data>
+  <data name="Conflict_ChangeCounts" xml:space="preserve">
+    <value>+ 追加 {0} 行 · − 削除 {1} 行 · ~ 変更 {2} 行</value>
+  </data>
+  <data name="Conflict_Changed" xml:space="preserve">
+    <value>確認中にファイルが変更されました。最新の情報を確認して再度選択してください。</value>
+  </data>
+  <data name="Conflict_Coarse" xml:space="preserve">
+    <value>大きな変更はまとめて表示します。詳細は WinMerge で確認できます。</value>
+  </data>
+  <data name="Conflict_Compare" xml:space="preserve">
+    <value>両方のファイルの情報を比較</value>
+  </data>
+  <data name="Conflict_CompareFailed" xml:space="preserve">
+    <value>内容を比較できません。使用中、変更済み、または読み取り不可の可能性があります。スキップや両方の保持は可能です。</value>
+  </data>
+  <data name="Conflict_CompareHint" xml:space="preserve">
+    <value>詳細、内容のプレビュー、テキストの差分を並べて確認します。</value>
+  </data>
+  <data name="Conflict_Continue" xml:space="preserve">
+    <value>続行</value>
+  </data>
+  <data name="Conflict_DecideEach" xml:space="preserve">
+    <value>ファイルごとに決定する</value>
+  </data>
+  <data name="Conflict_DeletedAnnotation" xml:space="preserve">
+    <value>新しいバージョンでは削除</value>
+  </data>
+  <data name="Conflict_Different" xml:space="preserve">
+    <value>ファイルのデータ内容が異なります。</value>
+  </data>
+  <data name="Conflict_EncodingDiffers" xml:space="preserve">
+    <value>表示テキストは同じですが、実際のデータは異なります（文字コードや改行など）。</value>
+  </data>
+  <data name="Conflict_Exists" xml:space="preserve">
+    <value>同名の項目が存在します</value>
+  </data>
+  <data name="Conflict_Identical" xml:space="preserve">
+    <value>ファイルのデータ内容は同一です。日時などの属性は異なる場合があります。</value>
+  </data>
+  <data name="Conflict_KeepAll" xml:space="preserve">
+    <value>すべて両方を保持</value>
+  </data>
+  <data name="Conflict_KeepExisting" xml:space="preserve">
+    <value>保存先を保持（スキップ）</value>
+  </data>
+  <data name="Conflict_KeepFiles" xml:space="preserve">
+    <value>両方のファイルを保持</value>
+  </data>
+  <data name="Conflict_LineCounts" xml:space="preserve">
+    <value>保存先に対し追加 {0} 行 · 削除 {1} 行</value>
+  </data>
+  <data name="Conflict_Loading" xml:space="preserve">
+    <value>比較内容を読み込み中…</value>
+  </data>
+  <data name="Conflict_Merge" xml:space="preserve">
+    <value>同名フォルダーを統合</value>
+  </data>
+  <data name="Conflict_MergeHint" xml:space="preserve">
+    <value>フォルダーの内容を統合します。同名ファイルは別途確認します。</value>
+  </data>
+  <data name="Conflict_NewItem" xml:space="preserve">
+    <value>新しい項目</value>
+  </data>
+  <data name="Conflict_OriginalItem" xml:space="preserve">
+    <value>元の項目</value>
+  </data>
+  <data name="Conflict_Partial" xml:space="preserve">
+    <value>テキストの一部を比較中（各ファイル最大 256 KB / 2,000 行）。ファイル全体が同一とは判断できません。</value>
+  </data>
+  <data name="Conflict_Preview" xml:space="preserve">
+    <value>内容のプレビュー</value>
+  </data>
+  <data name="Conflict_PreviewHint" xml:space="preserve">
+    <value>プレビューは比較の参考です。サイズと日時が同じでも内容が同じとは限りません。</value>
+  </data>
+  <data name="Conflict_ReplaceAll" xml:space="preserve">
+    <value>保存先のファイルをすべて置き換える</value>
+  </data>
+  <data name="Conflict_ReplaceFile" xml:space="preserve">
+    <value>保存先のファイルを置き換える</value>
+  </data>
+  <data name="Conflict_ReplaceHint" xml:space="preserve">
+    <value>コピー元のファイルで保存先のバージョンを置き換えます。</value>
+  </data>
+  <data name="Conflict_SkipAll" xml:space="preserve">
+    <value>これらのファイルをスキップ</value>
+  </data>
+  <data name="Conflict_SkipFile" xml:space="preserve">
+    <value>このファイルをスキップ</value>
+  </data>
+  <data name="Conflict_SkipHint" xml:space="preserve">
+    <value>保存先のバージョンを保持し、元のファイルも元の場所に残します。</value>
+  </data>
+  <data name="Conflict_TextChanges" xml:space="preserve">
+    <value>テキストの差分</value>
+  </data>
+  <data name="Conflict_Title" xml:space="preserve">
+    <value>置き換えまたはスキップ</value>
+  </data>
+  <data name="Conflict_UndoHint" xml:space="preserve">
+    <value>置き換え前のファイルを保持し、このセッションの操作履歴から元に戻せます。</value>
+  </data>
+  <data name="Conflict_UseIncoming" xml:space="preserve">
+    <value>元のファイルで置き換え</value>
+  </data>
+  <data name="Conflict_Verify" xml:space="preserve">
+    <value>内容全体を照合</value>
+  </data>
+  <data name="Conflict_Verifying" xml:space="preserve">
+    <value>ファイルのデータ内容を照合中…</value>
+  </data>
+  <data name="Conflict_WinMerge" xml:space="preserve">
+    <value>WinMerge（読み取り専用）</value>
   </data>
   <data name="CopyDiagnostics" xml:space="preserve">
     <value>診断情報をコピー</value>
@@ -1336,6 +1510,30 @@
   <data name="FoldersSection" xml:space="preserve">
     <value>フォルダー</value>
   </data>
+  <data name="Font_Default" xml:space="preserve">
+    <value>システムの既定</value>
+  </data>
+  <data name="Font_DetailsSize" xml:space="preserve">
+    <value>詳細文字のサイズ</value>
+  </data>
+  <data name="Font_Family" xml:space="preserve">
+    <value>フォント</value>
+  </data>
+  <data name="Font_Hint" xml:space="preserve">
+    <value>アプリ、メニュー、検索に適用します。名前と詳細の文字サイズは個別に設定できます。</value>
+  </data>
+  <data name="Font_NameSize" xml:space="preserve">
+    <value>ファイル名・フォルダー名のサイズ</value>
+  </data>
+  <data name="Font_Preview" xml:space="preserve">
+    <value>プロジェクト資料 · 夏の写真 2026.png</value>
+  </data>
+  <data name="Font_Reset" xml:space="preserve">
+    <value>既定のフォントとサイズに戻す</value>
+  </data>
+  <data name="Font_Section" xml:space="preserve">
+    <value>フォントと文字</value>
+  </data>
   <data name="FullPath" xml:space="preserve">
     <value>完全なパス</value>
   </data>
@@ -1375,8 +1573,56 @@
   <data name="GroupSelection" xml:space="preserve">
     <value>選択項目を新しいフォルダーに移動</value>
   </data>
+  <data name="Grouping_Cycle" xml:space="preserve">
+    <value>ボタンで切り替える項目</value>
+  </data>
+  <data name="Grouping_Default" xml:space="preserve">
+    <value>既定の配置順</value>
+  </data>
+  <data name="Grouping_DefaultHint" xml:space="preserve">
+    <value>保存した配置がないフォルダーに適用します。混在では、ファイルとフォルダーを選んだ項目で一緒に並べ替えます。</value>
+  </data>
+  <data name="Grouping_Options" xml:space="preserve">
+    <value>配置順</value>
+  </data>
+  <data name="HiddenFiles_Hidden" xml:space="preserve">
+    <value>隠しファイル：非表示 · クリックで表示</value>
+  </data>
+  <data name="HiddenFiles_Shown" xml:space="preserve">
+    <value>隠しファイル：表示中 · クリックで非表示</value>
+  </data>
   <data name="HideSettings" xml:space="preserve">
     <value>設定を閉じる</value>
+  </data>
+  <data name="History_Completed" xml:space="preserve">
+    <value>完了</value>
+  </data>
+  <data name="History_Empty" xml:space="preserve">
+    <value>元に戻せる操作はまだありません</value>
+  </data>
+  <data name="History_EmptyHint" xml:space="preserve">
+    <value>取り消せる最近の操作がここに表示されます</value>
+  </data>
+  <data name="History_Files" xml:space="preserve">
+    <value>関連ファイル</value>
+  </data>
+  <data name="History_Hint" xml:space="preserve">
+    <value>順番に元に戻します。起動中の最大5件を保持します。</value>
+  </data>
+  <data name="History_Locate" xml:space="preserve">
+    <value>保存場所を表示</value>
+  </data>
+  <data name="History_Missing" xml:space="preserve">
+    <value>ファイルまたは保存場所が見つかりません。</value>
+  </data>
+  <data name="History_Redo" xml:space="preserve">
+    <value>やり直す</value>
+  </data>
+  <data name="History_Title" xml:space="preserve">
+    <value>操作履歴</value>
+  </data>
+  <data name="History_Undone" xml:space="preserve">
+    <value>取り消し済み</value>
   </data>
   <data name="Home" xml:space="preserve">
     <value>ホーム</value>
@@ -1467,6 +1713,9 @@
   </data>
   <data name="Layout_LargeIcons" xml:space="preserve">
     <value>大アイコン</value>
+  </data>
+  <data name="Layout_List" xml:space="preserve">
+    <value>一覧</value>
   </data>
   <data name="Layout_MaximumIcons" xml:space="preserve">
     <value>アイコン（256）</value>
@@ -1612,6 +1861,60 @@
   <data name="NetworkDrive" xml:space="preserve">
     <value>ネットワークドライブ</value>
   </data>
+  <data name="NewDocumentName_Csv" xml:space="preserve">
+    <value>新しい CSV テーブル</value>
+  </data>
+  <data name="NewDocumentName_Html" xml:space="preserve">
+    <value>新しい HTML ドキュメント</value>
+  </data>
+  <data name="NewDocumentName_Json" xml:space="preserve">
+    <value>新しい JSON ファイル</value>
+  </data>
+  <data name="NewDocumentName_Markdown" xml:space="preserve">
+    <value>新しい Markdown 文書</value>
+  </data>
+  <data name="NewDocumentName_Presentation" xml:space="preserve">
+    <value>新しい PowerPoint プレゼンテーション</value>
+  </data>
+  <data name="NewDocumentName_RichText" xml:space="preserve">
+    <value>新しいリッチテキスト文書</value>
+  </data>
+  <data name="NewDocumentName_Spreadsheet" xml:space="preserve">
+    <value>新しい Excel ブック</value>
+  </data>
+  <data name="NewDocumentName_Text" xml:space="preserve">
+    <value>新しいテキスト文書</value>
+  </data>
+  <data name="NewDocumentName_Word" xml:space="preserve">
+    <value>新しい Word 文書</value>
+  </data>
+  <data name="NewDocument_Csv" xml:space="preserve">
+    <value>CSV テーブル (.csv)</value>
+  </data>
+  <data name="NewDocument_Html" xml:space="preserve">
+    <value>HTML ドキュメント (.html)</value>
+  </data>
+  <data name="NewDocument_Json" xml:space="preserve">
+    <value>JSON ファイル (.json)</value>
+  </data>
+  <data name="NewDocument_Markdown" xml:space="preserve">
+    <value>Markdown 文書 (.md)</value>
+  </data>
+  <data name="NewDocument_Presentation" xml:space="preserve">
+    <value>PowerPoint プレゼンテーション (.pptx)</value>
+  </data>
+  <data name="NewDocument_RichText" xml:space="preserve">
+    <value>リッチテキスト文書 (.rtf)</value>
+  </data>
+  <data name="NewDocument_Spreadsheet" xml:space="preserve">
+    <value>Excel ブック (.xlsx)</value>
+  </data>
+  <data name="NewDocument_Text" xml:space="preserve">
+    <value>テキスト文書 (.txt)</value>
+  </data>
+  <data name="NewDocument_Word" xml:space="preserve">
+    <value>Word 文書 (.docx)</value>
+  </data>
   <data name="NewFileName" xml:space="preserve">
     <value>新しいファイル.txt</value>
   </data>
@@ -1683,6 +1986,30 @@
   </data>
   <data name="Opening" xml:space="preserve">
     <value>開いています…</value>
+  </data>
+  <data name="Opening_DoubleClick" xml:space="preserve">
+    <value>ダブルクリック</value>
+  </data>
+  <data name="Opening_FileTitle" xml:space="preserve">
+    <value>ファイルの開き方</value>
+  </data>
+  <data name="Opening_FolderHint" xml:space="preserve">
+    <value>ホームのドライブや場所にも適用します。ファイルとは別に設定できます。</value>
+  </data>
+  <data name="Opening_FolderTitle" xml:space="preserve">
+    <value>フォルダーの開き方</value>
+  </data>
+  <data name="Opening_Hint" xml:space="preserve">
+    <value>名前のクリック：名前で開き、アイコンや他の部分で選択します。Ctrl / Shift＋クリック、または空白からドラッグして複数選択できます。</value>
+  </data>
+  <data name="Opening_NameClick" xml:space="preserve">
+    <value>名前のクリック</value>
+  </data>
+  <data name="Opening_SelectItem" xml:space="preserve">
+    <value>項目を選択</value>
+  </data>
+  <data name="Opening_SingleClick" xml:space="preserve">
+    <value>シングルクリック</value>
   </data>
   <data name="Order_SaveFailed" xml:space="preserve">
     <value>保存できませんでした。元の順序に戻しました：</value>
@@ -2353,6 +2680,9 @@ size:&gt;100mb · dm:7days
   <data name="SearchPage_Loaded" xml:space="preserve">
     <value>{0:N0} 件を表示</value>
   </data>
+  <data name="SearchPage_LoadedSort" xml:space="preserve">
+    <value>読み込み済みの結果を並べ替え</value>
+  </data>
   <data name="SearchPage_LoadingMore" xml:space="preserve">
     <value>{0:N0} 件を表示 · 読み込み中…</value>
   </data>
@@ -2842,6 +3172,12 @@ size:&gt;100mb · dm:7days
   <data name="SettingsTags" xml:space="preserve">
     <value>タグ</value>
   </data>
+  <data name="Settings_Find" xml:space="preserve">
+    <value>設定を検索</value>
+  </data>
+  <data name="Settings_NoMatches" xml:space="preserve">
+    <value>一致する設定がありません</value>
+  </data>
   <data name="Settings_SaveFailed" xml:space="preserve">
     <value>設定を保存できませんでした</value>
   </data>
@@ -2887,6 +3223,12 @@ size:&gt;100mb · dm:7days
   <data name="Shelf_Add" xml:space="preserve">
     <value>ファイルシェルフに追加</value>
   </data>
+  <data name="Shelf_AddSelection" xml:space="preserve">
+    <value>選択を追加</value>
+  </data>
+  <data name="Shelf_AddSelectionHint" xml:space="preserve">
+    <value>ファイル一覧で選択した項目をシェルフに追加します。</value>
+  </data>
   <data name="Shelf_Browse" xml:space="preserve">
     <value>転送先フォルダーを選択</value>
   </data>
@@ -2911,6 +3253,9 @@ size:&gt;100mb · dm:7days
   <data name="Shelf_CopyTo" xml:space="preserve">
     <value>選択した項目をコピー…</value>
   </data>
+  <data name="Shelf_CopyToShort" xml:space="preserve">
+    <value>コピー先…</value>
+  </data>
   <data name="Shelf_Count" xml:space="preserve">
     <value>{0} 項目</value>
   </data>
@@ -2920,8 +3265,14 @@ size:&gt;100mb · dm:7days
   <data name="Shelf_Empty" xml:space="preserve">
     <value>シェルフは空です</value>
   </data>
+  <data name="Shelf_EmptyHint" xml:space="preserve">
+    <value>ファイルをドロップ、またはコピーした項目を貼り付け。</value>
+  </data>
   <data name="Shelf_InvalidDestination" xml:space="preserve">
     <value>存在するフォルダーを転送先に選択してください。</value>
+  </data>
+  <data name="Shelf_More" xml:space="preserve">
+    <value>操作</value>
   </data>
   <data name="Shelf_Move" xml:space="preserve">
     <value>選択した項目を転送先に移動</value>
@@ -2929,17 +3280,38 @@ size:&gt;100mb · dm:7days
   <data name="Shelf_MoveTo" xml:space="preserve">
     <value>選択した項目を移動…</value>
   </data>
+  <data name="Shelf_MoveToShort" xml:space="preserve">
+    <value>移動先…</value>
+  </data>
   <data name="Shelf_Progress" xml:space="preserve">
     <value>転送中：{0} 項目完了</value>
   </data>
   <data name="Shelf_Remove" xml:space="preserve">
-    <value>選択した項目をシェルフから外す</value>
+    <value>選択項目をシェルフから除く（元のファイルは保持）</value>
+  </data>
+  <data name="Shelf_RemoveShort" xml:space="preserve">
+    <value>取り除く</value>
+  </data>
+  <data name="Shelf_Removed" xml:space="preserve">
+    <value>{0} 件をシェルフから除きました。元のファイルは保持されます。</value>
+  </data>
+  <data name="Shelf_Reveal" xml:space="preserve">
+    <value>保存場所を開く</value>
+  </data>
+  <data name="Shelf_SelectNone" xml:space="preserve">
+    <value>選択解除</value>
+  </data>
+  <data name="Shelf_SelectedCount" xml:space="preserve">
+    <value>{0} 件を選択</value>
   </data>
   <data name="Shelf_Short" xml:space="preserve">
     <value>シェルフ</value>
   </data>
   <data name="Shelf_Title" xml:space="preserve">
     <value>ファイルシェルフ</value>
+  </data>
+  <data name="Shelf_UndoRemove" xml:space="preserve">
+    <value>元に戻す</value>
   </data>
   <data name="Shortcut_Change" xml:space="preserve">
     <value>ショートカットを変更</value>
@@ -3129,6 +3501,33 @@ Ctrl+T で新しいタブ。Ctrl+W でタブを閉じる。Ctrl+L でアドレ�
   </data>
   <data name="SortByType" xml:space="preserve">
     <value>種類で並べ替え</value>
+  </data>
+  <data name="Sort_Ascending" xml:space="preserve">
+    <value>昇順</value>
+  </data>
+  <data name="Sort_DefaultDirection" xml:space="preserve">
+    <value>既定の並べ替え方向</value>
+  </data>
+  <data name="Sort_DefaultDirectionHint" xml:space="preserve">
+    <value>別の列を選ぶときに使う方向です。同じ列をもう一度クリックすると順序が逆になります。降順では新しい項目や大きい項目が先に表示されます。</value>
+  </data>
+  <data name="Sort_Descending" xml:space="preserve">
+    <value>降順</value>
+  </data>
+  <data name="Sort_Direction" xml:space="preserve">
+    <value>並べ替え順序</value>
+  </data>
+  <data name="Sort_FilesFirst" xml:space="preserve">
+    <value>ファイルを先に</value>
+  </data>
+  <data name="Sort_FoldersFirst" xml:space="preserve">
+    <value>フォルダーを先に</value>
+  </data>
+  <data name="Sort_Grouping" xml:space="preserve">
+    <value>ファイルとフォルダー</value>
+  </data>
+  <data name="Sort_Mixed" xml:space="preserve">
+    <value>混在</value>
   </data>
   <data name="Sort_MixedPinyin" xml:space="preserve">
     <value>中国語と英字をピンイン順で並べる</value>
@@ -3392,6 +3791,18 @@ Ctrl+T で新しいタブ。Ctrl+W でタブを閉じる。Ctrl+L でアドレ�
   <data name="ToolbarDescription" xml:space="preserve">
     <value>アドレスバーの近くに並べ替えと表示方法のボタンを表示します。</value>
   </data>
+  <data name="Toolbar_Customize" xml:space="preserve">
+    <value>ツールバーのカスタマイズ</value>
+  </data>
+  <data name="Toolbar_FileTools" xml:space="preserve">
+    <value>ファイル操作</value>
+  </data>
+  <data name="Toolbar_Restore" xml:space="preserve">
+    <value>ツールバーを既定に戻す</value>
+  </data>
+  <data name="Toolbar_ViewTools" xml:space="preserve">
+    <value>表示とナビゲーション</value>
+  </data>
   <data name="Transfer_ApplyAll" xml:space="preserve">
     <value>今回の操作で同じ種類の競合にすべて適用</value>
   </data>
@@ -3607,6 +4018,21 @@ Ctrl+T で新しいタブ。Ctrl+W でタブを閉じる。Ctrl+L でアドレ�
   </data>
   <data name="Videos" xml:space="preserve">
     <value>ビデオ</value>
+  </data>
+  <data name="View_AlternatingRows" xml:space="preserve">
+    <value>行の背景色を交互に表示</value>
+  </data>
+  <data name="View_AlternatingRowsHint" xml:space="preserve">
+    <value>詳細表示で行の背景色を交互に変えます。オフにすると背景色が統一されます。</value>
+  </data>
+  <data name="View_IconSize" xml:space="preserve">
+    <value>アイコンのサイズ</value>
+  </data>
+  <data name="View_ListZoom" xml:space="preserve">
+    <value>一覧のサイズ</value>
+  </data>
+  <data name="View_Options" xml:space="preserve">
+    <value>表示</value>
   </data>
   <data name="View_PerFolder" xml:space="preserve">
     <value>フォルダーごとに記憶</value>

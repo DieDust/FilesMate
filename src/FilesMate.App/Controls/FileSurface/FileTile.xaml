@@ -6,20 +6,16 @@
     Width="80"
     Height="88"
     IsTabStop="False">
-    <Border
-        x:Name="Root"
-        Padding="2"
-        HorizontalAlignment="Center"
-        VerticalAlignment="Top"
-        Background="Transparent"
-        BorderBrush="Transparent"
-        BorderThickness="0"
-        CornerRadius="{StaticResource FilesMate.Corner.Card}"
-        PointerEntered="OnPointerEntered"
-        PointerExited="OnPointerExited"
-        PointerPressed="OnPointerPressed"
-        PointerReleased="OnPointerReleased"
-        PointerCaptureLost="OnPointerCaptureLost">
+    <Grid VerticalAlignment="Top"
+          PointerEntered="OnPointerEntered"
+          PointerExited="OnPointerExited"
+          PointerPressed="OnPointerPressed"
+          PointerReleased="OnPointerReleased"
+          PointerCaptureLost="OnPointerCaptureLost">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="CommonStates">
                 <VisualStateGroup.Transitions>
@@ -108,71 +104,77 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <Grid HorizontalAlignment="Center">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <Border
-                x:Name="IconHost"
-                Width="48"
-                Height="48"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                UseLayoutRounding="True"
-                Background="Transparent"
-                BorderBrush="Transparent"
-                BorderThickness="0"
-                CornerRadius="{StaticResource FilesMate.Corner.Card}">
-                <Grid>
-                    <FontIcon
-                        x:Name="Glyph"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        FontFamily="Segoe Fluent Icons"
-                        FontSize="32"
-                        Glyph="&#xE8B7;" />
-                    <Image
-                        x:Name="IconImage"
-                        Stretch="Uniform"
-                        UseLayoutRounding="True"
-                        Visibility="Collapsed" />
-                    <Viewbox Stretch="Uniform" IsHitTestVisible="False">
-                        <Grid x:Name="FolderPreviewHost" Width="128" Height="128" Visibility="Collapsed">
-                            <Border
-                                Margin="21,43,20,22"
-                                Background="{ThemeResource FilesMate.FolderPreview.BodyBrush}"
-                                BorderBrush="{ThemeResource FilesMate.FolderPreview.TabBrush}"
-                                BorderThickness="2"
-                                CornerRadius="6">
-                                <Image
-                                    x:Name="FolderPreviewCover"
-                                    Stretch="UniformToFill"
-                                    HorizontalAlignment="Stretch"
-                                    VerticalAlignment="Stretch" />
-                            </Border>
-                        </Grid>
-                    </Viewbox>
-                </Grid>
-            </Border>
-            <Grid Grid.Row="1" Margin="0,2,0,0" HorizontalAlignment="Center">
+        <Border
+            x:Name="Root"
+            Padding="2"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top"
+            Background="Transparent"
+            BorderBrush="Transparent"
+            BorderThickness="0"
+            CornerRadius="{StaticResource FilesMate.Corner.Card}">
+            <Grid HorizontalAlignment="Stretch" VerticalAlignment="Top">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
+                <Border
+                    x:Name="IconHost"
+                    Width="48"
+                    Height="48"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    UseLayoutRounding="True"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    BorderThickness="0"
+                    CornerRadius="{StaticResource FilesMate.Corner.Card}">
+                    <Grid>
+                        <FontIcon
+                            x:Name="Glyph"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontFamily="Segoe Fluent Icons"
+                            FontSize="32"
+                            Glyph="&#xE8B7;" />
+                        <Image
+                            x:Name="IconImage"
+                            Stretch="Uniform"
+                            UseLayoutRounding="True"
+                            Visibility="Collapsed" />
+                        <Viewbox Stretch="Uniform" IsHitTestVisible="False">
+                            <Grid x:Name="FolderPreviewHost" Width="128" Height="128" Visibility="Collapsed">
+                                <Border
+                                    Margin="21,43,20,22"
+                                    Background="{ThemeResource FilesMate.FolderPreview.BodyBrush}"
+                                    BorderBrush="{ThemeResource FilesMate.FolderPreview.TabBrush}"
+                                    BorderThickness="2"
+                                    CornerRadius="6">
+                                    <Image
+                                        x:Name="FolderPreviewCover"
+                                        Stretch="UniformToFill"
+                                        HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Stretch" />
+                                </Border>
+                            </Grid>
+                        </Viewbox>
+                    </Grid>
+                </Border>
                 <TextBlock
                     x:Name="NameText"
+                    Grid.Row="1"
+                    Margin="0,4,0,0"
                     HorizontalAlignment="Center"
                     MaxLines="2"
                     Style="{StaticResource FileTileNameStyle}" />
-                <StackPanel
-                    x:Name="TagHost"
-                    Grid.Row="1"
-                    Margin="0,2,0,0"
-                    HorizontalAlignment="Center"
-                    Orientation="Horizontal"
-                    Spacing="4" />
             </Grid>
-        </Grid>
-    </Border>
+        </Border>
+        <StackPanel
+            x:Name="TagHost"
+            Grid.Row="1"
+            Margin="0,6,0,0"
+            HorizontalAlignment="Center"
+            Orientation="Horizontal"
+            Spacing="4" />
+    </Grid>
 </UserControl>

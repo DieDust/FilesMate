@@ -141,15 +141,13 @@ public sealed class AppearanceSettingsTests
             ReduceMotionKind.On,
             GlassEffectMode.Immersive);
 
+        await service.SaveAsync(AppearanceSettings.Default);
         await service.SaveAsync(settings);
 
         Assert.True(File.Exists(file));
         Assert.False(File.Exists(file + ".tmp"));
         Assert.Contains("\"glassEffect\": \"Immersive\"", await File.ReadAllTextAsync(file), StringComparison.Ordinal);
-        Assert.Contains("File.Replace", File.ReadAllText(Path.Combine(
-            ThemeXaml.AppRoot,
-            "Services",
-            "AppearanceSettingsService.cs")), StringComparison.Ordinal);
+        Assert.Equal([file], Directory.GetFiles(Path.GetDirectoryName(file)!));
         Assert.Equal(settings, service.Load());
     }
 

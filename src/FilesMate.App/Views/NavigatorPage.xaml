@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <Page
     x:Class="FilesMate.App.Views.NavigatorPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -162,7 +162,7 @@
                                     FolderSizesClicked="Commands_FolderSizesClicked"
                                     LayoutChanged="Commands_LayoutChanged"
                                     PreviewClicked="Commands_PreviewClicked"
-                                    SortRequested="Commands_SortRequested" />
+                                    SortRequested="Commands_SortRequested" SortSpecificationRequested="Commands_SortSpecificationRequested" GridSizeRequested="Commands_GridSizeRequested" ListZoomRequested="Commands_ListZoomRequested" SortDirectionRequested="Commands_SortDirectionRequested" GroupingRequested="Commands_GroupingRequested" />
                             </glass:LiquidGlassSurface>
                         </Grid>
                     </Grid>
@@ -194,7 +194,7 @@
                                             OpenRequested="FileSurface_OpenRequested"
                                             RefreshRequested="FileSurface_RefreshRequested"
                                             SelectionChanged="FileSurface_SelectionChanged"
-                                            SortRequested="FileSurface_SortRequested"
+                                            SortRequested="FileSurface_SortRequested" SortSpecificationRequested="FileSurface_SortSpecificationRequested"
                                             UpRequested="FileSurface_UpRequested"
                                             BackRequested="FileSurface_BackRequested"
                                             ForwardRequested="FileSurface_ForwardRequested" />
@@ -224,7 +224,7 @@
                             Grid.Column="2"
                             HorizontalContentAlignment="Stretch"
                             VerticalContentAlignment="Stretch"
-                            Margin="0,0,8,8"
+                            Margin="0,0,8,0"
                             Visibility="Collapsed" />
                     </Grid>
                 </Grid>

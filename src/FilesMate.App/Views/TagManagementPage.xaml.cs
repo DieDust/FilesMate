@@ -99,13 +99,9 @@ public sealed partial class TagManagementPage : UserControl
 
         var host = new Grid();
         host.Children.Add(row);
-        host.Children.Add(new Border
-        {
-            Height = 1,
-            Margin = new Thickness(16, 0, 16, 0),
-            VerticalAlignment = VerticalAlignment.Bottom,
-            Background = ThemeBrush("FilesMate.Divider.Brush"),
-        });
+        var divider = new Border { Height = 1, Margin = new Thickness(16, 0, 16, 0), VerticalAlignment = VerticalAlignment.Bottom };
+        Theming.ThemeResources.Bind(divider, Border.BackgroundProperty, "FilesMate.Divider.Brush");
+        host.Children.Add(divider);
         return host;
     }
 
@@ -228,6 +224,5 @@ public sealed partial class TagManagementPage : UserControl
         ErrorText.Visibility = Visibility.Visible;
     }
 
-    private static Brush? ThemeBrush(string key) =>
-        Application.Current.Resources.TryGetValue(key, out var value) ? value as Brush : null;
+
 }

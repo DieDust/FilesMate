@@ -14,6 +14,7 @@
         <local:BoolToVisibilityConverter x:Key="BoolToVisibility" />
         <local:BoolToOpacityConverter x:Key="BoolToOpacity" />
         <local:BoolToHorizontalAlignmentConverter x:Key="CompactAlign" />
+        <local:CompactThicknessConverter x:Key="SectionSpacing" CompactValue="0,0,0,8" ExpandedValue="0" />
         <local:CompactThicknessConverter
             x:Key="IconMargin"
             CompactValue="0"
@@ -54,10 +55,10 @@
                 Style="{StaticResource SidebarSectionListStyle}">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="nav:NavigationSection">
-                        <StackPanel Spacing="0">
+                        <StackPanel Spacing="0" Margin="{x:Bind IsExpanded, Mode=OneWay, Converter={StaticResource SectionSpacing}}">
                             <Border Height="1" Margin="12,8,12,3"
                                 Background="{ThemeResource FilesMate.Sidebar.SeparatorBrush}"
-                                Visibility="{x:Bind ShowTitle, Converter={StaticResource BoolToVisibility}}" />
+                                Visibility="{x:Bind ShowSeparator, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
                             <Grid Visibility="{Binding IsCompact, ElementName=Root, Converter={StaticResource TrueCollapsed}}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -65,7 +66,8 @@
                                 </Grid.ColumnDefinitions>
                                 <Grid
                                     x:Name="SectionHeader"
-                                    Padding="16,10,8,6"
+                                    MinHeight="32"
+                                    Padding="16,6,8,6"
                                     HorizontalAlignment="Stretch"
                                     Background="Transparent"
                                     PointerPressed="SectionHeader_PointerPressed"
@@ -104,7 +106,8 @@
                                     Grid.Column="1"
                                     Width="28"
                                     Height="28"
-                                    Margin="0,4,4,0"
+                                    Margin="0,0,4,0"
+                                    VerticalAlignment="Center"
                                     Click="SectionAction_Click"
                                     Style="{StaticResource QuietButtonStyle}"
                                     Tag="{x:Bind}"

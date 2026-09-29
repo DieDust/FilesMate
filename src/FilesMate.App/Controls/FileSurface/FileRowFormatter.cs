@@ -45,6 +45,15 @@ public static class FileColumnLayout
 
     public static double ClampMeta(double width) => Math.Clamp(width, MinMetaWidth, MaxColumnWidth);
 
+    public static (double Width, double Height, double Top) SelectionAccentBounds(double contentHeight, double scale)
+    {
+        if (!double.IsFinite(scale) || scale <= 0) scale = 1;
+        double Snap(double value) => Math.Round(value * scale) / scale;
+        var width = Math.Max(1 / scale, Snap(3));
+        var height = Snap(Math.Clamp(contentHeight - 8, 0, 16));
+        return (width, height, Snap(Math.Max(0, (contentHeight - height) / 2)));
+    }
+
     public static int IndexFromPoint(
         double x,
         double y,
@@ -52,21 +61,22 @@ public static class FileColumnLayout
         double name,
         double modified,
         double type,
-        double size)
+        double size,
+        double rowHeight = RowHeight)
     {
         if (count <= 0 || y < 0)
         {
             return -1;
         }
 
-        var row = (int)(y / RowStride);
+        var row = (int)(y / rowHeight);
         if ((uint)row >= (uint)count)
         {
             return -1;
         }
 
-        var localY = y - (row * RowStride);
-        if (localY < RowInset || localY >= RowHeight - RowInset)
+        var localY = y - (row * rowHeight);
+        if (localY < RowInset || localY >= rowHeight - RowInset)
         {
             return -1;
         }
@@ -86,7 +96,8 @@ public static class FileColumnLayout
         double modified,
         double type,
         double size,
-        List<int> into)
+        List<int> into,
+        double rowHeight = RowHeight)
     {
         // Match the painted row and point hit testing, not the full viewport.
         var contentRight = ContentLeft + ColumnsWidth(name, modified, type, size);
@@ -96,12 +107,12 @@ public static class FileColumnLayout
             return;
         }
 
-        var from = Math.Max(0, (int)Math.Floor(top / RowStride) - 1);
-        var to = Math.Min(count - 1, (int)Math.Floor((bottom - double.Epsilon) / RowStride) + 1);
+        var from = Math.Max(0, (int)Math.Floor(top / rowHeight) - 1);
+        var to = Math.Min(count - 1, (int)Math.Floor((bottom - double.Epsilon) / rowHeight) + 1);
         for (var i = from; i <= to; i++)
         {
-            var contentTop = (i * RowStride) + RowInset;
-            var contentBottom = (i * RowStride) + RowHeight - RowInset;
+            var contentTop = (i * rowHeight) + RowInset;
+            var contentBottom = (i * rowHeight) + rowHeight - RowInset;
             if (bottom > contentTop && top < contentBottom)
             {
                 into.Add(i);
@@ -114,6 +125,7 @@ public enum FileLayoutKind
 {
     Details = 0,
     Grid = 1,
+    List = 2,
 }
 
 public readonly record struct FileRowContent(

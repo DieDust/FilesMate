@@ -9,9 +9,8 @@ public sealed class QuietPaletteContrastTests
     [InlineData("Dark")]
     public void Small_type_labels_and_body_text_have_readable_contrast(string theme)
     {
-        var entries = ThemeXaml.ThemeDictionaries(ThemeXaml.Load("Themes/AppThemeResources.xaml"))[theme]
-            .Elements().ToDictionary(e => (string)e.Attribute(ThemeXaml.Xaml + "Key")!);
-        uint Color(string key) => Convert.ToUInt32(((string)entries[key].Attribute("Color")!)[1..], 16);
+        var dictionary = ThemeXaml.ThemeDictionaries(ThemeXaml.Load("Themes/AppThemeResources.xaml"))[theme];
+        uint Color(string key) => Convert.ToUInt32(((string)ThemeXaml.Resolve(dictionary, key).Attribute("Color")!)[1..], 16);
         foreach (var tone in Enum.GetNames<FileTypeTone>())
             Assert.True(Contrast(Color($"FilesMate.Type.{tone}.ForegroundBrush"), Color($"FilesMate.Type.{tone}.BackgroundBrush")) >= 4.5,
                 $"{theme} {tone} label is not legible.");
@@ -27,6 +26,21 @@ public sealed class QuietPaletteContrastTests
         foreach (var color in AccentPalette.Presets.Select(p => AccentPalette.Resolve(p.Kind, null, dark))
             .Concat(new uint[] { 0xFFFFFFFF, 0xFF000000, 0xFFFFFF00, 0xFF777777, 0xFF004466 }))
             Assert.True(Contrast(AccentPalette.Foreground(color), color) >= 4.5, $"Ink on {color:X8}");
+    }
+
+    [Theory]
+    [InlineData("Light")]
+    [InlineData("Dark")]
+    public void Difference_markers_and_content_remain_readable_on_semantic_fills(string theme)
+    {
+        var dictionary = ThemeXaml.ThemeDictionaries(ThemeXaml.Load("Themes/AppThemeResources.xaml"))[theme];
+        uint Color(string key) => Convert.ToUInt32(((string)ThemeXaml.Resolve(dictionary, key).Attribute("Color")!)[1..], 16);
+        foreach (var change in new[] { "Added", "Deleted", "Modified" })
+        {
+            var background = Color($"FilesMate.Compare.{change}FillBrush");
+            Assert.True(Contrast(Color("FilesMate.Text.PrimaryBrush"), background) >= 4.5, $"{theme}: {change} body text");
+            Assert.True(Contrast(Color($"FilesMate.Compare.{change}TextBrush"), background) >= 4.5, $"{theme}: {change} marker");
+        }
     }
 
     [Fact]

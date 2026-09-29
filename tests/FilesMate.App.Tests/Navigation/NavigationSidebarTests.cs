@@ -122,7 +122,7 @@ public sealed class NavigationSidebarTests
 
         pinned.IsExpanded = false;
         NavigationCatalog.SelectPath(sections, @"C:\Users\a\Documents");
-        Assert.True(pinned.IsExpanded);
+        Assert.False(pinned.IsExpanded);
         Assert.True(Find(sections, "docs").Selected);
     }
 

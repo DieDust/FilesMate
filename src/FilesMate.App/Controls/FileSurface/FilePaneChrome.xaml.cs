@@ -326,7 +326,7 @@ public sealed partial class FilePaneChrome : UserControl
     private void ApplyPaneShape()
     {
         PaneCaptionHost.Visibility = IsDualPane ? Visibility.Visible : Visibility.Collapsed;
-        PaneCard.Margin = new Thickness(8, 0, 8, 8);
+        PaneCard.Margin = new Thickness(8, 0, 8, 0);
         PaneCard.CornerRadius = InactiveOverlay.CornerRadius = CardCornerRadius();
     }
 

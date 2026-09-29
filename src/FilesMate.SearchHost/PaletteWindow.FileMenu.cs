@@ -29,6 +29,7 @@ public partial class PaletteWindow
         }
         var menu = new ContextMenu
         {
+            FontFamily = FontFamily,
             PlacementTarget = anchor, Resources = Resources,
             Placement = keyboard ? PlacementMode.Bottom : PlacementMode.MousePoint,
             MaxHeight = SystemParameters.WorkArea.Height - 32

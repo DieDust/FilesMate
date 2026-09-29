@@ -49,9 +49,9 @@ public sealed class NavigationReentrancyContractTests
         var surfaceCode = File.ReadAllText(AppSource("Controls", "FileSurface", "FileDetailsSurface.xaml.cs"));
         Assert.DoesNotContain("DoubleTapped=", surface, StringComparison.Ordinal);
         Assert.DoesNotContain("OnDoubleTapped", surfaceCode, StringComparison.Ordinal);
-        Assert.Contains("IsDoubleClick(_pressViewIndex)", surfaceCode, StringComparison.Ordinal);
+        Assert.Contains("ItemActivation.ShouldOpen", surfaceCode, StringComparison.Ordinal);
         Assert.Contains("PointerUpdateKind.LeftButtonPressed", surfaceCode, StringComparison.Ordinal);
-        Assert.Contains("_lastClickViewIndex = -1;", surfaceCode, StringComparison.Ordinal);
+        Assert.Contains("_pressGeneration == _generation", surfaceCode, StringComparison.Ordinal);
 
         var navigator = File.ReadAllText(AppSource("Views", "NavigatorPage.xaml.cs"));
         var start = navigator.IndexOf("private void FileSurface_OpenRequested", StringComparison.Ordinal);

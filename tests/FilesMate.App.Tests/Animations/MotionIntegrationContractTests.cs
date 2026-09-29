@@ -40,8 +40,8 @@ public sealed class MotionIntegrationContractTests
             // Intentional drag dwell; no animation or repeating background work.
             ["FileDetailsSurface.DragHover.cs"] = [750],
             ["MainWindow.Convenience.cs"] = [750],
-            // Native window opacity sampling cadence; duration uses MotionDurations.
-            ["QuickPreviewWindow.cs"] = [16],
+            // Native opacity sampling and foreground dismissal polling; neither is a motion duration.
+            ["QuickPreviewWindow.cs"] = [16, 160],
             // Test-only dispatcher heartbeat measurement, not an animation.
             ["MainWindow.NativeOfficeHangSmoke.cs"] = [50],
             ["MainWindow.TabMemorySmoke.cs"] = [20],

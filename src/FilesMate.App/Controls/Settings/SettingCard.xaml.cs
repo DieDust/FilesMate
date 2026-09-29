@@ -17,7 +17,7 @@ public sealed partial class SettingCard : UserControl
         nameof(Description),
         typeof(string),
         typeof(SettingCard),
-        new PropertyMetadata(string.Empty));
+        new PropertyMetadata(string.Empty, OnDescriptionChanged));
 
     public static readonly DependencyProperty ActionProperty = DependencyProperty.Register(
         nameof(Action),
@@ -34,6 +34,18 @@ public sealed partial class SettingCard : UserControl
     public SettingCard()
     {
         InitializeComponent();
+        UpdateDescriptionLayout();
+    }
+
+    private static void OnDescriptionChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args) =>
+        ((SettingCard)sender).UpdateDescriptionLayout();
+
+    private void UpdateDescriptionLayout()
+    {
+        if (DescriptionText is null) return;
+        var hasDescription = !string.IsNullOrWhiteSpace(Description);
+        DescriptionText.Visibility = hasDescription ? Visibility.Visible : Visibility.Collapsed;
+        CardRoot.MinHeight = hasDescription ? 68 : 56;
     }
 
     private void LayoutGrid_SizeChanged(object sender, SizeChangedEventArgs e)

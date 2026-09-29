@@ -28,7 +28,7 @@ public static class AccentPalette
 {
     public static readonly AccentSwatch[] Presets =
     [
-        new(AccentKind.Default, "Accent_Default", 0xFF4F786C),
+        new(AccentKind.Default, "Accent_Default", SkinPalette.Light.Accent),
         new(AccentKind.Gold, "Accent_Gold", 0xFFFFB900),
         new(AccentKind.Orange, "Accent_Orange", 0xFFFF8C00),
         new(AccentKind.BrickRed, "Accent_BrickRed", 0xFFE81123),
@@ -56,7 +56,7 @@ public static class AccentPalette
 
         if (kind == AccentKind.Default)
         {
-            return dark ? 0xFF96ABC7 : 0xFF4F786C;
+            return SkinPalette.For(dark).Accent;
         }
 
         foreach (var preset in Presets)

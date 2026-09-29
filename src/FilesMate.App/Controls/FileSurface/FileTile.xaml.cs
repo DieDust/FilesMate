@@ -1,5 +1,6 @@
 using FilesMate.App.Animations;
 using FilesMate.App.Icons;
+using FilesMate.App.Input;
 using FilesMate.App.Controls.Tags;
 using FilesMate.App.Models;
 using FilesMate.Core.Entries;
@@ -23,10 +24,13 @@ public sealed partial class FileTile : UserControl
     private GridSizePreset _preset = GridSizePreset.Default;
     private string? _previewPath;
     private int _previewPixels;
+    private TagDefinition[] _tags = [];
+    private ItemOpeningMode OpeningMode => App.ExplorerPreferences.OpeningMode(Entry.Kind == EntryKind.Directory);
 
     public FileTile()
     {
         InitializeComponent();
+        ItemActivation.BindName(NameText, () => OpeningMode, cursor => ProtectedCursor = cursor);
         Unloaded += (_, _) => FolderPreviewBinder.Clear(FolderPreviewHost, FolderPreviewCover);
         Loaded += (_, _) => BindPreview();
         ResetVisual();
@@ -51,6 +55,11 @@ public sealed partial class FileTile : UserControl
             Height = preset.ItemHeight;
         }
 
+        // Selection chrome belongs to the grid cell, not the measured filename or tags.
+        var chromeWidth = Math.Max(preset.IconSize, itemWidth - 2 * GridSizePreset.HighlightPad);
+        if (Root.Width != chromeWidth) Root.Width = chromeWidth;
+        if (Root.Height != preset.ChromeHeight) Root.Height = preset.ChromeHeight;
+
         if (IconHost.Width != preset.IconSize)
         {
             IconHost.Width = preset.IconSize;
@@ -59,9 +68,10 @@ public sealed partial class FileTile : UserControl
         }
 
         var nameWidth = Math.Max(preset.IconSize, itemWidth - (2 * GridSizePreset.HighlightPad));
-        if (NameText.Width != nameWidth)
+        var width = double.NaN;
+        if (!NameText.Width.Equals(width) || NameText.MaxWidth != nameWidth)
         {
-            NameText.Width = nameWidth;
+            NameText.Width = width;
             NameText.MaxWidth = nameWidth;
             TagHost.MaxWidth = nameWidth;
         }
@@ -71,10 +81,14 @@ public sealed partial class FileTile : UserControl
             NameText.MaxHeight = preset.TextHeight;
         }
 
-        if (!double.IsNaN(NameText.Height))
-        {
-            NameText.Height = double.NaN;
-        }
+        // A shared two-line name area keeps every highlight the same size.
+        // Tags sit below it instead of stretching the selection background.
+        NameText.Height = preset.TextHeight;
+        NameText.LineHeight = preset.TextHeight / 2;
+        NameText.Margin = new Thickness(0, GridSizePreset.TileIconTextGap, 0, 0);
+        TagHost.Margin = new Thickness(0, GridSizePreset.TileTagGap, 0, 0);
+        TagHost.Height = preset.TagHeight;
+        RenderTags();
 
         var pixels = Math.Clamp((int)Math.Ceiling(preset.IconSize * (XamlRoot?.RasterizationScale ?? 1)), 32, 256);
         if (_previewPixels != pixels)
@@ -87,6 +101,7 @@ public sealed partial class FileTile : UserControl
 
     public void Bind(int viewIndex, in FileEntryCore entry, bool selected, string? path)
     {
+        ApplyTypography(App.AppearanceViewModel?.Current ?? AppearanceSettings.Default);
         ViewIndex = viewIndex;
         EntryId = entry.Id;
         Entry = entry;
@@ -105,7 +120,21 @@ public sealed partial class FileTile : UserControl
         UpdateState(animate: false);
     }
 
-    public void SetTags(IEnumerable<TagDefinition>? tags) => TagVisuals.Apply(TagHost, tags, showNames: false);
+    internal void ApplyTypography(AppearanceSettings settings)
+    {
+        FileTypography.Apply(NameText, settings, settings.FileNameFontSize);
+        NameText.TextLineBounds = TextLineBounds.Full;
+        NameText.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+    }
+
+    public void SetTags(IEnumerable<TagDefinition>? tags)
+    {
+        _tags = tags?.ToArray() ?? [];
+        RenderTags();
+    }
+
+    private void RenderTags() => TagVisuals.Apply(TagHost, _tags, showNames: _preset.ShowsTagNames,
+        availableWidth: double.IsFinite(TagHost.MaxWidth) ? TagHost.MaxWidth : _preset.ChromeWidth, maxVisible: 1);
 
     public void SetSelected(bool selected)
     {
@@ -139,6 +168,8 @@ public sealed partial class FileTile : UserControl
 
     public void ResetVisual()
     {
+        NameText.TextDecorations = Windows.UI.Text.TextDecorations.None;
+        ProtectedCursor = null;
         _selected = false;
         _pointerOver = false;
         _pressed = false;
@@ -159,7 +190,8 @@ public sealed partial class FileTile : UserControl
         NameText.Text = string.Empty;
         ToolTipService.SetToolTip(Root, null);
         Glyph.Glyph = "\uE8B7";
-        TagHost.Children.Clear();
+        _tags = [];
+        RenderTags();
         IconImage.Stretch = Stretch.Uniform;
         ShellIconBinder.Clear(IconImage, Glyph);
         _previewPath = null;
@@ -172,6 +204,7 @@ public sealed partial class FileTile : UserControl
 
     private void OnPointerEntered(object sender, PointerRoutedEventArgs e)
     {
+        ProtectedCursor = OpeningMode == ItemOpeningMode.SingleClick ? ItemActivation.HandCursor : null;
         _pointerOver = true;
         UpdateState(animate: false);
     }
@@ -217,6 +250,7 @@ public sealed partial class FileTile : UserControl
             Opacity = _hidden ? HiddenOpacity() : 1;
         }
     }
+
 
     private static double HiddenOpacity()
     {

@@ -595,11 +595,14 @@
   <data name="Clipboard_BusyShort" xml:space="preserve">
     <value>剪贴板忙，请重试</value>
   </data>
+  <data name="Clipboard_CopiedCount" xml:space="preserve">
+    <value>已复制 {0} 个项目</value>
+  </data>
   <data name="Clipboard_CopyCount" xml:space="preserve">
     <value>已复制 {0} 项</value>
   </data>
   <data name="Clipboard_CutCount" xml:space="preserve">
-    <value>已剪切 {0} 项</value>
+    <value>已剪切 {0} 个项目，等待粘贴</value>
   </data>
   <data name="Clipboard_DimensionsTooLarge" xml:space="preserve">
     <value>图片尺寸过大，请通过图片应用另存为。</value>
@@ -643,8 +646,56 @@
   <data name="Column_Type" xml:space="preserve">
     <value>类型</value>
   </data>
+  <data name="Columns_Category_All" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="Columns_Category_Common" xml:space="preserve">
+    <value>常用</value>
+  </data>
+  <data name="Columns_Category_Document" xml:space="preserve">
+    <value>文档</value>
+  </data>
+  <data name="Columns_Category_Media" xml:space="preserve">
+    <value>音视频</value>
+  </data>
+  <data name="Columns_Category_Other" xml:space="preserve">
+    <value>其他</value>
+  </data>
+  <data name="Columns_Category_Photo" xml:space="preserve">
+    <value>照片</value>
+  </data>
+  <data name="Columns_Choose" xml:space="preserve">
+    <value>选择详细信息…</value>
+  </data>
+  <data name="Columns_ChooseHint" xml:space="preserve">
+    <value>勾选要显示的信息，在右侧调整顺序和列宽。</value>
+  </data>
+  <data name="Columns_Fit" xml:space="preserve">
+    <value>将此列调整到合适宽度</value>
+  </data>
+  <data name="Columns_FitAll" xml:space="preserve">
+    <value>将所有列调整到合适宽度</value>
+  </data>
+  <data name="Columns_MoveDown" xml:space="preserve">
+    <value>下移此列</value>
+  </data>
+  <data name="Columns_MoveUp" xml:space="preserve">
+    <value>上移此列</value>
+  </data>
   <data name="Columns_Reset" xml:space="preserve">
     <value>恢复默认列</value>
+  </data>
+  <data name="Columns_Search" xml:space="preserve">
+    <value>搜索列名称</value>
+  </data>
+  <data name="Columns_Selected" xml:space="preserve">
+    <value>显示的列</value>
+  </data>
+  <data name="Columns_Title" xml:space="preserve">
+    <value>选择详细信息</value>
+  </data>
+  <data name="Columns_Width" xml:space="preserve">
+    <value>宽度</value>
   </data>
   <data name="CommandPalette" xml:space="preserve">
     <value>搜索功能</value>
@@ -783,6 +834,129 @@
   </data>
   <data name="ConfirmRemove" xml:space="preserve">
     <value>确认移除</value>
+  </data>
+  <data name="Conflict_ApplyRemaining" xml:space="preserve">
+    <value>对剩余同类冲突使用相同选择</value>
+  </data>
+  <data name="Conflict_BackupUnavailable" xml:space="preserve">
+    <value>此文件超出撤销备份额度。替换后无法撤销，需要单独确认。</value>
+  </data>
+  <data name="Conflict_BatchScope" xml:space="preserve">
+    <value>仅应用于本次操作，类型不同的冲突会单独询问。</value>
+  </data>
+  <data name="Conflict_ChangeCounts" xml:space="preserve">
+    <value>+ 增加 {0} 行 · − 删减 {1} 行 · ~ 修改 {2} 行</value>
+  </data>
+  <data name="Conflict_Changed" xml:space="preserve">
+    <value>文件在比较期间发生了变化，请查看更新后的信息并重新决定。</value>
+  </data>
+  <data name="Conflict_Coarse" xml:space="preserve">
+    <value>大段变更已合并展示，可用 WinMerge 查看更细的差异。</value>
+  </data>
+  <data name="Conflict_Compare" xml:space="preserve">
+    <value>比较两个文件的信息</value>
+  </data>
+  <data name="Conflict_CompareFailed" xml:space="preserve">
+    <value>暂时无法比较内容，文件可能被占用、已变化或无法读取。仍可跳过或保留两个。</value>
+  </data>
+  <data name="Conflict_CompareHint" xml:space="preserve">
+    <value>并排查看文件信息、内容预览和文本差异。</value>
+  </data>
+  <data name="Conflict_Continue" xml:space="preserve">
+    <value>继续</value>
+  </data>
+  <data name="Conflict_DecideEach" xml:space="preserve">
+    <value>让我决定每个文件</value>
+  </data>
+  <data name="Conflict_DeletedAnnotation" xml:space="preserve">
+    <value>已删除</value>
+  </data>
+  <data name="Conflict_Different" xml:space="preserve">
+    <value>文件数据内容不同。</value>
+  </data>
+  <data name="Conflict_EncodingDiffers" xml:space="preserve">
+    <value>显示的文字相同，但实际数据不同，例如编码或换行格式不同。</value>
+  </data>
+  <data name="Conflict_Exists" xml:space="preserve">
+    <value>已有同名项目</value>
+  </data>
+  <data name="Conflict_Identical" xml:space="preserve">
+    <value>文件数据内容一致，日期等属性仍可能不同。</value>
+  </data>
+  <data name="Conflict_KeepAll" xml:space="preserve">
+    <value>全部保留两个</value>
+  </data>
+  <data name="Conflict_KeepExisting" xml:space="preserve">
+    <value>保留目标（跳过）</value>
+  </data>
+  <data name="Conflict_KeepFiles" xml:space="preserve">
+    <value>保留两个文件</value>
+  </data>
+  <data name="Conflict_LineCounts" xml:space="preserve">
+    <value>来源相对目标：新增 {0} 行 · 移除 {1} 行</value>
+  </data>
+  <data name="Conflict_Loading" xml:space="preserve">
+    <value>正在读取比较内容…</value>
+  </data>
+  <data name="Conflict_Merge" xml:space="preserve">
+    <value>合并同名文件夹</value>
+  </data>
+  <data name="Conflict_MergeHint" xml:space="preserve">
+    <value>合并文件夹内容，内部同名文件会另行询问。</value>
+  </data>
+  <data name="Conflict_NewItem" xml:space="preserve">
+    <value>新项目</value>
+  </data>
+  <data name="Conflict_OriginalItem" xml:space="preserve">
+    <value>原有项目</value>
+  </data>
+  <data name="Conflict_Partial" xml:space="preserve">
+    <value>当前为部分文本比较（每侧最多 256 KB / 2,000 行），不能据此判断整个文件相同。</value>
+  </data>
+  <data name="Conflict_Preview" xml:space="preserve">
+    <value>内容预览</value>
+  </data>
+  <data name="Conflict_PreviewHint" xml:space="preserve">
+    <value>预览供比对参考，大小与日期相同不代表内容相同。</value>
+  </data>
+  <data name="Conflict_ReplaceAll" xml:space="preserve">
+    <value>替换目标中的文件</value>
+  </data>
+  <data name="Conflict_ReplaceFile" xml:space="preserve">
+    <value>替换目标中的文件</value>
+  </data>
+  <data name="Conflict_ReplaceHint" xml:space="preserve">
+    <value>使用来源文件替换目标位置的版本。</value>
+  </data>
+  <data name="Conflict_SkipAll" xml:space="preserve">
+    <value>跳过这些文件</value>
+  </data>
+  <data name="Conflict_SkipFile" xml:space="preserve">
+    <value>跳过这个文件</value>
+  </data>
+  <data name="Conflict_SkipHint" xml:space="preserve">
+    <value>保留目标版本，来源文件仍留在原位置。</value>
+  </data>
+  <data name="Conflict_TextChanges" xml:space="preserve">
+    <value>文本差异</value>
+  </data>
+  <data name="Conflict_Title" xml:space="preserve">
+    <value>替换或跳过</value>
+  </data>
+  <data name="Conflict_UndoHint" xml:space="preserve">
+    <value>替换时保留旧版本，可在本次运行的操作记录中撤销。</value>
+  </data>
+  <data name="Conflict_UseIncoming" xml:space="preserve">
+    <value>使用来源替换</value>
+  </data>
+  <data name="Conflict_Verify" xml:space="preserve">
+    <value>核对完整内容</value>
+  </data>
+  <data name="Conflict_Verifying" xml:space="preserve">
+    <value>正在核对文件数据内容…</value>
+  </data>
+  <data name="Conflict_WinMerge" xml:space="preserve">
+    <value>WinMerge 只读比对</value>
   </data>
   <data name="CopyDiagnostics" xml:space="preserve">
     <value>复制诊断信息</value>
@@ -1336,6 +1510,30 @@
   <data name="FoldersSection" xml:space="preserve">
     <value>文件夹</value>
   </data>
+  <data name="Font_Default" xml:space="preserve">
+    <value>系统默认</value>
+  </data>
+  <data name="Font_DetailsSize" xml:space="preserve">
+    <value>详情文字字号</value>
+  </data>
+  <data name="Font_Family" xml:space="preserve">
+    <value>字体</value>
+  </data>
+  <data name="Font_Hint" xml:space="preserve">
+    <value>应用于软件、菜单与搜索窗口。名称和详情字号可分别设置。</value>
+  </data>
+  <data name="Font_NameSize" xml:space="preserve">
+    <value>文件与文件夹名称字号</value>
+  </data>
+  <data name="Font_Preview" xml:space="preserve">
+    <value>项目资料 · 夏日照片 2026.png</value>
+  </data>
+  <data name="Font_Reset" xml:space="preserve">
+    <value>恢复默认字体与字号</value>
+  </data>
+  <data name="Font_Section" xml:space="preserve">
+    <value>字体与文字</value>
+  </data>
   <data name="FullPath" xml:space="preserve">
     <value>完整路径</value>
   </data>
@@ -1375,8 +1573,56 @@
   <data name="GroupSelection" xml:space="preserve">
     <value>新建文件夹并移入所选项目</value>
   </data>
+  <data name="Grouping_Cycle" xml:space="preserve">
+    <value>单击图标时参与切换</value>
+  </data>
+  <data name="Grouping_Default" xml:space="preserve">
+    <value>默认排列方式</value>
+  </data>
+  <data name="Grouping_DefaultHint" xml:space="preserve">
+    <value>用于尚未保存排列方式的文件夹。混排时，文件和文件夹一起按所选字段排序。</value>
+  </data>
+  <data name="Grouping_Options" xml:space="preserve">
+    <value>排列方式</value>
+  </data>
+  <data name="HiddenFiles_Hidden" xml:space="preserve">
+    <value>隐藏文件：已隐藏 · 点击显示</value>
+  </data>
+  <data name="HiddenFiles_Shown" xml:space="preserve">
+    <value>隐藏文件：已显示 · 点击隐藏</value>
+  </data>
   <data name="HideSettings" xml:space="preserve">
     <value>收起设置</value>
+  </data>
+  <data name="History_Completed" xml:space="preserve">
+    <value>已完成</value>
+  </data>
+  <data name="History_Empty" xml:space="preserve">
+    <value>暂无可撤销的操作记录</value>
+  </data>
+  <data name="History_EmptyHint" xml:space="preserve">
+    <value>可撤销的近期操作会显示在这里</value>
+  </data>
+  <data name="History_Files" xml:space="preserve">
+    <value>相关文件</value>
+  </data>
+  <data name="History_Hint" xml:space="preserve">
+    <value>按顺序撤销，保留本次运行中最近 5 次可撤销操作。</value>
+  </data>
+  <data name="History_Locate" xml:space="preserve">
+    <value>在文件夹中定位</value>
+  </data>
+  <data name="History_Missing" xml:space="preserve">
+    <value>文件或所在位置已不存在。</value>
+  </data>
+  <data name="History_Redo" xml:space="preserve">
+    <value>重做</value>
+  </data>
+  <data name="History_Title" xml:space="preserve">
+    <value>操作记录</value>
+  </data>
+  <data name="History_Undone" xml:space="preserve">
+    <value>已撤销</value>
   </data>
   <data name="Home" xml:space="preserve">
     <value>主页</value>
@@ -1467,6 +1713,9 @@
   </data>
   <data name="Layout_LargeIcons" xml:space="preserve">
     <value>大图标</value>
+  </data>
+  <data name="Layout_List" xml:space="preserve">
+    <value>列表</value>
   </data>
   <data name="Layout_MaximumIcons" xml:space="preserve">
     <value>最大图标（256）</value>
@@ -1612,6 +1861,60 @@
   <data name="NetworkDrive" xml:space="preserve">
     <value>网络驱动器</value>
   </data>
+  <data name="NewDocumentName_Csv" xml:space="preserve">
+    <value>新建 CSV 表格</value>
+  </data>
+  <data name="NewDocumentName_Html" xml:space="preserve">
+    <value>新建 HTML 网页</value>
+  </data>
+  <data name="NewDocumentName_Json" xml:space="preserve">
+    <value>新建 JSON 文件</value>
+  </data>
+  <data name="NewDocumentName_Markdown" xml:space="preserve">
+    <value>新建 Markdown 文档</value>
+  </data>
+  <data name="NewDocumentName_Presentation" xml:space="preserve">
+    <value>新建 PowerPoint 演示文稿</value>
+  </data>
+  <data name="NewDocumentName_RichText" xml:space="preserve">
+    <value>新建富文本文档</value>
+  </data>
+  <data name="NewDocumentName_Spreadsheet" xml:space="preserve">
+    <value>新建 Excel 工作簿</value>
+  </data>
+  <data name="NewDocumentName_Text" xml:space="preserve">
+    <value>新建文本文档</value>
+  </data>
+  <data name="NewDocumentName_Word" xml:space="preserve">
+    <value>新建 Word 文档</value>
+  </data>
+  <data name="NewDocument_Csv" xml:space="preserve">
+    <value>CSV 表格 (.csv)</value>
+  </data>
+  <data name="NewDocument_Html" xml:space="preserve">
+    <value>HTML 网页 (.html)</value>
+  </data>
+  <data name="NewDocument_Json" xml:space="preserve">
+    <value>JSON 文件 (.json)</value>
+  </data>
+  <data name="NewDocument_Markdown" xml:space="preserve">
+    <value>Markdown 文档 (.md)</value>
+  </data>
+  <data name="NewDocument_Presentation" xml:space="preserve">
+    <value>PowerPoint 演示文稿 (.pptx)</value>
+  </data>
+  <data name="NewDocument_RichText" xml:space="preserve">
+    <value>富文本文档 (.rtf)</value>
+  </data>
+  <data name="NewDocument_Spreadsheet" xml:space="preserve">
+    <value>Excel 工作簿 (.xlsx)</value>
+  </data>
+  <data name="NewDocument_Text" xml:space="preserve">
+    <value>文本文档 (.txt)</value>
+  </data>
+  <data name="NewDocument_Word" xml:space="preserve">
+    <value>Word 文档 (.docx)</value>
+  </data>
   <data name="NewFileName" xml:space="preserve">
     <value>新建文件.txt</value>
   </data>
@@ -1683,6 +1986,30 @@
   </data>
   <data name="Opening" xml:space="preserve">
     <value>正在打开…</value>
+  </data>
+  <data name="Opening_DoubleClick" xml:space="preserve">
+    <value>双击打开</value>
+  </data>
+  <data name="Opening_FileTitle" xml:space="preserve">
+    <value>文件打开方式</value>
+  </data>
+  <data name="Opening_FolderHint" xml:space="preserve">
+    <value>同时适用于主页中的盘符和位置。文件与文件夹可分别设置。</value>
+  </data>
+  <data name="Opening_FolderTitle" xml:space="preserve">
+    <value>文件夹打开方式</value>
+  </data>
+  <data name="Opening_Hint" xml:space="preserve">
+    <value>单击名称打开：点名称打开，点图标或其他区域选中。可用 Ctrl / Shift 点击，或从空白处拖拽框选多个项目。</value>
+  </data>
+  <data name="Opening_NameClick" xml:space="preserve">
+    <value>单击名称打开</value>
+  </data>
+  <data name="Opening_SelectItem" xml:space="preserve">
+    <value>选择项目</value>
+  </data>
+  <data name="Opening_SingleClick" xml:space="preserve">
+    <value>单击打开</value>
   </data>
   <data name="Order_SaveFailed" xml:space="preserve">
     <value>保存失败，已恢复原顺序：</value>
@@ -2354,6 +2681,9 @@ dm:today · dm:7days · dm:2026-01-01..2026-12-31
   <data name="SearchPage_Loaded" xml:space="preserve">
     <value>已加载 {0:N0} 项</value>
   </data>
+  <data name="SearchPage_LoadedSort" xml:space="preserve">
+    <value>按已加载结果排序</value>
+  </data>
   <data name="SearchPage_LoadingMore" xml:space="preserve">
     <value>已加载 {0:N0} 项 · 正在加载更多…</value>
   </data>
@@ -2843,6 +3173,12 @@ dm:today · dm:7days · dm:2026-01-01..2026-12-31
   <data name="SettingsTags" xml:space="preserve">
     <value>标签</value>
   </data>
+  <data name="Settings_Find" xml:space="preserve">
+    <value>搜索设置</value>
+  </data>
+  <data name="Settings_NoMatches" xml:space="preserve">
+    <value>没有找到匹配的设置</value>
+  </data>
   <data name="Settings_SaveFailed" xml:space="preserve">
     <value>设置未能保存</value>
   </data>
@@ -2888,6 +3224,12 @@ dm:today · dm:7days · dm:2026-01-01..2026-12-31
   <data name="Shelf_Add" xml:space="preserve">
     <value>添加到暂存架</value>
   </data>
+  <data name="Shelf_AddSelection" xml:space="preserve">
+    <value>添加所选</value>
+  </data>
+  <data name="Shelf_AddSelectionHint" xml:space="preserve">
+    <value>将文件列表里选中的项目添加到暂存架。</value>
+  </data>
   <data name="Shelf_Browse" xml:space="preserve">
     <value>选择目标文件夹</value>
   </data>
@@ -2912,6 +3254,9 @@ dm:today · dm:7days · dm:2026-01-01..2026-12-31
   <data name="Shelf_CopyTo" xml:space="preserve">
     <value>复制所选项目到…</value>
   </data>
+  <data name="Shelf_CopyToShort" xml:space="preserve">
+    <value>复制到…</value>
+  </data>
   <data name="Shelf_Count" xml:space="preserve">
     <value>{0} 项</value>
   </data>
@@ -2921,8 +3266,14 @@ dm:today · dm:7days · dm:2026-01-01..2026-12-31
   <data name="Shelf_Empty" xml:space="preserve">
     <value>暂存架为空</value>
   </data>
+  <data name="Shelf_EmptyHint" xml:space="preserve">
+    <value>拖入文件或粘贴已复制的项目</value>
+  </data>
   <data name="Shelf_InvalidDestination" xml:space="preserve">
     <value>请选择已存在的目标文件夹。</value>
+  </data>
+  <data name="Shelf_More" xml:space="preserve">
+    <value>更多</value>
   </data>
   <data name="Shelf_Move" xml:space="preserve">
     <value>移动所选项目到目标文件夹</value>
@@ -2930,17 +3281,38 @@ dm:today · dm:7days · dm:2026-01-01..2026-12-31
   <data name="Shelf_MoveTo" xml:space="preserve">
     <value>移动所选项目到…</value>
   </data>
+  <data name="Shelf_MoveToShort" xml:space="preserve">
+    <value>移动到…</value>
+  </data>
   <data name="Shelf_Progress" xml:space="preserve">
     <value>正在传输：已完成 {0} 项</value>
   </data>
   <data name="Shelf_Remove" xml:space="preserve">
-    <value>移除所选引用</value>
+    <value>从暂存架移除所选，保留原文件</value>
+  </data>
+  <data name="Shelf_RemoveShort" xml:space="preserve">
+    <value>移除所选</value>
+  </data>
+  <data name="Shelf_Removed" xml:space="preserve">
+    <value>已移除 {0} 项，原文件保留。</value>
+  </data>
+  <data name="Shelf_Reveal" xml:space="preserve">
+    <value>打开所在文件夹</value>
+  </data>
+  <data name="Shelf_SelectNone" xml:space="preserve">
+    <value>全不选</value>
+  </data>
+  <data name="Shelf_SelectedCount" xml:space="preserve">
+    <value>已选 {0} 项</value>
   </data>
   <data name="Shelf_Short" xml:space="preserve">
     <value>收纳</value>
   </data>
   <data name="Shelf_Title" xml:space="preserve">
     <value>文件暂存架</value>
+  </data>
+  <data name="Shelf_UndoRemove" xml:space="preserve">
+    <value>撤销</value>
   </data>
   <data name="Shortcut_Change" xml:space="preserve">
     <value>更换快捷键</value>
@@ -3130,6 +3502,33 @@ Ctrl+T 新标签　　Ctrl+W 关闭标签　　Ctrl+L 路径　　Ctrl+F 筛选�
   </data>
   <data name="SortByType" xml:space="preserve">
     <value>按类型排序</value>
+  </data>
+  <data name="Sort_Ascending" xml:space="preserve">
+    <value>升序</value>
+  </data>
+  <data name="Sort_DefaultDirection" xml:space="preserve">
+    <value>默认排序方向</value>
+  </data>
+  <data name="Sort_DefaultDirectionHint" xml:space="preserve">
+    <value>切换到新的排序字段时使用此方向；再次点击当前字段则反转顺序。倒序会让较新、较大的文件排在前面。</value>
+  </data>
+  <data name="Sort_Descending" xml:space="preserve">
+    <value>降序</value>
+  </data>
+  <data name="Sort_Direction" xml:space="preserve">
+    <value>排序方向</value>
+  </data>
+  <data name="Sort_FilesFirst" xml:space="preserve">
+    <value>文件在上</value>
+  </data>
+  <data name="Sort_FoldersFirst" xml:space="preserve">
+    <value>文件夹在上</value>
+  </data>
+  <data name="Sort_Grouping" xml:space="preserve">
+    <value>文件与文件夹</value>
+  </data>
+  <data name="Sort_Mixed" xml:space="preserve">
+    <value>混排</value>
   </data>
   <data name="Sort_MixedPinyin" xml:space="preserve">
     <value>中英文按拼音混合排序</value>
@@ -3393,6 +3792,18 @@ Ctrl+T 新标签　　Ctrl+W 关闭标签　　Ctrl+L 路径　　Ctrl+F 筛选�
   <data name="ToolbarDescription" xml:space="preserve">
     <value>在地址栏右侧显示排序和视图按钮。</value>
   </data>
+  <data name="Toolbar_Customize" xml:space="preserve">
+    <value>自定义工具栏</value>
+  </data>
+  <data name="Toolbar_FileTools" xml:space="preserve">
+    <value>文件操作</value>
+  </data>
+  <data name="Toolbar_Restore" xml:space="preserve">
+    <value>恢复默认工具栏</value>
+  </data>
+  <data name="Toolbar_ViewTools" xml:space="preserve">
+    <value>浏览与视图</value>
+  </data>
   <data name="Transfer_ApplyAll" xml:space="preserve">
     <value>对本次操作后续同类冲突应用此选择</value>
   </data>
@@ -3608,6 +4019,21 @@ Ctrl+T 新标签　　Ctrl+W 关闭标签　　Ctrl+L 路径　　Ctrl+F 筛选�
   </data>
   <data name="Videos" xml:space="preserve">
     <value>视频</value>
+  </data>
+  <data name="View_AlternatingRows" xml:space="preserve">
+    <value>交替行底色</value>
+  </data>
+  <data name="View_AlternatingRowsHint" xml:space="preserve">
+    <value>在详细信息视图中以深浅交替的底色区分行，也可关闭以使用统一底色。</value>
+  </data>
+  <data name="View_IconSize" xml:space="preserve">
+    <value>图标大小</value>
+  </data>
+  <data name="View_ListZoom" xml:space="preserve">
+    <value>列表大小</value>
+  </data>
+  <data name="View_Options" xml:space="preserve">
+    <value>查看</value>
   </data>
   <data name="View_PerFolder" xml:space="preserve">
     <value>每个文件夹单独记忆</value>
