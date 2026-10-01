@@ -5,6 +5,8 @@ public static partial class StringTable
     public static readonly IReadOnlyDictionary<string, (string English, string Chinese, string Japanese)> Additional =
         new Dictionary<string, (string English, string Chinese, string Japanese)>(StringComparer.Ordinal)
         {
+            ["History_WindowsTransfer"] = ("Windows file transfer", "Windows 文件传输", "Windows ファイル転送"),
+            ["History_WindowsHandled"] = ("Handled by Windows", "由 Windows 处理", "Windows が処理"),
             ["Columns_AutoNameWidth"] = ("Automatically fit the Name column", "自动调整名称列宽", "名前列の幅を自動調整"),
             ["Columns_AutoNameWidthHint"] = ("Fit the longest name in each folder, up to the same maximum width as List view. Turning this off restores your manual width.", "按当前文件夹最长的名称调整宽度，上限与列表模式相同。关闭后恢复手动设置的宽度。", "フォルダー内で最も長い名前に合わせます。上限は一覧表示と同じです。オフにすると手動の幅に戻ります。"),
             ["Thumbnail_Section"] = ("Thumbnails and large icons", "预览图与大图模式", "サムネイルと大アイコン"),

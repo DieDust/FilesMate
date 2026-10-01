@@ -7,6 +7,7 @@
     IsTabStop="True"
     UseSystemFocusVisuals="False"
     AllowDrop="True"
+    Background="Transparent"
     KeyDown="OnKeyDown"
     CharacterReceived="OnCharacterReceived"
     PointerPressed="OnPointerPressed"
@@ -68,10 +69,11 @@
             <local:FileTile />
         </DataTemplate>
     </UserControl.Resources>
-    <Grid>
+    <Grid Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition x:Name="HeaderRow" Height="0" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <ScrollViewer
             x:Name="HeaderScroller"
@@ -268,6 +270,17 @@
                 </ItemsRepeater.Layout>
             </ItemsRepeater>
         </ScrollViewer>
+        <ScrollBar x:Name="ListColumnScroller" Grid.Row="2" Orientation="Horizontal"
+                   Minimum="0" SmallChange="1" LargeChange="1" IsTabStop="False"
+                   Visibility="Collapsed" ValueChanged="ListColumnScroller_ValueChanged" />
+        <Border
+            x:Name="ArchiveDropHint" Grid.Row="1" Visibility="Collapsed" IsHitTestVisible="False"
+            HorizontalAlignment="Left" VerticalAlignment="Top" Padding="10,5" CornerRadius="6"
+            Background="{ThemeResource FilesMate.FileContent.BackgroundBrush}"
+            BorderBrush="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" BorderThickness="1">
+            <TextBlock x:Name="ArchiveDropCaption" MaxWidth="260" TextTrimming="CharacterEllipsis"
+                       Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+        </Border>
         <Border
             x:Name="Marquee"
             Grid.Row="1"

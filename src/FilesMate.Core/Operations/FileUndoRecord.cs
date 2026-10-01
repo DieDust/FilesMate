@@ -8,6 +8,7 @@ public enum FileUndoKind
     Grouped,
     Merged,
     Copied,
+    ShellTransfer,
 }
 
 public readonly record struct FilePathPair(string Source, string Destination)
@@ -74,6 +75,11 @@ public sealed record FileUndoRecord(
 
     public static FileUndoRecord Created(IReadOnlyList<string> paths) =>
         new(FileUndoKind.Created, Snapshot(paths), []);
+
+    // Windows owns this transfer, including its completion and undo receipts.
+    // Keep it as a history boundary instead of undoing an earlier app operation.
+    public static FileUndoRecord ShellTransfer(string destination) =>
+        new(FileUndoKind.ShellTransfer, Snapshot([destination]), []);
 
     public static FileUndoRecord Recycled(IReadOnlyList<string> paths) =>
         new(FileUndoKind.Recycled, Snapshot(paths), []);

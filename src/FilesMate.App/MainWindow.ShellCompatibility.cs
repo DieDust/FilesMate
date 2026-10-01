@@ -2,12 +2,17 @@ using FilesMate.App.Navigation;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
+using FilesMate.App.Input;
+using FilesMate.App.Views;
 
 namespace FilesMate.App;
 
 public sealed partial class MainWindow
 {
     private ShellCompatibilityWindow? _shellHost;
+    private ExternalDragFeedback? _externalDragFeedback;
+    internal ExternalDragFeedback ExternalDrag => _externalDragFeedback ??= new(NativeHandle, (FrameworkElement)Content,
+        () => TabHost.Content as NavigatorPage);
     internal nint NativeHandle => _shellHost?.Handle ?? WinRT.Interop.WindowNative.GetWindowHandle(this);
     internal nint ShellViewHandle => _shellHost?.ViewHandle ?? 0;
     public new AppWindow AppWindow => _shellHost?.AppWindow ?? base.AppWindow;
@@ -40,6 +45,8 @@ public sealed partial class MainWindow
             _shellHost.Activated += () => DispatcherQueue.TryEnqueue(OnWindowActivated);
             _shellHost.CloseRequested += RequestCloseAfterFileWork;
             _shellHost.MoveSizeChanged += SchedulePlacementSave;
+            _ = ExternalDrag;
+            InitializeNativeFileDrop();
         }
         catch
         {

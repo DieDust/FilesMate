@@ -19,6 +19,7 @@ internal sealed class ShellCompatibilityWindow : IDisposable
     private bool _disposed;
     public nint Handle { get; }
     public nint ViewHandle { get; }
+    internal nint IslandHandle => Win32Interop.GetWindowFromWindowId(_source.SiteBridge.WindowId);
     public AppWindow AppWindow { get; }
     // The island content is assigned once. Activation/theme callbacks can run
     // while a popup changes focus; querying the native source then can block.

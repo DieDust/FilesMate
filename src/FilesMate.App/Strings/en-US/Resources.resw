@@ -652,6 +652,12 @@
   <data name="Column_Type" xml:space="preserve">
     <value>Type</value>
   </data>
+  <data name="Columns_AutoNameWidth" xml:space="preserve">
+    <value>Automatically fit the Name column</value>
+  </data>
+  <data name="Columns_AutoNameWidthHint" xml:space="preserve">
+    <value>Fit the longest name in each folder, up to the same maximum width as List view. Turning this off restores your manual width.</value>
+  </data>
   <data name="Columns_Category_All" xml:space="preserve">
     <value>All</value>
   </data>
@@ -1162,6 +1168,9 @@
   <data name="Drag_CopyTo" xml:space="preserve">
     <value>Copy to this folder</value>
   </data>
+  <data name="Drag_Destination" xml:space="preserve">
+    <value>Destination: {0}</value>
+  </data>
   <data name="Drag_FailedPrefix" xml:space="preserve">
     <value>Could not drag files: </value>
   </data>
@@ -1641,6 +1650,12 @@ Destination folder:
   </data>
   <data name="History_Undone" xml:space="preserve">
     <value>Undone</value>
+  </data>
+  <data name="History_WindowsHandled" xml:space="preserve">
+    <value>Handled by Windows</value>
+  </data>
+  <data name="History_WindowsTransfer" xml:space="preserve">
+    <value>Windows file transfer</value>
   </data>
   <data name="Home" xml:space="preserve">
     <value>Home</value>
@@ -4106,11 +4121,5 @@ Sleeping — select to restore</value>
   </data>
   <data name="WindowsSection" xml:space="preserve">
     <value>Windows &amp; tabs</value>
-  </data>
-  <data name="Columns_AutoNameWidth" xml:space="preserve">
-    <value>Automatically fit the Name column</value>
-  </data>
-  <data name="Columns_AutoNameWidthHint" xml:space="preserve">
-    <value>Fit the longest name in each folder, up to the same maximum width as List view. Turning this off restores your manual width.</value>
   </data>
 </root>

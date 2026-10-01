@@ -6,13 +6,17 @@ public static class FileDropPolicy
 {
     public static FileDropOperation ResolveOperation(
         IReadOnlyList<string> sources, string? destination, bool validTarget,
-        bool control, bool shift)
+        bool control, bool shift, bool allowCopy = true, bool allowMove = true)
     {
         if (!validTarget || string.IsNullOrWhiteSpace(destination) || !Path.IsPathFullyQualified(destination))
             return FileDropOperation.None;
+        if ((control && !allowCopy) || (!control && shift && !allowMove)) return FileDropOperation.None;
         var copy = control || (!shift && (sources.Count == 0
             || sources.Any(source => !string.Equals(Path.GetPathRoot(source), Path.GetPathRoot(destination),
                 StringComparison.OrdinalIgnoreCase))));
+        if (copy && !allowCopy) copy = false;
+        if (!copy && !allowMove) copy = true;
+        if (copy ? !allowCopy : !allowMove) return FileDropOperation.None;
         if (sources.Count > 0 && FilterSources(sources, destination, !copy, allowSameDirectoryCopy: control).Count == 0)
             return FileDropOperation.None;
         return copy ? FileDropOperation.Copy : FileDropOperation.Move;

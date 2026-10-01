@@ -14,6 +14,7 @@ public static partial class StringTable
         ["Shelf_Title"] = "ファイルシェルフ",
         ["Drag_MoveTo"] = "このフォルダーに移動",
         ["Drag_CopyTo"] = "このフォルダーにコピー",
+        ["Drag_Destination"] = "移動先：{0}",
         ["Shelf_CopyTo"] = "選択した項目をコピー…",
         ["Shelf_MoveTo"] = "選択した項目を移動…",
         ["Shelf_Add"] = "ファイルシェルフに追加",

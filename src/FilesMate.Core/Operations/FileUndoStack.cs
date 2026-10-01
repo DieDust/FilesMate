@@ -7,7 +7,7 @@ public sealed class FileUndoStack(IFileUndoCleanupScheduler? cleanupScheduler = 
     private readonly List<FileUndoRecord> _undo = [];
     private readonly List<FileUndoRecord> _redo = [];
 
-    public bool CanUndo => _undo.Count > 0;
+    public bool CanUndo => _undo.Count > 0 && _undo[^1].Kind != FileUndoKind.ShellTransfer;
 
     public bool CanRedo => _redo.Count > 0;
     public FileUndoRecord? Latest => _undo.Count == 0 ? null : _undo[^1];
@@ -66,7 +66,7 @@ public sealed class FileUndoStack(IFileUndoCleanupScheduler? cleanupScheduler = 
     public bool TryUndo(ILocalFileOperations operations)
     {
         ArgumentNullException.ThrowIfNull(operations);
-        if (_undo.Count == 0)
+        if (!CanUndo)
         {
             return false;
         }
@@ -84,7 +84,7 @@ public sealed class FileUndoStack(IFileUndoCleanupScheduler? cleanupScheduler = 
     public async Task<bool> TryApplyAsync(ILocalFileOperations operations, bool redo, Func<Action, Task> worker)
     {
         var source = redo ? _redo : _undo;
-        if (source.Count == 0) return false;
+        if (source.Count == 0 || source[^1].Kind == FileUndoKind.ShellTransfer) return false;
         var record = source[^1];
         try
         {

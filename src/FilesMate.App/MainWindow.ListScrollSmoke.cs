@@ -157,6 +157,18 @@ public sealed partial class MainWindow
             finally { scroller.ViewChanged -= ObserveNativeWheel; }
             void ObserveNativeWheel(object? sender, ScrollViewerViewChangedEventArgs e) => nativeOffsets.Add(scroller.HorizontalOffset);
 
+            surface.RestoreScrollOffset(100.25);
+            await Wait(() => Field(surface, "_pendingScrollRestore") is null, "column restore");
+            await Task.Delay(100);
+            Require(Math.Abs(scroller.HorizontalOffset) < .5, "Restoring the folder retained a partial column");
+            surface.GetType().GetField("_marqueePointer", BindingFlags.NonPublic | BindingFlags.Instance)!
+                .SetValue(surface, new Point(scroller.ViewportWidth, 50));
+            surface.GetType().GetMethod("AutoScroll", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(surface, [50d]);
+            await Task.Delay(100);
+            Require(Math.Abs(scroller.HorizontalOffset - Geometry().LeftAt(1)) < .5,
+                "Marquee edge scrolling did not move one whole column");
+            report["FolderRestoreAndMarqueeScrollUseWholeColumns"] = true;
+
             scroller.ChangeView(100.25, 0, null, true);
             await Wait(() => Math.Abs(scroller.HorizontalOffset - 100.25) < 1, "starting offset");
             Require(Field(surface, "_listWheelPresenter") is ScrollContentPresenter, "Wheel input was not intercepted below ScrollViewer.");
@@ -190,9 +202,15 @@ public sealed partial class MainWindow
             Require(scroller.HorizontalOffset > beforeHorizontal, "Horizontal wheel direction is incorrect.");
             Wheel(-120, false); await Task.Delay(25);
             Call(surface, "StopListWheel");
-            scroller.ChangeView(500.25, 0, null, true); await Task.Delay(100);
+            var columnScroller = (Microsoft.UI.Xaml.Controls.Primitives.ScrollBar)surface.FindName("ListColumnScroller");
+            Require(scroller.HorizontalScrollMode == ScrollMode.Disabled && !scroller.IsScrollInertiaEnabled,
+                "List mode still allows native pixel manipulation.");
+            columnScroller.Value = 3.35;
+            await Settled();
             var dragged = scroller.HorizontalOffset; await Task.Delay(350);
-            Require(Math.Abs(scroller.HorizontalOffset - dragged) < .5 && !IsAligned(dragged), "Wheel handling changed the free scrollbar position.");
+            Require(columnScroller.Value == 3 && Math.Abs(dragged - Geometry().LeftAt(3)) < .5
+                && Math.Abs(scroller.HorizontalOffset - dragged) < .5,
+                "Dragging the column scrollbar exposed a partial column or snapped later.");
             Wheel(-30, false); await Task.Delay(150);
             Require(Math.Abs(scroller.HorizontalOffset - dragged) < .5, "A partial notch started pixel scrolling.");
             report["ReverseHorizontalAndScrollbarCancellation"] = true;
@@ -204,7 +222,14 @@ public sealed partial class MainWindow
             Require(Math.Abs(scroller.HorizontalOffset - Geometry().LeftAt(8)) < 1, "Rapid notches lost pending column targets.");
             report["RapidNotchesKeepPendingColumns"] = true;
             Wheel(-120 * Geometry().ColumnCount, false); await Settled();
-            Require(IsAligned(scroller.HorizontalOffset) && Math.Abs(scroller.HorizontalOffset - scroller.ScrollableWidth) < 1,
+            report["EndGeometry"] = new { Offset = scroller.HorizontalOffset, Maximum = scroller.ScrollableWidth,
+                Viewport = scroller.ViewportWidth, SurfaceWidth = scroller.ActualWidth,
+                Extent = scroller.ExtentWidth, LogicalExtent = Geometry().ExtentWidth,
+                Column = Geometry().ClampedColumnAt(scroller.HorizontalOffset),
+                Left = Geometry().LeftAt(Geometry().ClampedColumnAt(scroller.HorizontalOffset)),
+                PaddedExtent = Geometry().ExtentForViewport(scroller.ActualWidth) };
+            Require(IsAligned(scroller.HorizontalOffset)
+                && Math.Abs(scroller.HorizontalOffset - Geometry().LeftAt(Geometry().ClampedColumnAt(scroller.ScrollableWidth))) < .5,
                 "The right scroll limit clamped the target to a partial column.");
             Wheel(-120, false); await Settled();
             Require(!Motion().HasTarget && IsAligned(scroller.HorizontalOffset), "Input at the end retained a pending target.");

@@ -9,10 +9,14 @@ internal sealed class CompactListLayout : VirtualizingLayout
     public int Rows => Geometry.Rows;
     public double RowHeight { get; private set; } = FileColumnLayout.RowHeight;
     private double _viewportWidth;
-    public void Configure(CompactListGeometry geometry, double rowHeight, double viewportWidth)
+    private double _rasterizationScale = 1;
+    public void Configure(CompactListGeometry geometry, double rowHeight, double viewportWidth, double rasterizationScale = 1)
     {
-        if (ReferenceEquals(Geometry, geometry) && RowHeight == rowHeight && _viewportWidth == viewportWidth) return;
-        Geometry = geometry; RowHeight = rowHeight; _viewportWidth = viewportWidth; InvalidateMeasure();
+        if (ReferenceEquals(Geometry, geometry) && RowHeight == rowHeight && _viewportWidth == viewportWidth
+            && _rasterizationScale == rasterizationScale) return;
+        Geometry = geometry; RowHeight = rowHeight; _viewportWidth = viewportWidth;
+        _rasterizationScale = rasterizationScale > 0 ? rasterizationScale : 1;
+        InvalidateMeasure();
     }
     protected override Size MeasureOverride(VirtualizingLayoutContext context, Size availableSize)
     {
@@ -26,7 +30,11 @@ internal sealed class CompactListLayout : VirtualizingLayout
         context.LayoutState = (first, end);
         for (var i = first; i < end; i++)
             context.GetOrCreateElementAt(i).Measure(new Size(Geometry.WidthAt(i / Rows) - CompactListMetrics.ColumnGap, RowHeight));
-        return new Size(Geometry.ExtentForViewport(_viewportWidth), Math.Min(Rows, context.ItemCount) * RowHeight);
+        var extent = Geometry.ExtentForViewport(_viewportWidth);
+        // WinUI rounds the extent and viewport separately. Keep one physical pixel
+        // beyond the final column edge so the scroll limit cannot clamp it short.
+        if (extent > Geometry.ExtentWidth) extent += 1 / _rasterizationScale;
+        return new Size(extent, Math.Min(Rows, context.ItemCount) * RowHeight);
     }
     protected override Size ArrangeOverride(VirtualizingLayoutContext context, Size finalSize)
     {

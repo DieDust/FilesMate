@@ -5,6 +5,39 @@ namespace FilesMate.Core.Tests.Operations;
 public sealed class FileUndoStackTests
 {
     [Fact]
+    public async Task Shell_transfer_boundary_keeps_earlier_history_without_undoing_unrelated_files()
+    {
+        var stack = new FileUndoStack();
+        var operations = new MemoryOperations();
+        const string old = @"D:\fixture\earlier.txt";
+        operations.Live.Add(old);
+        var earlier = FileUndoRecord.Created([old]);
+        stack.Push(earlier);
+        stack.Push(FileUndoRecord.ShellTransfer(@"D:\destination"));
+        Assert.False(stack.CanUndo);
+        Assert.False(stack.TryUndo(operations));
+        var workerCalled = false;
+        Assert.False(await stack.TryApplyAsync(operations, false, action =>
+        {
+            workerCalled = true; action(); return Task.CompletedTask;
+        }));
+        Assert.False(workerCalled);
+        Assert.Contains(old, operations.Live);
+        Assert.Contains(earlier, stack.UndoRecords);
+        Assert.False(stack.CanRedo);
+
+        const string newer = @"D:\fixture\later.txt";
+        operations.Live.Add(newer);
+        stack.Push(FileUndoRecord.Created([newer]));
+        Assert.True(stack.TryUndo(operations));
+        Assert.DoesNotContain(newer, operations.Live);
+        Assert.False(stack.CanUndo);
+        Assert.True(stack.TryRedo(operations));
+        Assert.Contains(newer, operations.Live);
+        Assert.Contains(old, operations.Live);
+    }
+
+    [Fact]
     public void History_snapshots_track_undo_redo_and_expiration_without_mutable_aliases()
     {
         var stack = new FileUndoStack();

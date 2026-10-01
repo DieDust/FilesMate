@@ -11,10 +11,12 @@ public sealed record OperationHistoryEntry(FileUndoRecord Record, bool Undone)
         FileUndoKind.Relocated => StringTable.Format("Files_RenamedMovedCount", Count),
         FileUndoKind.Grouped => StringTable.Format("Files_GroupedCount", Count),
         FileUndoKind.Merged => StringTable.Get("Files_Merged"),
+        FileUndoKind.ShellTransfer => StringTable.Get("History_WindowsTransfer"),
         _ => StringTable.Format("Files_CreatedCopiedCount", Count)
     };
     public string Detail => Record.RecordedAt.ToLocalTime().ToString("HH:mm") + " · "
-        + StringTable.Get(Undone ? "History_Undone" : "History_Completed");
+        + StringTable.Get(Record.Kind == FileUndoKind.ShellTransfer ? "History_WindowsHandled"
+            : Undone ? "History_Undone" : "History_Completed");
     public string FileSummary => string.Join(" · ", Paths.Take(2).Select(path =>
     {
         var name = Path.GetFileName(Path.TrimEndingDirectorySeparator(path));

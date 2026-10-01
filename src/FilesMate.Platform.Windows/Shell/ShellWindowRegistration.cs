@@ -15,7 +15,7 @@ public sealed class ShellWindowRegistration : IDisposable
 
     public void Navigate(nint window, string? folder, Action<string> select,
         nint viewWindow = 0, Func<IReadOnlyList<string>>? selectedPaths = null,
-        Func<int, int, string?>? externalDropTarget = null)
+        Func<int, int, string?>? externalDropTarget = null, INativeFolderDropTarget? dropTarget = null)
     {
         if (string.Equals(_folder, folder, StringComparison.OrdinalIgnoreCase)) return;
         Dispose();
@@ -32,7 +32,7 @@ public sealed class ShellWindowRegistration : IDisposable
             object root = null!;
             _registry = (IShellWindowRegistry)Activator.CreateInstance(
                 Type.GetTypeFromCLSID(new Guid("9BA05972-F6A8-11CF-A442-00A0C90A8F39"), true)!)!;
-            _document = new ShellSelectionDocument(window, folder, select, viewWindow, selectedPaths);
+            _document = new ShellSelectionDocument(window, folder, select, viewWindow, selectedPaths, dropTarget);
             _browser = new ShellBrowserAutomation(window, _document, externalDropTarget);
             // SWC_BROWSER is what the shell searches for. RegisterPending is required
             // even when the HWND exists: it completes an outstanding shell launch.
@@ -75,14 +75,15 @@ public sealed class ShellWindowRegistration : IDisposable
 
 [SupportedOSPlatform("windows"), ComVisible(true), ClassInterface(ClassInterfaceType.AutoDispatch)]
 public sealed partial class ShellSelectionDocument(nint window, string folder, Action<string> select,
-    nint viewWindow = 0, Func<IReadOnlyList<string>>? selectedPaths = null)
+    nint viewWindow = 0, Func<IReadOnlyList<string>>? selectedPaths = null, INativeFolderDropTarget? dropTarget = null)
     : IShellServiceProvider, ISelectionShellView, ISelectionFolderView2
 {
     private const int NotImplemented = unchecked((int)0x80004001);
     private Action<string>? _select = select;
     private Func<IReadOnlyList<string>>? _selectedPaths = selectedPaths;
+    private INativeFolderDropTarget? _dropTarget = dropTarget;
     internal bool CanExportSelection => _selectedPaths is not null;
-    public void Disconnect() { _select = null; _selectedPaths = null; }
+    public void Disconnect() { _select = null; _selectedPaths = null; _dropTarget = null; }
 
     public int QueryService(ref Guid service, ref Guid iid, out nint result)
     {
@@ -133,7 +134,17 @@ public sealed partial class ShellSelectionDocument(nint window, string folder, A
     public int GetCurrentInfo(nint settings) => NotImplemented;
     public int AddPropertySheetPages(uint reserved, nint callback, nint parameter) => NotImplemented;
     public int SaveViewState() => NotImplemented;
-    public int GetItemObject(uint item, ref Guid iid, out nint result) { result = 0; return NotImplemented; }
+    public int GetItemObject(uint item, ref Guid iid, out nint result)
+    {
+        result = 0;
+        if (_select is null) return unchecked((int)0x80004004);
+        // SVGIO_BACKGROUND: standard Shell clients can request our registered
+        // IDropTarget directly, without a FilesMate-specific property.
+        if ((item & 0xF) != 0 || iid != typeof(INativeFolderDropTarget).GUID || _dropTarget is null)
+            return unchecked((int)0x80004002);
+        try { result = Marshal.GetComInterfaceForObject(_dropTarget, typeof(INativeFolderDropTarget)); return 0; }
+        catch (Exception error) { return Marshal.GetHRForException(error); }
+    }
 
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)] private static extern nint ILCreateFromPath(string path);
     [DllImport("shell32.dll")] private static extern nint ILCombine(nint parent, nint child);
@@ -189,7 +200,9 @@ public sealed class ShellBrowserAutomation(nint window, ShellSelectionDocument d
         if (!string.Equals(name, "FilesMate.DropTargetPath", StringComparison.Ordinal)) return NotImplemented;
         try
         {
-            if (!GetCursorPos(out var point)) return 1;
+            // COM clients can enter with a different DPI awareness context.
+            // Transfer physical screen coordinates to the XAML UI dispatcher.
+            if (!GetPhysicalCursorPos(out var point)) return 1;
             var path = externalDropTarget?.Invoke(point.X, point.Y);
             if (string.IsNullOrWhiteSpace(path)) return 1;
             value = path;
@@ -207,7 +220,7 @@ public sealed class ShellBrowserAutomation(nint window, ShellSelectionDocument d
 
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GetCursorPos(out NativePoint point);
+    private static extern bool GetPhysicalCursorPos(out NativePoint point);
     public int get_Visible(out short value) { value = 0; return NotImplemented; }
     public int put_Visible(short value) { return NotImplemented; }
     public int get_StatusBar(out short value) { value = 0; return NotImplemented; }

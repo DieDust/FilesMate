@@ -188,6 +188,10 @@ public sealed partial class MainWindow : Window
                 DispatcherQueue.TryEnqueue(async () => await RunPinCheckboxSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_FOLDER_MUTATION_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunFolderMutationSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_ARCHIVE_DROP_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunArchiveDropSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_ARCHIVE_DROP_RUNTIME") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunArchiveDropRuntimeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_WINDOW_SHORTCUT_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunWindowShortcutSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_PENDING_POLISH_SMOKE") == "1")
@@ -1337,6 +1341,10 @@ public sealed partial class MainWindow : Window
     {
         if (_windowClosed) return;
         _windowClosed = true;
+#if FILESMATE_UI_TEST
+        _archiveRuntimeTimer?.Stop();
+        _archiveRuntimeTimer = null;
+#endif
         _deviceRefreshTimer?.Stop();
         _deviceSubscription?.Dispose();
         _deviceSubscription = null;
@@ -1378,6 +1386,10 @@ public sealed partial class MainWindow : Window
         RemoveTitleBarMenuHook();
         foreach (var search in Tabs.TabItems.OfType<TabViewItem>().Select(t => t.Tag).OfType<SearchResultsPage>()) search.Dispose();
         _glassScene.Dispose();
+        _nativeFileDrop?.Dispose();
+        _nativeFileDrop = null;
+        _externalDragFeedback?.Dispose();
+        _externalDragFeedback = null;
         _shellHost?.Dispose();
         _shellHost = null;
     }

@@ -65,7 +65,9 @@ public sealed partial class FileTile : UserControl
         // Selection chrome belongs to the grid cell, not the measured filename or tags.
         var chromeWidth = Math.Max(preset.IconSize, itemWidth - 2 * GridSizePreset.HighlightPad);
         if (Root.Width != chromeWidth) Root.Width = chromeWidth;
-        if (Root.Height != preset.ChromeHeight) Root.Height = preset.ChromeHeight;
+        // Each row and each border/padding edge rounds separately at high DPI.
+        // Reserve their full physical height so the bottom border stays visible.
+        Root.Height = preset.ChromeHeightForScale(XamlRoot?.RasterizationScale ?? 1);
 
         if (IconHost.Width != preset.IconSize)
         {

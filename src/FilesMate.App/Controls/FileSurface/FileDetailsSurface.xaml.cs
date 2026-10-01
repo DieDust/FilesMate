@@ -302,18 +302,19 @@ public sealed partial class FileDetailsSurface : UserControl
         if (!IsLoaded || Visibility != Visibility.Visible || IsPortableDevice || !IsFolderWritable)
             return null;
 
-        var origin = Scroller.TransformToVisual(null).TransformPoint(new Point(0, 0));
-        var x = rootPoint.X - origin.X;
-        var y = rootPoint.Y - origin.Y;
+        var local = Scroller.TransformToVisual(null).Inverse.TransformPoint(rootPoint);
+        var x = local.X;
+        var y = local.Y;
         if (x < 0 || y < 0 || x >= Scroller.ActualWidth || y >= Scroller.ActualHeight)
             return null;
 
-        var index = ViewIndexFromPoint(x, y + Scroller.VerticalOffset);
+        var index = DropIndexAt(local);
         string? path;
         if (index >= 0 && _items.TryGetEntry(index, out var entry))
         {
-            if (entry.Kind != EntryKind.Directory) return null;
-            path = ResolvePath?.Invoke(entry);
+            // Ordinary files do not contain an extraction destination. Their
+            // rows belong to the current folder, just like the pane background.
+            path = entry.Kind == EntryKind.Directory ? ResolvePath?.Invoke(entry) : ResolveFolder?.Invoke();
         }
         else path = ResolveFolder?.Invoke();
         return !string.IsNullOrWhiteSpace(path) && Directory.Exists(path) ? path : null;
@@ -654,8 +655,13 @@ public sealed partial class FileDetailsSurface : UserControl
         HeaderRow.Height = kind == FileLayoutKind.Details ? new GridLength(RowHeight) : new GridLength(0);
         DetailsHeader.Visibility = kind == FileLayoutKind.Details ? Visibility.Visible : Visibility.Collapsed;
         ViewportLayoutChanged?.Invoke(this, EventArgs.Empty);
-        Scroller.HorizontalScrollBarVisibility = grid ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto;
-        Scroller.HorizontalScrollMode = grid ? ScrollMode.Disabled : ScrollMode.Enabled;
+        Scroller.HorizontalScrollBarVisibility = grid ? ScrollBarVisibility.Disabled
+            : kind == FileLayoutKind.List ? ScrollBarVisibility.Hidden : ScrollBarVisibility.Auto;
+        // List scrolling is expressed in column indices. Disable the native
+        // pixel manipulation channel instead of correcting its offset afterward.
+        Scroller.HorizontalScrollMode = kind == FileLayoutKind.Details ? ScrollMode.Enabled : ScrollMode.Disabled;
+        Scroller.IsScrollInertiaEnabled = kind != FileLayoutKind.List;
+        ListColumnScroller.Visibility = kind == FileLayoutKind.List ? Visibility.Visible : Visibility.Collapsed;
         Scroller.VerticalScrollMode = kind == FileLayoutKind.List ? ScrollMode.Disabled : ScrollMode.Enabled;
         Scroller.VerticalScrollBarVisibility = kind == FileLayoutKind.List ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto;
         UpdateListMetrics();
@@ -723,6 +729,7 @@ public sealed partial class FileDetailsSurface : UserControl
             {
                 ApplyRowColumns(row);
                 row.Bind(row.ViewIndex, entry, _selection.Contains(entry.Id), ResolvePath?.Invoke(entry), _folderSizeCts.Token, _retainKnownFolderSizes);
+                row.SetDropTarget(row.ViewIndex == _dropTargetViewIndex);
                 row.SetTags(ResolveTags?.Invoke(entry));
             }
         }
@@ -732,6 +739,7 @@ public sealed partial class FileDetailsSurface : UserControl
             if (tile.ViewIndex >= 0 && _items.TryGetEntry(tile.ViewIndex, out var entry))
             {
                 tile.Bind(tile.ViewIndex, entry, _selection.Contains(entry.Id), ResolvePath?.Invoke(entry), _folderSizeCts.Token, _retainKnownFolderSizes);
+                tile.SetDropTarget(tile.ViewIndex == _dropTargetViewIndex);
                 tile.SetTags(ResolveTags?.Invoke(entry));
             }
         }
@@ -1008,7 +1016,11 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void Scroller_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
     {
-        if (_layout == FileLayoutKind.List) _listWheel.ObserveOffset(Scroller.HorizontalOffset);
+        if (_layout == FileLayoutKind.List)
+        {
+            _listWheel.ObserveOffset(Scroller.HorizontalOffset);
+            UpdateListColumnScroller();
+        }
         UpdateMarquee();
         UpdateAlphabetTailSpace();
         if (_layout == FileLayoutKind.Details)
@@ -1416,6 +1428,9 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void OnDragOver(object sender, DragEventArgs e)
     {
+#if FILESMATE_UI_TEST
+        MainWindow.TraceArchiveDrop("DragOver", new { Formats = e.DataView.AvailableFormats.ToArray(), HasFiles = DeviceTransferUI.HasFiles(e.DataView), Point = e.GetPosition(Scroller) });
+#endif
         e.DragUIOverride.IsGlyphVisible = false;
         e.DragUIOverride.IsCaptionVisible = true;
         if (!DeviceTransferUI.HasFiles(e.DataView))
@@ -1426,7 +1441,10 @@ public sealed partial class FileDetailsSurface : UserControl
         }
 
         var point = e.GetPosition(Scroller);
-        var candidate = ViewIndexFromPoint(point.X, point.Y + Scroller.VerticalOffset);
+        var window = App.WindowForElement(this);
+        if (window?.ExternalDrag.TryPoint(out var physicalPoint) == true)
+            point = Scroller.TransformToVisual(null).Inverse.TransformPoint(physicalPoint);
+        var candidate = DropIndexAt(point);
         var overItem = candidate >= 0 && _items.TryGetEntry(candidate, out _);
         var overFolder = overItem && _items.TryGetEntry(candidate, out var entry) && entry.Kind == EntryKind.Directory;
         _dropTargetViewIndex = overFolder ? candidate : -1;
@@ -1438,27 +1456,53 @@ public sealed partial class FileDetailsSurface : UserControl
                 ? DataPackageOperation.Copy : DataPackageOperation.None;
             UpdateFolderHover(e.AcceptedOperation != DataPackageOperation.None && overFolder ? destination : null);
             e.DragUIOverride.Caption = StringTable.Get("Drag_CopyTo");
+            if (e.AcceptedOperation != DataPackageOperation.None && destination is not null) ShowDropDestination(point, destination);
+            else ArchiveDropHint.Visibility = Visibility.Collapsed;
             RefreshRealizedSelection();
             e.Handled = true;
             return;
         }
         var operation = FileDropPolicy.ResolveOperation(
-            FileDropRequest.SourcePaths(e.DataView), destination, !overItem || overFolder,
-            e.Modifiers.HasFlag(DragDropModifiers.Control), e.Modifiers.HasFlag(DragDropModifiers.Shift));
+            FileDropRequest.SourcePaths(e.DataView), destination, IsFolderWritable,
+            e.Modifiers.HasFlag(DragDropModifiers.Control), e.Modifiers.HasFlag(DragDropModifiers.Shift),
+            e.AllowedOperations.HasFlag(DataPackageOperation.Copy), e.AllowedOperations.HasFlag(DataPackageOperation.Move));
         e.AcceptedOperation = ToDataOperation(operation);
         if (operation == FileDropOperation.None) _dropTargetViewIndex = -1;
         UpdateFolderHover(operation != FileDropOperation.None && overFolder ? destination : null);
         e.DragUIOverride.IsCaptionVisible = operation != FileDropOperation.None;
         if (operation != FileDropOperation.None)
+        {
             e.DragUIOverride.Caption = StringTable.Get(operation == FileDropOperation.Move ? "Drag_MoveTo" : "Drag_CopyTo");
+            ShowDropDestination(point, destination!);
+        }
+        else ArchiveDropHint.Visibility = Visibility.Collapsed;
         RefreshRealizedSelection();
         e.Handled = true;
+        if (operation != FileDropOperation.None) window?.ExternalDrag.Begin(FileDropRequest.SourcePaths(e.DataView), e.AllowedOperations);
+#if FILESMATE_UI_TEST
+        var rootPoint = Scroller.TransformToVisual(null).TransformPoint(point);
+        MainWindow.TraceArchiveDrop("DragResolved", new { Updated = DateTime.UtcNow, Point = rootPoint, candidate, _dropTargetViewIndex,
+            destination, Hint = ArchiveDropCaption.Text, HintVisible = ArchiveDropHint.Visibility.ToString(), operation = operation.ToString(),
+            States = _tiles.Cast<FrameworkElement>().Concat(_realized).Select(element => new {
+                Name = element is FileTile t ? t.Entry.Name : ((FileRow)element).Entry.Name,
+                State = VisualStateManager.GetVisualStateGroups((FrameworkElement)VisualTreeHelper.GetChild(element, 0)).FirstOrDefault()?.CurrentState?.Name
+            }).ToArray() });
+#endif
     }
 
-    private void OnDragLeave(object sender, DragEventArgs e) => ClearDropTarget();
+    private void OnDragLeave(object sender, DragEventArgs e)
+    {
+#if FILESMATE_UI_TEST
+        MainWindow.TraceArchiveDrop("DragLeave", new { Updated = DateTime.UtcNow, Point = e.GetPosition(Scroller), Original = e.OriginalSource?.GetType().Name });
+#endif
+        if (App.WindowForElement(this)?.ExternalDrag.TryPoint(out var point) == true && ContainsExternalDragPoint(point)) return;
+        App.WindowForElement(this)?.ExternalDrag.End();
+        ClearDropTarget();
+    }
 
     private async void OnDrop(object sender, DragEventArgs e)
     {
+        App.WindowForElement(this)?.ExternalDrag.End();
         CancelFolderHover();
         if (!DeviceTransferUI.HasFiles(e.DataView))
         {
@@ -1488,7 +1532,8 @@ public sealed partial class FileDetailsSurface : UserControl
             if (paths.Length > 0)
             {
                 var operation = ToDataOperation(FileDropPolicy.ResolveOperation(paths, destination, true,
-                    e.Modifiers.HasFlag(DragDropModifiers.Control), e.Modifiers.HasFlag(DragDropModifiers.Shift)));
+                    e.Modifiers.HasFlag(DragDropModifiers.Control), e.Modifiers.HasFlag(DragDropModifiers.Shift),
+                    e.AllowedOperations.HasFlag(DataPackageOperation.Copy), e.AllowedOperations.HasFlag(DataPackageOperation.Move)));
                 e.AcceptedOperation = operation;
                 if (operation == DataPackageOperation.None) return;
                 if (DropRequested is { } performDrop)
@@ -1579,6 +1624,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void ClearDropTarget()
     {
+        ArchiveDropHint.Visibility = Visibility.Collapsed;
         CancelFolderHover();
         if (_dropTargetViewIndex < 0)
         {
@@ -1960,8 +2006,9 @@ public sealed partial class FileDetailsSurface : UserControl
         if (_layout == FileLayoutKind.List)
         {
             var x = _marqueePointer.X;
-            if (x < 24) ChangeScrollOffset(Math.Max(0, Scroller.HorizontalOffset - RowHeight * 3));
-            else if (x > Scroller.ViewportWidth - 24) ChangeScrollOffset(Math.Min(Scroller.ScrollableWidth, Scroller.HorizontalOffset + RowHeight * 3));
+            if (x < 24) ChangeScrollOffset(ListGeometry.WheelOffset(Scroller.HorizontalOffset, -1, Scroller.ScrollableWidth));
+            else if (x > Scroller.ViewportWidth - 24)
+                ChangeScrollOffset(ListGeometry.WheelOffset(Scroller.HorizontalOffset, 1, Scroller.ScrollableWidth));
             return;
         }
         const double edge = 28;

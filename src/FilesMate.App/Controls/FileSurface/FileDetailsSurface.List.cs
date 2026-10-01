@@ -3,6 +3,7 @@ using FilesMate.App.Models;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Windows.Foundation;
@@ -22,6 +23,7 @@ public sealed partial class FileDetailsSurface
     private int _listMeasureIndex;
     private long _listMeasureVersion;
     private bool _listMeasurePending;
+    private bool _updatingColumnScroller;
     public int ListZoomPercent { get; private set; } = 100;
     private double ListScale => _layout == FileLayoutKind.List ? ListZoomPercent / 100d : 1;
     private AppearanceSettings RowTypography => _layout == FileLayoutKind.List ? _typography with
@@ -56,7 +58,8 @@ public sealed partial class FileDetailsSurface
     private void ChangeScrollOffset(double value)
     {
         StopListWheel();
-        if (_layout == FileLayoutKind.List) Scroller.ChangeView(value, 0, null, true);
+        if (_layout == FileLayoutKind.List)
+            Scroller.ChangeView(ListGeometry.LeftAt(ListGeometry.ClampedColumnAt(value)), 0, null, true);
         else Scroller.ChangeView(null, value, null, true);
     }
     private void UpdateListMetrics()
@@ -66,7 +69,8 @@ public sealed partial class FileDetailsSurface
         var regrouped = _listGeometry.Rows != rows || _listGeometry.Count != _items.Count;
         if (regrouped)
             _listGeometry = CompactListGeometry.Uniform(rows, _items.Count, CompactListMetrics.ColumnWidth * ListScale);
-        _listLayout.Configure(_listGeometry, RowHeight, Scroller.ActualWidth);
+        _listLayout.Configure(_listGeometry, RowHeight, Scroller.ActualWidth, XamlRoot?.RasterizationScale ?? 1);
+        UpdateListColumnScroller();
         foreach (var row in _realized.ToArray()) ApplyRowColumns(row);
         if (regrouped) ScheduleListNameMeasurement();
     }
@@ -192,6 +196,7 @@ public sealed partial class FileDetailsSurface
 
     private void ScrollListWheel(int delta, bool horizontal)
     {
+        Scroller.CancelDirectManipulations();
         if (!SystemParametersInfoW(horizontal ? 0x006Cu : 0x0068u, 0, out var units, 0)) units = 3;
         if (units == 0) { StopListWheel(); return; }
         if (_listWheel.AddWheel(delta, horizontal, ListGeometry, Scroller.HorizontalOffset, Scroller.ScrollableWidth))
@@ -210,5 +215,31 @@ public sealed partial class FileDetailsSurface
     private void StopListWheel()
     {
         _listWheel.Reset();
+    }
+
+    private void UpdateListColumnScroller()
+    {
+        if (_layout != FileLayoutKind.List) return;
+        _updatingColumnScroller = true;
+        try
+        {
+            ListColumnScroller.Maximum = ListGeometry.ClampedColumnAt(Scroller.ScrollableWidth);
+            ListColumnScroller.ViewportSize = Math.Max(1,
+                ListGeometry.ClampedColumnAt(Scroller.HorizontalOffset + Scroller.ViewportWidth)
+                - ListGeometry.ClampedColumnAt(Scroller.HorizontalOffset));
+            ListColumnScroller.Value = ListGeometry.ClampedColumnAt(Scroller.HorizontalOffset);
+        }
+        finally { _updatingColumnScroller = false; }
+    }
+
+    private void ListColumnScroller_ValueChanged(object sender, RangeBaseValueChangedEventArgs args)
+    {
+        if (_updatingColumnScroller || _layout != FileLayoutKind.List) return;
+        var column = (int)Math.Round(args.NewValue, MidpointRounding.AwayFromZero);
+        _updatingColumnScroller = true;
+        try { ListColumnScroller.Value = column; }
+        finally { _updatingColumnScroller = false; }
+        Scroller.CancelDirectManipulations();
+        ChangeScrollOffset(ListGeometry.LeftAt(column));
     }
 }

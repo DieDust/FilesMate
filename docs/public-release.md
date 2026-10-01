@@ -1,5 +1,17 @@
 # Public release checks
 
+## Release-note format
+
+Use the established 1.1.81–1.1.83 GitHub release format: an English installer link, system requirements, and a Changes list, followed by separate `<details>` sections for Simplified Chinese and Japanese. Give each language the same concrete user-facing changes and its own installer link. Keep build logs, test counts, and verification reports in this document and the verification records rather than in the release body.
+
+## 1.1.133-preview.1 — 2026-10-01
+
+- The independent public source export builds with zero warnings and errors. App 1092, Core 183, Integration 20, and Windows platform 373 tests pass (1668 total). Bounded PDF layout and both resource checks also pass.
+- Standard folder drops preserve the original OLE data object and delegate transfer, progress and conflicts to the Windows folder drop handler. Actual desktop input passes with 7-Zip 26.03, WinRAR 7.23, and the Windows compressed-folder view, including Details, List, scrolled items, ordinary file rows, breadcrumbs and folder tabs. The grid sweep covers 56 icon/name/size/edge positions. Unicode/ANSI virtual descriptors with indexed IStream or HGLOBAL contents pass with 21 files and a nested directory; Esc cancellation writes no files.
+- List scrolling uses complete columns without native pixel inertia. At 175% scaling, icon items retain their complete selection border when file/folder sizes are shown. Test profiles and synthetic sources are isolated from production.
+- Current native-drop limitations: FilesMate undo receipts, custom non-folder drop actions (file shelf and pinned-item collection), and portable-device destinations remain unintegrated. Windows owns transfer UI. Native transfers add a history boundary so Ctrl+Z cannot undo an unrelated older operation. No universal compression-software compatibility claim is made. The previously reported loading indicator was not reproduced and is not claimed fixed.
+- The animation contract now recognizes the 75 ms test-only archive sampling cadence, following its existing test-harness exceptions. This change does not alter production timing. Production packaging checks test-hook exclusion, the published source revision, licenses and installer hashes; both release channels distribute the same installer.
+
 ## 1.1.130-preview.1 — 2026-10-01
 
 - The independent public source export builds with zero warnings and errors. App 1,091, Core 176, Integration 20, and Windows platform 367 tests pass (1,654 total).

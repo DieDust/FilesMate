@@ -47,6 +47,7 @@ public sealed class MotionIntegrationContractTests
             ["MainWindow.TabMemorySmoke.cs"] = [20],
             ["MainWindow.ListScrollSmoke.cs"] = [16],
             ["MainWindow.PendingPolishSmoke.cs"] = [20],
+            ["MainWindow.ArchiveDropSmoke.cs"] = [75],
         };
 
         foreach (var path in EnumerateAppFiles("*.cs"))

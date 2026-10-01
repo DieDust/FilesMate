@@ -3,12 +3,20 @@ using FilesMate.Platform.Windows.Shell;
 using FilesMate.Platform.Windows.Associations;
 using System.Runtime.InteropServices;
 using Windows.Foundation;
+using FilesMate.App.Controls.FileSurface;
 
 namespace FilesMate.App.Views;
 
 public sealed partial class NavigatorPage
 {
     private readonly ShellWindowRegistration _shellWindow = new();
+
+    internal Controls.Omnibar.Omnibar NativeDropOmnibar => Omni;
+
+    internal FileDetailsSurface? ExternalDragSurfaceAt(Point point) =>
+        _paneCount == 3 && _thirdSurface?.ContainsExternalDragPoint(point) == true ? _thirdSurface
+        : _paneCount >= 2 && _rightSurface?.ContainsExternalDragPoint(point) == true ? _rightSurface
+        : FileSurface.ContainsExternalDragPoint(point) ? FileSurface : null;
 
     private void FolderHandlerChanged(object? sender, EventArgs args) => UpdateShellWindow();
 
@@ -56,7 +64,7 @@ public sealed partial class NavigatorPage
                     TryApplyPendingSelection(ViewModel);
                 });
             }, window.ShellViewHandle, window.ShellViewHandle == 0 ? null : ReadShellSelection,
-                (x, y) => ReadExternalDropTarget(window.NativeHandle, x, y));
+                (x, y) => ReadExternalDropTarget(window.NativeHandle, x, y), window.NativeDropTarget);
         }
         catch (COMException error)
         {
@@ -73,8 +81,13 @@ public sealed partial class NavigatorPage
             if (!ScreenToClient(window, ref point)) return null;
             var scale = XamlRoot?.RasterizationScale ?? 1;
             var rootPoint = new Point(point.X / scale, point.Y / scale);
-            return (_paneCount == 3 ? _thirdSurface?.ExternalDropDestinationAt(rootPoint) : null) ?? _rightSurface?.ExternalDropDestinationAt(rootPoint)
+            var destination = (_paneCount == 3 ? _thirdSurface?.ExternalDropDestinationAt(rootPoint) : null)
+                ?? (_paneCount >= 2 ? _rightSurface?.ExternalDropDestinationAt(rootPoint) : null)
                 ?? FileSurface.ExternalDropDestinationAt(rootPoint);
+#if FILESMATE_UI_TEST
+            MainWindow.TraceArchiveDrop("ShellTarget", new { screenX, screenY, ClientX = point.X, ClientY = point.Y, scale, rootPoint.X, rootPoint.Y, destination });
+#endif
+            return destination;
         }
 
         if (DispatcherQueue.HasThreadAccess) return Resolve();

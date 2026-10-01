@@ -7,6 +7,7 @@ using FilesMate.Core.Operations;
 using FilesMate.Platform.Windows.Shell;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Windows.Foundation;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.ApplicationModel.DataTransfer.DragDrop;
 
@@ -16,6 +17,23 @@ public sealed partial class Omnibar
 {
     public Func<FileDropRequest, Task>? DropRequested { get; set; }
     private FrameworkElement? _crumbDropTarget;
+
+    internal FrameworkElement? NativeCrumbAt(Point rootPoint)
+    {
+        if (!IsLoaded || !IsEnabled || PathViewport.Visibility != Visibility.Visible) return null;
+        var viewport = PathViewport.TransformToVisual(null).Inverse.TransformPoint(rootPoint);
+        if (viewport.X < 0 || viewport.Y < 0 || viewport.X >= PathViewport.ActualWidth || viewport.Y >= PathViewport.ActualHeight) return null;
+        foreach (var target in _crumbViews)
+        {
+            if (!target.IsLoaded || target.Visibility != Visibility.Visible || !target.AllowDrop
+                || target.Tag is not string path || !Path.IsPathFullyQualified(path)) continue;
+            var point = target.TransformToVisual(null).Inverse.TransformPoint(rootPoint);
+            if (point.X >= 0 && point.Y >= 0 && point.X < target.ActualWidth && point.Y < target.ActualHeight) return target;
+        }
+        return null;
+    }
+
+    internal void NativeCrumbFeedback(FrameworkElement? target) => SetCrumbDropTarget(target);
 
     private void ConfigureCrumbDrop(FrameworkElement target, string path)
     {

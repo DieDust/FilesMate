@@ -51,6 +51,28 @@ public sealed class FileDropPolicyTests
             FileDropPolicy.ResolveOperation([@"C:\source\file.txt"], @"D:\target", true, false, false));
     }
 
+    [Theory]
+    [InlineData(false, false, true, false, FileDropOperation.Copy)]
+    [InlineData(false, false, false, true, FileDropOperation.Move)]
+    [InlineData(false, false, false, false, FileDropOperation.None)]
+    [InlineData(false, true, true, false, FileDropOperation.None)]
+    [InlineData(true, false, false, true, FileDropOperation.None)]
+    public void Same_volume_drag_respects_operations_allowed_by_the_source(
+        bool control, bool shift, bool allowCopy, bool allowMove, FileDropOperation expected)
+    {
+        Assert.Equal(expected, FileDropPolicy.ResolveOperation(
+            [Path.GetFullPath("temporary-extraction/received.txt")], Path.GetFullPath("destination"),
+            true, control, shift, allowCopy, allowMove));
+    }
+
+    [Fact]
+    public void Copy_only_source_does_not_duplicate_files_in_their_current_folder_without_ctrl()
+    {
+        var folder = Path.GetFullPath("drag-return");
+        Assert.Equal(FileDropOperation.None, FileDropPolicy.ResolveOperation(
+            [Path.Combine(folder, "file.txt")], folder, true, false, false, allowMove: false));
+    }
+
     [Fact]
     public void Move_into_the_current_parent_is_a_no_op()
     {

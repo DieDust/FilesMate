@@ -6,6 +6,15 @@ namespace FilesMate.App.Tests.FileSurface;
 public sealed class GridLayoutTests
 {
     [Fact]
+    public void Size_tiles_keep_the_extra_border_pixel_at_175_percent_scaling()
+    {
+        var preset = GridSizePreset.Large.WithFileSize(true, 12);
+        Assert.Equal(238, preset.ChromeHeight * 1.75);
+        Assert.Equal(239, preset.ChromeHeightForScale(1.75) * 1.75, precision: 6);
+        Assert.True(preset.ChromeHeightForScale(1.75) < preset.ItemHeight);
+    }
+
+    [Fact]
     public void Zoom_can_reach_every_large_size_and_step_back_without_skipping()
     {
         var preset = GridSizePreset.Small;

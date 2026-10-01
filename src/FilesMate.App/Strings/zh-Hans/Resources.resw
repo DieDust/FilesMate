@@ -652,6 +652,12 @@
   <data name="Column_Type" xml:space="preserve">
     <value>类型</value>
   </data>
+  <data name="Columns_AutoNameWidth" xml:space="preserve">
+    <value>自动调整名称列宽</value>
+  </data>
+  <data name="Columns_AutoNameWidthHint" xml:space="preserve">
+    <value>按当前文件夹最长的名称调整宽度，上限与列表模式相同。关闭后恢复手动设置的宽度。</value>
+  </data>
   <data name="Columns_Category_All" xml:space="preserve">
     <value>全部</value>
   </data>
@@ -1162,6 +1168,9 @@
   <data name="Drag_CopyTo" xml:space="preserve">
     <value>复制到此文件夹</value>
   </data>
+  <data name="Drag_Destination" xml:space="preserve">
+    <value>目标：{0}</value>
+  </data>
   <data name="Drag_FailedPrefix" xml:space="preserve">
     <value>无法拖出文件：</value>
   </data>
@@ -1641,6 +1650,12 @@
   </data>
   <data name="History_Undone" xml:space="preserve">
     <value>已撤销</value>
+  </data>
+  <data name="History_WindowsHandled" xml:space="preserve">
+    <value>由 Windows 处理</value>
+  </data>
+  <data name="History_WindowsTransfer" xml:space="preserve">
+    <value>Windows 文件传输</value>
   </data>
   <data name="Home" xml:space="preserve">
     <value>主页</value>
@@ -4106,11 +4121,5 @@ Ctrl+T 新标签　　Ctrl+W 关闭标签　　Ctrl+L 路径　　Ctrl+F 筛选�
   </data>
   <data name="WindowsSection" xml:space="preserve">
     <value>窗口与标签页</value>
-  </data>
-  <data name="Columns_AutoNameWidth" xml:space="preserve">
-    <value>自动调整名称列宽</value>
-  </data>
-  <data name="Columns_AutoNameWidthHint" xml:space="preserve">
-    <value>按当前文件夹最长的名称调整宽度，上限与列表模式相同。关闭后恢复手动设置的宽度。</value>
   </data>
 </root>

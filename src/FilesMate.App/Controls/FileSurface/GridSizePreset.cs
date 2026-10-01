@@ -60,6 +60,18 @@ public readonly record struct GridSizePreset(
     public double ChromeHeight => HighlightPad + IconSize + TileIconTextGap + TextHeight
         + (ShowsFileSize ? TileSizeGap + SizeHeight : 0) + HighlightPad;
 
+    public double ChromeHeightForScale(double scale)
+    {
+        scale = scale > 0 && double.IsFinite(scale) ? scale : 1;
+        double Pixels(double value) => Math.Round(value * scale, MidpointRounding.AwayFromZero);
+        // Selected borders split the inset into border + padding; both edges
+        // round independently. Keep enough room for every interaction state.
+        var inset = Math.Max(Pixels(HighlightPad), 2 * Pixels(HighlightPad / 2));
+        var pixels = 2 * inset + Pixels(IconSize) + Pixels(TileIconTextGap) + Pixels(TextHeight)
+            + (ShowsFileSize ? Pixels(TileSizeGap) + Pixels(SizeHeight) : 0);
+        return Math.Max(ChromeHeight, pixels / scale);
+    }
+
     public double ChromeLeft => HighlightPad;
 
     public static int Columns(double viewportWidth, GridSizePreset preset)

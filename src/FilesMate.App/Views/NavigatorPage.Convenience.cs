@@ -106,6 +106,7 @@ public sealed partial class NavigatorPage
     private void OperationRecorded(object? sender, FileUndoRecord record) => DispatcherQueue.TryEnqueue(() =>
     {
         if (!IsLoaded || _disposed || !ReferenceEquals(App.FileUndo.Latest, record)) return;
+        if (record.Kind == FileUndoKind.ShellTransfer) { DismissOperationNotice(); return; }
         App.WindowForElement(this)?.DismissActionNotice();
         if (_transferResultNotice is { IsOpen: true })
         {
