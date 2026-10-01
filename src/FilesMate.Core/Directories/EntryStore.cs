@@ -122,6 +122,38 @@ public sealed class EntryStore
         }
     }
 
+    /// <summary>Reconciles a complete listing without replacing surviving entry identities.</summary>
+    public IReadOnlyList<string> Reconcile(IReadOnlyList<FileEntryCore> listing)
+    {
+        ArgumentNullException.ThrowIfNull(listing);
+        lock (_gate)
+        {
+            var previous = _entries.ToDictionary(entry => entry.Name, StringComparer.OrdinalIgnoreCase);
+            var next = new List<FileEntryCore>(listing.Count);
+            var changed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var incoming in listing)
+            {
+                if (previous.Remove(incoming.Name, out var existing))
+                {
+                    var replacement = incoming with { Id = existing.Id };
+                    if (replacement != existing) changed.Add(incoming.Name);
+                    next.Add(replacement);
+                }
+                else
+                {
+                    next.Add(incoming with { Id = _nextId++ });
+                    changed.Add(incoming.Name);
+                }
+            }
+            foreach (var removed in previous.Keys) changed.Add(removed);
+            // Keep the original positions when the filesystem merely enumerates in a different order.
+            if (changed.Count == 0) return [];
+            _entries.Clear();
+            _entries.AddRange(next);
+            return changed.ToArray();
+        }
+    }
+
     /// <summary>
     /// Observes the live list under the store lock. Used to filter and sort indexes without copying entry structs
     /// or taking a lock per comparison. Do not mutate from inside <paramref name="observer"/>.

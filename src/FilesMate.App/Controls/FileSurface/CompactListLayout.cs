@@ -5,34 +5,35 @@ namespace FilesMate.App.Controls.FileSurface;
 
 internal sealed class CompactListLayout : VirtualizingLayout
 {
-    public int Rows { get; private set; } = 1;
-    public double ColumnWidth { get; private set; } = CompactListMetrics.ColumnWidth;
+    public CompactListGeometry Geometry { get; private set; } = CompactListGeometry.Uniform(1, 0, CompactListMetrics.ColumnWidth);
+    public int Rows => Geometry.Rows;
     public double RowHeight { get; private set; } = FileColumnLayout.RowHeight;
-    public void Configure(int rows, double width, double rowHeight)
+    private double _viewportWidth;
+    public void Configure(CompactListGeometry geometry, double rowHeight, double viewportWidth)
     {
-        if (Rows == rows && Math.Abs(ColumnWidth - width) < .1 && RowHeight == rowHeight) return;
-        Rows = rows; ColumnWidth = width; RowHeight = rowHeight; InvalidateMeasure();
+        if (ReferenceEquals(Geometry, geometry) && RowHeight == rowHeight && _viewportWidth == viewportWidth) return;
+        Geometry = geometry; RowHeight = rowHeight; _viewportWidth = viewportWidth; InvalidateMeasure();
     }
     protected override Size MeasureOverride(VirtualizingLayoutContext context, Size availableSize)
     {
         var rect = context.RealizationRect;
-        var columns = (int)Math.Ceiling(context.ItemCount / (double)Rows);
-        var startColumn = Math.Clamp((int)Math.Floor(Math.Max(0, rect.X) / ColumnWidth), 0, columns);
-        var visibleWidth = double.IsFinite(rect.Width) ? rect.Width : ColumnWidth * 4;
-        var endColumn = Math.Min(columns, (int)Math.Ceiling((Math.Max(0, rect.X) + visibleWidth) / ColumnWidth) + 1);
+        var columns = Geometry.ColumnCount;
+        var startColumn = Geometry.ClampedColumnAt(rect.X);
+        var visibleWidth = double.IsFinite(rect.Width) ? rect.Width : CompactListMetrics.ColumnWidth * 4;
+        var endColumn = Math.Min(columns, Geometry.ClampedColumnAt(Math.Max(0, rect.X) + visibleWidth) + 2);
         var first = startColumn * Rows;
         var end = Math.Min(context.ItemCount, endColumn * Rows);
         context.LayoutState = (first, end);
         for (var i = first; i < end; i++)
-            context.GetOrCreateElementAt(i).Measure(new Size(ColumnWidth - 8, RowHeight));
-        return new Size(columns * ColumnWidth, Math.Min(Rows, context.ItemCount) * RowHeight);
+            context.GetOrCreateElementAt(i).Measure(new Size(Geometry.WidthAt(i / Rows) - CompactListMetrics.ColumnGap, RowHeight));
+        return new Size(Geometry.ExtentForViewport(_viewportWidth), Math.Min(Rows, context.ItemCount) * RowHeight);
     }
     protected override Size ArrangeOverride(VirtualizingLayoutContext context, Size finalSize)
     {
         if (context.LayoutState is ValueTuple<int, int> range)
             for (var i = range.Item1; i < range.Item2; i++)
-                context.GetOrCreateElementAt(i).Arrange(new Rect(i / Rows * ColumnWidth, i % Rows * RowHeight,
-                    ColumnWidth - 8, RowHeight));
+                context.GetOrCreateElementAt(i).Arrange(new Rect(Geometry.LeftAt(i / Rows), i % Rows * RowHeight,
+                    Geometry.WidthAt(i / Rows) - CompactListMetrics.ColumnGap, RowHeight));
         return finalSize;
     }
 }

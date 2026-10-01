@@ -48,13 +48,13 @@ public sealed partial class FileDetailsSurface
                 {
                     SetListZoom(zoom);
                     Scroller.ChangeView(0, 0, null, true);
-                    await Task.Delay(120);
+                    await SettleListLayout(0);
                     var a = Part(0, "Root"); var b = Part(1, "Root"); var c = Part(2, "Root");
                     Drag(new(a.X + 12, (a.Bottom + b.Top) / 2), new(c.X + c.Width / 2, c.Y + c.Height / 2), $"List/{zoom}/{font}/row gap");
                     var next = Part(ListRows, "Root"); var nextRow = Part(ListRows + 1, "Root");
                     Drag(new((a.Right + next.Left) / 2, a.Y + 3), new(nextRow.X + 45, nextRow.Y + nextRow.Height / 2), $"List/{zoom}/{font}/column gap");
-                    Scroller.ChangeView(ListWidth * 2, 0, null, true);
-                    await Task.Delay(120);
+                    Scroller.ChangeView(ListGeometry.LeftAt(2), 0, null, true);
+                    await SettleListLayout(2);
                     Require(Scroller.HorizontalOffset > 0, "List fixture did not scroll");
                     a = Part(ListRows * 2, "Root"); b = Part(ListRows * 2 + 1, "Root"); c = Part(ListRows * 2 + 2, "Root");
                     Drag(new(a.X + 12, (a.Bottom + b.Top) / 2), new(c.X + c.Width / 2, c.Y + c.Height / 2), $"List/{zoom}/{font}/scrolled gap");
@@ -77,6 +77,25 @@ public sealed partial class FileDetailsSurface
         }
         finally { CancelMarquee(); }
 
+        async Task SettleListLayout(int column)
+        {
+            // Name measurements update column widths on low-priority dispatcher turns.
+            // Wait for those widths to be arranged before deriving pointer coordinates.
+            var deadline = DateTime.UtcNow.AddSeconds(5);
+            do
+            {
+                await Task.Delay(20);
+                UpdateLayout();
+                if (_listMeasurePending || Repeater.TryGetElement(column * ListRows) is null) continue;
+                var bounds = Part(column * ListRows, "Root");
+                if (Math.Abs(bounds.Left + Scroller.HorizontalOffset - ListGeometry.LeftAt(column) - FileColumnLayout.ContentLeft) < 1
+                    && Math.Abs(bounds.Width - (ListGeometry.WidthAt(column) - CompactListMetrics.ColumnGap
+                        - FileColumnLayout.ContentLeft - FileColumnLayout.ContentRight)) < 2)
+                    return;
+            } while (DateTime.UtcNow < deadline);
+            throw new InvalidOperationException("List name measurements and arranged columns did not settle");
+        }
+
         Rect Part(int index, string name)
         {
             var item = (FrameworkElement)Repeater.TryGetElement(index);
@@ -88,7 +107,8 @@ public sealed partial class FileDetailsSurface
             Require(start.Y >= 0 && end.Y >= 0 && start.Y < Scroller.ViewportHeight && end.Y < Scroller.ViewportHeight,
                 scenario + ": fixture points are outside the visible viewport");
             PreparePointerSelection(start, 1);
-            Require(_pressViewIndex < 0 && !_dragCandidate, scenario + ": empty space selected a file");
+            if (_pressViewIndex >= 0 || _dragCandidate)
+                throw new InvalidOperationException(scenario + $": empty space selected a file; start={start}; end={end}; index={_pressViewIndex}; offset={Scroller.HorizontalOffset},{Scroller.VerticalOffset}; rows={ListRows}; geometryLeft={ListGeometry.LeftAt(1)}; columnWidth={ListGeometry.WidthAt(0)}; nameMeasurePending={_listMeasurePending}");
             Require(!AdvanceSelectionPointer(end) && _dragging && !_externalDragStarted, scenario + ": did not start marquee");
             Require(_selection.Count == 2, scenario + $": expected two items, got {_selection.Count}; start={start}; end={end}; offset={Scroller.HorizontalOffset},{Scroller.VerticalOffset}; anchor={_marqueeStart}; current={ToContentPoint(end)}; columns={Columns()}; preset={EffectiveGridPreset}");
             samples.Add(new { Scenario = scenario, Selected = _selection.Ids.ToArray(), StartsInGap = true, ExternalDrag = false });

@@ -1,4 +1,5 @@
 #if FILESMATE_UI_TEST
+using System.Reflection;
 using System.Text.Json;
 using FilesMate.App.Controls.FileSurface;
 using FilesMate.App.Models;
@@ -21,7 +22,8 @@ public sealed partial class MainWindow
         var failures = new List<string>();
         var samples = new List<object>();
         var multiTagSamples = new List<object>();
-        var accentSamples = new List<object>();
+        var selectionSamples = new List<object>();
+        var interactionSamples = new List<object>();
         FileDetailsSurface? surface = null;
         try
         {
@@ -32,6 +34,12 @@ public sealed partial class MainWindow
             AppWindow.Resize(new(2200, 1500));
             await App.AppearanceViewModel!.SetBackdropAsync(BackdropKind.Solid);
             await App.AppearanceViewModel.SetFileTypographyAsync(null, 13, 12);
+            await App.AppearanceViewModel.SetAccentAsync(AccentKind.Default);
+            await App.SetExplorerPreferencesAsync(App.ExplorerPreferences with
+            {
+                ShowAlternatingRows = true, ShowGridFileSizes = false,
+                ShowFullThumbnails = false, ThumbnailQuality = ThumbnailQuality.Standard,
+            });
             for (var attempt = 0; attempt < 100 && TabHost.Content is not NavigatorPage { IsLoaded: true }; attempt++) await Task.Delay(50);
             var store = new EntryStore();
             string[] names = ["tools", "Project planning documents September", "publish"];
@@ -68,27 +76,17 @@ public sealed partial class MainWindow
                             {
                                 var check = row.FindName("SelectionBox") as CheckBox;
                                 Check(check is null || check.Visibility == Visibility.Collapsed, $"{theme}/{layout}/{mode}: row checkbox visible");
-                                var accent = (FrameworkElement)row.FindName("AccentBar");
-                                var visible = accent.Visibility == Visibility.Visible && accent.Opacity > .5;
-                                var expected = selected.Length == 1 && selected.Contains(row.Entry.Name);
-                                Check(visible == expected, $"{theme}/{layout}/{mode}/{selected.Length}: accent mismatch on {row.Entry.Name}");
-                                if (visible)
-                                {
-                                    var bounds = Bounds(accent, host);
-                                    var scale = row.XamlRoot.RasterizationScale;
-                                    foreach (var edge in new[] { bounds.Left, bounds.Right, bounds.Top, bounds.Bottom })
-                                        Check(Math.Abs(edge * scale - Math.Round(edge * scale)) < .02, $"{theme}/{layout}: accent edge lies between physical pixels");
-                                    Check(((Grid)row.FindName("Root")).CornerRadius == new CornerRadius(0), "Row clips the selection accent with its background corners");
-                                    accentSamples.Add(new { Theme = theme.ToString(), Layout = layout.ToString(), Scale = scale, bounds.X, bounds.Y, bounds.Width, bounds.Height });
-                                }
+                                Check(row.FindName("AccentBar") is null, "File row retained a selection bar");
+                                selectionSamples.Add(new { Theme = theme.ToString(), Layout = layout.ToString(), Mode = mode.ToString(),
+                                    Selected = selected.Contains(row.Entry.Name), SelectionCount = selected.Length, row.Entry.Name });
                             }
                             if (mode == ItemOpeningMode.DoubleClick && selected.Length is 1 or 2)
                                 await CaptureSample($"selection-{layout}-{theme}-{selected.Length}.png", 600, 128);
-                            if (theme == AppThemeKind.Light && layout == FileLayoutKind.Details && mode == ItemOpeningMode.DoubleClick && selected.Length == 1)
-                                await CaptureAccent((Border)rows.Single(row => row.Entry.Name == selected[0]).FindName("AccentBar"));
                         }
                     }
                 }
+                foreach (var layout in new[] { FileLayoutKind.Details, FileLayoutKind.List, FileLayoutKind.Grid })
+                    await CaptureInteractionSample(theme, layout);
                 surface.SetLayout(FileLayoutKind.Grid);
                 foreach (var font in new[] { 13d, 20d })
                 {
@@ -113,7 +111,7 @@ public sealed partial class MainWindow
                                 $"{theme}/{preset.Slot}/{font}: different highlight sizes: {JsonSerializer.Serialize(sizes)}");
                         foreach (var tile in tiles)
                         {
-                            Check(tile.FindName("SelectionBox") is null, $"{theme}/{preset.Slot}/{font}: grid checkbox still present");
+                            Check(tile.FindName("SelectionBox") is CheckBox { Visibility: Visibility.Collapsed }, $"{theme}/{preset.Slot}/{font}: idle grid checkbox visible");
                             var root = (FrameworkElement)tile.FindName("Root");
                             Check(root.ActualHeight <= tile.ActualHeight + 1 && root.ActualWidth <= tile.ActualWidth + 1, "Highlight exceeds its grid cell");
                             var name = Bounds((FrameworkElement)tile.FindName("NameText"), tile);
@@ -171,27 +169,91 @@ public sealed partial class MainWindow
                 await Task.Delay(150);
                 surface.RestoreSelectedNames(names[..2]);
                 Check(surface.Selection.Count == 2, $"{mode}: grid multi-selection failed");
-                Check(PolishDescendants(surface).OfType<CheckBox>().Count() == 0, $"{mode}: grid selection checkbox remains");
+                Check(!PolishDescendants(surface).OfType<CheckBox>().Any(box => box.Visibility == Visibility.Visible), $"{mode}: idle grid checkbox visible");
             }
             Check(opened == 0, "Selecting items opened an item");
             report["GridSizes"] = samples;
             report["MultipleTags"] = multiTagSamples;
-            report["AccentGeometry"] = accentSamples;
+            report["FileRowSelectionSamples"] = selectionSamples;
+            report["Interactions"] = interactionSamples;
 
-            async Task CaptureAccent(Border accent)
+            async Task CaptureInteractionSample(AppThemeKind theme, FileLayoutKind layout)
             {
-                // Magnify the native control and its corner radius together.
-                var zoom = new Viewbox
+                await App.AppearanceViewModel!.SetFileTypographyAsync(null, 13, 12);
+                var oldWidth = host.Width;
+                var oldHeight = host.Height;
+                var grid = layout == FileLayoutKind.Grid;
+                var width = grid ? GridSizePreset.Large.ItemWidth * 3 + GridSizePreset.Large.Gutter * 2 + 16 : 600;
+                var height = grid ? GridSizePreset.Large.ItemHeight + 12 : 128;
+                surface.Width = host.Width = width;
+                surface.Height = host.Height = height;
+                surface.SetLayout(layout);
+                surface.SetGridSize(GridSizePreset.Large);
+                surface.RestoreSelectedNames([names[2]]);
+                await Task.Delay(150);
+                var items = PolishDescendants(surface).Where(item => grid ? item is FileTile { EntryId: >= 0 } : item is FileRow { EntryId: >= 0 })
+                    .Cast<Control>().OrderBy(item => grid ? ((FileTile)item).EntryId : ((FileRow)item).EntryId).ToArray();
+                Check(items.Length == 3, $"{theme}/{layout}: interaction fixture items missing");
+                if (items.Length != 3) return;
+                foreach (var item in items) Pointer(item, false);
+                if (!grid && layout == FileLayoutKind.Details)
+                    Check(((Border)items[1].FindName("Stripe")).Visibility == Visibility.Visible, "Normal odd row has no stripe");
+                Pointer(items[1], true);
+                await Task.Delay(60);
+                var normal = Fill(items[0]);
+                var hover = Fill(items[1]);
+                var selected = Fill(items[2]);
+                var colors = SkinPalette.For(theme == AppThemeKind.Dark).FileItemColors();
+                Check(Argb(normal.Background) >> 24 == 0, "Normal item retained an interaction fill");
+                Check(Argb(hover.Background) == colors["FilesMate.FileItem.HoverBrush"], $"{theme}/{layout}: neutral hover fill missing");
+                Check(Argb(hover.BorderBrush) == colors["FilesMate.FileItem.HoverBorderBrush"] && hover.BorderThickness.Left == 1, "Hover outline missing");
+                Check(Argb(selected.Background) == colors["FilesMate.FileItem.SelectedBrush"], $"{theme}/{layout}: selection fill missing");
+                Check(Argb(selected.BorderBrush) == colors["FilesMate.FileItem.SelectionBorderBrush"] && selected.BorderThickness.Left == 1, "Selection outline missing");
+                Check(Argb(((TextBlock)items[2].FindName("SizeText")).Foreground) == colors["FilesMate.FileItem.SelectedForegroundBrush"], "Selected details did not use legible ink");
+                if (!grid) Check(((Border)items[1].FindName("Stripe")).Visibility == Visibility.Collapsed, "Stripe remains behind hover");
+                interactionSamples.Add(new { Theme = theme.ToString(), Layout = layout.ToString(),
+                    HoverFill = $"{Argb(hover.Background):X8}", HoverBorder = $"{Argb(hover.BorderBrush):X8}",
+                    SelectedFill = $"{Argb(selected.Background):X8}", SelectedBorder = $"{Argb(selected.BorderBrush):X8}" });
+                await Capture(host, $"hover-selection-{layout}-{theme}.png");
+                Pointer(items[2], true);
+                Check(Argb(Fill(items[2]).Background) == colors["FilesMate.FileItem.SelectedHoverBrush"], "Hovered selection lost its accent fill");
+                Pointer(items[1], false);
+                surface.RestoreSelectedNames(names[1..]);
+                await Task.Delay(70);
+                Pointer(items[2], true);
+                foreach (var item in items) Check(item.FindName("AccentBar") is null, "File item retained a selection bar");
+                await Capture(host, $"hover-selection-{layout}-{theme}-multi.png");
+                foreach (var accent in new[] { "#0078D4", "#FFFFFF", "#000000" })
                 {
-                    Width = accent.ActualWidth * 8, Height = accent.ActualHeight * 8,
-                    HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Top,
-                    Child = new Border { Width = accent.ActualWidth, Height = accent.ActualHeight,
-                        Background = accent.Background, CornerRadius = accent.CornerRadius }
-                };
-                fixtureRoot.Children.Add(zoom);
+                    await App.AppearanceViewModel!.SetCustomAccentAsync(accent);
+                    await Task.Delay(70);
+                    var expected = (SkinPalette.For(theme == AppThemeKind.Dark) with { Accent = AccentPalette.Resolve(AccentKind.Custom, accent) }).FileItemColors();
+                    Check(Argb(Fill(items[2]).Background) == expected["FilesMate.FileItem.SelectedHoverBrush"], $"{theme}/{layout}/{accent}: live selected-hover accent was not updated");
+                    Check(Argb(Fill(items[2]).BorderBrush) == expected["FilesMate.FileItem.SelectionBorderBrush"], $"{theme}/{layout}/{accent}: live selection outline was not updated");
+                }
+                await App.AppearanceViewModel!.SetAccentAsync(AccentKind.Default);
+                foreach (var item in items) Pointer(item, false);
+                surface.RestoreSelectedNames([]);
+                await Task.Delay(60);
+                foreach (var item in items)
+                {
+                    Check(Argb(Fill(item).Background) >> 24 == 0, "Clearing selection left a fill behind");
+                    Check(Argb(((TextBlock)item.FindName("SizeText")).Foreground) == SkinPalette.For(theme == AppThemeKind.Dark).Muted, "Clearing selection retained selected detail ink");
+                }
+                surface.Width = host.Width = oldWidth;
+                surface.Height = host.Height = oldHeight;
                 await Task.Delay(80);
-                await Capture(zoom, "selection-accent-enlarged.png");
-                fixtureRoot.Children.Remove(zoom);
+
+                Border Fill(Control item) => (Border)item.FindName(grid ? "Root" : "Fill");
+            }
+
+            static void Pointer(Control item, bool entered) =>
+                item.GetType().GetMethod(entered ? "OnPointerEntered" : "OnPointerExited", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)!.Invoke(item, [item, null]);
+
+            static uint Argb(Brush brush)
+            {
+                var color = ((SolidColorBrush)brush).Color;
+                return (uint)color.A << 24 | (uint)color.R << 16 | (uint)color.G << 8 | color.B;
             }
 
             async Task CaptureSample(string filename, double width, double height)
@@ -202,25 +264,6 @@ public sealed partial class MainWindow
                 surface.Height = host.Height = height;
                 await Task.Delay(120);
                 await Capture(host, filename);
-                if (Environment.GetEnvironmentVariable("FILESMATE_SHORT_ACCENT_PREVIEW") == "1" && filename.Contains("-1.png", StringComparison.Ordinal))
-                {
-                    var bars = PolishDescendants(surface).OfType<Border>().Where(border => border.Name == "AccentBar" && border.Visibility == Visibility.Visible).ToArray();
-                    foreach (var bar in bars)
-                    {
-                        var scale = bar.XamlRoot.RasterizationScale;
-                        var root = (FrameworkElement)VisualTreeHelper.GetParent(bar);
-                        bar.Height = Math.Round(14 * scale) / scale;
-                        bar.Margin = new Thickness(Math.Round(scale) / scale, Math.Round((root.ActualHeight - bar.Height) * scale / 2) / scale, 0, 0);
-                        Grid.SetColumnSpan(bar, 2);
-                    }
-                    await Task.Delay(70);
-                    await Capture(host, filename.Replace(".png", "-compact.png", StringComparison.Ordinal));
-                    foreach (var row in PolishDescendants(surface).OfType<FileRow>())
-                    {
-                        Grid.SetColumnSpan((FrameworkElement)row.FindName("AccentBar"), 1);
-                        row.ApplyTypography(App.AppearanceViewModel!.Current);
-                    }
-                }
                 surface.Width = host.Width = oldWidth;
                 surface.Height = host.Height = oldHeight;
                 await Task.Delay(100);

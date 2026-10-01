@@ -74,7 +74,7 @@ public sealed partial class NavigatorPage
                     await vm.SetUseBundledFileIconsAsync(previous);
                 }
             });
-            await check("UnprotectedReplacementRequiresSeparateConfirmation", async () =>
+            await check("UnprotectedReplacementExecutesAfterOneChoice", async () =>
             {
                 var source = Path.Combine(folder, "budget-source.txt");
                 var target = Path.Combine(folder, "budget-target.txt");
@@ -86,19 +86,59 @@ public sealed partial class NavigatorPage
                         false, FileConflictDialog.For(this), backupBudget: budget);
                     var dialog = await Dialog();
                     Require(dialog.DefaultButton == ContentDialogButton.None, "Enter authorized irreversible replacement");
-                    ChooseConflict(dialog, FileConflictAction.ReplaceWithoutUndo);
-                    await Wait(() => !dialog.IsLoaded);
-                    var confirmation = await Dialog();
-                    Require(!ReferenceEquals(confirmation, dialog) && confirmation.DefaultButton == ContentDialogButton.Close,
-                        "separate confirmation missing");
-                    Require(File.ReadAllText(target) == "original", "target changed before final confirmation");
-                    await Capture(confirmation, "backup-no-undo-confirmation.png");
-                    if (attempt == 0) confirmation.Hide(); else InvokePrimary(confirmation);
+                    Require(Descendants(dialog).OfType<TextBlock>().Any(text => text.Text == Localization.StringTable.Get("Conflict_BackupUnavailable")),
+                        "irreversible replacement warning was not visible with the first choice");
+                    Require(File.ReadAllText(target) == "original", "target changed before user choice");
+                    await Capture(dialog, "backup-no-undo-choice.png");
+                    ChooseConflict(dialog, attempt == 0 ? FileConflictAction.Cancel : FileConflictAction.ReplaceWithoutUndo);
                     var result = await pending.WaitAsync(TimeSpan.FromSeconds(10));
                     Require(result.Errors.Count == 0 && result.Undo is null && budget.UsedBytes == 0, "unexpected backup or failure");
                     Require(attempt == 0 ? result.Cancelled && File.ReadAllText(target) == "original"
-                        : result.WithoutUndo == 1 && File.ReadAllText(target) == "incoming", "confirmation outcome incorrect");
+                        : result.WithoutUndo == 1 && File.ReadAllText(target) == "incoming", "single-choice outcome incorrect");
+                    Require(!Microsoft.UI.Xaml.Media.VisualTreeHelper.GetOpenPopupsForXamlRoot(XamlRoot)
+                        .SelectMany(popup => Descendants(popup.Child)).OfType<ContentDialog>().Any(d => d.IsLoaded), "second confirmation remained open");
                 }
+            });
+            await check("ConflictCardsAndLocationsFillTheSameWidth", async () =>
+            {
+                var vm = App.AppearanceViewModel!;
+                var previous = vm.Current.Theme;
+                var conflict = new FileConflict(Path.Combine(folder, "incoming", "一份很长的文件名称用于检查换行和对齐.txt"),
+                    Path.Combine(folder, "destination", "一份很长的文件名称用于检查换行和对齐.txt"), false, "一份很长的文件名称用于检查换行和对齐 (2).txt")
+                    { CanReplace = true };
+                try
+                {
+                    foreach (var theme in new[] { Models.AppThemeKind.Light, Models.AppThemeKind.Dark })
+                    {
+                        await vm.SetThemeAsync(theme);
+                        var pending = FileConflictDialog.For(this)(conflict, CancellationToken.None);
+                        var dialog = await Dialog();
+                        try
+                        {
+                            dialog.UpdateLayout();
+                            var body = (FileConflictBody)dialog.Content;
+                            var locations = Descendants(body).OfType<Border>().Single(b =>
+                                Microsoft.UI.Xaml.Automation.AutomationProperties.GetAutomationId(b) == "ConflictLocations");
+                            var cards = Descendants(body).OfType<Button>().Where(b =>
+                                Microsoft.UI.Xaml.Automation.AutomationProperties.GetAutomationId(b) is "ConflictReplace" or "ConflictSkip" or "ConflictKeepBoth").ToArray();
+                            Require(cards.Length == 3, "conflict choices were not three action cards");
+                            var origin = locations.TransformToVisual(body).TransformPoint(new());
+                            foreach (var card in cards)
+                            {
+                                var point = card.TransformToVisual(body).TransformPoint(new());
+                                Require(Math.Abs(point.X - origin.X) < 1 && Math.Abs(card.ActualWidth - locations.ActualWidth) < 1,
+                                    "path information and action cards were not aligned/full width");
+                                Require(card.ActualHeight >= 63 && ((Grid)card.Content).Children.OfType<StackPanel>().Single()
+                                    .Children.OfType<TextBlock>().Count(text => !string.IsNullOrWhiteSpace(text.Text)) == 2, "choice description was not visible");
+                            }
+                            await Capture(dialog, $"conflict-cards-{theme}.png");
+                            ChooseConflict(dialog, FileConflictAction.KeepBoth);
+                            Require((await pending.WaitAsync(TimeSpan.FromSeconds(10))).Action == FileConflictAction.KeepBoth, "card chose wrong action");
+                        }
+                        finally { if (dialog.IsLoaded) dialog.Hide(); }
+                    }
+                }
+                finally { await vm.SetThemeAsync(previous); }
             });
             await check("BackupManagementClearsOnlyHistoryVersions", async () =>
             {

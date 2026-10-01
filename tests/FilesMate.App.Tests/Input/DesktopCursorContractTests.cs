@@ -9,7 +9,8 @@ public sealed class DesktopCursorContractTests
     {
         var cursors = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Input", "DesktopCursors.cs"));
         Assert.Contains("LoadCursorW", cursors, StringComparison.Ordinal);
-        Assert.Contains("CreateFromHCursor", cursors, StringComparison.Ordinal);
+        Assert.Contains("SetCursor(handle)", cursors, StringComparison.Ordinal);
+        Assert.DoesNotContain("CreateFromHCursor", cursors, StringComparison.Ordinal);
         Assert.Contains("32512", cursors, StringComparison.Ordinal);
         Assert.Contains("32644", cursors, StringComparison.Ordinal);
 

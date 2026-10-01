@@ -69,7 +69,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private bool _rightActive;
     private bool _dualPane;
     private readonly PaneFileActions _fileActions;
-    private readonly PinnedLocationStore _pinnedLocations = new(PinnedLocationStore.DefaultFilePath);
+    private readonly PinnedLocationStore _pinnedLocations = new(Program.SettingsPath(PinnedLocationStore.DefaultFilePath));
     private readonly Dictionary<string, IReadOnlyList<TagDefinition>> _tagCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _tagLoads = new(StringComparer.OrdinalIgnoreCase);
     private readonly Queue<string> _tagCacheOrder = new();
@@ -818,25 +818,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private void ClosePaneAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (ShelfCard.Visibility == Visibility.Visible)
-        {
-            _shelfPanel?.RequestClose();
-            args.Handled = true;
-            return;
-        }
-        if (LockOverlay.Visibility == Visibility.Visible)
-        {
-            HideLockOverlay();
-            args.Handled = true;
-            return;
-        }
-
-        if (Omni.CancelMode())
-        {
-            args.Handled = true;
-            return;
-        }
-
+        args.Handled = HandleEscapeFromWindow();
     }
 
     private void Sidebar_SettingsClicked(object? sender, EventArgs e) =>
@@ -900,16 +882,10 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     }
 
     private void AddressEditAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        Omni.BeginPathEdit();
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.EditAddress);
 
     private void SearchAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        Omni.BeginSearch();
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.FilterFolder);
 
     private void FileSurface_OpenRequested(object? sender, FileEntryCore entry)
     {
@@ -925,6 +901,9 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     }
 
     private void RefreshAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.Refresh);
+
+    private void RefreshCurrentFolder()
     {
         Icons.FolderPreviewBinder.ClearCache();
         if (HomeLocation.IsHome(ViewModel.AddressText))
@@ -936,7 +915,6 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             ViewModel.Refresh();
         }
 
-        args.Handled = true;
     }
 
     private void FileSurface_UpRequested(object? sender, EventArgs e)
@@ -958,22 +936,13 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     }
 
     private void BackAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        ScheduleNavigation(ViewModel.Back);
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowNavigationShortcut(VirtualKey.Left);
 
     private void ForwardAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        ScheduleNavigation(ViewModel.Forward);
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowNavigationShortcut(VirtualKey.Right);
 
     private void UpAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        ScheduleNavigation(ViewModel.Up);
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowNavigationShortcut(VirtualKey.Up);
 
     private void FileSurface_SortRequested(object? sender, EntrySortColumn column)
     {
@@ -1271,9 +1240,12 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     public async Task VacateFoldersAsync(IReadOnlyList<string> paths)
     {
         if (PinnedPreviewUsesAny(paths)) ResetPinnedPreview();
-        FileSurface.CancelFolderSizeWalks();
-        _rightSurface?.CancelFolderSizeWalks();
-        _thirdSurface?.CancelFolderSizeWalks();
+        foreach (var request in _folderStatusRequests.Values)
+            if (paths.Any(path => FileLockPath.Matches(path, request.Path, directory: true)
+                || FileLockPath.Matches(request.Path, path, directory: true))) request.Cancellation.Cancel();
+        FileSurface.CancelFolderSizeWalks(paths);
+        _rightSurface?.CancelFolderSizeWalks(paths);
+        _thirdSurface?.CancelFolderSizeWalks(paths);
         await VacatePaneAsync(_leftVm, paths).ConfigureAwait(true);
         if (_thirdVm is not null) await VacatePaneAsync(_thirdVm, paths).ConfigureAwait(true);
         if (_rightVm is not null)
@@ -1373,9 +1345,9 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private void RefreshFilePanes()
     {
-        _leftVm.Refresh();
-        _rightVm?.Refresh();
-        _thirdVm?.Refresh();
+        _leftVm.RefreshAfterFileOperation();
+        _rightVm?.RefreshAfterFileOperation();
+        _thirdVm?.RefreshAfterFileOperation();
     }
 
     private Task HandleFileDropAsync(FileDropRequest request, PaneViewModel vm)
@@ -1657,102 +1629,31 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     }
 
     private void CutAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        if (FileAcceleratorsBlocked())
-        {
-            return;
-        }
-
-        _ = _fileActions.RunAsync(AppCommandId.Cut);
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.Cut);
 
     private void CopyAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        if (FileAcceleratorsBlocked())
-        {
-            return;
-        }
-
-        _ = _fileActions.RunAsync(AppCommandId.Copy);
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.Copy);
 
     private void CopyPathAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        if (FileAcceleratorsBlocked())
-        {
-            return;
-        }
-
-        CopySelectedPaths();
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.CopyPath);
 
     private void PasteAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        if (FileAcceleratorsBlocked())
-        {
-            return;
-        }
-
-        _ = _fileActions.RunAsync(AppCommandId.Paste);
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.Paste);
 
     private void UndoAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        if (FileAcceleratorsBlocked())
-        {
-            return;
-        }
-
-        _fileActions.Undo();
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.Undo);
 
     private void RedoAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        if (FileAcceleratorsBlocked())
-        {
-            return;
-        }
-
-        _fileActions.Redo();
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.Redo);
 
     private void NewFolderAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        if (FileAcceleratorsBlocked())
-        {
-            return;
-        }
-
-        _ = _fileActions.RunAsync(AppCommandId.NewFolder);
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.NewFolder);
 
     private void RenameAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        if (FileAcceleratorsBlocked())
-        {
-            return;
-        }
-
-        RunFileCommand(
-            ActiveSurface.Selection.Count > 1
-                ? AppCommandId.BatchRename
-                : AppCommandId.Rename);
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.Rename);
 
     private void TerminalAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        if (FileAcceleratorsBlocked()) return;
-        OpenTerminalAt(ViewModel.AddressText);
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.OpenTerminal);
 
     private void OpenTerminalAt(string path)
     {
@@ -1762,46 +1663,20 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     }
 
     private void RecycleAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        if (FileAcceleratorsBlocked())
-        {
-            return;
-        }
-
-        _ = _fileActions.RunAsync(AppCommandId.Recycle);
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.Recycle);
 
     private void PermanentDeleteAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        if (FileAcceleratorsBlocked())
-        {
-            return;
-        }
-
-        _ = _fileActions.RunAsync(AppCommandId.PermanentDelete);
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.PermanentDelete);
 
     private void PropertiesAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        if (FileAcceleratorsBlocked())
-        {
-            return;
-        }
-
-        _ = _fileActions.RunAsync(AppCommandId.Properties);
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.Properties);
 
     private void PreviewAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        SetPreviewVisible(!_previewVisible);
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.Preview);
 
     private bool FileAcceleratorsBlocked() =>
-        Omni.IsEditing || FocusManager.GetFocusedElement() is TextBox || _shelfPanel?.ContainsFocus() == true;
+        _ownerWindow.FileShortcutRoutingBlocked || _ownerWindow.TextInputFocused || Omni.IsEditing
+            || ActiveSurface.IsRenaming || _shelfPanel?.ContainsFocus() == true;
 
     private void Commands_SortRequested(object? sender, EntrySortColumn column) =>
         ViewModel.SetSortColumn(column, App.ExplorerPreferences.DefaultSortAscending);
@@ -1840,10 +1715,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     }
 
     private void DualPaneAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        ToggleDualPane();
-        args.Handled = true;
-    }
+        => args.Handled = InvokeWindowNavigationShortcut(VirtualKey.S);
 
     private void Commands_PreviewClicked(object sender, RoutedEventArgs e)
     {
@@ -2010,6 +1882,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             {
                 surface.Bind(vm.Store, vm.ViewIndex, vm.Navigation.CurrentGeneration);
                 surface.SetSort(vm.Sort);
+                UpdateFolderStatus(vm);
                 ScheduleChrome();
                 TryRestoreNavigationViewport(vm);
                 TryApplyPendingSelection(vm);

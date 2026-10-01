@@ -391,6 +391,7 @@ internal sealed partial class PaneFileActions
             .ToArray();
         if (pairs.Length > 0)
         {
+            foreach (var pair in pairs) App.RelocatePinnedFolder(pair.Source, pair.Destination);
             App.FileUndo.Push(await Task.Run(() => FileUndoRecord.Relocated(pairs)));
         }
 

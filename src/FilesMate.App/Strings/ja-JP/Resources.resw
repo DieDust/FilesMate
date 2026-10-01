@@ -463,8 +463,11 @@
   <data name="Backup_Cleared" xml:space="preserve">
     <value>現在の履歴を消去しました。残っている場所は確認が必要で、ファイルは削除していません。</value>
   </data>
+  <data name="Backup_DeletePolicy" xml:space="preserve">
+    <value>フォルダーの通常削除では全体をごみ箱へ移動し、置換バックアップの256 MiB制限は適用しません。完全削除ではコピーを残しません。ごみ箱へ移動できない場合はWindowsが警告します。</value>
+  </data>
   <data name="Backup_DestructiveHint" xml:space="preserve">
-    <value>旧バージョンを残さず、既存の内容を完全に置き換えます。今回の一括操作全体は元に戻せず、置換に成功すると以前の元に戻す/やり直し履歴も消去されます。この選択は現在のファイルだけに適用されます。</value>
+    <value>旧バージョンを残さず、既存の内容を完全に置き換えます。今回の操作は元に戻せず、置換に成功すると以前の元に戻す/やり直し履歴も消去されます。残りの競合に適用する項目を選ぶと、今回の操作の同種の競合にもこの選択を適用します。</value>
   </data>
   <data name="Backup_LimitHint" xml:space="preserve">
     <value>{0} MiBの予約が必要です（現在{1} / 256 MiB）。上限に達したか、バックアップを利用できません。スキップ、両方を保持、キャンセルして管理、または元に戻せない置換を選択してください。</value>
@@ -487,8 +490,11 @@
   <data name="Backup_ReservationHint" xml:space="preserve">
     <value>転送先ドライブに{0} MiBを予約します（現在{1} / 256 MiB）。最大5操作を保持します。設定 → ファイルとフォルダーで管理・削除できます。</value>
   </data>
+  <data name="Backup_SettingsHint" xml:space="preserve">
+    <value>同名ファイルの上書き時、上限内で旧版を保存して元に戻せます。通常の削除はWindowsのごみ箱を使い、追加のコピーは作成しません。</value>
+  </data>
   <data name="Backup_Title" xml:space="preserve">
-    <value>元に戻すためのバックアップ</value>
+    <value>置換バックアップと元に戻す</value>
   </data>
   <data name="Backup_UnprotectedCount" xml:space="preserve">
     <value>{0}件をバックアップなしで置換。今回の操作は元に戻せません</value>
@@ -839,7 +845,7 @@
     <value>残りの同種の競合に同じ選択を適用</value>
   </data>
   <data name="Conflict_BackupUnavailable" xml:space="preserve">
-    <value>元に戻すためのバックアップ上限を超えています。置き換えは取り消せないため、別途確認します。</value>
+    <value>元に戻すためのバックアップを利用できません。既存のファイルを完全に置き換えます。今回の操作は元に戻せず、置換に成功すると以前の元に戻す/やり直し履歴も消去されます。</value>
   </data>
   <data name="Conflict_BatchScope" xml:space="preserve">
     <value>今回の操作にのみ適用します。異なる種類の競合は別途確認します。</value>
@@ -871,6 +877,12 @@
   <data name="Conflict_DeletedAnnotation" xml:space="preserve">
     <value>新しいバージョンでは削除</value>
   </data>
+  <data name="Conflict_DestinationLocation" xml:space="preserve">
+    <value>コピー先</value>
+  </data>
+  <data name="Conflict_Details" xml:space="preserve">
+    <value>詳細情報</value>
+  </data>
   <data name="Conflict_Different" xml:space="preserve">
     <value>ファイルのデータ内容が異なります。</value>
   </data>
@@ -890,7 +902,10 @@
     <value>保存先を保持（スキップ）</value>
   </data>
   <data name="Conflict_KeepFiles" xml:space="preserve">
-    <value>両方のファイルを保持</value>
+    <value>両方を保持</value>
+  </data>
+  <data name="Conflict_KeepHint" xml:space="preserve">
+    <value>コピー名を作成し、両方のバージョンを保持します。</value>
   </data>
   <data name="Conflict_LineCounts" xml:space="preserve">
     <value>保存先に対し追加 {0} 行 · 削除 {1} 行</value>
@@ -932,10 +947,13 @@
     <value>これらのファイルをスキップ</value>
   </data>
   <data name="Conflict_SkipFile" xml:space="preserve">
-    <value>このファイルをスキップ</value>
+    <value>この項目をスキップ</value>
   </data>
   <data name="Conflict_SkipHint" xml:space="preserve">
     <value>保存先のバージョンを保持し、元のファイルも元の場所に残します。</value>
+  </data>
+  <data name="Conflict_SourceLocation" xml:space="preserve">
+    <value>コピー元</value>
   </data>
   <data name="Conflict_TextChanges" xml:space="preserve">
     <value>テキストの差分</value>
@@ -3767,6 +3785,39 @@ Ctrl+T で新しいタブ。Ctrl+W でタブを閉じる。Ctrl+L でアドレ�
   <data name="ThemeSystem" xml:space="preserve">
     <value>システムに合わせる</value>
   </data>
+  <data name="Thumbnail_FileSizes" xml:space="preserve">
+    <value>ファイル名の下にサイズを表示</value>
+  </data>
+  <data name="Thumbnail_FileSizesHint" xml:space="preserve">
+    <value>大アイコン以上の表示でサイズを表示します。「フォルダーのサイズを表示」がオンの場合はフォルダーのサイズも表示します。</value>
+  </data>
+  <data name="Thumbnail_Full" xml:space="preserve">
+    <value>サムネイル全体を表示</value>
+  </data>
+  <data name="Thumbnail_FullHint" xml:space="preserve">
+    <value>正方形に切り抜かず、元の縦横比と透明部分を保ってサムネイル全体を表示します。</value>
+  </data>
+  <data name="Thumbnail_High" xml:space="preserve">
+    <value>高画質</value>
+  </data>
+  <data name="Thumbnail_Quality" xml:space="preserve">
+    <value>サムネイルの画質</value>
+  </data>
+  <data name="Thumbnail_QualityHint" xml:space="preserve">
+    <value>画像と動画のサムネイルの画質を選択します。標準は現在の画質を維持します。</value>
+  </data>
+  <data name="Thumbnail_ResourceHint" xml:space="preserve">
+    <value>高画質ではメモリと処理資源の使用量が増え、サムネイルの読み込みに時間がかかる場合があります。</value>
+  </data>
+  <data name="Thumbnail_Section" xml:space="preserve">
+    <value>サムネイルと大アイコン</value>
+  </data>
+  <data name="Thumbnail_Standard" xml:space="preserve">
+    <value>標準（既定）</value>
+  </data>
+  <data name="Thumbnail_Ultra" xml:space="preserve">
+    <value>最高画質</value>
+  </data>
   <data name="TitleBar_Close" xml:space="preserve">
     <value>ウィンドウを閉じる</value>
   </data>
@@ -4054,5 +4105,11 @@ Ctrl+T で新しいタブ。Ctrl+W でタブを閉じる。Ctrl+L でアドレ�
   </data>
   <data name="WindowsSection" xml:space="preserve">
     <value>ウィンドウとタブ</value>
+  </data>
+  <data name="Columns_AutoNameWidth" xml:space="preserve">
+    <value>名前列の幅を自動調整</value>
+  </data>
+  <data name="Columns_AutoNameWidthHint" xml:space="preserve">
+    <value>フォルダー内で最も長い名前に合わせます。上限は一覧表示と同じです。オフにすると手動の幅に戻ります。</value>
   </data>
 </root>

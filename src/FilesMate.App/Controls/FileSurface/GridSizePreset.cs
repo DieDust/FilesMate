@@ -12,6 +12,10 @@ public readonly record struct GridSizePreset(
 
     public const double TileIconTextGap = 4;
     public const double TileTagGap = 6;
+    public const double TileSizeGap = 3;
+
+    public double SizeHeight { get; init; }
+    public bool ShowsFileSize => SizeHeight > 0;
 
     public bool ShowsTagNames => IconSize >= 72;
     public double TagHeight => ShowsTagNames ? 20 : 16;
@@ -43,9 +47,18 @@ public readonly record struct GridSizePreset(
         return this with { TextHeight = textHeight, ItemHeight = ItemHeight + textHeight - TextHeight };
     }
 
+    public GridSizePreset WithFileSize(bool enabled, double fontSize)
+    {
+        var sizeHeight = enabled && IconSize >= Large.IconSize ? Math.Ceiling(fontSize * 1.35) : 0;
+        var extra = sizeHeight > 0 ? TileSizeGap + sizeHeight : 0;
+        var previous = ShowsFileSize ? TileSizeGap + SizeHeight : 0;
+        return this with { SizeHeight = sizeHeight, ItemHeight = ItemHeight + extra - previous };
+    }
+
     public double ChromeWidth => Math.Max(IconSize, ItemWidth - (2 * HighlightPad));
 
-    public double ChromeHeight => HighlightPad + IconSize + TileIconTextGap + TextHeight + HighlightPad;
+    public double ChromeHeight => HighlightPad + IconSize + TileIconTextGap + TextHeight
+        + (ShowsFileSize ? TileSizeGap + SizeHeight : 0) + HighlightPad;
 
     public double ChromeLeft => HighlightPad;
 

@@ -51,7 +51,10 @@ internal static class FlyoutTheme
         popup.Opened += (_, _) =>
         {
             if (popup.Target?.XamlRoot is { } root)
-                foreach (var child in VisualTreeHelper.GetOpenPopupsForXamlRoot(root)) AppTypography.Apply(child.Child);
+                foreach (var child in VisualTreeHelper.GetOpenPopupsForXamlRoot(root))
+                {
+                    AppTypography.Apply(child.Child);
+                }
         };
         popup.Closed += (_, _) =>
         {

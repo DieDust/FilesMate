@@ -1,4 +1,5 @@
 using System.Text.Json;
+using FilesMate.Platform.Windows.Metadata;
 
 namespace FilesMate.App.Navigation;
 
@@ -12,7 +13,10 @@ public sealed record PinnedLocationState(
     IReadOnlyList<string>? SectionOrder = null,
     IReadOnlyList<string>? HiddenCloudPaths = null,
     IReadOnlyList<CloudLocationOverride>? CloudOverrides = null,
-    IReadOnlyList<string>? CollapsedSections = null);
+    IReadOnlyList<string>? CollapsedSections = null,
+    IReadOnlyList<PinnedFolderReference>? FolderReferences = null);
+
+public sealed record PinnedFolderReference(string Path, WindowsDirectoryReference Identity);
 
 public sealed record CloudLocationOverride(string Id, string Label, string Target, string? OriginalTarget = null);
 
@@ -57,7 +61,9 @@ public sealed class PinnedLocationStore
                 return EmptyState();
             }
 
-            var json = File.ReadAllText(FilePath);
+            using var stream = new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var reader = new StreamReader(stream);
+            var json = reader.ReadToEnd();
             using var document = JsonDocument.Parse(json);
             if (document.RootElement.ValueKind == JsonValueKind.Array)
             {
@@ -83,7 +89,9 @@ public sealed class PinnedLocationStore
                     NormalizeIds(stored.SectionOrder ?? []),
                     NormalizeDistinct(stored.HiddenCloudPaths ?? []),
                     NormalizeCloudOverrides(stored.CloudOverrides ?? []),
-                    NormalizeIds(stored.CollapsedSections ?? []));
+                    NormalizeIds(stored.CollapsedSections ?? []),
+                    (stored.FolderReferences ?? []).Where(reference => reference is not null && reference.Identity is not null
+                        && Normalize(reference.Path) is not null).ToArray());
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
         {
@@ -167,6 +175,43 @@ public sealed class PinnedLocationStore
         SaveState(state with { Paths = NormalizeDistinct(paths) });
     }
 
+    /// <summary>Update the pinned folder and any pinned descendants without changing their order.</summary>
+    public bool Relocate(string oldPath, string newPath)
+    {
+        var old = Normalize(oldPath);
+        var target = Normalize(newPath);
+        if (old is null || target is null || string.Equals(old, target, StringComparison.Ordinal)) return false;
+        var state = LoadState();
+        string Map(string path) => PathsEqual(path, old) ? target
+            : path.StartsWith(old.TrimEnd('\\') + "\\", StringComparison.OrdinalIgnoreCase) ? target.TrimEnd('\\') + path[old.Length..] : path;
+        var paths = state.Paths.Select(Map).ToArray();
+        if (paths.SequenceEqual(state.Paths, StringComparer.Ordinal)) return false;
+        SaveState(state with
+        {
+            Paths = paths,
+            FolderReferences = (state.FolderReferences ?? []).Select(reference => reference with { Path = Map(reference.Path) }).ToArray(),
+            ItemOrder = (state.ItemOrder ?? []).Select(id => id.StartsWith("custom:", StringComparison.OrdinalIgnoreCase)
+                ? "custom:" + Map(id[7..]) : id).ToArray(),
+        });
+        return true;
+    }
+
+    public void RememberFolderReferences()
+    {
+        var state = LoadState();
+        var references = CaptureReferences(state);
+        if (!references.SequenceEqual(state.FolderReferences ?? [])) SaveState(state with { FolderReferences = references });
+    }
+
+    private static PinnedFolderReference[] CaptureReferences(PinnedLocationState state)
+    {
+        var saved = (state.FolderReferences ?? []).GroupBy(reference => reference.Path, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+        return state.Paths.Select(path => saved.TryGetValue(path, out var reference) ? reference
+            : WindowsDirectoryReferences.Capture(path) is { } identity ? new PinnedFolderReference(path, identity) : null)
+            .Where(reference => reference is not null).Select(reference => reference!).ToArray();
+    }
+
     public static string? Normalize(string? path)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -239,6 +284,7 @@ public sealed class PinnedLocationStore
             HiddenCloudPaths = NormalizeDistinct(state.HiddenCloudPaths ?? []),
             CloudOverrides = NormalizeCloudOverrides(state.CloudOverrides ?? []),
             CollapsedSections = NormalizeIds(state.CollapsedSections ?? []),
+            FolderReferences = CaptureReferences(state),
         };
         var json = JsonSerializer.Serialize(stored, JsonOptions);
         var directory = Path.GetDirectoryName(FilePath);
@@ -417,6 +463,7 @@ public sealed class PinnedLocationStore
 
     private sealed class PinnedLocationFile
     {
+        public PinnedFolderReference[] FolderReferences { get; init; } = [];
         public string[] CollapsedSections { get; init; } = [];
         public string[] Paths { get; init; } = [];
 

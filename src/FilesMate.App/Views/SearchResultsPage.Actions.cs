@@ -285,27 +285,22 @@ public sealed partial class SearchResultsPage
         }
         finally { deferral.Complete(); }
     }
-    private async void Page_KeyDown(object sender, KeyRoutedEventArgs e)
+    private void Page_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (e.Handled || _shelfPanel?.ContainsFocus() == true || IsTextInput(e.OriginalSource as DependencyObject)) return;
         var ctrl = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
         var shift = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
-        if (ctrl && e.Key == VirtualKey.F) { QueryBox.Focus(FocusState.Keyboard); QueryBox.SelectAll(); e.Handled = true; }
-        else if (ctrl && e.Key == VirtualKey.Enter) { e.Handled = true; RevealSelected(); }
-        else if (ctrl && e.Key == VirtualKey.Z) { e.Handled = true; if (shift) _fileActions.Redo(); else _fileActions.Undo(); }
-        else if (ctrl && e.Key == VirtualKey.Y) { e.Handled = true; _fileActions.Redo(); }
-        else if (e.Key == VirtualKey.F5) { e.Handled = true; await SearchAsync(false); }
-        else if (e.Key == VirtualKey.Escape && IsSearching) { e.Handled = true; Stop_Click(this, new()); }
+        var alt = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Menu).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+        var win = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.LeftWindows).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down)
+            || Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.RightWindows).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+        if (ctrl && !alt && !win && e.Key == VirtualKey.Enter) { e.Handled = true; RevealSelected(); }
+        else if (!ctrl && !shift && !alt && !win && e.Key == VirtualKey.Escape) e.Handled = HandleEscapeFromWindow();
         else
         {
-            AppCommandId? command = e.Key switch
-            {
-                VirtualKey.C when ctrl => shift ? AppCommandId.CopyPath : AppCommandId.Copy,
-                VirtualKey.X when ctrl => AppCommandId.Cut, VirtualKey.V when ctrl => AppCommandId.Paste,
-                VirtualKey.F2 => Results.Selection.Count > 1 ? AppCommandId.BatchRename : AppCommandId.Rename,
-                VirtualKey.Delete => shift ? AppCommandId.PermanentDelete : AppCommandId.Recycle, _ => null
-            };
-            if (command is { } id) { e.Handled = true; await RunActionAsync(id); }
+            var modifiers = (ctrl ? 1 : 0) | (alt ? 2 : 0) | (shift ? 4 : 0) | (win ? 8 : 0);
+            foreach (var (action, gesture) in App.Shortcuts.Snapshot())
+                if ((int)gesture.Key == (int)e.Key && (int)gesture.Modifiers == modifiers)
+                { e.Handled = InvokeWindowShortcut(action); break; }
         }
     }
     private static bool IsTextInput(DependencyObject? node)

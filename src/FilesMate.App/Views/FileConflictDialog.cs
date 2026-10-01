@@ -9,7 +9,7 @@ namespace FilesMate.App.Views;
 internal static class FileConflictDialog
 {
     internal const double FooterInset = 8;
-    internal sealed class Session { public bool DecideIndividually; }
+    internal sealed class Session { public bool DecideIndividually; public bool? ApplyRemaining; }
 
     public static FileConflictResolver For(FrameworkElement host)
     {
@@ -43,33 +43,22 @@ internal static class FileConflictDialog
         ContentDialogTheme.Apply(dialog, host);
         await using var body = new FileConflictBody(dialog, host, conflict, session, token);
         dialog.Content = body;
-        dialog.Opened += (_, _) => host.DispatcherQueue.TryEnqueue(body.FocusCancel);
-        if (session.DecideIndividually && !conflict.CanMerge && !conflict.IsSameItem) body.Compare();
+        dialog.Opened += (_, _) => host.DispatcherQueue.TryEnqueue(() =>
+        {
+            if (token.IsCancellationRequested || !host.IsLoaded) return;
+            // Begin previews after the dialog has attached its content. Starting
+            // before ShowAsync lets template reparenting unload and clear them.
+            if (session.DecideIndividually && !conflict.CanMerge && !conflict.IsSameItem) body.Compare();
+            body.FocusCancel();
+        });
         using var cancellation = token.Register(() => host.DispatcherQueue.TryEnqueue(dialog.Hide));
         RoutedEventHandler unload = (_, _) => dialog.Hide();
         host.Unloaded += unload;
         try { if (!token.IsCancellationRequested) await dialog.ShowAsync(); }
         finally { host.Unloaded -= unload; }
         var choice = token.IsCancellationRequested || !host.IsLoaded ? new(FileConflictAction.Cancel) : body.Choice;
-        // Release file previews and read guards before the confirmation or transfer continues.
+        // Release file previews and read guards before the chosen transfer continues.
         await body.DisposeAsync();
-        if (choice.Action != FileConflictAction.ReplaceWithoutUndo) return choice;
-        var confirm = new ContentDialog
-        {
-            Title = StringTable.Get("Backup_ReplaceWithoutUndo"),
-            Content = new TextBlock { Text = StringTable.Get("Backup_DestructiveHint"), TextWrapping = TextWrapping.Wrap },
-            PrimaryButtonText = StringTable.Get("Backup_ReplaceWithoutUndo"), CloseButtonText = StringTable.Get("Cancel"),
-            DefaultButton = ContentDialogButton.Close, XamlRoot = host.XamlRoot,
-        };
-        ContentDialogTheme.Apply(confirm, host);
-        using var cancelConfirm = token.Register(() => host.DispatcherQueue.TryEnqueue(confirm.Hide));
-        RoutedEventHandler unloadConfirm = (_, _) => confirm.Hide();
-        host.Unloaded += unloadConfirm;
-        try
-        {
-            return !token.IsCancellationRequested && host.IsLoaded && await confirm.ShowAsync() == ContentDialogResult.Primary
-                ? new(FileConflictAction.ReplaceWithoutUndo) : new(FileConflictAction.Cancel);
-        }
-        finally { host.Unloaded -= unloadConfirm; }
+        return token.IsCancellationRequested || !host.IsLoaded ? new(FileConflictAction.Cancel) : choice;
     }
 }

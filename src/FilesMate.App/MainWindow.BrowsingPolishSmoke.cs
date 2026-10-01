@@ -50,7 +50,7 @@ public sealed partial class MainWindow
             report["GapSelection"] = await surface.RunGapSelectionSmokeAsync();
             toolbar.SetLayout(FileLayoutKind.Grid); toolbar.SetViewSize(GridSizePreset.Large, 100);
             await Task.Delay(160);
-            Require(!PolishDescendants(surface).OfType<CheckBox>().Any(), "File checkboxes remain");
+            Require(!PolishDescendants(surface).OfType<CheckBox>().Any(box => box.Visibility == Visibility.Visible), "Idle file checkboxes are visible");
             await Capture(host, "browsing-grid-light.png");
 
             var viewButton = (Button)toolbar.FindName("ViewMenuButton");
@@ -66,7 +66,15 @@ public sealed partial class MainWindow
                 if (layout == FileLayoutKind.List) await Capture(host, "browsing-list-light.png");
             }
             menu.ShowAt(viewButton); await Task.Delay(120);
-            await Capture(VisualTreeHelper.GetOpenPopupsForXamlRoot(surface.XamlRoot).Select(p => p.Child).OfType<MenuFlyoutPresenter>().Last(), "browsing-view-menu.png");
+            MenuFlyoutPresenter? viewPresenter = null;
+            for (var attempt = 0; attempt < 100 && viewPresenter is null; attempt++)
+            {
+                viewPresenter = VisualTreeHelper.GetOpenPopupsForXamlRoot(surface.XamlRoot).SelectMany(p => PolishDescendants(p.Child))
+                    .OfType<MenuFlyoutPresenter>().LastOrDefault(p => p.IsLoaded);
+                if (viewPresenter is null) await Task.Delay(50);
+            }
+            Require(viewPresenter is not null, "View menu presenter did not attach");
+            await Capture(viewPresenter!, "browsing-view-menu.png");
             menu.Hide();
             foreach (var width in new[] { 360d, 600d, 900d })
             {

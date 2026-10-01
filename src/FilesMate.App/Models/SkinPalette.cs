@@ -43,6 +43,31 @@ public sealed record SkinPalette
     public uint ControlHover => Mix(Text, Card, .055);
     public uint ControlPressed => Mix(Text, Card, .10);
 
+    // File hover is neutral; selection owns the accent. Keep this separate from
+    // quieter navigation/control fills so multi-selection remains identifiable.
+    public IReadOnlyDictionary<string, uint> FileItemColors()
+    {
+        var selectedAlpha = Dark ? (byte)0x3D : (byte)0x35;
+        var selectedHoverAlpha = Dark ? (byte)0x48 : (byte)0x43;
+        var accent = Accent | 0xFF000000;
+        // Custom white/black and low-contrast accents still need a visible outline.
+        // Adjust only the file selection treatment, preserving the chosen hue.
+        for (var step = 1; step <= 10 && Contrast(accent, Mix(accent, Content, selectedHoverAlpha / 255d)) < 3; step++)
+        {
+            accent = Mix(Text, Accent, step / 10d);
+        }
+        return new Dictionary<string, uint>(StringComparer.Ordinal)
+        {
+            ["FilesMate.FileItem.HoverBrush"] = Alpha(Text, Dark ? (byte)0x18 : (byte)0x14),
+            ["FilesMate.FileItem.HoverBorderBrush"] = Alpha(Text, Dark ? (byte)0x42 : (byte)0x3B),
+            ["FilesMate.FileItem.SelectedBrush"] = Alpha(accent, selectedAlpha),
+            ["FilesMate.FileItem.SelectedHoverBrush"] = Alpha(accent, selectedHoverAlpha),
+            ["FilesMate.FileItem.SelectionBorderBrush"] = accent,
+            ["FilesMate.FileItem.SelectedForegroundBrush"] = Text,
+            ["FilesMate.FileItem.CheckForegroundBrush"] = AccentPalette.Foreground(accent),
+        };
+    }
+
     public IReadOnlyDictionary<string, uint> CompanionColors() => new Dictionary<string, uint>
     {
         ["Surface"] = Floating, ["MenuSurface"] = Floating, ["PaletteCanvas"] = Dark ? Canvas : Floating,
@@ -100,6 +125,18 @@ public sealed record SkinPalette
         Put(Alpha(Line, Dark ? (byte)0x3A : (byte)0x30), prefix + "ComboBox.BorderBrush", "FilesMate.Glass.BorderStrongBrush",
             "TextControlBorderBrush", "TextControlBorderBrushPointerOver");
         Put(Alpha(Line, Dark ? (byte)0x14 : (byte)0x20), "FilesMate.FileContent.BorderBrush", "FilesMate.Card.BorderBrush");
+        var conflictFill = Mix(Text, Card, Dark ? .09 : .025);
+        var conflictHover = Mix(Text, Card, Dark ? .16 : .075);
+        var conflictAccent = Accent | 0xFF000000;
+        for (var step = 1; step <= 10 && Contrast(conflictAccent, conflictHover) < 3; step++)
+            conflictAccent = Mix(Text, Accent, step / 10d);
+        Put(conflictFill, "FilesMate.Conflict.ActionFillBrush");
+        Put(conflictHover, "FilesMate.Conflict.ActionHoverFillBrush");
+        Put(Mix(Text, Card, Dark ? .06 : .11), "FilesMate.Conflict.ActionPressedFillBrush");
+        Put(Mix(Text, conflictFill, Dark ? .5 : .62), "FilesMate.Conflict.ActionBorderBrush");
+        Put(conflictAccent, "FilesMate.Conflict.ActionHoverBorderBrush");
+        Put(Mix(Text, Muted, Dark ? .5 : .25), "FilesMate.Conflict.DescriptionBrush");
+        Put(Mix(conflictAccent, Card, Dark ? .22 : .13), "FilesMate.Conflict.IconFillBrush");
         Put(Outline, "FilesMate.Floating.OutlineBrush", "CalendarDatePickerBorderBrush", "CalendarDatePickerBorderBrushPointerOver",
             "CalendarDatePickerBorderBrushPressed");
         Put(Mix(Line, Navigation, .09), "FilesMate.Shell.SeparatorBrush", "FilesMate.Sidebar.SeparatorBrush");
@@ -127,6 +164,7 @@ public sealed record SkinPalette
             "ToggleButtonForegroundCheckedPointerOver", "ToggleButtonForegroundCheckedPressed",
             "RadioButtonCheckGlyphFill", "RadioButtonCheckGlyphFillPointerOver", "RadioButtonCheckGlyphFillPressed");
         Put(Alpha(Text, 0x08), "FilesMate.Item.StripeBrush");
+        foreach (var (key, color) in FileItemColors()) Put(color, key);
         Put(Alpha(Text, 0x0A), "FilesMate.FileArea.InactiveBackgroundBrush");
         Put(Alpha(Text, 0x01), "FilesMate.TextControl.CaretHostBrush");
         Put(Alpha(Card, 0xF0), "FilesMate.AddressBar.BackgroundBrush");
@@ -150,6 +188,21 @@ public sealed record SkinPalette
     {
         uint Channel(int shift) => (uint)Math.Round(((color >> shift) & 255) * amount + ((background >> shift) & 255) * (1 - amount));
         return 0xFF000000 | Channel(16) << 16 | Channel(8) << 8 | Channel(0);
+    }
+    private static double Contrast(uint first, uint second)
+    {
+        static double Luminance(uint color)
+        {
+            static double Linear(uint channel)
+            {
+                var value = channel / 255d;
+                return value <= .04045 ? value / 12.92 : Math.Pow((value + .055) / 1.055, 2.4);
+            }
+            return .2126 * Linear((color >> 16) & 255) + .7152 * Linear((color >> 8) & 255) + .0722 * Linear(color & 255);
+        }
+        var a = Luminance(first);
+        var b = Luminance(second);
+        return (Math.Max(a, b) + .05) / (Math.Min(a, b) + .05);
     }
     private static uint Lift(uint color, byte amount)
     {

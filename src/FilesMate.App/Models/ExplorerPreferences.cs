@@ -34,7 +34,11 @@ public sealed record ExplorerPreferences(
     bool DefaultSortAscending = true,
     IReadOnlyList<ToolbarTool>? HiddenToolbarTools = null,
     FilesMate.Core.Entries.EntryGrouping DefaultEntryGrouping = FilesMate.Core.Entries.EntryGrouping.FoldersFirst,
-    IReadOnlyList<FilesMate.Core.Entries.EntryGrouping>? GroupingClickCycle = null)
+    IReadOnlyList<FilesMate.Core.Entries.EntryGrouping>? GroupingClickCycle = null,
+    ThumbnailQuality ThumbnailQuality = ThumbnailQuality.Standard,
+    bool ShowFullThumbnails = false,
+    bool ShowGridFileSizes = false,
+    bool AutoFitNameColumn = false)
 {
     public IReadOnlyList<FilesMate.Core.Entries.EntryGrouping> EffectiveGroupingCycle => GroupingClickCycle is { Count: > 0 }
         ? GroupingClickCycle : [FilesMate.Core.Entries.EntryGrouping.FoldersFirst, FilesMate.Core.Entries.EntryGrouping.Mixed];
@@ -113,7 +117,11 @@ public sealed record ExplorerPreferences(
         bool? defaultSortAscending = null,
         string[]? hiddenToolbarTools = null,
         string? defaultEntryGrouping = null,
-        string[]? groupingClickCycle = null) =>
+        string[]? groupingClickCycle = null,
+        string? thumbnailQuality = null,
+        bool? showFullThumbnails = null,
+        bool? showGridFileSizes = null,
+        bool? autoFitNameColumn = null) =>
         new(
             showHiddenFiles ?? Default.ShowHiddenFiles,
             confirmPermanentDelete ?? Default.ConfirmPermanentDelete,
@@ -145,7 +153,11 @@ public sealed record ExplorerPreferences(
             defaultSortAscending ?? Default.DefaultSortAscending,
             ParseHiddenToolbarTools(hiddenToolbarTools),
             Parse(defaultEntryGrouping, Default.DefaultEntryGrouping),
-            ParseGroupingCycle(groupingClickCycle));
+            ParseGroupingCycle(groupingClickCycle),
+            Parse(thumbnailQuality, Default.ThumbnailQuality),
+            showFullThumbnails ?? Default.ShowFullThumbnails,
+            showGridFileSizes ?? Default.ShowGridFileSizes,
+            autoFitNameColumn ?? Default.AutoFitNameColumn);
 
     private static IReadOnlyList<FilesMate.Core.Entries.EntryGrouping>? ParseGroupingCycle(string[]? values)
     {

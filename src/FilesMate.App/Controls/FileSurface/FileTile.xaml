@@ -32,8 +32,8 @@
                 </VisualState>
                 <VisualState x:Name="PointerOver">
                     <VisualState.Setters>
-                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Item.HoverBrush}" />
-                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Glass.BorderBrush}" />
+                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.FileItem.HoverBrush}" />
+                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.FileItem.HoverBorderBrush}" />
                         <Setter Target="Root.BorderThickness" Value="1" />
                         <Setter Target="Root.Padding" Value="1" />
                         <Setter Target="Root.Opacity" Value="1" />
@@ -41,44 +41,52 @@
                 </VisualState>
                 <VisualState x:Name="Pressed">
                     <VisualState.Setters>
-                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}" />
-                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Glass.BorderStrongBrush}" />
+                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.FileItem.SelectedHoverBrush}" />
+                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
                         <Setter Target="Root.BorderThickness" Value="1" />
                         <Setter Target="Root.Padding" Value="1" />
                         <Setter Target="Root.Opacity" Value="1" />
+                        <Setter Target="NameText.Foreground" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
+                        <Setter Target="SizeText.Foreground" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState x:Name="Selected">
                     <VisualState.Setters>
-                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}" />
-                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Glass.BorderBrush}" />
+                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.FileItem.SelectedBrush}" />
+                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
                         <Setter Target="Root.BorderThickness" Value="1" />
                         <Setter Target="Root.Padding" Value="1" />
                         <Setter Target="Root.Opacity" Value="1" />
+                        <Setter Target="NameText.Foreground" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
+                        <Setter Target="SizeText.Foreground" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState x:Name="SelectedPointerOver">
                     <VisualState.Setters>
-                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Item.SelectedHoverBrush}" />
-                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Glass.BorderStrongBrush}" />
+                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.FileItem.SelectedHoverBrush}" />
+                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
                         <Setter Target="Root.BorderThickness" Value="1" />
                         <Setter Target="Root.Padding" Value="1" />
                         <Setter Target="Root.Opacity" Value="1" />
+                        <Setter Target="NameText.Foreground" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
+                        <Setter Target="SizeText.Foreground" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState x:Name="SelectedPressed">
                     <VisualState.Setters>
-                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}" />
-                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Glass.BorderStrongBrush}" />
+                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.FileItem.SelectedHoverBrush}" />
+                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
                         <Setter Target="Root.BorderThickness" Value="1" />
                         <Setter Target="Root.Padding" Value="1" />
                         <Setter Target="Root.Opacity" Value="1" />
+                        <Setter Target="NameText.Foreground" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
+                        <Setter Target="SizeText.Foreground" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState x:Name="Focused">
                     <VisualState.Setters>
                         <Setter Target="Root.Background" Value="Transparent" />
-                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Selection.AccentBrush}" />
+                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
                         <Setter Target="Root.BorderThickness" Value="1" />
                         <Setter Target="Root.Padding" Value="1" />
                         <Setter Target="Root.Opacity" Value="1" />
@@ -86,20 +94,24 @@
                 </VisualState>
                 <VisualState x:Name="Dragging">
                     <VisualState.Setters>
-                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}" />
-                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Selection.AccentBrush}" />
+                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.FileItem.SelectedBrush}" />
+                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
                         <Setter Target="Root.BorderThickness" Value="2" />
                         <Setter Target="Root.Padding" Value="0" />
                         <Setter Target="Root.Opacity" Value="0.55" />
+                        <Setter Target="NameText.Foreground" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
+                        <Setter Target="SizeText.Foreground" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState x:Name="DropTarget">
                     <VisualState.Setters>
-                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Item.DropTargetBrush}" />
-                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Selection.AccentBrush}" />
+                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.FileItem.SelectedHoverBrush}" />
+                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
                         <Setter Target="Root.BorderThickness" Value="2" />
                         <Setter Target="Root.Padding" Value="0" />
                         <Setter Target="Root.Opacity" Value="1" />
+                        <Setter Target="NameText.Foreground" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
+                        <Setter Target="SizeText.Foreground" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
@@ -115,6 +127,7 @@
             CornerRadius="{StaticResource FilesMate.Corner.Card}">
             <Grid HorizontalAlignment="Stretch" VerticalAlignment="Top">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
@@ -167,6 +180,24 @@
                     HorizontalAlignment="Center"
                     MaxLines="2"
                     Style="{StaticResource FileTileNameStyle}" />
+                <TextBlock
+                    x:Name="SizeText"
+                    Grid.Row="2"
+                    HorizontalAlignment="Center"
+                    TextAlignment="Center"
+                    TextTrimming="CharacterEllipsis"
+                    Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                    Visibility="Collapsed" />
+                <!-- Canvas overlays the cell without contributing to its measured size. -->
+                <Canvas Grid.RowSpan="3">
+                    <Viewbox x:Name="SelectionOverlay" Canvas.Left="4" Canvas.Top="4"
+                             Width="18" Height="18" Stretch="Uniform" Visibility="Collapsed">
+                        <Border Background="{ThemeResource FilesMate.FileContent.BackgroundBrush}" CornerRadius="3">
+                            <CheckBox x:Name="SelectionBox" Visibility="Collapsed"
+                                      Style="{StaticResource FilesMate.FileSelectionCheckBoxStyle}" Click="OnSelectionBoxClick" />
+                        </Border>
+                    </Viewbox>
+                </Canvas>
             </Grid>
         </Border>
         <StackPanel

@@ -35,7 +35,9 @@ public sealed partial class FileDetailsSurface
             }).DefaultIfEmpty(64).Max() + 30;
             return column with { Width = Math.Clamp(Math.Ceiling(width), column.Id == DetailsColumnId.Name ? 96 : 64, 1200) };
         }).ToArray();
+        if (key is null or "Name") RememberManualNameWidth();
         ApplyDetailsColumns(true);
+        ScheduleAutoNameMeasurement();
     }
     private async Task ChooseColumnsAsync()
     {
@@ -44,7 +46,9 @@ public sealed partial class FileDetailsSurface
             var columns = await DetailsColumnPicker.ShowAsync(this, _detailColumns);
             if (columns is null || !IsLoaded) return;
             _detailColumns = columns;
+            RememberManualNameWidth();
             ApplyDetailsColumns(true);
+            ScheduleAutoNameMeasurement();
             UpdateExtraSortGlyphs();
         }
         catch (Exception error) { App.LogFailure("ChooseColumns", error); }

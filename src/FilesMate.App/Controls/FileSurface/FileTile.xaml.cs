@@ -24,6 +24,12 @@ public sealed partial class FileTile : UserControl
     private GridSizePreset _preset = GridSizePreset.Default;
     private string? _previewPath;
     private int _previewPixels;
+    private string? _path;
+    private int _iconDipSize;
+    private double _iconRasterScale;
+    private ThumbnailQuality _iconQuality;
+    private bool _iconShowFullThumbnails;
+    private int _iconCacheGeneration;
     private TagDefinition[] _tags = [];
     private ItemOpeningMode OpeningMode => App.ExplorerPreferences.OpeningMode(Entry.Kind == EntryKind.Directory);
 
@@ -31,12 +37,13 @@ public sealed partial class FileTile : UserControl
     {
         InitializeComponent();
         ItemActivation.BindName(NameText, () => OpeningMode, cursor => ProtectedCursor = cursor);
-        Unloaded += (_, _) => FolderPreviewBinder.Clear(FolderPreviewHost, FolderPreviewCover);
-        Loaded += (_, _) => BindPreview();
+        Unloaded += (_, _) => { FolderPreviewBinder.Clear(FolderPreviewHost, FolderPreviewCover); CancelTileFolderSize(); };
+        Loaded += (_, _) => { BindPreview(); UpdateSizeText(); };
         ResetVisual();
     }
 
     public int EntryId { get; private set; } = -1;
+    public event EventHandler<int>? SelectionToggleRequested;
 
     public int ViewIndex { get; private set; } = -1;
 
@@ -86,11 +93,19 @@ public sealed partial class FileTile : UserControl
         NameText.Height = preset.TextHeight;
         NameText.LineHeight = preset.TextHeight / 2;
         NameText.Margin = new Thickness(0, GridSizePreset.TileIconTextGap, 0, 0);
+        SizeText.MaxWidth = nameWidth;
+        SizeText.Height = preset.SizeHeight;
+        SizeText.Margin = new Thickness(0, preset.ShowsFileSize ? GridSizePreset.TileSizeGap : 0, 0, 0);
+        UpdateSizeText();
         TagHost.Margin = new Thickness(0, GridSizePreset.TileTagGap, 0, 0);
         TagHost.Height = preset.TagHeight;
         RenderTags();
 
-        var pixels = Math.Clamp((int)Math.Ceiling(preset.IconSize * (XamlRoot?.RasterizationScale ?? 1)), 32, 256);
+        var scale = XamlRoot?.RasterizationScale ?? 1;
+        var dipSize = (int)Math.Round(preset.IconSize);
+        if (ViewIndex >= 0 && (_iconDipSize != dipSize || _iconRasterScale != scale)) BindIcon();
+        var pixels = ThumbnailQualityPolicy.PixelSize(
+            Math.Clamp((int)Math.Ceiling(preset.IconSize * scale), 32, 256), App.ExplorerPreferences.ThumbnailQuality);
         if (_previewPixels != pixels)
         {
             _previewPixels = pixels;
@@ -99,22 +114,34 @@ public sealed partial class FileTile : UserControl
         }
     }
 
-    public void Bind(int viewIndex, in FileEntryCore entry, bool selected, string? path)
+    public void Bind(int viewIndex, in FileEntryCore entry, bool selected, string? path, CancellationToken cancellationToken = default, bool retainKnownSize = false)
     {
+        var sameEntry = EntryId >= 0 && string.Equals(_path, path, StringComparison.OrdinalIgnoreCase) && Entry == entry;
+        var prefs = App.ExplorerPreferences;
+        var keepIcon = sameEntry && IconImage.Source is not null && _iconQuality == prefs.ThumbnailQuality
+            && _iconShowFullThumbnails == prefs.ShowFullThumbnails && _iconCacheGeneration == ShellIconBinder.CacheGeneration
+            && _iconDipSize == (int)Math.Round(_preset.IconSize) && _iconRasterScale == (XamlRoot?.RasterizationScale ?? 1);
+        if (!sameEntry) CancelTileFolderSize();
+        _tileSizeOwner = cancellationToken;
+        _tileRetainKnownSize = retainKnownSize;
         ApplyTypography(App.AppearanceViewModel?.Current ?? AppearanceSettings.Default);
         ViewIndex = viewIndex;
         EntryId = entry.Id;
         Entry = entry;
-        var prefs = App.ExplorerPreferences;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(SelectionBox, Localization.StringTable.Get("Opening_SelectItem") + ": " + entry.Name);
         NameText.Text = FileRowFormatter.DisplayName(entry, prefs.ShowFileExtensions);
         ToolTipService.SetToolTip(Root, entry.Name);
         Glyph.Glyph = FileRowFormatter.Glyph(entry);
-        IconImage.Stretch = FileTypeIconCatalog.Classify(entry) is FileIconKind.Image or FileIconKind.Video
+        _path = path;
+        IconImage.Stretch = !prefs.ShowFullThumbnails && (FileTypeIconCatalog.Classify(entry) is FileIconKind.Image or FileIconKind.Video)
             ? Stretch.UniformToFill : Stretch.Uniform;
-        ShellIconBinder.Bind(IconImage, Glyph, entry, path, (int)Math.Round(_preset.IconSize));
+        FolderPreviewCover.Stretch = prefs.ShowFullThumbnails ? Stretch.Uniform : Stretch.UniformToFill;
+        // Size/status updates must not decode another copy of a retained Ultra thumbnail.
+        if (!keepIcon) BindIcon();
+        UpdateSizeText();
         var isFolder = entry.Kind == EntryKind.Directory;
         _previewPath = isFolder ? path : null;
-        BindPreview();
+        if (!sameEntry) BindPreview();
         _hidden = FileRowFormatter.IsGhosted(entry.Attributes);
         _selected = selected;
         UpdateState(animate: false);
@@ -123,8 +150,32 @@ public sealed partial class FileTile : UserControl
     internal void ApplyTypography(AppearanceSettings settings)
     {
         FileTypography.Apply(NameText, settings, settings.FileNameFontSize);
+        FileTypography.Apply(SizeText, settings, settings.FileDetailsFontSize);
         NameText.TextLineBounds = TextLineBounds.Full;
         NameText.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+    }
+
+    private void BindIcon()
+    {
+        _iconDipSize = (int)Math.Round(_preset.IconSize);
+        _iconRasterScale = XamlRoot?.RasterizationScale ?? 1;
+        _iconQuality = App.ExplorerPreferences.ThumbnailQuality;
+        _iconShowFullThumbnails = App.ExplorerPreferences.ShowFullThumbnails;
+        _iconCacheGeneration = ShellIconBinder.CacheGeneration;
+        ShellIconBinder.Bind(IconImage, Glyph, Entry, _path, _iconDipSize);
+    }
+
+    private void UpdateSizeText()
+    {
+        var show = ViewIndex >= 0 && _preset.ShowsFileSize
+            && (Entry.Kind == EntryKind.File || App.ExplorerPreferences.ShowFolderSizes && CanMeasureTileFolder());
+        if (show && Entry.Kind == EntryKind.Directory) UpdateTileFolderSize();
+        else
+        {
+            CancelTileFolderSize();
+            SizeText.Text = show ? FileRowFormatter.FormatSize(Entry) : string.Empty;
+        }
+        SizeText.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
     }
 
     public void SetTags(IEnumerable<TagDefinition>? tags)
@@ -184,10 +235,13 @@ public sealed partial class FileTile : UserControl
 
     public void Clear()
     {
+        CancelTileFolderSize();
         ViewIndex = -1;
         EntryId = -1;
         Entry = default;
         NameText.Text = string.Empty;
+        SizeText.Text = string.Empty;
+        SizeText.Visibility = Visibility.Collapsed;
         ToolTipService.SetToolTip(Root, null);
         Glyph.Glyph = "\uE8B7";
         _tags = [];
@@ -195,6 +249,7 @@ public sealed partial class FileTile : UserControl
         IconImage.Stretch = Stretch.Uniform;
         ShellIconBinder.Clear(IconImage, Glyph);
         _previewPath = null;
+        _path = null;
         FolderPreviewBinder.Clear(FolderPreviewHost, FolderPreviewCover);
         ResetVisual();
     }
@@ -236,6 +291,9 @@ public sealed partial class FileTile : UserControl
 
     private void UpdateState(bool animate = true)
     {
+        SelectionBox.IsChecked = _selected;
+        SelectionBox.Visibility = SelectionOverlay.Visibility = EntryId >= 0 && _pointerOver && !_dragging && !_dropTarget
+            ? Visibility.Visible : Visibility.Collapsed;
         var state = FileRowVisualStates.Resolve(
             _selected,
             _pointerOver,
@@ -249,6 +307,13 @@ public sealed partial class FileTile : UserControl
         {
             Opacity = _hidden ? HiddenOpacity() : 1;
         }
+    }
+
+    private void OnSelectionBoxClick(object sender, RoutedEventArgs e)
+    {
+        _pressed = false;
+        if (EntryId >= 0) SelectionToggleRequested?.Invoke(this, EntryId);
+        UpdateState(animate: false);
     }
 
 

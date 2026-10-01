@@ -49,12 +49,14 @@ public sealed class EntryItemsSource : IList, INotifyCollectionChanged
         }
 
         var previousCount = Count;
+        var sameView = ReferenceEquals(Store, store) && Generation == currentGeneration
+            && Index is not null && Index.SequenceEqual(index);
         var appended = append && ReferenceEquals(Store, store) && Generation == currentGeneration && index.Count >= previousCount
             && Index is not null && Enumerable.Range(0, previousCount).All(i => Index[i] == index[i]);
         Store = store;
         Index = index;
         Generation = index.Generation;
-        if (!appended) CollectionChanged?.Invoke(this, ResetArgs);
+        if (!appended && !sameView) CollectionChanged?.Invoke(this, ResetArgs);
         else if (index.Count > previousCount)
             CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add,
                 Enumerable.Range(previousCount, index.Count - previousCount).ToArray(), previousCount));
@@ -82,7 +84,9 @@ public sealed class EntryItemsSource : IList, INotifyCollectionChanged
             return false;
         }
 
-        entry = Store[Index[viewIndex]];
+        var sourceIndex = Index[viewIndex];
+        if ((uint)sourceIndex >= (uint)Store.Count) return false;
+        entry = Store[sourceIndex];
         return true;
     }
 

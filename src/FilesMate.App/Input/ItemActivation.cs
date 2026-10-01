@@ -15,7 +15,7 @@ internal static class ItemActivation
     // Share between Home and all panes in a window so navigation cannot turn the
     // second half of a single-click-mode double-click into another open action.
     private static readonly ConditionalWeakTable<XamlRoot, ItemClickTracker> Trackers = new();
-    internal static readonly InputSystemCursor HandCursor = InputSystemCursor.Create(InputSystemCursorShape.Hand);
+    internal static InputSystemCursor HandCursor => DesktopCursors.Hand;
 
     internal static void BindName(TextBlock name, Func<ItemOpeningMode> mode, Action<InputCursor?> cursor)
     {

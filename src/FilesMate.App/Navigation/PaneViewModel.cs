@@ -33,6 +33,8 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
     private readonly DirectoryWatchBuffer _watchQueue = new(WatchQueueLimit);
     private long _watchScheduledGeneration;
     private bool _watchBatchActive;
+    private long _entryRefreshGeneration;
+    private bool _entryRefreshRequested;
 
     private DirectorySession? _session;
     private CancellationTokenSource? _listenCts;
@@ -245,6 +247,67 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         RefreshSession(preserveSurface: false);
     }
 
+    public void RefreshAfterFileOperation()
+    {
+        AssertUi();
+        if (_disposed || string.IsNullOrEmpty(AddressText) || HomeLocation.IsHome(AddressText)) return;
+        if (IsPortableDevice || TagLocation.IsTag(AddressText))
+        {
+            RefreshSession(preserveSurface: true);
+            return;
+        }
+        _entryRefreshRequested = true;
+        DirectorySession? session;
+        CancellationToken token;
+        lock (_sessionGate)
+        {
+            session = _session;
+            token = _listenCts?.Token ?? CancellationToken.None;
+        }
+        if (session is null || IsLoading || _watchBatchActive || _entryRefreshGeneration == session.Generation) return;
+        _entryRefreshRequested = false;
+        _entryRefreshGeneration = session.Generation;
+        _ = RefreshEntriesAsync(session, token);
+    }
+
+    public long EntryRevision { get; private set; }
+
+    private async Task RefreshEntriesAsync(DirectorySession session, CancellationToken token)
+    {
+        var listing = new List<FileEntryCore>();
+        Exception? failure = null;
+        var complete = false;
+        try
+        {
+            var request = new DirectoryRequest(session.PaneId, session.Generation, session.Path, session.Options);
+            await foreach (var batch in _enumerator.EnumerateAsync(request, token).ConfigureAwait(false))
+            {
+                if (batch.Generation != session.Generation || batch.PaneId != session.PaneId
+                    || !string.Equals(batch.DirectoryPath, session.Path, StringComparison.OrdinalIgnoreCase)) continue;
+                if (batch.Error is { } error) throw new IOException(error.Message);
+                listing.AddRange(batch.Entries);
+                complete |= batch.IsFinal;
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception error) { failure = error; }
+        _dispatcher.Post(() =>
+        {
+            if (_entryRefreshGeneration == session.Generation) _entryRefreshGeneration = 0;
+            if (_disposed || token.IsCancellationRequested || !_navigation.Allows(session.Generation)) return;
+            if (failure is not null) ReportUserError(failure.Message);
+            else if (complete)
+            {
+                var changed = session.Store.Reconcile(listing);
+                foreach (var name in changed)
+                    ExplorerPreferenceBridge.MarkFolderSizeChanged(_paths.Combine(session.Path, name), true);
+                if (changed.Count > 0) { EntryRevision++; RebuildIndex(); }
+            }
+            if (_entryRefreshRequested) RefreshAfterFileOperation();
+            else if (!_watchQueue.IsEmpty) ApplyWatchBatch();
+        });
+    }
+
     private void ResetFilters()
     {
         _filter = EntryFilter.None;
@@ -441,6 +504,7 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
 
     private void StartSession(NavigationIntent intent, bool preserveSurface = false)
     {
+        _entryRefreshRequested = false;
         if (HomeLocation.IsHome(intent.Path))
         {
             ShowHome();
@@ -627,7 +691,7 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
             return;
         }
 
-        if (_watchBatchActive) return;
+        if (_watchBatchActive || _entryRefreshGeneration == session.Generation) return;
         var notices = new List<DirectoryWatchNotification>();
         while (notices.Count < WatchBatchSize && _watchQueue.TryDequeue(out var notice))
         {
@@ -683,10 +747,18 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
                         return;
                     }
                     var mutated = false;
-                    foreach (var (notice, entry) in prepared) mutated |= ApplyWatchNotice(session, notice, entry);
-                    if (mutated) RebuildIndex();
+                    foreach (var (notice, entry) in prepared)
+                    {
+                        if (!string.IsNullOrEmpty(notice.Name))
+                            ExplorerPreferenceBridge.MarkFolderSizeChanged(_paths.Combine(session.Path, notice.Name), notice.Kind != DirectoryWatchKind.Modified);
+                        if (!string.IsNullOrEmpty(notice.OldName))
+                            ExplorerPreferenceBridge.MarkFolderSizeChanged(_paths.Combine(session.Path, notice.OldName), true);
+                        mutated |= ApplyWatchNotice(session, notice, entry);
+                    }
+                    if (mutated) { EntryRevision++; RebuildIndex(); }
                 }
-                if (!_watchQueue.IsEmpty) ApplyWatchBatch();
+                if (_entryRefreshRequested) RefreshAfterFileOperation();
+                else if (!_watchQueue.IsEmpty) ApplyWatchBatch();
             });
         }
     }
@@ -805,14 +877,17 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
             return entry.Size;
         }
 
-        return ExplorerPreferenceBridge.TryFolderSize(FullPath(entry), out var size) ? size : 0;
+        var path = FullPath(entry);
+        return ExplorerPreferenceBridge.TryFolderSize(path, out var size)
+            || ExplorerPreferenceBridge.TryLastKnownFolderSize(path, out size) ? size : 0;
     }
 
-    private void OnFolderSizesChanged()
+    private void OnFolderSizesChanged(string path)
     {
         _dispatcher.Post(() =>
         {
-            if (_disposed || _sort.Column != EntrySortColumn.Size || !ExplorerPreferenceBridge.ShowFolderSizes())
+            if (_disposed || _sort.Column != EntrySortColumn.Size || !ExplorerPreferenceBridge.ShowFolderSizes()
+                || !string.Equals(Path.GetDirectoryName(path), Path.TrimEndingDirectorySeparator(AddressText), StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
@@ -1033,7 +1108,11 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
             IsLoading = loading && change.Error is null;
             StatusText = FormatStatus(change, index.Count);
             RaiseToolbar();
-            if (!IsLoading && !_watchQueue.IsEmpty)
+            if (!IsLoading && _entryRefreshRequested)
+            {
+                RefreshAfterFileOperation();
+            }
+            else if (!IsLoading && !_watchQueue.IsEmpty)
             {
                 ApplyWatchBatch();
             }

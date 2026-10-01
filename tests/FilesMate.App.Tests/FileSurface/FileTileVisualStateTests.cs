@@ -15,9 +15,9 @@ public sealed class FileTileVisualStateTests
             Assert.Contains($"x:Name=\"{state}\"", xaml, StringComparison.Ordinal);
         }
 
-        Assert.Contains("FilesMate.Item.HoverBrush", xaml, StringComparison.Ordinal);
-        Assert.Contains("FilesMate.Item.SelectedBrush", xaml, StringComparison.Ordinal);
-        Assert.Contains("FilesMate.Selection.AccentBrush", xaml, StringComparison.Ordinal);
+        Assert.Contains("FilesMate.FileItem.HoverBrush", xaml, StringComparison.Ordinal);
+        Assert.Contains("FilesMate.FileItem.SelectedBrush", xaml, StringComparison.Ordinal);
+        Assert.Contains("FilesMate.FileItem.SelectionBorderBrush", xaml, StringComparison.Ordinal);
         Assert.Contains("x:Name=\"IconHost\"", xaml, StringComparison.Ordinal);
         Assert.Contains("x:Name=\"IconImage\"", xaml, StringComparison.Ordinal);
         Assert.DoesNotContain("x:Name=\"Placeholder\"", xaml, StringComparison.Ordinal);

@@ -152,14 +152,15 @@
                                                 Opacity="{x:Bind Selected, Mode=OneWay, Converter={StaticResource BoolToOpacity}}"
                                                 IsHitTestVisible="False" />
                                             <glyph:PlaceGlyph
-                                                Width="16"
-                                                Height="16"
+                                                Width="{StaticResource FilesMate.Icon.Size.Medium}"
+                                                Height="{StaticResource FilesMate.Icon.Size.Medium}"
                                                 Margin="{Binding IsCompact, ElementName=Root, Converter={StaticResource IconMargin}}"
                                                 HorizontalAlignment="{Binding IsCompact, ElementName=Root, Converter={StaticResource CompactAlign}}"
                                                 VerticalAlignment="Center"
-                                                Glyph="{x:Bind IconGlyph}" />
+                                                Glyph="{x:Bind IconGlyph}"
+                                                Target="{x:Bind Target}" />
                                             <Grid
-                                                Margin="44,0,12,0"
+                                                Margin="40,0,12,0"
                                                 ColumnSpacing="4"
                                                 Visibility="{Binding IsCompact, ElementName=Root, Converter={StaticResource TrueCollapsed}}">
                                                 <Grid.ColumnDefinitions>
@@ -202,8 +203,8 @@
                 ToolTipService.ToolTip="Settings">
                 <Grid>
                     <FontIcon
-                        Width="16"
-                        Height="16"
+                        Width="{StaticResource FilesMate.Icon.Size.Medium}"
+                        Height="{StaticResource FilesMate.Icon.Size.Medium}"
                         Margin="{Binding IsCompact, ElementName=Root, Converter={StaticResource IconMargin}}"
                         HorizontalAlignment="{Binding IsCompact, ElementName=Root, Converter={StaticResource CompactAlign}}"
                         VerticalAlignment="Center"

@@ -245,6 +245,7 @@
             x:Name="Scroller"
             Grid.Row="1"
             Background="Transparent"
+            HorizontalSnapPointsType="None"
             HorizontalScrollBarVisibility="Disabled"
             VerticalScrollBarVisibility="Auto"
             ViewChanged="Scroller_ViewChanged">
@@ -298,7 +299,7 @@
             </Border>
             <Border x:Name="AlphabetBubble" MinWidth="48" Height="44" Padding="10,0" Margin="-52,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
                     CornerRadius="12" Background="{ThemeResource FilesMate.Selection.AccentBrush}" IsHitTestVisible="False" Visibility="Collapsed">
-                <TextBlock x:Name="AlphabetBubbleText" FontSize="20" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <TextBlock x:Name="AlphabetBubbleText" FontSize="20" Foreground="{ThemeResource FilesMate.Glass.AccentForegroundBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Border>
         </Grid>
         <!-- A connected, offscreen visual is rendered only when a drag starts. -->

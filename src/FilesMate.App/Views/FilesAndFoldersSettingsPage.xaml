@@ -122,6 +122,9 @@
                 <settings:SettingCard x:Name="AlternatingRowsCard" Title="{loc:LocalizedText Key=View_AlternatingRows}" Description="{loc:LocalizedText Key=View_AlternatingRowsHint}" ShowDivider="True">
                     <ToggleSwitch x:Name="AlternatingRowsToggle" MinWidth="0" Toggled="AlternatingRowsToggle_Toggled" AutomationProperties.Name="{loc:LocalizedText Key=View_AlternatingRows}" />
                 </settings:SettingCard>
+                <settings:SettingCard x:Name="AutoNameWidthCard" Title="{loc:LocalizedText Key=Columns_AutoNameWidth}" Description="{loc:LocalizedText Key=Columns_AutoNameWidthHint}" ShowDivider="True">
+                    <ToggleSwitch x:Name="AutoNameWidthToggle" MinWidth="0" Toggled="AutoNameWidth_Toggled" AutomationProperties.Name="{loc:LocalizedText Key=Columns_AutoNameWidth}" />
+                </settings:SettingCard>
                 <settings:SettingCard
                     x:Name="DateFormatCard"
                     Title="Date format"
@@ -135,6 +138,30 @@
                         <ComboBoxItem x:Name="DateSystemItem" Content="Windows" Tag="System" />
                         <ComboBoxItem x:Name="DateIsoItem" Content="ISO" Tag="Iso" />
                     </ComboBox>
+                </settings:SettingCard>
+            </StackPanel>
+        </glass:LiquidGlassSurface>
+        <TextBlock Text="{loc:LocalizedText Key=Thumbnail_Section}" Style="{StaticResource FilesMate.SettingsSectionHeaderStyle}" />
+        <glass:LiquidGlassSurface x:Name="ThumbnailSettingsSection" Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <StackPanel>
+                <settings:SettingCard x:Name="ThumbnailQualityCard" Title="{loc:LocalizedText Key=Thumbnail_Quality}" Description="{loc:LocalizedText Key=Thumbnail_QualityHint}">
+                    <ComboBox x:Name="ThumbnailQualityBox" MinWidth="160" SelectionChanged="ThumbnailQuality_Changed"
+                              AutomationProperties.AutomationId="ThumbnailQualityBox" AutomationProperties.Name="{loc:LocalizedText Key=Thumbnail_Quality}">
+                        <ComboBoxItem Tag="Standard" Content="{loc:LocalizedText Key=Thumbnail_Standard}" />
+                        <ComboBoxItem Tag="High" Content="{loc:LocalizedText Key=Thumbnail_High}" />
+                        <ComboBoxItem Tag="Ultra" Content="{loc:LocalizedText Key=Thumbnail_Ultra}" />
+                    </ComboBox>
+                </settings:SettingCard>
+                <TextBlock x:Name="ThumbnailResourceHint" Margin="16,8,16,12" Text="{loc:LocalizedText Key=Thumbnail_ResourceHint}"
+                           TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" Visibility="Collapsed" />
+                <Border x:Name="ThumbnailQualityDivider" Height="1" Margin="18,0" Background="{ThemeResource FilesMate.Divider.Brush}" />
+                <settings:SettingCard x:Name="FullThumbnailsCard" Title="{loc:LocalizedText Key=Thumbnail_Full}" Description="{loc:LocalizedText Key=Thumbnail_FullHint}" ShowDivider="True">
+                    <ToggleSwitch x:Name="FullThumbnailsToggle" MinWidth="0" Toggled="FullThumbnails_Toggled"
+                                  AutomationProperties.AutomationId="FullThumbnailsToggle" AutomationProperties.Name="{loc:LocalizedText Key=Thumbnail_Full}" />
+                </settings:SettingCard>
+                <settings:SettingCard x:Name="GridFileSizesCard" Title="{loc:LocalizedText Key=Thumbnail_FileSizes}" Description="{loc:LocalizedText Key=Thumbnail_FileSizesHint}">
+                    <ToggleSwitch x:Name="GridFileSizesToggle" MinWidth="0" Toggled="GridFileSizes_Toggled"
+                                  AutomationProperties.AutomationId="GridFileSizesToggle" AutomationProperties.Name="{loc:LocalizedText Key=Thumbnail_FileSizes}" />
                 </settings:SettingCard>
             </StackPanel>
         </glass:LiquidGlassSurface>
@@ -197,7 +224,7 @@
         </glass:LiquidGlassSurface>
         <TextBlock Style="{StaticResource FilesMate.SettingsSectionHeaderStyle}" Text="{loc:LocalizedText Key=Backup_Title}" />
         <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
-            <settings:SettingCard Title="{loc:LocalizedText Key=Backup_Title}" Description="{loc:LocalizedText Key=Backup_Policy}">
+            <settings:SettingCard Title="{loc:LocalizedText Key=Backup_Title}" Description="{loc:LocalizedText Key=Backup_SettingsHint}">
                 <Button x:Name="BackupManageButton" Content="{loc:LocalizedText Key=Backup_Manage}" Click="BackupManage_Click" />
             </settings:SettingCard>
         </glass:LiquidGlassSurface>

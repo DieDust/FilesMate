@@ -109,6 +109,7 @@ public sealed partial class MainWindow : Window
         InitializeTabMemory();
         InitializeShellCompatibility();
         InitializeDevices();
+        InitializeFileShortcuts();
         ApplyShortcuts();
         App.ShortcutsChanged += App_ShortcutsChanged;
 
@@ -179,6 +180,18 @@ public sealed partial class MainWindow : Window
                 DispatcherQueue.TryEnqueue(async () => await RunOpeningSettingsSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_COMPATIBILITY_POLISH_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunCompatibilityPolishSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_LIST_SCROLL_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunListScrollSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_THUMBNAIL_SETTINGS_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunThumbnailSettingsSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_PIN_CHECKBOX_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunPinCheckboxSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_FOLDER_MUTATION_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunFolderMutationSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_WINDOW_SHORTCUT_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunWindowShortcutSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_PENDING_POLISH_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunPendingPolishSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_DETAILS_TYPOGRAPHY_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunDetailsTypographySmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_BROWSING_PREFERENCES_SMOKE") is "1" or "restore")
@@ -656,6 +669,10 @@ public sealed partial class MainWindow : Window
         {
             CloseSettings();
             args.Handled = true;
+        }
+        else if (!FileShortcutRoutingBlocked)
+        {
+            args.Handled = ClearSelectionFromWindow();
         }
     }
 
@@ -1159,6 +1176,11 @@ public sealed partial class MainWindow : Window
     private static void PaintAccentDictionary(ResourceDictionary dict, AppearanceSettings settings, bool dark)
     {
         var argb = AccentPalette.Resolve(settings.Accent, settings.CustomAccent, dark);
+        foreach (var (key, argbValue) in (SkinPalette.For(dark) with { Accent = argb }).FileItemColors())
+        {
+            if (dict.TryGetValue(key, out var brush))
+                AssignBrush(brush, Color.FromArgb((byte)(argbValue >> 24), (byte)(argbValue >> 16), (byte)(argbValue >> 8), (byte)argbValue));
+        }
         var color = Color.FromArgb((byte)(argb >> 24), (byte)(argb >> 16), (byte)(argb >> 8), (byte)argb);
         var ink = AccentPalette.Foreground(argb);
         var foreground = Color.FromArgb(255, (byte)(ink >> 16), (byte)(ink >> 8), (byte)ink);
@@ -1386,6 +1408,7 @@ public sealed partial class MainWindow : Window
         ApplyShortcut(NewTabAccelerator, ShortcutAction.NewTab);
         ApplyShortcut(CloseTabAccelerator, ShortcutAction.CloseTab);
         ApplyShortcut(ReopenTabAccelerator, ShortcutAction.ReopenTab);
+        foreach (var (action, accelerator) in _fileShortcuts) ApplyShortcut(accelerator, action);
     }
 
     private static void ApplyShortcut(KeyboardAccelerator accelerator, ShortcutAction action)

@@ -1,5 +1,15 @@
 # Public release checks
 
+## 1.1.130-preview.1 — 2026-10-01
+
+- The independent public source export builds with zero warnings and errors. App 1,091, Core 176, Integration 20, and Windows platform 367 tests pass (1,654 total).
+- Actual desktop mouse input in the native Shell host passes twelve menu-row hover checks and six clicks across Light/Dark, including opening and selecting a nested View option. Menu hover clears after leaving a row. These checks use the real navigator page at 175% scaling and an isolated profile.
+- View choices are ordered Details, List, Large icons. All View labels, including nested choices, start at 28 DIP within their 32 DIP rows. The real toolbar retains an 8 DIP left inset and a 52 DIP New button.
+- Native Windows cursor handles and bitmap dimensions match for arrow, hand, text, and both resize directions. Sidebar icons use 20 DIP frames, 4 DIP label gaps, and 32 DIP rows across both themes.
+- Native window and child-window wheel checks cover complete-column alignment, fractional deltas, reversal, horizontal input, and popup guards. Window shortcuts pass from five focus locations; text editing, rename cancellation, dialogs, and dual panes retain their intended routing.
+- Automatic Name column sizing, manual-width restoration, offscreen names, theme feedback, and column visibility persistence/reset pass in the native UI fixtures. The update also retains thumbnail reuse, folder sizes under icons, folder mutation, pin/checkbox, and consecutive conflict-comparison fixes.
+- Test profiles and desktop-input fixtures are isolated from the production app. Release preflight checks compiled test-hook exclusion, source revision, and installer checksums before publishing.
+
 ## 1.1.120-preview.19 — 2026-09-30
 
 - The independent public source export builds with zero warnings and errors. App 1,056, Core 173, Integration 20, and Windows platform 365 tests pass (1,614 total). Bounded PDF layout and both resource checks also pass.

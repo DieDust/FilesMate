@@ -4,6 +4,128 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:loc="using:FilesMate.App.Localization"
     xmlns:glass="using:FilesMate.App.Controls.Glass">
+    <Style x:Key="FilesMate.ConflictActionButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Conflict.ActionFillBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.Conflict.ActionBorderBrush}" />
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="ActionRoot">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="ActionFrame.Background" Value="{ThemeResource FilesMate.Conflict.ActionHoverFillBrush}" />
+                                        <Setter Target="ActionFrame.BorderBrush" Value="{ThemeResource FilesMate.Conflict.ActionHoverBorderBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="ActionFrame.Background" Value="{ThemeResource FilesMate.Conflict.ActionPressedFillBrush}" />
+                                        <Setter Target="ActionFrame.BorderBrush" Value="{ThemeResource FilesMate.Conflict.ActionHoverBorderBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="ActionRoot.Opacity" Value="0.4" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <Border x:Name="ActionFrame" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}">
+                            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                Padding="{TemplateBinding Padding}"
+                                HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <!-- Native checkbox behavior with an immediate, legible system check glyph. -->
+    <Style x:Key="FilesMate.FileSelectionCheckBoxStyle" TargetType="CheckBox" BasedOn="{StaticResource DefaultCheckBoxStyle}">
+        <Setter Property="Width" Value="20" />
+        <Setter Property="Height" Value="20" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <Grid x:Name="CheckRoot" Background="Transparent">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CombinedStates">
+                                <VisualState x:Name="UncheckedNormal" />
+                                <VisualState x:Name="UncheckedPointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="CheckFrame.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="UncheckedPressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="CheckFrame.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
+                                        <Setter Target="CheckFrame.Background" Value="{ThemeResource FilesMate.FileItem.SelectedBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="UncheckedDisabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="CheckRoot.Opacity" Value="0.4" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedNormal">
+                                    <VisualState.Setters>
+                                        <Setter Target="CheckFrame.Background" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
+                                        <Setter Target="CheckFrame.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
+                                        <Setter Target="CheckGlyph.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedPointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="CheckFrame.Background" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
+                                        <Setter Target="CheckFrame.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
+                                        <Setter Target="CheckGlyph.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedPressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="CheckFrame.Background" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
+                                        <Setter Target="CheckFrame.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
+                                        <Setter Target="CheckGlyph.Opacity" Value="1" />
+                                        <Setter Target="CheckRoot.Opacity" Value="0.8" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedDisabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="CheckFrame.Background" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
+                                        <Setter Target="CheckFrame.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
+                                        <Setter Target="CheckGlyph.Opacity" Value="1" />
+                                        <Setter Target="CheckRoot.Opacity" Value="0.4" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <Border x:Name="CheckFrame" Width="20" Height="20"
+                            Background="{ThemeResource FilesMate.FileContent.BackgroundBrush}"
+                            BorderBrush="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                            BorderThickness="1" CornerRadius="{TemplateBinding CornerRadius}" />
+                        <FontIcon x:Name="CheckGlyph" Glyph="&#xE73E;" FontSize="14"
+                            FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                            Foreground="{ThemeResource FilesMate.FileItem.CheckForegroundBrush}"
+                            Opacity="0" IsHitTestVisible="False" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
     <Style
         x:Key="ColumnHeaderButtonStyle"
         BasedOn="{StaticResource QuietButtonStyle}"

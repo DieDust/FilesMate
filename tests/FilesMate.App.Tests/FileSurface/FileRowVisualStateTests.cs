@@ -9,26 +9,6 @@ namespace FilesMate.App.Tests.FileSurface;
 
 public sealed class FileRowVisualStateTests
 {
-    [Theory]
-    [InlineData(1)]
-    [InlineData(1.25)]
-    [InlineData(1.5)]
-    [InlineData(1.75)]
-    [InlineData(2)]
-    public void Selection_accent_edges_land_on_physical_pixels(double scale)
-    {
-        foreach (var contentHeight in new[] { 25d, 26d, 34d, 41d })
-        {
-            var bounds = FileColumnLayout.SelectionAccentBounds(contentHeight, scale);
-            foreach (var edge in new[] { bounds.Width, bounds.Top, bounds.Top + bounds.Height })
-                Assert.Equal(Math.Round(edge * scale), edge * scale, 8);
-            Assert.InRange(bounds.Width, 2.5, 3.5);
-            Assert.InRange(bounds.Height, 15.5, 16.5);
-            Assert.True(bounds.Top >= 4 && bounds.Top + bounds.Height <= contentHeight - 3);
-            Assert.InRange(Math.Abs(bounds.Top - (contentHeight - bounds.Height) / 2), 0, 0.5 / scale + 1e-9);
-        }
-    }
-
     [Fact]
     public void Row_template_declares_the_full_interaction_state_set()
     {
@@ -38,9 +18,9 @@ public sealed class FileRowVisualStateTests
             Assert.Contains($"x:Name=\"{state}\"", xaml, StringComparison.Ordinal);
         }
 
-        Assert.Contains("FilesMate.Item.HoverBrush", xaml, StringComparison.Ordinal);
-        Assert.Contains("FilesMate.Item.SelectedBrush", xaml, StringComparison.Ordinal);
-        Assert.Contains("FilesMate.Selection.AccentBrush", xaml, StringComparison.Ordinal);
+        Assert.Contains("FilesMate.FileItem.HoverBrush", xaml, StringComparison.Ordinal);
+        Assert.Contains("FilesMate.FileItem.SelectedBrush", xaml, StringComparison.Ordinal);
+        Assert.Contains("FilesMate.FileItem.SelectionBorderBrush", xaml, StringComparison.Ordinal);
         Assert.Contains("FilesMate.Text.SecondaryBrush", xaml, StringComparison.Ordinal);
         Assert.Contains("FilesMate.Control.Height.Row", xaml, StringComparison.Ordinal);
         Assert.Contains("FilesMate.Column.Modified", xaml, StringComparison.Ordinal);

@@ -29,7 +29,7 @@ public sealed partial class MainWindow
             await Wait(() => Content is FrameworkElement { IsLoaded: true }, "window");
             await Wait(() => TabHost.Content is NavigatorPage { IsLoaded: true } page && !page.ViewModel.IsLoading, "navigator settled");
             await Task.Delay(300);
-            Activate();
+            AppWindow.Move(new(-12000, -12000)); Activate();
             await App.AppearanceViewModel!.SetThemeAsync(AppThemeKind.Light);
             var host = (FrameworkElement)Content;
             var root = Path.Combine(AppContext.BaseDirectory, "transfer-fixture-" + Guid.NewGuid().ToString("N"));
@@ -71,7 +71,9 @@ public sealed partial class MainWindow
             var above = cancelButton.TransformToVisual(footerBand).TransformPoint(default).Y - footerBand.BorderThickness.Top;
             var below = cardBorder.ActualHeight - cancelButton.TransformToVisual(cardBorder).TransformPoint(new(0, cancelButton.ActualHeight)).Y - cardBorder.BorderThickness.Bottom;
             report["FooterButtonInsets"] = new { Above = above, Below = below };
-            Require(Math.Abs(above - below) <= 1.1 && below <= 9.1, "footer button needs compact, symmetric vertical padding");
+            Require(above >= 0 && below <= 9.1
+                && cancelButton.TransformToVisual(body).TransformPoint(new(0, cancelButton.ActualHeight)).Y <= body.ActualHeight + 1,
+                "footer cancel button needs a compact inset and must remain visible");
             await CaptureCard(dialog, "transfer-single-light.png");
             Click(dialog, "ConflictCompare");
             await Wait(() => PolishDescendants(dialog).OfType<ListView>().Any(l => l.Items.Count > 0), "text diff");
@@ -159,9 +161,10 @@ public sealed partial class MainWindow
             var ta = Write("batch/target/a.txt", "old a"); var tb = Write("batch/target/b.txt", "old b");
             pending = Move([a, b], Path.GetDirectoryName(ta)!);
             dialog = await Dialog(); await Task.Delay(180);
-            Require(PolishDescendants(dialog).OfType<TextBlock>().Any(t => t.Text == StringTable.Get("Conflict_ReplaceAll")), "batch actions");
+            Require(PolishDescendants(dialog).OfType<TextBlock>().Any(t => t.Text == StringTable.Get("Conflict_ReplaceFile")), "batch actions");
             await CaptureCard(dialog, "transfer-batch-light.png");
             Click(dialog, "ConflictCompare");
+            PolishDescendants(dialog).OfType<CheckBox>().Single(box => AutomationProperties.GetAutomationId(box) == "ConflictApplyRemaining").IsChecked = false;
             Choose(dialog, FileConflictAction.Replace);
             var firstDialog = dialog;
             dialog = await Dialog(firstDialog);
@@ -208,16 +211,42 @@ public sealed partial class MainWindow
             Require(cancelled.Cancelled && File.Exists(pngA) && File.Exists(pngB), "cancel image comparison");
             report["PairedImagePreviewAndCancel"] = true;
 
+            var batchPairs = Enumerable.Range(0, 3).Select(i => new FilePathPair(Path.Combine(root, $"image-batch/source/photo-{i}.png"),
+                Path.Combine(root, $"image-batch/target/photo-{i}.png"))).ToArray();
+            foreach (var pair in batchPairs) { await ImageFixture(pair.Source, false); await ImageFixture(pair.Destination, true); }
+            var batchPending = WindowsFileTransfer.RunAsync(operations, batchPairs, false, FileConflictDialog.For(host));
+            ContentDialog? previousBatchDialog = null;
+            for (var index = 0; index < batchPairs.Length; index++)
+            {
+                var batchDialog = await Dialog(previousBatchDialog);
+                if (index == 0) Click(batchDialog, "ConflictCompare");
+                await Wait(() => PolishDescendants(batchDialog).OfType<Image>().Count(i => i.Name == "ImageContent" && i.Source is not null) == 2,
+                    "batch image previews " + index);
+                var applyRemaining = PolishDescendants(batchDialog).OfType<CheckBox>()
+                    .Single(c => AutomationProperties.GetAutomationId(c) == "ConflictApplyRemaining");
+                Require(applyRemaining.IsChecked == (index == 0), "Unchecked batch scope was reset on the next conflict");
+                applyRemaining.IsChecked = false;
+                Click(batchDialog, "ConflictChooseReplace");
+                previousBatchDialog = batchDialog;
+            }
+            var batchImages = await batchPending.WaitAsync(TimeSpan.FromSeconds(15));
+            if (batchImages.Undo is { } imageUndo) retained.Add(imageUndo);
+            Require(!batchImages.Cancelled && batchImages.Errors.Count == 0 && batchImages.Completed.Count == 3
+                && batchPairs.All(p => File.ReadAllBytes(p.Source).SequenceEqual(File.ReadAllBytes(p.Destination))),
+                "Individual batch preview decisions failed");
+            report["ThreeSequentialImagePreviewsAndUncheckedScope"] = true;
+
             await App.AppearanceViewModel.SetThemeAsync(AppThemeKind.Light);
             var budgetSource = Write("budget/source/a.txt", "incoming"); var budgetTarget = Write("budget/target/a.txt", "existing");
             var operation = WindowsFileTransfer.RunAsync(operations, [new(budgetSource, budgetTarget)], true,
                 FileConflictDialog.For(host), backupBudget: new ReplacementBackupBudget(0, 0));
-            dialog = await Dialog(); Click(dialog, "ConflictReplaceWithoutUndo");
-            firstDialog = dialog; dialog = await Dialog(firstDialog);
-            Require(dialog.DefaultButton == ContentDialogButton.Close && File.ReadAllText(budgetTarget) == "existing", "irreversible confirmation");
+            dialog = await Dialog();
+            Require(dialog.DefaultButton == ContentDialogButton.None && File.ReadAllText(budgetTarget) == "existing"
+                && PolishDescendants(dialog).OfType<TextBlock>().Any(text => text.Text == StringTable.Get("Conflict_BackupUnavailable")),
+                "irreversible warning must precede the first choice");
             dialog.Hide(); var unprotected = await operation.WaitAsync(TimeSpan.FromSeconds(15));
             Require(unprotected.Cancelled && File.Exists(budgetSource), "cancel unprotected replacement");
-            report["BackupLimitNeverBatchAuthorizesDestruction"] = true;
+            report["BackupLimitCancellationFromFirstDialog"] = true;
 
             var normalSize = AppWindow.Size;
             var presenter = (Microsoft.UI.Windowing.OverlappedPresenter)AppWindow.Presenter;

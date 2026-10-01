@@ -18,14 +18,16 @@ namespace FilesMate.App.Controls.FileSurface;
 public sealed partial class FileRow : UserControl
 {
     private bool _selected;
-    private bool _singleSelection;
     private bool _pointerOver;
+    private bool _iconPointerOver;
     private bool _pressed;
     private bool _focused;
     private bool _dragging;
     private bool _dropTarget;
     private bool _hidden;
     private CancellationTokenSource? _sizeRequest;
+    private Task? _sizeTask;
+    private CancellationToken _sizeOwnerToken;
     private long _sizeVersion;
     private DetailsColumn[]? _columns;
     private TagDefinition[] _tags = [];
@@ -39,25 +41,31 @@ public sealed partial class FileRow : UserControl
     {
         InitializeComponent();
         ItemActivation.BindName(NameText, () => OpeningMode, cursor => ProtectedCursor = cursor);
-        Loaded += (_, _) => UpdateAccentGeometry();
-        Root.SizeChanged += (_, _) => UpdateAccentGeometry();
         Unloaded += (_, _) => { CancelFolderSize(); CancelPropertyRead(); };
         ResetVisual();
     }
 
     public int EntryId { get; private set; } = -1;
+    public event EventHandler<int>? SelectionToggleRequested;
 
     public int ViewIndex { get; private set; } = -1;
 
     public FileEntryCore Entry { get; private set; }
 
-    public void Bind(int viewIndex, in FileEntryCore entry, bool selected, string? path, CancellationToken cancellationToken = default, bool singleSelection = true)
+    public void Bind(int viewIndex, in FileEntryCore entry, bool selected, string? path, CancellationToken cancellationToken = default, bool retainKnownSize = false)
     {
-        CancelFolderSize();
+        var keepWalk = string.Equals(path, _entryPath, StringComparison.OrdinalIgnoreCase)
+            && Entry.Kind == EntryKind.Directory && entry.Kind == EntryKind.Directory
+            && entry with { Id = Entry.Id } == Entry
+            && App.ExplorerPreferences.ShowFolderSizes && !_compact
+            && _sizeRequest?.IsCancellationRequested == false && _sizeTask is { IsCompleted: false };
+        var previousSize = SizeText.Text;
+        if (!keepWalk) CancelFolderSize();
         CancelPropertyRead();
         ViewIndex = viewIndex;
         EntryId = entry.Id;
         Entry = entry;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(SelectionBox, Loc.Get("Opening_SelectItem") + ": " + entry.Name);
         _entryPath = path;
         var prefs = App.ExplorerPreferences;
         var content = FileRowFormatter.Format(entry, selected, prefs.ShowFileExtensions, prefs.DateFormat);
@@ -71,9 +79,9 @@ public sealed partial class FileRow : UserControl
         ShellIconBinder.Bind(IconImage, Glyph, entry, path, (int)FileColumnLayout.DetailsIconSize);
         _hidden = content.IsHidden;
         _selected = content.IsSelected;
-        _singleSelection = singleSelection;
         UpdateState(animate: false);
-        RequestFolderSize(path, cancellationToken);
+        if (keepWalk) SizeText.Text = previousSize;
+        else RequestFolderSize(path, cancellationToken, retainKnownSize);
         RefreshProperties();
     }
 
@@ -88,7 +96,7 @@ public sealed partial class FileRow : UserControl
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(TypeCell, description);
     }
 
-    private void RequestFolderSize(string? path, CancellationToken cancellationToken)
+    private void RequestFolderSize(string? path, CancellationToken cancellationToken, bool retainKnownSize)
     {
         if (_compact || Entry.Kind != EntryKind.Directory
             || !App.ExplorerPreferences.ShowFolderSizes
@@ -99,26 +107,37 @@ public sealed partial class FileRow : UserControl
             return;
         }
 
-        if (FolderSizeCache.TryGet(path, out var cached))
+        if (FolderSizeCache.TryGet(path, out var cached)
+            || (retainKnownSize && FolderSizeCache.TryGetUnchanged(path, out cached)))
         {
             SizeText.Text = DriveCapacity.FormatBytes(ToDisplayBytes(cached));
             return;
         }
 
-        SizeText.Text = "…";
+        var hadKnown = FolderSizeCache.TryGetLastKnown(path, out var previous);
+        SizeText.Text = hadKnown ? DriveCapacity.FormatBytes(ToDisplayBytes(previous)) : "…";
         _sizeRequest = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        _ = FillFolderSizeAsync(_sizeVersion, path, _sizeRequest.Token);
+        _sizeOwnerToken = cancellationToken;
+        _sizeTask = FillFolderSizeAsync(_sizeVersion, path, _sizeRequest.Token, hadKnown);
     }
 
-    private async Task FillFolderSizeAsync(long version, string path, CancellationToken cancellationToken)
+    private async Task FillFolderSizeAsync(long version, string path, CancellationToken cancellationToken, bool hadKnown)
     {
         try
         {
-            var bytes = await FolderSizeCache.GetAsync(path, cancellationToken, Report).ConfigureAwait(false);
+            var bytes = await FolderSizeCache.GetAsync(path, cancellationToken, hadKnown ? null : Report).ConfigureAwait(false);
             Report(bytes);
         }
         catch (OperationCanceledException)
         {
+            if (!cancellationToken.IsCancellationRequested)
+                _ = DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+                {
+                    if (_sizeVersion != version || !IsLoaded || _sizeOwnerToken.IsCancellationRequested) return;
+                    var owner = _sizeOwnerToken;
+                    CancelFolderSize();
+                    RequestFolderSize(path, owner, retainKnownSize: false);
+                });
         }
         catch
         {
@@ -142,6 +161,12 @@ public sealed partial class FileRow : UserControl
         _sizeRequest?.Cancel();
         _sizeRequest?.Dispose();
         _sizeRequest = null;
+    }
+
+    internal void CancelFolderSizeWithin(IReadOnlyList<string> paths)
+    {
+        if (_entryPath is { } path && paths.Any(root => FilesMate.Platform.Windows.Locks.FileLockPath.Matches(path, root, directory: true)))
+            CancelFolderSize();
     }
 
     private static long ToDisplayBytes(ulong bytes) =>
@@ -237,22 +262,11 @@ public sealed partial class FileRow : UserControl
     {
         Height = settings.FileRowHeightForScale(scale ?? XamlRoot?.RasterizationScale ?? 1);
         UseLayoutRounding = true;
-        UpdateAccentGeometry(scale);
         FileTypography.Apply(NameText, settings, settings.FileNameFontSize);
         TypeCell.Height = Math.Max(20, Math.Ceiling(settings.FileDetailsFontSize * 1.4) + 2);
         foreach (var text in _extraCells.Values.Append(ModifiedText).Append(SizeText))
             FileTypography.Apply(text, settings, settings.FileDetailsFontSize);
         FileTypography.Apply(TypeText, settings, settings.FileDetailsFontSize - 1);
-    }
-
-    private void UpdateAccentGeometry(double? scale = null)
-    {
-        var contentHeight = Root.ActualHeight > 0 ? Root.ActualHeight : Math.Max(0, Height - Root.Margin.Top - Root.Margin.Bottom);
-        var bounds = FileColumnLayout.SelectionAccentBounds(contentHeight, scale ?? XamlRoot?.RasterizationScale ?? 1);
-        AccentBar.Width = bounds.Width;
-        AccentBar.Height = bounds.Height;
-        AccentBar.Margin = new Thickness(0, bounds.Top, 0, 0);
-        AccentBar.CornerRadius = new CornerRadius(bounds.Width / 2);
     }
 
     private void UpdateExtraCells()
@@ -316,10 +330,9 @@ public sealed partial class FileRow : UserControl
         UpdateState(animate: false);
     }
 
-    public void SetSelected(bool selected, bool singleSelection = true)
+    public void SetSelected(bool selected)
     {
         _selected = selected;
-        _singleSelection = singleSelection;
         UpdateState();
     }
 
@@ -352,8 +365,8 @@ public sealed partial class FileRow : UserControl
         NameText.TextDecorations = Windows.UI.Text.TextDecorations.None;
         ProtectedCursor = null;
         _selected = false;
-        _singleSelection = false;
         _pointerOver = false;
+        _iconPointerOver = false;
         _pressed = false;
         _focused = false;
         _dragging = false;
@@ -402,8 +415,38 @@ public sealed partial class FileRow : UserControl
     private void OnPointerExited(object sender, PointerRoutedEventArgs e)
     {
         _pointerOver = false;
+        _iconPointerOver = false;
         _pressed = false;
         UpdateState(animate: false);
+    }
+
+    private void OnIconPointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        _iconPointerOver = true;
+        ProtectedCursor = null;
+        UpdateSelectionBox();
+    }
+
+    private void OnIconPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        _iconPointerOver = false;
+        UpdateSelectionBox();
+    }
+
+    private void OnSelectionBoxClick(object sender, RoutedEventArgs e)
+    {
+        _pressed = false;
+        if (EntryId >= 0) SelectionToggleRequested?.Invoke(this, EntryId);
+        UpdateState(animate: false);
+    }
+
+    private void UpdateSelectionBox()
+    {
+        var show = EntryId >= 0 && _iconPointerOver && !_dragging && !_dropTarget;
+        SelectionBox.IsChecked = _selected;
+        SelectionBox.Visibility = SelectionOverlay.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        // Keep the graphic measured, so replacing it with the checkbox cannot move the name.
+        IconImage.Opacity = Glyph.Opacity = show ? 0 : 1;
     }
 
     private void OnPointerPressed(object sender, PointerRoutedEventArgs e)
@@ -426,7 +469,7 @@ public sealed partial class FileRow : UserControl
 
     private void UpdateState(bool animate = true)
     {
-        AccentBar.Visibility = _selected && _singleSelection ? Visibility.Visible : Visibility.Collapsed;
+        UpdateSelectionBox();
         var state = FileRowVisualStates.Resolve(
             _selected,
             _pointerOver,

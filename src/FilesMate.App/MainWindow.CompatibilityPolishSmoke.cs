@@ -75,12 +75,14 @@ public sealed partial class MainWindow
                 surface.BeginInlineRename();
                 await Wait(() => surface.IsRenaming, "rename start");
                 var editor = (TextBox)Field(surface, "_renameEditor")!;
-                editor.Text = "Cancel-" + layout + ".txt";
-                surface.CancelRenameOutside(editor);
+                editor.Text = "Blur-" + layout + ".txt";
+                surface.CommitRenameOutside(editor);
                 Require(surface.IsRenaming, "Click inside rename editor cancelled it.");
-                surface.CancelRenameOutside(scroller);
-                Require(!surface.IsRenaming && File.Exists(Path.Combine(fixture, "Document-010.txt"))
-                    && !File.Exists(Path.Combine(fixture, "Cancel-" + layout + ".txt")), "Outside click did not cancel rename.");
+                surface.CommitRenameOutside(scroller);
+                await Wait(() => !surface.IsRenaming && File.Exists(Path.Combine(fixture, "Blur-" + layout + ".txt")), "outside rename commit");
+                File.Move(Path.Combine(fixture, "Blur-" + layout + ".txt"), Path.Combine(fixture, "Document-010.txt"));
+                navigator.ViewModel.Refresh();
+                await Wait(() => !navigator.ViewModel.IsLoading && surface.TrySelectByName("Document-010.txt"), "blur rename reset");
                 surface.BeginInlineRename();
                 await Wait(() => surface.IsRenaming, "rename restart");
                 ((TextBox)Field(surface, "_renameEditor")!).Text = "Confirmed-" + layout + ".txt";
@@ -90,7 +92,7 @@ public sealed partial class MainWindow
                 navigator.ViewModel.Refresh();
                 await Wait(() => !navigator.ViewModel.IsLoading && surface.TrySelectByName("Document-010.txt"), "rename reset");
             }
-            report["RenameOutsideCancelInsideEditAndCommitAllViews"] = true;
+            report["RenameOutsideCommitInsideEditAndCommitAllViews"] = true;
 
             surface.SetLayout(FileLayoutKind.Details);
             var actions = (PaneFileActions)Field(navigator, "_fileActions")!;
@@ -103,8 +105,9 @@ public sealed partial class MainWindow
                 var createdBytes = File.ReadAllBytes(path);
                 Require(Path.GetExtension(path) == NewDocumentTemplate.Extension(kind), "Wrong new document type.");
                 Require(File.ReadAllBytes(path).SequenceEqual(NewDocumentTemplate.Content(kind)) || kind is NewDocumentKind.Word or NewDocumentKind.Spreadsheet or NewDocumentKind.Presentation, "Document template was not written.");
-                surface.CancelRenameOutside(scroller);
-                Require(File.Exists(path), "Cancelling initial rename removed the newly created document.");
+                surface.CommitRenameOutside(scroller);
+                await Wait(() => !surface.IsRenaming && !PaneFileActions.IsBusy, "initial rename completion");
+                Require(File.Exists(path), "Completing initial rename removed the newly created document.");
                 await actions.ApplyUndoAsync(false);
                 await Wait(() => !File.Exists(path), "undo new document");
                 await actions.ApplyUndoAsync(true);

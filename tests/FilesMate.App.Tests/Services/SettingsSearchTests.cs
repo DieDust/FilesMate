@@ -13,6 +13,9 @@ public sealed class SettingsSearchTests
     [InlineData("标签", "SettingsTags")]
     [InlineData("Alt Space", "SearchShortcut")]
     [InlineData("隐藏", "ShowHiddenFilesTitle")]
+    [InlineData("清晰度", "Thumbnail_Quality")]
+    [InlineData("圆图", "Thumbnail_Full")]
+    [InlineData("大图 文件大小", "Thumbnail_FileSizes")]
     public void Search_finds_the_relevant_setting(string query, string title)
         => Assert.Contains(SettingsSearchCatalog.Search(query), entry => entry.TitleKey == title);
 

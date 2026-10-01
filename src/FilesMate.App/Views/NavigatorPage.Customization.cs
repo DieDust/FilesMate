@@ -83,7 +83,7 @@ public sealed partial class NavigatorPage
         _viewRevisions[vm]++;
         var surface = SurfaceOf(vm);
         _ = SaveFolderViewAsync(vm.AddressText,
-            new(surface.LayoutKind == FileLayoutKind.Details, surface.GridPreset.Slot, vm.Sort, surface.GetColumns(), surface.LayoutKind == FileLayoutKind.List, surface.ListZoomPercent));
+            new(surface.LayoutKind == FileLayoutKind.Details, surface.GridPreset.Slot, vm.Sort, surface.GetPresentationColumns(), surface.LayoutKind == FileLayoutKind.List, surface.ListZoomPercent));
     }
 
     private async Task SaveFolderViewAsync(string path, FolderViewSettings view)

@@ -12,7 +12,7 @@ public sealed partial class FilesAndFoldersSettingsPage : UserControl
 {
     private async void BackupManage_Click(object sender, RoutedEventArgs e) => await BackupHistoryDialog.ShowAsync(this);
     private bool _syncing;
-    private readonly PinnedLocationStore _pinnedLocations = new(PinnedLocationStore.DefaultFilePath);
+    private readonly PinnedLocationStore _pinnedLocations = new(Program.SettingsPath(PinnedLocationStore.DefaultFilePath));
 
     public FilesAndFoldersSettingsPage()
     {
@@ -153,6 +153,23 @@ public sealed partial class FilesAndFoldersSettingsPage : UserControl
     private async void FolderSizesToggle_Toggled(object sender, RoutedEventArgs e) =>
         await UpdateAsync(App.ExplorerPreferences with { ShowFolderSizes = FolderSizesToggle.IsOn });
 
+    private async void ThumbnailQuality_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_syncing || ThumbnailQualityBox.SelectedItem is not ComboBoxItem { Tag: string tag }
+            || !Enum.TryParse<ThumbnailQuality>(tag, out var quality)) return;
+        ThumbnailResourceHint.Visibility = quality == ThumbnailQuality.Standard ? Visibility.Collapsed : Visibility.Visible;
+        await UpdateAsync(App.ExplorerPreferences with { ThumbnailQuality = quality });
+    }
+
+    private async void FullThumbnails_Toggled(object sender, RoutedEventArgs e) =>
+        await UpdateAsync(App.ExplorerPreferences with { ShowFullThumbnails = FullThumbnailsToggle.IsOn });
+
+    private async void GridFileSizes_Toggled(object sender, RoutedEventArgs e) =>
+        await UpdateAsync(App.ExplorerPreferences with { ShowGridFileSizes = GridFileSizesToggle.IsOn });
+
+    private async void AutoNameWidth_Toggled(object sender, RoutedEventArgs e) =>
+        await UpdateAsync(App.ExplorerPreferences with { AutoFitNameColumn = AutoNameWidthToggle.IsOn });
+
     private async void AlphabetToggle_Toggled(object sender, RoutedEventArgs e) =>
         await UpdateAsync(App.ExplorerPreferences with { ShowAlphabetNavigation = AlphabetToggle.IsOn });
 
@@ -238,6 +255,12 @@ public sealed partial class FilesAndFoldersSettingsPage : UserControl
         ConfirmDeleteToggle.IsOn = App.ExplorerPreferences.ConfirmPermanentDelete;
         ExtensionsToggle.IsOn = App.ExplorerPreferences.ShowFileExtensions;
         FolderSizesToggle.IsOn = App.ExplorerPreferences.ShowFolderSizes;
+        SelectTag(ThumbnailQualityBox, App.ExplorerPreferences.ThumbnailQuality.ToString());
+        FullThumbnailsToggle.IsOn = App.ExplorerPreferences.ShowFullThumbnails;
+        GridFileSizesToggle.IsOn = App.ExplorerPreferences.ShowGridFileSizes;
+        AutoNameWidthToggle.IsOn = App.ExplorerPreferences.AutoFitNameColumn;
+        ThumbnailResourceHint.Visibility = App.ExplorerPreferences.ThumbnailQuality == ThumbnailQuality.Standard
+            ? Visibility.Collapsed : Visibility.Visible;
         AlphabetToggle.IsOn = App.ExplorerPreferences.ShowAlphabetNavigation;
         AlphabetMinimumItemsBox.Value = App.ExplorerPreferences.AlphabetNavigationMinimumItemCount;
         AlphabetDualPaneToggle.IsOn = App.ExplorerPreferences.ShowAlphabetNavigationInDualPane;

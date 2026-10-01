@@ -10,5 +10,6 @@ internal sealed class ShellRoot : Grid
     public ShellRoot()
     {
         ProtectedCursor = DesktopCursors.Arrow;
+        Loaded += (_, _) => DesktopCursorBinding.Attach(this);
     }
 }

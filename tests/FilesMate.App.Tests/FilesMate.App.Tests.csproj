@@ -59,6 +59,8 @@
     <Compile Include="..\..\src\FilesMate.App\Controls\FileSurface\FileRowFormatter.cs" Link="LinkedApp\FileSurface\FileRowFormatter.cs" />
     <Compile Include="..\..\src\FilesMate.App\Controls\FileSurface\GridSizePreset.cs" Link="LinkedApp\FileSurface\GridSizePreset.cs" />
     <Compile Include="..\..\src\FilesMate.App\Controls\FileSurface\CompactListMetrics.cs" Link="LinkedApp\FileSurface\CompactListMetrics.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Controls\FileSurface\CompactListGeometry.cs" Link="LinkedApp\FileSurface\CompactListGeometry.cs" />
+    <Compile Include="..\..\src\FilesMate.App\Controls\FileSurface\ListScrollState.cs" Link="LinkedApp\FileSurface\ListScrollState.cs" />
     <Compile Include="..\..\src\FilesMate.App\Controls\FileSurface\DragPreviewSelection.cs" Link="LinkedApp\FileSurface\DragPreviewSelection.cs" />
     <Compile Include="..\..\src\FilesMate.App\Controls\Tags\TagPresentation.cs" Link="LinkedApp\Tags\TagPresentation.cs" />
     <Compile Include="..\..\src\FilesMate.App\Controls\Tags\TagPickerLogic.cs" Link="LinkedApp\Tags\TagPickerLogic.cs" />

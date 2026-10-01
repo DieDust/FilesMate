@@ -160,11 +160,7 @@ public sealed partial class NavigatorPage
     });
 
     private void CommandPaletteAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
-    {
-        if (App.IsShortcutCaptureActive) return;
-        args.Handled = true;
-        _ = ShowCommandPaletteAsync();
-    }
+        => args.Handled = InvokeWindowShortcut(ShortcutAction.CommandPalette);
 
     private sealed record PaletteAction(string Label, string Hint, bool Enabled, Action Invoke)
     {
@@ -208,7 +204,7 @@ public sealed partial class NavigatorPage
         Add(Loc.Get("Action_IconView"), "", true, () => ActiveSurface.SetLayout(FileLayoutKind.Grid));
         foreach (var column in FilesMate.App.Models.DetailsColumn.Defaults().Where(c => c.CanSort))
             Add(Loc.Format("Action_SortColumn", column.Title), "", true, () => ViewModel.SetSortColumn(column.Sort, App.ExplorerPreferences.DefaultSortAscending));
-        Add(Loc.Get("Action_RefreshFolder"), App.Shortcuts[ShortcutAction.Refresh].DisplayText, ViewModel.CanRefresh, RefreshFilePanes);
+        Add(Loc.Get("Action_RefreshFolder"), App.Shortcuts[ShortcutAction.Refresh].DisplayText, ViewModel.CanRefresh, ViewModel.Refresh);
         Add(Loc.Get("Action_OpenSettings"), "", true, () => App.CurrentWindow?.OpenSettings("general"));
         var search = new TextBox { PlaceholderText = Loc.Get("Action_SearchHint"), MinWidth = 320 };
         var list = new ListView { MaxHeight = 360, IsItemClickEnabled = true, SelectionMode = ListViewSelectionMode.Single };
@@ -267,7 +263,7 @@ public sealed partial class NavigatorPage
 
     private static ClosedPaneState CapturePane(PaneViewModel vm, FileDetailsSurface surface) =>
         new(vm.AddressText, new FolderViewSettings(surface.LayoutKind == FileLayoutKind.Details,
-            surface.GridPreset.Slot, vm.Sort, surface.GetColumns(), surface.LayoutKind == FileLayoutKind.List, surface.ListZoomPercent), surface.ScrollOffset,
+            surface.GridPreset.Slot, vm.Sort, surface.GetPresentationColumns(), surface.LayoutKind == FileLayoutKind.List, surface.ListZoomPercent), surface.ScrollOffset,
             surface.SelectedPaths().Select(path => Path.GetFileName(path)).ToArray(), vm.FilterQuery, vm.Navigation.CaptureHistory());
 
     public async Task RestoreClosedTabAsync(ClosedTabState state)

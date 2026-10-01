@@ -41,10 +41,29 @@ public sealed partial class AdaptiveCommandToolbar
         Caption(GroupingMenuButton, "Grouping_Options");
         Caption(ViewMenuButton, "View_Options");
         var views = new MenuFlyout { Placement = FlyoutPlacementMode.BottomEdgeAlignedRight };
+        var viewPresenter = new Style(typeof(MenuFlyoutPresenter))
+        { BasedOn = (Style)Application.Current.Resources["FilesMate.ColumnMenuPresenterStyle"] };
+        viewPresenter.Setters.Add(new Setter(FrameworkElement.MinWidthProperty, 180d));
+        viewPresenter.Setters.Add(new Setter(FrameworkElement.MaxWidthProperty, 260d));
+        views.MenuFlyoutPresenterStyle = viewPresenter;
         var choices = new List<(ToggleMenuFlyoutItem Item, FileLayoutKind Kind, int Slot)>();
+        static void Compact(MenuFlyoutItemBase item)
+        {
+            if (item is ToggleMenuFlyoutItem)
+                item.Style = (Style)Application.Current.Resources["FilesMate.ColumnMenuToggleStyle"];
+            else if (item is MenuFlyoutSubItem)
+                item.Style = (Style)Application.Current.Resources["FilesMate.CompactMenuSubItemStyle"];
+            item.Padding = new Thickness(8, 0, 8, 0);
+            item.Margin = new Thickness(2, 0, 2, 0);
+            item.BorderThickness = new Thickness(0);
+            item.MinHeight = 32;
+            item.FontSize = 13;
+            item.Resources["FilesMate.Menu.LeadingSlotWidth"] = new GridLength(20);
+        }
         ToggleMenuFlyoutItem Add(string key, FileLayoutKind kind, GridSizePreset? preset = null)
         {
             var item = new ToggleMenuFlyoutItem { Text = StringTable.Get(key) };
+            Compact(item);
             item.Click += (_, _) =>
             {
                 if (preset is { } size) GridSizeRequested?.Invoke(this, size);
@@ -53,18 +72,21 @@ public sealed partial class AdaptiveCommandToolbar
             choices.Add((item, kind, preset?.Slot ?? 0));
             return item;
         }
+        views.Items.Add(Add("Layout_Details", FileLayoutKind.Details));
         views.Items.Add(Add("Layout_List", FileLayoutKind.List));
         views.Items.Add(Add("Layout_LargeIcons", FileLayoutKind.Grid, GridSizePreset.Large));
-        views.Items.Add(Add("Layout_Details", FileLayoutKind.Details));
         views.Items.Add(new MenuFlyoutSeparator());
         var iconSizes = new MenuFlyoutSubItem { Text = StringTable.Get("View_IconSize") };
+        Compact(iconSizes);
         foreach (var preset in GridSizePreset.All.Reverse()) iconSizes.Items.Add(Add(preset.ZoomKey, FileLayoutKind.Grid, preset));
         views.Items.Add(iconSizes);
         var listZoom = new MenuFlyoutSubItem { Text = StringTable.Get("View_ListZoom") };
+        Compact(listZoom);
         var zooms = new List<ToggleMenuFlyoutItem>();
         foreach (var value in new[] { 80, 100, 120, 140, 160 })
         {
             var item = new ToggleMenuFlyoutItem { Text = value + "%", Tag = value };
+            Compact(item);
             item.Click += (_, _) => { LayoutChanged?.Invoke(this, FileLayoutKind.List); ListZoomRequested?.Invoke(this, value); };
             listZoom.Items.Add(item); zooms.Add(item);
         }

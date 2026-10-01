@@ -79,7 +79,8 @@ public sealed class ExplorerPreferencesService
                     dto.AlphabetNavigationMinimumItemCount,
                     dto.ShowAlphabetNavigationInDualPane, dto.PaneCount, dto.PaneArrangement,
                     dto.FileOpeningMode, dto.FolderOpeningMode, dto.ShowAlternatingRows, dto.DefaultSortAscending, dto.HiddenToolbarTools,
-                    dto.DefaultEntryGrouping, dto.GroupingClickCycle);
+                    dto.DefaultEntryGrouping, dto.GroupingClickCycle,
+                    dto.ThumbnailQuality, dto.ShowFullThumbnails, dto.ShowGridFileSizes, dto.AutoFitNameColumn);
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
         {
@@ -98,6 +99,10 @@ public sealed class ExplorerPreferencesService
             FileOpeningMode = settings.FileOpeningMode.ToString(),
             FolderOpeningMode = settings.FolderOpeningMode.ToString(),
             ShowFileExtensions = settings.ShowFileExtensions,
+            ThumbnailQuality = settings.ThumbnailQuality.ToString(),
+            ShowFullThumbnails = settings.ShowFullThumbnails,
+            ShowGridFileSizes = settings.ShowGridFileSizes,
+            AutoFitNameColumn = settings.AutoFitNameColumn,
             ShowAlternatingRows = settings.ShowAlternatingRows,
             DefaultEntryGrouping = settings.DefaultEntryGrouping.ToString(),
             GroupingClickCycle = settings.GroupingClickCycle?.Select(mode => mode.ToString()).ToArray(),
@@ -130,6 +135,10 @@ public sealed class ExplorerPreferencesService
 
     private sealed class Dto
     {
+        public string? ThumbnailQuality { get; set; }
+        public bool? ShowFullThumbnails { get; set; }
+        public bool? ShowGridFileSizes { get; set; }
+        public bool? AutoFitNameColumn { get; set; }
         public string? DefaultEntryGrouping { get; set; }
         public string[]? GroupingClickCycle { get; set; }
         public string[]? HiddenToolbarTools { get; set; }

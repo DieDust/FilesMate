@@ -45,15 +45,6 @@ public static class FileColumnLayout
 
     public static double ClampMeta(double width) => Math.Clamp(width, MinMetaWidth, MaxColumnWidth);
 
-    public static (double Width, double Height, double Top) SelectionAccentBounds(double contentHeight, double scale)
-    {
-        if (!double.IsFinite(scale) || scale <= 0) scale = 1;
-        double Snap(double value) => Math.Round(value * scale) / scale;
-        var width = Math.Max(1 / scale, Snap(3));
-        var height = Snap(Math.Clamp(contentHeight - 8, 0, 16));
-        return (width, height, Snap(Math.Max(0, (contentHeight - height) / 2)));
-    }
-
     public static int IndexFromPoint(
         double x,
         double y,

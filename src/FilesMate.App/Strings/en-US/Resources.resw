@@ -463,8 +463,11 @@
   <data name="Backup_Cleared" xml:space="preserve">
     <value>Current history cleared. Any remaining locations need inspection; their files were not deleted.</value>
   </data>
+  <data name="Backup_DeletePolicy" xml:space="preserve">
+    <value>Deleting a folder sends the entire item to the Windows Recycle Bin; the 256 MiB replacement-backup limit does not apply. Permanent deletion keeps no copy. Windows warns if an item cannot be recycled.</value>
+  </data>
   <data name="Backup_DestructiveHint" xml:space="preserve">
-    <value>The existing contents will be permanently replaced without retaining an old version. This entire batch cannot be undone, and previous undo/redo history will be cleared after a replacement succeeds. This choice applies only to this file.</value>
+    <value>The existing contents will be permanently replaced without retaining an old version. This entire batch cannot be undone, and previous undo/redo history will be cleared after a replacement succeeds. Select the remaining-conflicts option to apply this choice to other conflicts of the same kind in this operation.</value>
   </data>
   <data name="Backup_LimitHint" xml:space="preserve">
     <value>Undo would reserve {0} MiB (currently {1} / 256 MiB). The backup limit has been reached, or backups are unavailable. Skip, keep both, cancel and manage backups, or explicitly replace without undo.</value>
@@ -487,8 +490,11 @@
   <data name="Backup_ReservationHint" xml:space="preserve">
     <value>Undo reserves {0} MiB on the destination drive (currently {1} / 256 MiB). Up to 5 operations are retained. Manage or clear backups in Settings → Files &amp; folders.</value>
   </data>
+  <data name="Backup_SettingsHint" xml:space="preserve">
+    <value>Keep the overwritten version within the backup limits for Undo. Ordinary deletion uses the Windows Recycle Bin and does not create another copy.</value>
+  </data>
   <data name="Backup_Title" xml:space="preserve">
-    <value>Undo backups</value>
+    <value>Replacement backups and undo</value>
   </data>
   <data name="Backup_UnprotectedCount" xml:space="preserve">
     <value>{0} replaced without backup; this batch cannot be undone</value>
@@ -839,7 +845,7 @@
     <value>Use this choice for the remaining conflicts of this kind</value>
   </data>
   <data name="Conflict_BackupUnavailable" xml:space="preserve">
-    <value>The undo backup limit is reached. Replacing this file cannot be undone and requires a separate confirmation.</value>
+    <value>Undo backup is unavailable. Replacing this file permanently overwrites the existing version. This batch cannot be undone, and previous undo/redo history will be cleared after replacement succeeds.</value>
   </data>
   <data name="Conflict_BatchScope" xml:space="preserve">
     <value>For this operation only. Other kinds of conflicts are confirmed separately.</value>
@@ -871,6 +877,12 @@
   <data name="Conflict_DeletedAnnotation" xml:space="preserve">
     <value>Deleted from the new version</value>
   </data>
+  <data name="Conflict_DestinationLocation" xml:space="preserve">
+    <value>Destination</value>
+  </data>
+  <data name="Conflict_Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
   <data name="Conflict_Different" xml:space="preserve">
     <value>File data differs.</value>
   </data>
@@ -890,7 +902,10 @@
     <value>Keep destination (skip)</value>
   </data>
   <data name="Conflict_KeepFiles" xml:space="preserve">
-    <value>Keep both files</value>
+    <value>Keep both</value>
+  </data>
+  <data name="Conflict_KeepHint" xml:space="preserve">
+    <value>Create a copy name and keep both versions.</value>
   </data>
   <data name="Conflict_LineCounts" xml:space="preserve">
     <value>Incoming version: +{0} / −{1} lines</value>
@@ -932,10 +947,13 @@
     <value>Skip these files</value>
   </data>
   <data name="Conflict_SkipFile" xml:space="preserve">
-    <value>Skip this file</value>
+    <value>Skip this item</value>
   </data>
   <data name="Conflict_SkipHint" xml:space="preserve">
     <value>Keep the destination version and leave the source in its original location.</value>
+  </data>
+  <data name="Conflict_SourceLocation" xml:space="preserve">
+    <value>Source</value>
   </data>
   <data name="Conflict_TextChanges" xml:space="preserve">
     <value>Text changes</value>
@@ -3768,6 +3786,39 @@ Sleeping — select to restore</value>
   <data name="ThemeSystem" xml:space="preserve">
     <value>System</value>
   </data>
+  <data name="Thumbnail_FileSizes" xml:space="preserve">
+    <value>Show file sizes below names</value>
+  </data>
+  <data name="Thumbnail_FileSizesHint" xml:space="preserve">
+    <value>Show sizes in large icon views and larger. Folder sizes also appear when Show folder sizes is enabled.</value>
+  </data>
+  <data name="Thumbnail_Full" xml:space="preserve">
+    <value>Show complete thumbnails</value>
+  </data>
+  <data name="Thumbnail_FullHint" xml:space="preserve">
+    <value>Keep the original proportions and transparency of thumbnails instead of cropping them to fill a square.</value>
+  </data>
+  <data name="Thumbnail_High" xml:space="preserve">
+    <value>High</value>
+  </data>
+  <data name="Thumbnail_Quality" xml:space="preserve">
+    <value>Thumbnail quality</value>
+  </data>
+  <data name="Thumbnail_QualityHint" xml:space="preserve">
+    <value>Choose the detail of image and video thumbnails. Standard keeps the current quality.</value>
+  </data>
+  <data name="Thumbnail_ResourceHint" xml:space="preserve">
+    <value>Higher quality may use more memory and processing power, and thumbnails may take longer to load.</value>
+  </data>
+  <data name="Thumbnail_Section" xml:space="preserve">
+    <value>Thumbnails and large icons</value>
+  </data>
+  <data name="Thumbnail_Standard" xml:space="preserve">
+    <value>Standard (default)</value>
+  </data>
+  <data name="Thumbnail_Ultra" xml:space="preserve">
+    <value>Ultra</value>
+  </data>
   <data name="TitleBar_Close" xml:space="preserve">
     <value>Close window</value>
   </data>
@@ -4055,5 +4106,11 @@ Sleeping — select to restore</value>
   </data>
   <data name="WindowsSection" xml:space="preserve">
     <value>Windows &amp; tabs</value>
+  </data>
+  <data name="Columns_AutoNameWidth" xml:space="preserve">
+    <value>Automatically fit the Name column</value>
+  </data>
+  <data name="Columns_AutoNameWidthHint" xml:space="preserve">
+    <value>Fit the longest name in each folder, up to the same maximum width as List view. Turning this off restores your manual width.</value>
   </data>
 </root>

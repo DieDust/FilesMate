@@ -29,6 +29,10 @@
             <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}"><Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" /></Style>
             <Style TargetType="ContentDialog" BasedOn="{StaticResource DefaultContentDialogStyle}"><Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" /></Style>
             <Style TargetType="PasswordBox" BasedOn="{StaticResource DefaultPasswordBoxStyle}"><Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" /></Style>
+            <Style TargetType="InfoBar">
+                <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
+                <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+            </Style>
             <Style TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
                 <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />

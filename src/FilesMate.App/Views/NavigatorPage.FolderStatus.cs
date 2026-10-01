@@ -53,8 +53,11 @@ public sealed partial class NavigatorPage
             return;
         }
         _folderStatusRequests.TryGetValue(vm, out var previous);
-        if (previous is not null && previous.Path == path && previous.Generation == generation)
+        if (previous is not null && !previous.Cancellation.IsCancellationRequested
+            && previous.Path == path && previous.Generation == generation && previous.Revision == vm.EntryRevision)
             return;
+
+        var reuseUnchanged = previous is not null && previous.Path == path && previous.Generation == generation;
 
         if (previous is not null)
         {
@@ -71,7 +74,7 @@ public sealed partial class NavigatorPage
         }
         // Wait for directory navigation to complete, so rapidly passing through
         // folders does not start recursive work or display a stale total.
-        chrome.ZoomText = StringTable.Get("Status_FolderCalculating");
+        if (!reuseUnchanged) chrome.ZoomText = StringTable.Get("Status_FolderCalculating");
         if (vm.IsLoading) return;
         if (!string.IsNullOrEmpty(vm.ErrorText))
         {
@@ -79,7 +82,7 @@ public sealed partial class NavigatorPage
             return;
         }
 
-        var request = new FolderStatusRequest(path, generation);
+        var request = new FolderStatusRequest(path, generation, vm.EntryRevision, reuseUnchanged);
         _folderStatusRequests[vm] = request;
         _ = FillFolderStatusAsync(vm, request);
     }
@@ -90,7 +93,7 @@ public sealed partial class NavigatorPage
         try
         {
             await Task.Delay(200, token).ConfigureAwait(false);
-            var bytes = await FolderSizeCache.GetAsync(request.Path, token).ConfigureAwait(false);
+            var bytes = await FolderSizeCache.GetTotalAsync(request.Path, token, request.ReuseUnchanged).ConfigureAwait(false);
             Publish(StringTable.Format("Status_FolderSize",
                 DriveCapacity.FormatBytes((long)Math.Min(bytes, (ulong)long.MaxValue))));
         }
@@ -125,7 +128,7 @@ public sealed partial class NavigatorPage
         request.Cancellation.Dispose();
     }
 
-    private sealed record FolderStatusRequest(string Path, long Generation)
+    private sealed record FolderStatusRequest(string Path, long Generation, long Revision, bool ReuseUnchanged)
     {
         public CancellationTokenSource Cancellation { get; } = new();
     }

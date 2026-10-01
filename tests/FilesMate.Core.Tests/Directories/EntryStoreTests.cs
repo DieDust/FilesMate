@@ -47,4 +47,26 @@ public sealed class EntryStoreTests
 
     private static FileEntryCore File(int id, string name, ulong size = 1) =>
         new(id, name, size, ModifiedUtcTicks: 1, CreatedUtcTicks: 1, FileAttributes.Normal, EntryKind.File);
+
+    [Fact]
+    public void Reconcile_preserves_survivors_and_reports_only_changed_paths()
+    {
+        var store = new EntryStore();
+        store.Append([File(20, "keep.txt"), File(30, "changed.txt"), File(40, "deleted.txt")]);
+        var changed = store.Reconcile([File(1, "changed.txt", 99), File(2, "keep.txt"), File(3, "created.txt")]);
+        Assert.Equal(new[] { "changed.txt", "created.txt", "deleted.txt" }, changed.Order(StringComparer.Ordinal));
+        Assert.Equal(20, store.Snapshot().Single(e => e.Name == "keep.txt").Id);
+        Assert.Equal(30, store.Snapshot().Single(e => e.Name == "changed.txt").Id);
+        Assert.Equal(41, store.Snapshot().Single(e => e.Name == "created.txt").Id);
+        Assert.Equal(99UL, store.Snapshot().Single(e => e.Name == "changed.txt").Size);
+    }
+
+    [Fact]
+    public void Reconcile_of_reordered_unchanged_listing_keeps_existing_index_positions()
+    {
+        var store = new EntryStore();
+        store.Append([File(10, "b.txt"), File(20, "a.txt")]);
+        Assert.Empty(store.Reconcile([File(1, "a.txt"), File(2, "b.txt")]));
+        Assert.Equal(new[] { "b.txt", "a.txt" }, store.Snapshot().Select(e => e.Name));
+    }
 }

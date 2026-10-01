@@ -116,9 +116,10 @@ public static class WindowsFileTransfer
                                         CanReplace = canReplace, IsSameItem = sameItem, DestinationIsLink = destinationIsLink,
                                         Incoming = incoming, Existing = existing, BackupBytes = backupBytes,
                                         BackupUsedBytes = budget.UsedBytes, BackupUnavailable = backupUnavailable }, token).ConfigureAwait(false);
-                                if (choice.ApplyToAll && choice.Action is not (FileConflictAction.Cancel or FileConflictAction.ReplaceWithoutUndo)
+                                if (choice.ApplyToAll && choice.Action != FileConflictAction.Cancel
                                     && (choice.Action != FileConflictAction.Merge || canMerge)
-                                    && (choice.Action != FileConflictAction.Replace || canReplace)) remembered[kind] = choice.Action;
+                                    && (choice.Action is not (FileConflictAction.Replace or FileConflictAction.ReplaceWithoutUndo) || canReplace))
+                                    remembered[kind] = choice.Action;
                             }
                             if (choice.Action == FileConflictAction.Cancel) { cancelled = true; return; }
                             if (choice.Action == FileConflictAction.Skip) { skipped++; return; }

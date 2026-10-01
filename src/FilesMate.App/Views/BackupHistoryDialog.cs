@@ -25,6 +25,7 @@ internal static class BackupHistoryDialog
         var usage = new TextBlock { Text = Usage(), TextWrapping = TextWrapping.Wrap };
         panel.Children.Add(usage);
         panel.Children.Add(new TextBlock { Text = StringTable.Get("Backup_Policy"), TextWrapping = TextWrapping.Wrap });
+        panel.Children.Add(new TextBlock { Text = StringTable.Get("Backup_DeletePolicy"), TextWrapping = TextWrapping.Wrap });
         panel.Children.Add(new TextBlock { Text = StringTable.Get("Backup_ClearHint"), TextWrapping = TextWrapping.Wrap, FontSize = 12 });
         var paths = new StackPanel { Spacing = 6 };
         foreach (var entry in ReplacementBackupBudget.Shared.Entries)

@@ -7,6 +7,24 @@ namespace FilesMate.Core.Tests.Entries;
 
 public sealed class EntryViewIndexTests
 {
+    [Fact]
+    public void Folder_sizes_are_sampled_once_before_comparing_rows()
+    {
+        var store = new EntryStore();
+        store.Append(Enumerable.Range(1, 500).Select(i => new FileEntryCore(i, $"Folder-{i:D3}",
+            0, 0, 0, FileAttributes.Directory, EntryKind.Directory)).ToArray());
+        var reads = new Dictionary<int, int>();
+        var index = EntryViewIndex.Build(store, EntrySort.Size, EntryFilter.None, NaturalStringComparer.Instance,
+            1, null, sizeOf: entry =>
+            {
+                reads[entry.Id] = reads.GetValueOrDefault(entry.Id) + 1;
+                return (ulong)entry.Id;
+            });
+        Assert.Equal(500, reads.Count);
+        Assert.All(reads.Values, count => Assert.Equal(1, count));
+        var ids = index.Select(i => store[i].Id).ToArray();
+        Assert.Equal(EntrySort.Size.Ascending ? Enumerable.Range(1, 500) : Enumerable.Range(1, 500).Reverse(), ids);
+    }
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

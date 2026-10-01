@@ -32,6 +32,8 @@
             <StaticResource x:Key="FilesMate.Text.PrimaryBrush" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
             <StaticResource x:Key="FilesMate.Text.SecondaryBrush" ResourceKey="FilesMate.Palette.Light.Text.SecondaryBrush" />
             <StaticResource x:Key="FilesMate.Text.DisabledBrush" ResourceKey="FilesMate.Palette.Light.Text.DisabledBrush" />
+            <StaticResource x:Key="InfoBarTitleForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
+            <StaticResource x:Key="InfoBarMessageForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
             <SolidColorBrush x:Key="FilesMate.TransparentBrush" Color="Transparent" />
             <StaticResource x:Key="MenuFlyoutItemForeground" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
             <StaticResource x:Key="MenuFlyoutItemForegroundPointerOver" ResourceKey="FilesMate.Palette.Light.Text.PrimaryBrush" />
@@ -238,6 +240,20 @@
             <SolidColorBrush x:Key="FilesMate.Card.BorderBrush" Color="#20505E55" />
             <SolidColorBrush x:Key="FilesMate.Floating.OutlineBrush" Color="#FFD1D4CF" />
             <SolidColorBrush x:Key="FilesMate.Item.HoverBrush" Color="#104F786C" />
+            <SolidColorBrush x:Key="FilesMate.FileItem.HoverBrush" Color="#14303B37" />
+            <SolidColorBrush x:Key="FilesMate.FileItem.HoverBorderBrush" Color="#3B303B37" />
+            <SolidColorBrush x:Key="FilesMate.FileItem.SelectedBrush" Color="#354F786C" />
+            <SolidColorBrush x:Key="FilesMate.FileItem.SelectedHoverBrush" Color="#434F786C" />
+            <SolidColorBrush x:Key="FilesMate.FileItem.SelectionBorderBrush" Color="#FF4F786C" />
+            <SolidColorBrush x:Key="FilesMate.FileItem.SelectedForegroundBrush" Color="#FF303B37" />
+            <SolidColorBrush x:Key="FilesMate.FileItem.CheckForegroundBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="FilesMate.Conflict.ActionFillBrush" Color="#FFFAFAFA" />
+            <SolidColorBrush x:Key="FilesMate.Conflict.ActionHoverFillBrush" Color="#FFEFF0F0" />
+            <SolidColorBrush x:Key="FilesMate.Conflict.ActionPressedFillBrush" Color="#FFE8E9E9" />
+            <SolidColorBrush x:Key="FilesMate.Conflict.ActionBorderBrush" Color="#FF7D8481" />
+            <SolidColorBrush x:Key="FilesMate.Conflict.ActionHoverBorderBrush" Color="#FF4F786C" />
+            <SolidColorBrush x:Key="FilesMate.Conflict.DescriptionBrush" Color="#FF54605A" />
+            <SolidColorBrush x:Key="FilesMate.Conflict.IconFillBrush" Color="#FFE8EDEC" />
             <SolidColorBrush x:Key="FilesMate.Item.SelectedBrush" Color="#2B4F786C" />
             <SolidColorBrush x:Key="FilesMate.Item.SelectedHoverBrush" Color="#384F786C" />
             <StaticResource x:Key="FilesMate.Tab.BackgroundBrush" ResourceKey="FilesMate.Palette.Light.Tab.BackgroundBrush" />
@@ -373,6 +389,8 @@
             <StaticResource x:Key="FilesMate.Text.PrimaryBrush" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
             <StaticResource x:Key="FilesMate.Text.SecondaryBrush" ResourceKey="FilesMate.Palette.Dark.Text.SecondaryBrush" />
             <StaticResource x:Key="FilesMate.Text.DisabledBrush" ResourceKey="FilesMate.Palette.Dark.Text.DisabledBrush" />
+            <StaticResource x:Key="InfoBarTitleForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
+            <StaticResource x:Key="InfoBarMessageForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
             <SolidColorBrush x:Key="FilesMate.TransparentBrush" Color="Transparent" />
             <StaticResource x:Key="MenuFlyoutItemForeground" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
             <StaticResource x:Key="MenuFlyoutItemForegroundPointerOver" ResourceKey="FilesMate.Palette.Dark.Text.PrimaryBrush" />
@@ -579,6 +597,20 @@
             <SolidColorBrush x:Key="FilesMate.Card.BorderBrush" Color="#14FFFFFF" />
             <SolidColorBrush x:Key="FilesMate.Floating.OutlineBrush" Color="#FF434343" />
             <SolidColorBrush x:Key="FilesMate.Item.HoverBrush" Color="#1096ABC7" />
+            <SolidColorBrush x:Key="FilesMate.FileItem.HoverBrush" Color="#18E8E8E8" />
+            <SolidColorBrush x:Key="FilesMate.FileItem.HoverBorderBrush" Color="#42E8E8E8" />
+            <SolidColorBrush x:Key="FilesMate.FileItem.SelectedBrush" Color="#3D96ABC7" />
+            <SolidColorBrush x:Key="FilesMate.FileItem.SelectedHoverBrush" Color="#4896ABC7" />
+            <SolidColorBrush x:Key="FilesMate.FileItem.SelectionBorderBrush" Color="#FF96ABC7" />
+            <SolidColorBrush x:Key="FilesMate.FileItem.SelectedForegroundBrush" Color="#FFE8E8E8" />
+            <SolidColorBrush x:Key="FilesMate.FileItem.CheckForegroundBrush" Color="#FF000000" />
+            <SolidColorBrush x:Key="FilesMate.Conflict.ActionFillBrush" Color="#FF424242" />
+            <SolidColorBrush x:Key="FilesMate.Conflict.ActionHoverFillBrush" Color="#FF4F4F4F" />
+            <SolidColorBrush x:Key="FilesMate.Conflict.ActionPressedFillBrush" Color="#FF3D3D3D" />
+            <SolidColorBrush x:Key="FilesMate.Conflict.ActionBorderBrush" Color="#FF959595" />
+            <SolidColorBrush x:Key="FilesMate.Conflict.ActionHoverBorderBrush" Color="#FF96ABC7" />
+            <SolidColorBrush x:Key="FilesMate.Conflict.DescriptionBrush" Color="#FFCACACA" />
+            <SolidColorBrush x:Key="FilesMate.Conflict.IconFillBrush" Color="#FF484D53" />
             <SolidColorBrush x:Key="FilesMate.Item.SelectedBrush" Color="#3096ABC7" />
             <SolidColorBrush x:Key="FilesMate.Item.SelectedHoverBrush" Color="#3C96ABC7" />
             <StaticResource x:Key="FilesMate.Tab.BackgroundBrush" ResourceKey="FilesMate.Palette.Dark.Tab.BackgroundBrush" />
@@ -714,6 +746,8 @@
             <StaticResource x:Key="FilesMate.Text.PrimaryBrush" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
             <StaticResource x:Key="FilesMate.Text.SecondaryBrush" ResourceKey="FilesMate.Palette.HighContrast.Text.SecondaryBrush" />
             <StaticResource x:Key="FilesMate.Text.DisabledBrush" ResourceKey="FilesMate.Palette.HighContrast.Text.DisabledBrush" />
+            <StaticResource x:Key="InfoBarTitleForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
+            <StaticResource x:Key="InfoBarMessageForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
             <SolidColorBrush x:Key="FilesMate.TransparentBrush" Color="{ThemeResource SystemColorWindowColor}" />
             <StaticResource x:Key="MenuFlyoutItemForeground" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
             <StaticResource x:Key="MenuFlyoutItemForegroundPointerOver" ResourceKey="FilesMate.Palette.HighContrast.Text.PrimaryBrush" />
@@ -916,6 +950,20 @@
             <StaticResource x:Key="FilesMate.InfoPane.BackgroundBrush" ResourceKey="SystemColorButtonFaceColorBrush" />
             <StaticResource x:Key="FilesMate.Card.BorderBrush" ResourceKey="SystemColorWindowTextColorBrush" />
             <StaticResource x:Key="FilesMate.Item.HoverBrush" ResourceKey="SystemColorHotlightColorBrush" />
+            <StaticResource x:Key="FilesMate.FileItem.HoverBrush" ResourceKey="SystemColorWindowColorBrush" />
+            <StaticResource x:Key="FilesMate.FileItem.HoverBorderBrush" ResourceKey="SystemColorHotlightColorBrush" />
+            <StaticResource x:Key="FilesMate.FileItem.SelectedBrush" ResourceKey="SystemColorHighlightColorBrush" />
+            <StaticResource x:Key="FilesMate.FileItem.SelectedHoverBrush" ResourceKey="SystemColorHighlightColorBrush" />
+            <StaticResource x:Key="FilesMate.FileItem.SelectionBorderBrush" ResourceKey="SystemColorHighlightColorBrush" />
+            <StaticResource x:Key="FilesMate.FileItem.SelectedForegroundBrush" ResourceKey="SystemColorHighlightTextColorBrush" />
+            <StaticResource x:Key="FilesMate.FileItem.CheckForegroundBrush" ResourceKey="SystemColorHighlightTextColorBrush" />
+            <StaticResource x:Key="FilesMate.Conflict.ActionFillBrush" ResourceKey="SystemColorWindowColorBrush" />
+            <StaticResource x:Key="FilesMate.Conflict.ActionHoverFillBrush" ResourceKey="SystemColorWindowColorBrush" />
+            <StaticResource x:Key="FilesMate.Conflict.ActionPressedFillBrush" ResourceKey="SystemColorWindowColorBrush" />
+            <StaticResource x:Key="FilesMate.Conflict.ActionBorderBrush" ResourceKey="SystemColorWindowTextColorBrush" />
+            <StaticResource x:Key="FilesMate.Conflict.ActionHoverBorderBrush" ResourceKey="SystemColorHotlightColorBrush" />
+            <StaticResource x:Key="FilesMate.Conflict.DescriptionBrush" ResourceKey="SystemColorWindowTextColorBrush" />
+            <StaticResource x:Key="FilesMate.Conflict.IconFillBrush" ResourceKey="SystemColorWindowColorBrush" />
             <StaticResource x:Key="FilesMate.Item.SelectedBrush" ResourceKey="SystemColorHighlightColorBrush" />
             <StaticResource x:Key="FilesMate.Item.SelectedHoverBrush" ResourceKey="SystemColorHighlightColorBrush" />
             <StaticResource x:Key="FilesMate.Tab.BackgroundBrush" ResourceKey="SystemColorButtonFaceColorBrush" />

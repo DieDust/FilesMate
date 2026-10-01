@@ -25,7 +25,7 @@ public sealed class FolderSizeService
         _capacity = capacity;
     }
 
-    public event Action? SizeCached;
+    public event Action<string>? SizeCached;
 
     public bool TryGet(string path, out ulong size)
     {
@@ -34,21 +34,40 @@ public sealed class FolderSizeService
         lock (_sync) return TryGetCore(Normalize(path), out size);
     }
 
-    private bool TryGetCore(string key, out ulong size)
+    private bool TryGetCore(string key, out ulong size, bool useUnchanged = false)
     {
         size = 0;
         if (!_cache.TryGetValue(key, out var entry)) return false;
-        if (_time.GetUtcNow() >= entry.Expires)
-        {
-            _cache.Remove(key);
-            return false;
-        }
+        if (entry.Expires == DateTimeOffset.MinValue || (!useUnchanged && _time.GetUtcNow() >= entry.Expires)) return false;
         _cache[key] = entry with { Access = ++_access };
         size = entry.Size;
         return true;
     }
 
-    public async Task<ulong> GetAsync(string path, CancellationToken token = default, Action<ulong>? progress = null)
+    // Expired/changed values remain useful while a replacement walk is running.
+    // In particular, a folder must not temporarily sort as an empty folder.
+    public bool TryGetLastKnown(string path, out ulong size)
+    {
+        size = 0;
+        if (string.IsNullOrWhiteSpace(path)) return false;
+        lock (_sync)
+        {
+            var key = Normalize(path);
+            if (!_cache.TryGetValue(key, out var entry)) return false;
+            _cache[key] = entry with { Access = ++_access };
+            size = entry.Size;
+            return true;
+        }
+    }
+
+    public bool TryGetUnchanged(string path, out ulong size)
+    {
+        size = 0;
+        if (string.IsNullOrWhiteSpace(path)) return false;
+        lock (_sync) return TryGetCore(Normalize(path), out size, useUnchanged: true);
+    }
+
+    public async Task<ulong> GetAsync(string path, CancellationToken token = default, Action<ulong>? progress = null, bool useUnchanged = false)
     {
         token.ThrowIfCancellationRequested();
         var key = Normalize(path);
@@ -56,7 +75,7 @@ public sealed class FolderSizeService
         var subscriber = new Subscriber(progress);
         lock (_sync)
         {
-            if (TryGetCore(key, out var cached)) return cached;
+            if (TryGetCore(key, out var cached, useUnchanged)) return cached;
             if (!_inflight.TryGetValue(key, out request!))
             {
                 request = new Request();
@@ -102,11 +121,11 @@ public sealed class FolderSizeService
             lock (_sync)
             {
                 token.ThrowIfCancellationRequested();
-                while (_cache.Count >= _capacity)
+                while (!_cache.ContainsKey(key) && _cache.Count >= _capacity)
                     _cache.Remove(_cache.MinBy(pair => pair.Value.Access).Key);
                 _cache[key] = new(size, _time.GetUtcNow() + Lifetime, ++_access);
             }
-            SizeCached?.Invoke();
+            SizeCached?.Invoke(key);
             return size;
         }
         finally
@@ -134,6 +153,25 @@ public sealed class FolderSizeService
         {
             foreach (var cached in _cache.Keys.Where(p => Related(p, key)).ToArray()) _cache.Remove(cached);
             foreach (var active in _inflight.Where(p => Related(p.Key, key)).ToArray())
+            {
+                _inflight.Remove(active.Key);
+                active.Value.Cancellation.Cancel();
+            }
+        }
+    }
+
+    public void MarkChanged(string path, bool includeDescendants = false)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return;
+        var key = Normalize(path);
+        lock (_sync)
+        {
+            bool Affected(string candidate) => candidate.Equals(key, StringComparison.OrdinalIgnoreCase)
+                || key.StartsWith(WithSeparator(candidate), StringComparison.OrdinalIgnoreCase)
+                || (includeDescendants && candidate.StartsWith(WithSeparator(key), StringComparison.OrdinalIgnoreCase));
+            foreach (var cached in _cache.Where(pair => Affected(pair.Key)).ToArray())
+                _cache[cached.Key] = cached.Value with { Expires = DateTimeOffset.MinValue };
+            foreach (var active in _inflight.Where(pair => Affected(pair.Key)).ToArray())
             {
                 _inflight.Remove(active.Key);
                 active.Value.Cancellation.Cancel();

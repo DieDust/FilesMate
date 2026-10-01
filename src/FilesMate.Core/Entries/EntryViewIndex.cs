@@ -64,15 +64,14 @@ public sealed class EntryViewIndex : IReadOnlyList<int>
 
     public int IndexOfId(EntryStore store, int id)
     {
-        for (var i = 0; i < _indexes.Length; i++)
+        return store.Observe(entries =>
         {
-            if (store[_indexes[i]].Id == id)
+            for (var i = 0; i < _indexes.Length; i++)
             {
-                return i;
+                if ((uint)_indexes[i] < (uint)entries.Count && entries[_indexes[i]].Id == id) return i;
             }
-        }
-
-        return -1;
+            return -1;
+        });
     }
 
     public static EntryViewIndex Build(
@@ -132,7 +131,17 @@ public sealed class EntryViewIndex : IReadOnlyList<int>
                         keys[row] = PinyinName.Key(entries[row].Name);
                         chinese![row] = PinyinName.StartsWithHan(entries[row].Name);
                     }
-                Array.Sort(rented, 0, w, new RowComparer(entries, sort, nameComparer, sizeOf, keys, chinese, propertyValues));
+                // Folder walks may finish during sorting. Sample each size once so
+                // comparisons use consistent keys throughout this build.
+                var sizes = sort.Column == EntrySortColumn.Size && sizeOf is not null ? new ulong[n] : null;
+                if (sizes is not null)
+                    for (var i = 0; i < w; i++)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        var row = rented[i];
+                        sizes[row] = sizeOf!(entries[row]);
+                    }
+                Array.Sort(rented, 0, w, new RowComparer(entries, sort, nameComparer, sizes, keys, chinese, propertyValues));
                 var exact = w == 0 ? [] : new int[w];
                 if (w > 0)
                 {
@@ -174,7 +183,7 @@ public sealed class EntryViewIndex : IReadOnlyList<int>
         IReadOnlyList<FileEntryCore> entries,
         EntrySort sort,
         IComparer<string> names,
-        Func<FileEntryCore, ulong>? sizeOf, string[]? keys, bool[]? chinese,
+        ulong[]? sizes, string[]? keys, bool[]? chinese,
         IReadOnlyDictionary<int, EntryPropertyValue>? propertyValues) : IComparer<int>
     {
         private readonly EntryGrouping _grouping = sort.EffectiveGrouping;
@@ -203,7 +212,7 @@ public sealed class EntryViewIndex : IReadOnlyList<int>
 
             var cmp = sort.Column switch
             {
-                EntrySortColumn.Size => Size(left).CompareTo(Size(right)),
+                EntrySortColumn.Size => (sizes?[x] ?? left.Size).CompareTo(sizes?[y] ?? right.Size),
                 EntrySortColumn.Modified => left.ModifiedUtcTicks.CompareTo(right.ModifiedUtcTicks),
                 EntrySortColumn.Created => CompareCreated(left.CreatedUtcTicks, right.CreatedUtcTicks),
                 EntrySortColumn.Accessed => CompareCreated(left.AccessedUtcTicks, right.AccessedUtcTicks),
@@ -228,7 +237,6 @@ public sealed class EntryViewIndex : IReadOnlyList<int>
             return sort.Ascending ? cmp : -cmp;
         }
 
-        private ulong Size(in FileEntryCore entry) => sizeOf is null ? entry.Size : sizeOf(entry);
 
         private int CompareName(int left, int right)
         {

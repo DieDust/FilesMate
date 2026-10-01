@@ -111,6 +111,12 @@ internal sealed class FileConflictComparisonView : Grid, IAsyncDisposable
         _previews.Children.Add(_left); Grid.SetColumn(_right, 1); _previews.Children.Add(_right);
         _left.UseForComparison(); _right.UseForComparison();
         _left.Attach(_leftService); _right.Attach(_rightService);
+        // ContentDialog can reparent content while opening. A PreviewPane clears
+        // on unload, so start/restart the pair only after both panes are attached.
+        _left.Loaded += (_, _) => DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, TryStartPreviews);
+        _right.Loaded += (_, _) => DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, TryStartPreviews);
+        _left.Unloaded += (_, _) => _previewsStarted = false;
+        _right.Unloaded += (_, _) => _previewsStarted = false;
         var executable = ExternalFileComparison.FindWinMerge();
         if (executable is not null && !conflict.DestinationIsLink && (conflict.CanReplace || conflict.CanMerge))
         {
@@ -201,7 +207,12 @@ internal sealed class FileConflictComparisonView : Grid, IAsyncDisposable
         ThemeResources.Bind(_diff, Button.BackgroundProperty, "FilesMate.TransparentBrush");
         ThemeResources.Bind(_preview, Button.BackgroundProperty, "FilesMate.Compare.SourceFillBrush");
         UpdatePreferredHeight();
-        if (_previewsStarted || _disposed) return;
+        TryStartPreviews();
+    }
+
+    private void TryStartPreviews()
+    {
+        if (_previewsStarted || _disposed || _previews.Visibility != Visibility.Visible || !_left.IsLoaded || !_right.IsLoaded) return;
         _previewsStarted = true; _left.SetVisible(true); _right.SetVisible(true);
         _previewLoad = Task.WhenAll(_left.LoadAsync(_conflict.Destination, 1, _lifetime.Token), _right.LoadAsync(_incoming, 1, _lifetime.Token));
     }

@@ -53,7 +53,7 @@ public sealed class FileDetailsSurfaceVirtualizationTests
     }
 
     [Fact]
-    public void Batch_publish_emits_one_reset()
+    public void Batch_publish_emits_one_reset_per_changed_view()
     {
         var (store, index) = Directory(64);
         var source = new EntryItemsSource();
@@ -61,6 +61,11 @@ public sealed class FileDetailsSurfaceVirtualizationTests
         source.CollectionChanged += (_, _) => changes++;
         source.TryPublish(store, index, 1);
         source.TryPublish(store, index, 1);
+        Assert.Equal(1, changes);
+
+        var reversed = EntryViewIndex.Build(store, EntrySort.Name with { Ascending = false },
+            EntryFilter.None, NaturalStringComparer.Instance, 1);
+        source.TryPublish(store, reversed, 1);
         Assert.Equal(2, changes);
     }
 

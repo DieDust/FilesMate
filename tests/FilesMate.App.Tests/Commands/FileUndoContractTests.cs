@@ -10,6 +10,7 @@ public sealed class FileUndoContractTests
         var actions = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "PaneFileActions.cs"));
         var navigator = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "NavigatorPage.xaml"));
         var code = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "NavigatorPage.xaml.cs"));
+        code += File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "NavigatorPage.FileShortcuts.cs"));
 
         Assert.Contains("App.FileUndo.Push", actions, StringComparison.Ordinal);
         Assert.Contains("FileUndoRecord.Recycled", actions, StringComparison.Ordinal);

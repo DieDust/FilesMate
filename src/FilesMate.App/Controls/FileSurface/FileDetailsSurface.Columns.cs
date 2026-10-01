@@ -35,7 +35,9 @@ public sealed partial class FileDetailsSurface
         var normalized = DetailsColumn.Normalize(columns ?? LegacyColumns());
         if (_detailColumns.SequenceEqual(normalized)) return;
         _detailColumns = normalized;
+        RememberManualNameWidth();
         ApplyDetailsColumns(false);
+        ScheduleAutoNameMeasurement();
     }
 
     private static DetailsColumn[] LegacyColumns()
@@ -90,6 +92,7 @@ public sealed partial class FileDetailsSurface
         Theming.ThemeResources.Bind(_columnDropIndicator, Border.BackgroundProperty, "FilesMate.Selection.AccentBrush");
         DetailsHeader.Children.Add(_columnDropIndicator);
         _detailColumns = DetailsColumn.Normalize(LegacyColumns());
+        RememberManualNameWidth();
         ApplyDetailsColumns(false);
     }
 
@@ -165,21 +168,29 @@ public sealed partial class FileDetailsSurface
     private void ShowColumnMenu(Point? position)
     {
         if (_columnMenuOpen) return;
-        var menu = new MenuFlyout();
+        var menu = new MenuFlyout
+        {
+            MenuFlyoutPresenterStyle = (Style)Application.Current.Resources["FilesMate.ColumnMenuPresenterStyle"],
+            ShouldConstrainToRootBounds = true,
+            AreOpenCloseAnimationsEnabled = false,
+        };
         Theming.FlyoutTheme.FollowHost(menu);
         _columnMenu = menu;
         menu.Closed += (_, _) => { _columnMenuOpen = false; _columnMenu = null; };
         var target = ColumnAt(position?.X);
-        var fit = new MenuFlyoutItem { Text = Loc.Get("Columns_Fit"), IsEnabled = target is not null };
+        var itemStyle = (Style)Application.Current.Resources["FilesMate.ColumnMenuItemStyle"];
+        var toggleStyle = (Style)Application.Current.Resources["FilesMate.ColumnMenuToggleStyle"];
+        var separatorStyle = (Style)Application.Current.Resources["FilesMate.ColumnMenuSeparatorStyle"];
+        var fit = new MenuFlyoutItem { Text = Loc.Get("Columns_Fit"), Style = itemStyle, Icon = WidthGlyph(), IsEnabled = target is not null };
         fit.Click += (_, _) => { if (target is not null) FitColumn(target); };
         menu.Items.Add(fit);
-        var fitAll = new MenuFlyoutItem { Text = Loc.Get("Columns_FitAll") };
+        var fitAll = new MenuFlyoutItem { Text = Loc.Get("Columns_FitAll"), Style = itemStyle, Icon = WidthGlyph() };
         fitAll.Click += (_, _) => FitColumn(null);
         menu.Items.Add(fitAll);
-        menu.Items.Add(new MenuFlyoutSeparator());
+        menu.Items.Add(new MenuFlyoutSeparator { Style = separatorStyle });
         foreach (var column in _detailColumns.Where(c => c.Id != DetailsColumnId.ShellProperty || c.Visible))
         {
-            var item = new ToggleMenuFlyoutItem { Text = column.Title, IsChecked = column.Visible, IsEnabled = column.Id != DetailsColumnId.Name };
+            var item = new ToggleMenuFlyoutItem { Text = column.Title, Style = toggleStyle, IsChecked = column.Visible, IsEnabled = column.Id != DetailsColumnId.Name };
             item.Click += (_, _) =>
             {
                 _detailColumns = _detailColumns.Select(c => c.Key == column.Key ? c with { Visible = item.IsChecked } : c).ToArray();
@@ -187,18 +198,36 @@ public sealed partial class FileDetailsSurface
             };
             menu.Items.Add(item);
         }
-        menu.Items.Add(new MenuFlyoutSeparator());
-        var choose = new MenuFlyoutItem { Text = Loc.Get("Columns_Choose") };
+        menu.Items.Add(new MenuFlyoutSeparator { Style = separatorStyle });
+        var chooseIcon = new SymbolIcon(Symbol.List);
+        Theming.ThemeResources.Bind(chooseIcon, IconElement.ForegroundProperty, "FilesMate.Selection.AccentBrush");
+        var choose = new MenuFlyoutItem { Text = Loc.Get("Columns_Choose"), Style = itemStyle, Icon = chooseIcon };
         choose.Click += async (_, _) => await ChooseColumnsAsync();
         menu.Items.Add(choose);
-        var reset = new MenuFlyoutItem { Text = Loc.Get("Columns_Reset") };
-        reset.Click += (_, _) => { _detailColumns = DetailsColumn.Defaults(); ApplyDetailsColumns(true); };
+        var reset = new MenuFlyoutItem { Text = Loc.Get("Columns_Reset"), Style = itemStyle, Icon = MenuGlyph("\uE72C") };
+        reset.Click += (_, _) => { _detailColumns = DetailsColumn.Defaults(); RememberManualNameWidth(); ApplyDetailsColumns(true); ScheduleAutoNameMeasurement(); };
         menu.Items.Add(reset);
         var options = new FlyoutShowOptions { Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft };
         if (position is { } point) options.Position = point;
         _columnMenuOpen = true;
         try { menu.ShowAt(DetailsHeader, options); }
         catch { _columnMenuOpen = false; throw; }
+    }
+
+    private static FontIcon MenuGlyph(string glyph)
+    {
+        var icon = new FontIcon { FontFamily = new FontFamily("Segoe Fluent Icons"), Glyph = glyph, FontSize = 16 };
+        Theming.ThemeResources.Bind(icon, IconElement.ForegroundProperty, "FilesMate.Selection.AccentBrush");
+        return icon;
+    }
+
+    private static PathIcon WidthGlyph()
+    {
+        // Horizontal arrows between column boundaries describe sizing, rather than switching items.
+        var icon = (PathIcon)Microsoft.UI.Xaml.Markup.XamlReader.Load(
+            "<PathIcon xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' Data='M0,1 L1,1 L1,15 L0,15 Z M15,1 L16,1 L16,15 L15,15 Z M2,8 L5,5 L5.7,5.7 L3.9,7.5 L12.1,7.5 L10.3,5.7 L11,5 L14,8 L11,11 L10.3,10.3 L12.1,8.5 L3.9,8.5 L5.7,10.3 L5,11 Z' />");
+        Theming.ThemeResources.Bind(icon, IconElement.ForegroundProperty, "FilesMate.Selection.AccentBrush");
+        return icon;
     }
 
     private void AttachColumnEditing(Button button, string id)
@@ -311,6 +340,7 @@ public sealed partial class FileDetailsSurface
         _resizePointerId = e.Pointer.PointerId;
         _resizeOriginX = e.GetCurrentPoint(DetailsHeader).Position.X;
         _resizeOriginWidth = _detailColumns.Single(c => c.Key == _resizeColumn).Width;
+        if (_resizeColumn == "Name") CancelAutoNameMeasurement();
         e.Handled = true;
     }
     private void ColumnResize_PointerMoved(object sender, PointerRoutedEventArgs e)
@@ -324,19 +354,25 @@ public sealed partial class FileDetailsSurface
     private void ColumnResize_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
         if (_resizeColumn is null || _resizePointerId != e.Pointer.PointerId) return;
+        var resizedName = _resizeColumn == "Name";
         _resizeColumn = null;
         _resizePointerId = null;
         ((UIElement)sender).ReleasePointerCapture(e.Pointer);
         ProtectedCursor = null;
+        if (resizedName) RememberManualNameWidth();
         ApplyDetailsColumns(true);
+        ScheduleAutoNameMeasurement();
         e.Handled = true;
     }
     private void ColumnResize_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
     {
         if (_resizeColumn is null || _resizePointerId != e.Pointer.PointerId) return;
+        var resizedName = _resizeColumn == "Name";
         _resizeColumn = null;
         _resizePointerId = null;
         ProtectedCursor = null;
+        if (resizedName) RememberManualNameWidth();
         ApplyDetailsColumns(true);
+        ScheduleAutoNameMeasurement();
     }
 }

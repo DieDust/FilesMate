@@ -36,6 +36,7 @@ internal sealed partial class PaneFileActions
             try { await Task.Run(() => _operations.Rename(source, destination)); }
             catch (IOException) when (!samePath && Path.Exists(destination))
             { return await ResolveRenameConflictAsync(source, destination); }
+            App.RelocatePinnedFolder(source, destination);
             App.FileUndo.Push(await Task.Run(() => FileUndoRecord.Relocated([new(source, destination)])));
             _refresh();
             return destination;
@@ -60,8 +61,10 @@ internal sealed partial class PaneFileActions
         if (result.Errors.Count > 0)
             await ShowRenameMessageAsync(Loc.Get("Command_Rename"), string.Join(Environment.NewLine, result.Errors));
         if (Path.Exists(source)) return null;
-        return result.Completed.Where(pair => string.Equals(pair.Source, source, StringComparison.OrdinalIgnoreCase))
+        var actualDestination = result.Completed.Where(pair => string.Equals(pair.Source, source, StringComparison.OrdinalIgnoreCase))
             .Select(pair => pair.Destination).FirstOrDefault() ?? destination;
+        App.RelocatePinnedFolder(source, actualDestination);
+        return actualDestination;
     }
 
     private async Task ShowRenameMessageAsync(string title, string message)

@@ -162,9 +162,11 @@ public sealed class WindowsFileTransferTests : IDisposable
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task ExplicitUnprotectedReplacementLeavesNoBackupAndCannotBeRemembered(bool move)
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public async Task ExplicitUnprotectedReplacementLeavesNoBackupAndHonorsApplyToRemaining(bool move, bool applyToRemaining)
     {
         var budget = new ReplacementBackupBudget(4, 4);
         var requests = Enumerable.Range(0, 2).Select(i => new FilePathPair(Write(Source, i.ToString(), "incoming"), Write(Target, i.ToString(), "original"))).ToArray();
@@ -172,9 +174,9 @@ public sealed class WindowsFileTransferTests : IDisposable
         var result = await WindowsFileTransfer.RunAsync(_operations, requests, move, (conflict, _) =>
         {
             prompts++; Assert.True(conflict.BackupUnavailable);
-            return Task.FromResult(new FileConflictChoice(FileConflictAction.ReplaceWithoutUndo, true));
+            return Task.FromResult(new FileConflictChoice(FileConflictAction.ReplaceWithoutUndo, applyToRemaining));
         }, backupBudget: budget);
-        Assert.Empty(result.Errors); Assert.Equal(2, result.WithoutUndo); Assert.Equal(2, prompts); Assert.Null(result.Undo);
+        Assert.Empty(result.Errors); Assert.Equal(2, result.WithoutUndo); Assert.Equal(applyToRemaining ? 1 : 2, prompts); Assert.Null(result.Undo);
         Assert.Empty(Directory.GetDirectories(Target, ".filesmate-history-*")); Assert.Equal(0, budget.UsedBytes);
         foreach (var pair in requests) { Assert.Equal("incoming", File.ReadAllText(pair.Destination)); Assert.Equal(!move, File.Exists(pair.Source)); }
     }

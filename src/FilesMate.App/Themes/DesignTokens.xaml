@@ -20,7 +20,7 @@
 
     <x:Double x:Key="FilesMate.Control.Height.Row">28</x:Double>
     <x:Double x:Key="FilesMate.Control.Height.ContextItem">32</x:Double>
-    <x:Double x:Key="FilesMate.Control.Height.SidebarItem">36</x:Double>
+    <x:Double x:Key="FilesMate.Control.Height.SidebarItem">32</x:Double>
     <x:Double x:Key="FilesMate.Control.Height.Toolbar">44</x:Double>
     <x:Double x:Key="FilesMate.Control.Height.Omnibar">48</x:Double>
     <x:Double x:Key="FilesMate.Control.Height.StatusBar">28</x:Double>

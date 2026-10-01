@@ -18,7 +18,7 @@ public sealed class BatchRenameDialogContractTests
     [Fact]
     public void F2_routes_multi_selection_to_batch_rename()
     {
-        var code = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "NavigatorPage.xaml.cs"));
+        var code = File.ReadAllText(Path.Combine(ThemeXaml.AppRoot, "Views", "NavigatorPage.FileShortcuts.cs"));
         Assert.Contains("AppCommandId.BatchRename", code, StringComparison.Ordinal);
         Assert.Contains("ActiveSurface.Selection.Count > 1", code, StringComparison.Ordinal);
     }

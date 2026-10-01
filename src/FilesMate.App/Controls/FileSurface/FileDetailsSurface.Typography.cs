@@ -11,7 +11,8 @@ public sealed partial class FileDetailsSurface
     private XamlRoot? _typographyRoot;
     private double _typographyScale = 1;
     private double RowHeight => RowTypography.FileRowHeightForScale(XamlRoot?.RasterizationScale ?? 1);
-    private GridSizePreset EffectiveGridPreset => _gridPreset.WithFontSize(_typography.FileNameFontSize);
+    private GridSizePreset EffectiveGridPreset => _gridPreset.WithFontSize(_typography.FileNameFontSize)
+        .WithFileSize(App.ExplorerPreferences.ShowGridFileSizes, _typography.FileDetailsFontSize);
 
     private void TypographyChanged(object? sender, AppearanceSettings settings)
     {
@@ -24,6 +25,8 @@ public sealed partial class FileDetailsSurface
         foreach (var (button, _) in _columnHeaders.Values) ApplyHeaderTypography(button);
         HeaderRow.Height = new GridLength(_layout == FileLayoutKind.Details ? RowHeight : 0);
         ApplyGridMetrics(); UpdateListMetrics(); Repeater.InvalidateMeasure();
+        ScheduleListNameMeasurement();
+        ScheduleAutoNameMeasurement();
     }
 
     private void StartTypography()

@@ -72,26 +72,26 @@ public sealed partial class FileDetailsSurface
     }
     private void RenameRoot_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        CancelRenameOutside(e.OriginalSource as DependencyObject);
+        CommitRenameOutside(e.OriginalSource as DependencyObject);
     }
 
-    internal void CancelRenameOutside(DependencyObject? source)
+    internal void CommitRenameOutside(DependencyObject? source)
     {
         if (_renameEditor is not { } editor || IsInside(source, editor)) return;
-        CancelInlineRename();
+        _ = CompleteInlineRenameAsync(0, restoreFocus: false);
     }
 
     private void RenameEditor_LostFocus(object sender, RoutedEventArgs e)
     {
         var editor = _renameEditor;
         // A TextBox's context menu may temporarily own focus. Pointer dismissal is
-        // handled at the root; keyboard focus leaving the editor cancels as well.
+        // handled at the root; keyboard focus leaving the editor also commits.
         DispatcherQueue.TryEnqueue(() =>
         {
             if (editor is null || !ReferenceEquals(editor, _renameEditor) || XamlRoot is null) return;
             if (IsInside(FocusManager.GetFocusedElement(XamlRoot) as DependencyObject, editor)) return;
             if (VisualTreeHelper.GetOpenPopupsForXamlRoot(XamlRoot).Count > 0) return;
-            CancelInlineRename();
+            _ = CompleteInlineRenameAsync(0, restoreFocus: false);
         });
     }
 
@@ -102,11 +102,14 @@ public sealed partial class FileDetailsSurface
         return false;
     }
 
-    private async Task CommitInlineRenameAsync(int direction)
+    private Task CommitInlineRenameAsync(int direction) => CompleteInlineRenameAsync(direction, restoreFocus: true);
+
+    private async Task CompleteInlineRenameAsync(int direction, bool restoreFocus)
     {
         if (_renameEditor is not { } editor || _renamePath is not { } path || RenameRequested is null) return;
         var name = editor.Text;
         var folder = ResolveFolder?.Invoke();
+        var primaryId = _selection.PrimaryId;
         string? nextName = null;
         if (direction != 0 && _items.Store is not null && _items.Index is not null)
         {
@@ -118,6 +121,9 @@ public sealed partial class FileDetailsSurface
         var renamedPath = await RenameRequested(path, name);
         var succeeded = renamedPath is not null;
         if (!IsLoaded || sequence != _renameSequence || !string.Equals(folder, ResolveFolder?.Invoke(), StringComparison.OrdinalIgnoreCase)) return;
+        // A click may select another item while the filesystem operation is pending.
+        // Keep that selection and the new control's focus when finishing on blur.
+        if (!restoreFocus && _selection.PrimaryId is { } selectedId && selectedId != primaryId) return;
         var target = succeeded ? nextName ?? Path.GetFileName(renamedPath!) : Path.GetFileName(path);
         for (var attempt = 0; attempt < 60 && IsLoaded && sequence == _renameSequence; attempt++)
         {
@@ -125,7 +131,7 @@ public sealed partial class FileDetailsSurface
             if (TrySelectByName(target))
             {
                 if (succeeded && nextName is not null) BeginInlineRename();
-                else Focus(FocusState.Programmatic);
+                else if (restoreFocus) Focus(FocusState.Programmatic);
                 return;
             }
             await Task.Delay(50);

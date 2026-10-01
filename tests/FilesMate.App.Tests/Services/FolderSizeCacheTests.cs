@@ -114,4 +114,56 @@ public sealed class FolderSizeCacheTests
         public DateTimeOffset Now { get; set; } = DateTimeOffset.UtcNow;
         public override DateTimeOffset GetUtcNow() => Now;
     }
+
+    [Fact]
+    public async Task Child_change_preserves_sibling_values_and_last_known_size_until_replacement_finishes()
+    {
+        var calls = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var service = new FolderSizeService((path, _, _) =>
+        { calls[path] = calls.GetValueOrDefault(path) + 1; return (ulong)(calls[path] * 100); });
+        await service.GetAsync(@"C:\root");
+        await service.GetAsync(@"C:\root\changed");
+        await service.GetAsync(@"C:\root\changed\nested");
+        await service.GetAsync(@"C:\root\sibling");
+        service.MarkChanged(@"C:\root\changed\new.txt");
+        Assert.False(service.TryGet(@"C:\root", out _));
+        Assert.False(service.TryGet(@"C:\root\changed", out _));
+        Assert.True(service.TryGetLastKnown(@"C:\root\changed", out var previous));
+        Assert.Equal(100UL, previous);
+        Assert.True(service.TryGet(@"C:\root\changed\nested", out _));
+        Assert.True(service.TryGet(@"C:\root\sibling", out _));
+        Assert.Equal(100UL, await service.GetAsync(@"C:\root\sibling", useUnchanged: true));
+        Assert.Equal(200UL, await service.GetAsync(@"C:\root\changed", useUnchanged: true));
+        Assert.Equal(1, calls[@"C:\root\sibling"]);
+    }
+
+    [Fact]
+    public async Task Expired_unchanged_siblings_can_be_reused_but_dirty_folders_are_measured_again()
+    {
+        var time = new TestTime();
+        var calls = 0;
+        var service = new FolderSizeService((_, _, _) => (ulong)Interlocked.Increment(ref calls), time);
+        await service.GetAsync(@"C:\root\first");
+        await service.GetAsync(@"C:\root\second");
+        time.Now = time.Now.AddMinutes(2);
+        Assert.False(service.TryGet(@"C:\root\first", out _));
+        Assert.True(service.TryGetUnchanged(@"C:\root\first", out _));
+        Assert.Equal(1UL, await service.GetAsync(@"C:\root\first", useUnchanged: true));
+        service.MarkChanged(@"C:\root\second");
+        Assert.False(service.TryGetUnchanged(@"C:\root\second", out _));
+        Assert.Equal(3UL, await service.GetAsync(@"C:\root\second", useUnchanged: true));
+        Assert.Equal(3, calls);
+    }
+
+    [Fact]
+    public async Task Replacing_existing_cache_key_at_capacity_does_not_evict_other_folder()
+    {
+        var time = new TestTime();
+        var service = new FolderSizeService((_, _, _) => 42, time, 2);
+        await service.GetAsync(@"C:\first");
+        await service.GetAsync(@"C:\second");
+        service.MarkChanged(@"C:\first");
+        await service.GetAsync(@"C:\first");
+        Assert.True(service.TryGet(@"C:\second", out _));
+    }
 }

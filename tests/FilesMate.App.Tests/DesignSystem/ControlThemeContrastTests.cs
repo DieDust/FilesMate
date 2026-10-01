@@ -12,7 +12,8 @@ public sealed class ControlThemeContrastTests
         foreach (var key in new[] { "ContentDialogBackground", "ContentDialogTopOverlay", "ContentDialogForeground",
             "TextControlHeaderForeground", "ComboBoxHeaderForeground", "CheckBoxForegroundUnchecked",
             "ButtonForeground", "TextFillColorSecondaryBrush", "SystemFillColorCriticalBrush",
-            "ListViewItemForeground", "TextControlButtonForeground", "TextControlBackground" })
+            "ListViewItemForeground", "TextControlButtonForeground", "TextControlBackground",
+            "InfoBarTitleForeground", "InfoBarMessageForeground" })
             Assert.Contains(key, ThemeXaml.Keys(themes[theme]));
     }
 
@@ -37,7 +38,7 @@ public sealed class ControlThemeContrastTests
             }
             return .2126 * Channel(16) + .7152 * Channel(8) + .0722 * Channel(0);
         }
-        foreach (var key in new[] { "ContentDialogForeground", "TextControlHeaderForeground", "ComboBoxHeaderForeground", "CheckBoxForegroundUnchecked", "TextFillColorSecondaryBrush", "SystemFillColorCriticalBrush" })
+        foreach (var key in new[] { "ContentDialogForeground", "TextControlHeaderForeground", "ComboBoxHeaderForeground", "CheckBoxForegroundUnchecked", "TextFillColorSecondaryBrush", "SystemFillColorCriticalBrush", "InfoBarTitleForeground", "InfoBarMessageForeground" })
         {
             var background = Color("ContentDialogTopOverlay");
             var a = Luminance(Color(key), background);

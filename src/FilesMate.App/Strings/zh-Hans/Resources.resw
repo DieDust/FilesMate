@@ -463,8 +463,11 @@
   <data name="Backup_Cleared" xml:space="preserve">
     <value>当前历史已清除。仍列出的位置需要检查，其中的文件未被删除。</value>
   </data>
+  <data name="Backup_DeletePolicy" xml:space="preserve">
+    <value>普通删除文件夹时，整个项目移入系统回收站，不受 256 MiB 替换备份额度限制。永久删除不保留副本；无法移入回收站时，Windows 会提示。</value>
+  </data>
   <data name="Backup_DestructiveHint" xml:space="preserve">
-    <value>已有内容将被永久替换，不保留旧版本。本次整个批量操作无法撤销；替换成功后，之前的撤销/重做历史也会清除。这个选择仅适用于当前文件。</value>
+    <value>已有内容将被永久替换，不保留旧版本。本次操作无法撤销；替换成功后，也会清除之前的撤销/重做历史。勾选剩余冲突选项后，同一操作中的其他同类冲突也会使用这个选择。</value>
   </data>
   <data name="Backup_LimitHint" xml:space="preserve">
     <value>撤销需要预留 {0} MiB（当前 {1} / 256 MiB），已超过备份限制或备份不可用。可以跳过、保留两者、取消后管理备份，或明确选择不可撤销的替换。</value>
@@ -487,8 +490,11 @@
   <data name="Backup_ReservationHint" xml:space="preserve">
     <value>撤销将在目标磁盘预留 {0} MiB（当前 {1} / 256 MiB），最多保留 5 次操作。可在设置 → 文件与文件夹中查看和清理。</value>
   </data>
+  <data name="Backup_SettingsHint" xml:space="preserve">
+    <value>覆盖同名文件时，在备份额度内保留旧版本用于撤销。普通删除使用系统回收站，不创建额外副本。</value>
+  </data>
   <data name="Backup_Title" xml:space="preserve">
-    <value>撤销备份</value>
+    <value>替换备份与撤销</value>
   </data>
   <data name="Backup_UnprotectedCount" xml:space="preserve">
     <value>{0} 项未保留备份，本次操作无法撤销</value>
@@ -839,7 +845,7 @@
     <value>对剩余同类冲突使用相同选择</value>
   </data>
   <data name="Conflict_BackupUnavailable" xml:space="preserve">
-    <value>此文件超出撤销备份额度。替换后无法撤销，需要单独确认。</value>
+    <value>撤销备份不可用。替换会永久覆盖已有文件，本次操作无法撤销；替换成功后也会清除之前的撤销/重做历史。</value>
   </data>
   <data name="Conflict_BatchScope" xml:space="preserve">
     <value>仅应用于本次操作，类型不同的冲突会单独询问。</value>
@@ -871,6 +877,12 @@
   <data name="Conflict_DeletedAnnotation" xml:space="preserve">
     <value>已删除</value>
   </data>
+  <data name="Conflict_DestinationLocation" xml:space="preserve">
+    <value>目标</value>
+  </data>
+  <data name="Conflict_Details" xml:space="preserve">
+    <value>详细信息</value>
+  </data>
   <data name="Conflict_Different" xml:space="preserve">
     <value>文件数据内容不同。</value>
   </data>
@@ -890,7 +902,10 @@
     <value>保留目标（跳过）</value>
   </data>
   <data name="Conflict_KeepFiles" xml:space="preserve">
-    <value>保留两个文件</value>
+    <value>保留两者</value>
+  </data>
+  <data name="Conflict_KeepHint" xml:space="preserve">
+    <value>自动生成副本名称，保留两个版本。</value>
   </data>
   <data name="Conflict_LineCounts" xml:space="preserve">
     <value>来源相对目标：新增 {0} 行 · 移除 {1} 行</value>
@@ -932,10 +947,13 @@
     <value>跳过这些文件</value>
   </data>
   <data name="Conflict_SkipFile" xml:space="preserve">
-    <value>跳过这个文件</value>
+    <value>跳过此项目</value>
   </data>
   <data name="Conflict_SkipHint" xml:space="preserve">
     <value>保留目标版本，来源文件仍留在原位置。</value>
+  </data>
+  <data name="Conflict_SourceLocation" xml:space="preserve">
+    <value>来源</value>
   </data>
   <data name="Conflict_TextChanges" xml:space="preserve">
     <value>文本差异</value>
@@ -3768,6 +3786,39 @@ Ctrl+T 新标签　　Ctrl+W 关闭标签　　Ctrl+L 路径　　Ctrl+F 筛选�
   <data name="ThemeSystem" xml:space="preserve">
     <value>跟随系统</value>
   </data>
+  <data name="Thumbnail_FileSizes" xml:space="preserve">
+    <value>文件名下方显示文件大小</value>
+  </data>
+  <data name="Thumbnail_FileSizesHint" xml:space="preserve">
+    <value>在大图及更大的图标模式下显示大小；开启“显示文件夹大小”后，也会显示文件夹大小。</value>
+  </data>
+  <data name="Thumbnail_Full" xml:space="preserve">
+    <value>完整显示预览图</value>
+  </data>
+  <data name="Thumbnail_FullHint" xml:space="preserve">
+    <value>按原比例完整显示预览图，保留长图形状和透明区域，不强行裁剪成方形。</value>
+  </data>
+  <data name="Thumbnail_High" xml:space="preserve">
+    <value>高清</value>
+  </data>
+  <data name="Thumbnail_Quality" xml:space="preserve">
+    <value>预览图清晰度</value>
+  </data>
+  <data name="Thumbnail_QualityHint" xml:space="preserve">
+    <value>选择图片和视频预览图的清晰度，标准保持当前清晰度。</value>
+  </data>
+  <data name="Thumbnail_ResourceHint" xml:space="preserve">
+    <value>更高清晰度可能增加内存和处理资源消耗，预览图加载也可能更慢。</value>
+  </data>
+  <data name="Thumbnail_Section" xml:space="preserve">
+    <value>预览图与大图模式</value>
+  </data>
+  <data name="Thumbnail_Standard" xml:space="preserve">
+    <value>标准（默认）</value>
+  </data>
+  <data name="Thumbnail_Ultra" xml:space="preserve">
+    <value>超清</value>
+  </data>
   <data name="TitleBar_Close" xml:space="preserve">
     <value>关闭窗口</value>
   </data>
@@ -4055,5 +4106,11 @@ Ctrl+T 新标签　　Ctrl+W 关闭标签　　Ctrl+L 路径　　Ctrl+F 筛选�
   </data>
   <data name="WindowsSection" xml:space="preserve">
     <value>窗口与标签页</value>
+  </data>
+  <data name="Columns_AutoNameWidth" xml:space="preserve">
+    <value>自动调整名称列宽</value>
+  </data>
+  <data name="Columns_AutoNameWidthHint" xml:space="preserve">
+    <value>按当前文件夹最长的名称调整宽度，上限与列表模式相同。关闭后恢复手动设置的宽度。</value>
   </data>
 </root>

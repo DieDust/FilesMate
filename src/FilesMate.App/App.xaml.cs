@@ -37,6 +37,8 @@ public partial class App : Application
     internal static event EventHandler? FolderCoversChanged;
     internal static void NotifyFolderCoversChanged() => FolderCoversChanged?.Invoke(null, EventArgs.Empty);
     private readonly List<MainWindow> _windows = [];
+    private PinnedLocationTracker? _pinnedLocationTracker;
+    internal static PinnedLocationStore PinnedLocations { get; } = new(Program.SettingsPath(PinnedLocationStore.DefaultFilePath));
     private UISettings? _systemThemeWatcher;
     private CancellationTokenSource? _autoIndexCts;
     private readonly WindowSessionStore _windowSession = new(Program.SettingsPath(WindowSessionStore.DefaultFilePath));
@@ -185,7 +187,9 @@ public partial class App : Application
         ExplorerPreferenceBridge.ShowHiddenFiles = () => ExplorerPreferences.ShowHiddenFiles;
         ExplorerPreferenceBridge.ShowFolderSizes = () => ExplorerPreferences.ShowFolderSizes;
         ExplorerPreferenceBridge.TryFolderSize = FolderSizeCache.TryGet;
+        ExplorerPreferenceBridge.TryLastKnownFolderSize = FolderSizeCache.TryGetLastKnown;
         ExplorerPreferenceBridge.InvalidateFolderSizes = FolderSizeCache.Invalidate;
+        ExplorerPreferenceBridge.MarkFolderSizeChanged = FolderSizeCache.MarkChanged;
         FolderSizeCache.SizeCached += OnFolderSizeCached;
         if (!Program.IsUiTestBuild) RepairFolderHandlers();
         if (LaunchPath.IsExplorerHost(Environment.GetCommandLineArgs()))
@@ -396,7 +400,7 @@ public partial class App : Application
         }
     }
 
-    private static void OnFolderSizeCached() => ExplorerPreferenceBridge.NotifyFolderSizesChanged();
+    private static void OnFolderSizeCached(string path) => ExplorerPreferenceBridge.NotifyFolderSizesChanged(path);
 
     private static void LaunchClassicExplorer()
     {
@@ -514,10 +518,15 @@ public partial class App : Application
 
         app._windows.Add(window);
         CurrentWindow = window;
+        app._pinnedLocationTracker ??= new(PinnedLocations, action => window.DispatcherQueue.TryEnqueue(() => action()), NotifyPinnedLocationsChanged);
         window.Closed += app.Window_Closed;
     }
 
-    internal static void NotifyActivated(MainWindow window) => CurrentWindow = window;
+    internal static void NotifyActivated(MainWindow window)
+    {
+        CurrentWindow = window;
+        if (Current is App app) app._pinnedLocationTracker?.CheckNow();
+    }
 
     internal static bool IsMemoryReclamationBusy => Current is App app
         && app._windows.Any(window => window.IsMemoryReclamationBusy);
@@ -617,8 +626,17 @@ public partial class App : Application
 
     internal static void NotifyTagsChanged() => TagsChanged?.Invoke(null, EventArgs.Empty);
 
-    internal static void NotifyPinnedLocationsChanged() =>
+    internal static void NotifyPinnedLocationsChanged()
+    {
+        if (Current is App app) app._pinnedLocationTracker?.Refresh();
         PinnedLocationsChanged?.Invoke(null, EventArgs.Empty);
+    }
+
+    internal static void RelocatePinnedFolder(string source, string destination)
+    {
+        try { if (PinnedLocations.Relocate(source, destination)) NotifyPinnedLocationsChanged(); }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException) { LogFailure("RelocatePinnedFolder", error); }
+    }
 
     internal static async Task SetExplorerPreferencesAsync(ExplorerPreferences preferences)
     {
@@ -628,6 +646,11 @@ public partial class App : Application
         ExplorerPreferences = preferences;
         try
         {
+            // Saves can overlap and only the latest one publishes an event.
+            // Invalidate every source change so a later unrelated save cannot
+            // leave a folder cover cached with the previous thumbnail options.
+            if (previous.ThumbnailQuality != preferences.ThumbnailQuality || previous.ShowFullThumbnails != preferences.ShowFullThumbnails)
+                Icons.FolderPreviewBinder.ClearCache();
             if (ExplorerPreferencesStore is not null)
             {
                 await ExplorerPreferencesStore.SaveAsync(preferences).ConfigureAwait(true);
@@ -692,6 +715,8 @@ public partial class App : Application
         _autoIndexCts?.Cancel();
         _autoIndexCts?.Dispose();
         _autoIndexCts = null;
+        _pinnedLocationTracker?.Dispose();
+        _pinnedLocationTracker = null;
         Motion.CancelWindowScope();
         CurrentWindow = null;
         AppearanceViewModel = null;

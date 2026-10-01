@@ -102,6 +102,44 @@
         <Setter Property="FontSize" Value="13" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
     </Style>
+    <Style x:Key="FilesMate.ColumnMenuPresenterStyle" TargetType="MenuFlyoutPresenter" BasedOn="{StaticResource FilesMate.MenuFlyoutPresenterStyle}">
+        <Setter Property="Padding" Value="4,6" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="MinWidth" Value="{StaticResource FilesMate.ContextMenu.MinWidth}" />
+        <Setter Property="MaxWidth" Value="{StaticResource FilesMate.ContextMenu.MaxWidth}" />
+    </Style>
+    <Style x:Key="FilesMate.ColumnMenuItemStyle" TargetType="MenuFlyoutItem" BasedOn="{StaticResource FilesMate.MenuFlyoutItemStyle}">
+        <Setter Property="Template" Value="{StaticResource FilesMate.ColumnMenuItemTemplate}" />
+        <Setter Property="MinHeight" Value="{StaticResource FilesMate.Control.Height.ContextItem}" />
+        <Setter Property="Margin" Value="2,0" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+    </Style>
+    <Style x:Key="FilesMate.ColumnMenuToggleStyle" TargetType="ToggleMenuFlyoutItem">
+        <Setter Property="Template" Value="{StaticResource FilesMate.ColumnMenuToggleTemplate}" />
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+        <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Small}" />
+        <Setter Property="MinHeight" Value="{StaticResource FilesMate.Control.Height.ContextItem}" />
+        <Setter Property="Margin" Value="2,0" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+    </Style>
+    <Style x:Key="FilesMate.ColumnMenuSeparatorStyle" TargetType="MenuFlyoutSeparator">
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuFlyoutSeparator">
+                    <Border Height="1" Margin="8,4" Background="{ThemeResource FilesMate.Divider.Brush}" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
     <Style TargetType="ToolTip">
         <Setter Property="Background" Value="{ThemeResource FilesMate.Menu.BackgroundBrush}" />
         <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.LiquidGlass.BorderBrush}" />
@@ -158,7 +196,7 @@
     <Style TargetType="ToggleMenuFlyoutItem" BasedOn="{StaticResource FilesMate.ToggleMenuFlyoutItemStyle}">
         <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
     </Style>
-    <Style TargetType="MenuFlyoutSubItem">
+    <Style x:Key="FilesMate.MenuFlyoutSubItemStyle" TargetType="MenuFlyoutSubItem">
         <Setter Property="Template" Value="{StaticResource FilesMate.MenuFlyoutSubItemTemplate}" />
         <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="MinHeight" Value="{StaticResource FilesMate.Control.Height.Row}" />
@@ -166,6 +204,11 @@
         <Setter Property="Padding" Value="12,0,12,0" />
         <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Small}" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+    </Style>
+    <Style TargetType="MenuFlyoutSubItem" BasedOn="{StaticResource FilesMate.MenuFlyoutSubItemStyle}" />
+    <Style x:Key="FilesMate.CompactMenuSubItemStyle" TargetType="MenuFlyoutSubItem" BasedOn="{StaticResource FilesMate.MenuFlyoutSubItemStyle}">
+        <Setter Property="Template" Value="{StaticResource FilesMate.CompactMenuSubItemTemplate}" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
     </Style>
     <Style TargetType="MenuFlyoutSeparator">
         <Setter Property="Background" Value="{ThemeResource MenuFlyoutSeparatorBackground}" />

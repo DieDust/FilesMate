@@ -97,7 +97,7 @@ public sealed partial class MainWindow
                         element is FileRow { EntryId: 0 } || element is FileTile { EntryId: 0 });
                     var checkbox = item.FindName("SelectionBox") as CheckBox;
                     var mark = checkbox is null ? null : PolishDescendants(checkbox).OfType<Microsoft.UI.Xaml.Shapes.Rectangle>()
-                        .Single(rectangle => rectangle.Name == "NormalRectangle");
+                        .SingleOrDefault(rectangle => rectangle.Name == "NormalRectangle");
                     selectionSamples.Add(new
                     {
                         Layout = layout.ToString(), Theme = theme.ToString(),

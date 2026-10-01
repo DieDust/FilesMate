@@ -5,6 +5,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 
 using FilesMate.Core.Entries;
 using FilesMate.Core.Icons;
+using FilesMate.App.Models;
 using FilesMate.Platform.Windows.Icons;
 
 using Microsoft.UI.Dispatching;
@@ -31,6 +32,8 @@ internal static class ShellIconBinder
     private static readonly ShellThumbnailService Thumbnails = new();
     private static readonly Services.VividThumbnailCache VividThumbnails = new();
     private static int _stamp;
+    private static int _cacheGeneration;
+    internal static int CacheGeneration => Volatile.Read(ref _cacheGeneration);
     private static readonly ConditionalWeakTable<Image, IconBinding> Bindings = new();
     private sealed record IconBinding(FontIcon Fallback, IconKey Key, string? Path, FileAttributes Attributes,
         bool Directory, FileIconKind? Kind, int Pixels);
@@ -55,6 +58,9 @@ internal static class ShellIconBinder
 
         public int Stamp { get; } = stamp;
         public bool UseBundled { get; } = UseBundledIcons;
+        public ThumbnailQuality Quality { get; } = App.ExplorerPreferences.ThumbnailQuality;
+        public bool PreferOriginal { get; } = App.ExplorerPreferences.ShowFullThumbnails
+            || App.ExplorerPreferences.ThumbnailQuality != ThumbnailQuality.Standard;
 
         public CancellationTokenSource Cancellation { get; } = new();
 
@@ -87,6 +93,7 @@ internal static class ShellIconBinder
 
     public static void ClearCache()
     {
+        Interlocked.Increment(ref _cacheGeneration);
         (Service as WindowsSystemIconService)?.ClearCache();
         Images.Clear();
         DynamicImages.Clear();
@@ -112,19 +119,26 @@ internal static class ShellIconBinder
     internal static Task<IconBitmap?> GetThumbnailAsync(
         string? path,
         int pixelSize,
-        CancellationToken cancellationToken) => Task.Run(async () =>
+        CancellationToken cancellationToken) => GetThumbnailAsync(path, pixelSize, cancellationToken,
+            App.ExplorerPreferences.ShowFullThumbnails || App.ExplorerPreferences.ThumbnailQuality != ThumbnailQuality.Standard);
+
+    private static Task<IconBitmap?> GetThumbnailAsync(
+        string? path,
+        int pixelSize,
+        CancellationToken cancellationToken,
+        bool preferOriginal) => Task.Run(async () =>
         {
             if (path is not null && FileTypeIconCatalog.ClassifyPath(path, false) == FileIconKind.Video)
             {
                 var cachedPath = VividThumbnails.Find(path, cancellationToken);
                 if (cachedPath is not null)
                 {
-                    var cached = await Thumbnails.GetAsync(cachedPath, pixelSize, cancellationToken).ConfigureAwait(false);
+                    var cached = await Thumbnails.GetAsync(cachedPath, pixelSize, cancellationToken, preferOriginal).ConfigureAwait(false);
                     if (cached is not null)
                         return cached;
                 }
             }
-            return await Thumbnails.GetAsync(path, pixelSize, cancellationToken).ConfigureAwait(false);
+            return await Thumbnails.GetAsync(path, pixelSize, cancellationToken, preferOriginal).ConfigureAwait(false);
         }, cancellationToken);
 
     public static void Bind(
@@ -300,9 +314,9 @@ internal static class ShellIconBinder
             var cancellationToken = state.Cancellation.Token;
             if (formatKind is FileIconKind.Image or FileIconKind.Video)
             {
-                var thumbnailPixels = ThumbnailPixelSize(rasterPixels);
+                var thumbnailPixels = ThumbnailQualityPolicy.PixelSize(ThumbnailPixelSize(rasterPixels), state.Quality);
                 // File metadata can block on network paths; keep it off the UI thread.
-                var thumbnailKey = await Task.Run(() => ThumbnailCacheKey(path, thumbnailPixels), cancellationToken)
+                var thumbnailKey = await Task.Run(() => ThumbnailCacheKey(path, thumbnailPixels, state.PreferOriginal), cancellationToken)
                     .ConfigureAwait(false);
                 if (TryGetImage(thumbnailKey, out var thumbnailSource))
                 {
@@ -312,7 +326,7 @@ internal static class ShellIconBinder
                 }
                 // Recycled off-screen tiles cancel before decoding during rapid scrolling.
                 await Task.Delay(40, cancellationToken).ConfigureAwait(false);
-                var thumbnail = await GetThumbnailAsync(path, thumbnailPixels, cancellationToken)
+                var thumbnail = await GetThumbnailAsync(path, thumbnailPixels, cancellationToken, state.PreferOriginal)
                     .ConfigureAwait(false);
                 if (thumbnail is not null)
                 {
@@ -554,11 +568,11 @@ internal static class ShellIconBinder
     private static string AssetCacheKey(FileIconKind kind, int rasterPixels) =>
         $"asset:{kind}:{rasterPixels}";
 
-    private static string ThumbnailCacheKey(string? path, int pixelSize)
+    private static string ThumbnailCacheKey(string? path, int pixelSize, bool preferOriginal)
     {
-        return ShellThumbnailService.TryCreateKey(path, pixelSize, out var key)
+        return ShellThumbnailService.TryCreateKey(path, pixelSize, out var key, preferOriginal)
             ? key
-            : $"thumbnail:{path ?? string.Empty}:{pixelSize}";
+            : $"thumbnail:{path ?? string.Empty}:{pixelSize}:{preferOriginal}";
     }
 
     private static int ThumbnailPixelSize(int rasterPixels) =>
