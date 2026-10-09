@@ -1,4 +1,5 @@
 using FilesMate.App.Commands;
+using FilesMate.Core.Diagnostics;
 using FilesMate.App.Controls.FileSurface;
 using FilesMate.App.Controls.Tags;
 using FilesMate.App.Localization;
@@ -19,9 +20,52 @@ public static class FileContextFlyout
 {
     public static void ShowAt(Flyout menu, FrameworkElement anchor, Point position)
     {
-        // Position is a point anchor: keep it at the menu's top-left corner.
-        // WinUI handles edge collisions and scrolling within the available window.
-        menu.ShowAt(anchor, new FlyoutShowOptions { Position = position, Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft });
+        // Observe requested and actual bounds before judging edge placement. No pointer input is generated here.
+        var operation = PerformanceTrace.NextOperation();
+        PerformanceTrace.Record(PerformanceStage.RecursiveMenuRequested, operation: operation,
+            count: (long)Math.Round(position.X * 1000), auxiliary: (long)Math.Round(position.Y * 1000));
+        if (PerformanceTrace.Enabled)
+        {
+            void Opened(object? sender, object args)
+            {
+                menu.Opened -= Opened;
+                _ = anchor.DispatcherQueue.TryEnqueue(() =>
+                {
+                    try
+                    {
+                        if (anchor.XamlRoot is not { } root) return;
+                        foreach (var popup in VisualTreeHelper.GetOpenPopupsForXamlRoot(root))
+                        {
+                            var presenter = FindPresenter(popup.Child, menu.Content);
+                            if (presenter is null) continue;
+                            var actual = presenter.TransformToVisual(anchor).TransformPoint(default);
+                            PerformanceTrace.Record(PerformanceStage.RecursiveMenuOpened, operation: operation,
+                                count: (long)Math.Round(actual.X * 1000), auxiliary: (long)Math.Round(actual.Y * 1000));
+                            PerformanceTrace.Record(PerformanceStage.RecursiveMenuBounds, operation: operation,
+                                count: (long)Math.Round(presenter.ActualWidth * 1000), auxiliary: (long)Math.Round(presenter.ActualHeight * 1000));
+                            break;
+                        }
+                    }
+                    catch (Exception error)
+                    {
+                        // A diagnostic transform must not turn a working menu into an unhandled UI failure.
+                        PerformanceTrace.Record(PerformanceStage.RecursiveMenuOpened, operation: operation,
+                            outcome: PerformanceOutcome.Failed, auxiliary: error.HResult);
+                    }
+                });
+            }
+            menu.Opened += Opened;
+        }
+        FileContextPopupPlacement.ShowAt(menu, anchor, position);
+    }
+
+    private static FlyoutPresenter? FindPresenter(DependencyObject? root, object content)
+    {
+        if (root is null) return null;
+        if (root is FlyoutPresenter presenter && ReferenceEquals(presenter.Content, content)) return presenter;
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+            if (FindPresenter(VisualTreeHelper.GetChild(root, i), content) is { } match) return match;
+        return null;
     }
 
     public static Flyout Create(
@@ -34,7 +78,8 @@ public static class FileContextFlyout
         Func<EntrySort>? currentSort = null,
         Action<bool>? sortDirection = null,
         Action<GridSizePreset>? gridSize = null,
-        Action<EntryGrouping>? grouping = null)
+        Action<EntryGrouping>? grouping = null,
+        IReadOnlyList<RecursiveContextAction>? recursiveActions = null)
     {
         ArgumentNullException.ThrowIfNull(layout);
         ArgumentNullException.ThrowIfNull(invoke);
@@ -42,7 +87,9 @@ public static class FileContextFlyout
         var flyout = new Flyout
         {
             Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft,
-            ShouldConstrainToRootBounds = true,
+            // Pointer coordinates are anchor-local DIPs. Let the native popup constrain
+            // to the desktop work area, rather than flip at the application client edge.
+            ShouldConstrainToRootBounds = false,
             AreOpenCloseAnimationsEnabled = false,
         };
         if (TryStyle("FilesMate.ContextFlyoutPresenterStyle", out Style presenter))
@@ -68,6 +115,41 @@ public static class FileContextFlyout
             }
 
             column.Children.Add(bar);
+            column.Children.Add(CreateSeparator());
+        }
+
+        if (recursiveActions is { Count: > 0 })
+        {
+            foreach (var action in recursiveActions)
+            {
+                var grid = new Grid();
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength((double)Application.Current.Resources["FilesMate.Menu.LeadingSlot"]) });
+                grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                grid.Children.Add(CreateGlyph(action.Glyph, 16));
+                var text = new TextBlock { Text = action.Label, FontSize = 13, VerticalAlignment = VerticalAlignment.Center, Style = new Style(typeof(TextBlock)) };
+                Grid.SetColumn(text, 1); grid.Children.Add(text);
+                var button = new Button { Content = grid };
+                if (TryStyle("FilesMate.ContextMenuItemStyle", out Style itemStyle)) button.Style = itemStyle;
+                var invokeAction = action.Invoke;
+                if (action.Children is { Count: > 0 } children)
+                {
+                    grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(18) });
+                    var chevron = CreateGlyph("\uE76C", 10); Grid.SetColumn(chevron, 2); grid.Children.Add(chevron);
+                    var depthMenu = CreateSubmenu();
+                    foreach (var child in children)
+                    {
+                        var item = new MenuFlyoutItem { Text = child.Label };
+                        if (TryStyle("FilesMate.MenuFlyoutItemStyle", out Style childStyle)) item.Style = childStyle;
+                        var childAction = child.Invoke;
+                        item.Click += (_, _) => { depthMenu.Hide(); flyout.Hide(); childAction(); };
+                        depthMenu.Items.Add(item);
+                    }
+                    OpenSubmenuOnHover(button, depthMenu, submenu);
+                }
+                else button.Click += (_, _) => { submenu.Hide(); flyout.Hide(); invokeAction(); };
+                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, action.Label);
+                column.Children.Add(button);
+            }
             column.Children.Add(CreateSeparator());
         }
 
@@ -137,13 +219,12 @@ public static class FileContextFlyout
         Action<GridSizePreset>? gridSize, Action<EntryGrouping>? grouping)
     {
         var grid = new Grid();
-        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength((double)Application.Current.Resources["FilesMate.Menu.LeadingSlot"]) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
         var icon = CreateGlyph(entry.Glyph, 16);
-        icon.Margin = new Thickness(0, 0, 10, 0);
         grid.Children.Add(icon);
 
         var label = new TextBlock
@@ -151,6 +232,9 @@ public static class FileContextFlyout
             Text = entry.Label,
             FontSize = 13,
             VerticalAlignment = VerticalAlignment.Center,
+            // An explicit empty style permits active menu ink to inherit from
+            // its presenter instead of the application's implicit normal ink.
+            Style = new Style(typeof(TextBlock)),
         };
         Grid.SetColumn(label, 1);
         grid.Children.Add(label);
@@ -160,7 +244,7 @@ public static class FileContextFlyout
             var shortcut = new TextBlock
             {
                 Text = entry.Shortcut,
-                Margin = new Thickness(12, 0, 0, 0),
+                Margin = (Thickness)Application.Current.Resources["FilesMate.Menu.AcceleratorGap"],
                 VerticalAlignment = VerticalAlignment.Center,
                 FontSize = 12,
             };
@@ -175,7 +259,7 @@ public static class FileContextFlyout
             var chevron = new TextBlock
             {
                 Text = "\uE76C", FontFamily = new FontFamily("Segoe Fluent Icons"), FontSize = 12,
-                Margin = new Thickness(10, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center,
+                Margin = (Thickness)Application.Current.Resources["FilesMate.Menu.ChevronGap"], VerticalAlignment = VerticalAlignment.Center,
             };
             if (TryStyle("FilesMate.MenuShortcutStyle", out var chevronStyle)) chevron.Style = chevronStyle;
 
@@ -303,12 +387,34 @@ public static class FileContextFlyout
         };
     }
 
-    private static void ShowSubmenu(FrameworkElement anchor, FlyoutBase menu) =>
+    private static void ShowSubmenu(FrameworkElement anchor, FlyoutBase menu)
+    {
+        RecordSubmenu("ShowRequested", anchor, menu);
         menu.ShowAt(anchor, new FlyoutShowOptions
         {
             Placement = FlyoutPlacementMode.RightEdgeAlignedTop,
-            ShowMode = FlyoutShowMode.TransientWithDismissOnPointerMoveAway,
+            ShowMode = FlyoutShowMode.Transient,
         });
+        RecordSubmenu("ShowReturned", anchor, menu);
+    }
+
+    private static int _submenuAuditCount;
+    private static void RecordSubmenu(string stage, FrameworkElement? anchor, FlyoutBase menu)
+    {
+        if (!FilesMate.Core.Configuration.RuntimeProfile.IsIsolated || _submenuAuditCount >= 48
+            || !File.Exists(Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "presentation-audit.enabled"))) return;
+        ++_submenuAuditCount;
+        try
+        {
+            var data = new { Utc = DateTimeOffset.UtcNow, Stage = stage, Menu = menu.GetHashCode(),
+                Anchor = anchor is null ? null : Microsoft.UI.Xaml.Automation.AutomationProperties.GetName(anchor),
+                IsOpen = menu.IsOpen, Scale = anchor?.XamlRoot?.RasterizationScale,
+                Choices = (menu as MenuFlyout)?.Items.Count };
+            File.AppendAllText(Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "submenu-boundary.jsonl"),
+                System.Text.Json.JsonSerializer.Serialize(data) + Environment.NewLine);
+        }
+        catch (Exception error) { App.AppendCrashRecord("SubmenuBoundaryAudit", error); }
+    }
 
     private static MenuFlyout CreateSortFlyout(Flyout parent, Action<EntrySortColumn> sort, Func<EntrySort>? currentSort, Action<bool>? sortDirection, Action<EntryGrouping>? grouping)
     {
@@ -417,6 +523,7 @@ public static class FileContextFlyout
         var menu = new MenuFlyout
         {
             Placement = FlyoutPlacementMode.RightEdgeAlignedTop,
+            ShouldConstrainToRootBounds = false,
             AreOpenCloseAnimationsEnabled = false,
         };
         if (TryStyle("FilesMate.MenuFlyoutPresenterStyle", out Style style))
@@ -425,6 +532,12 @@ public static class FileContextFlyout
         }
 
         FlyoutTheme.FollowHost(menu);
+        if (FilesMate.Core.Configuration.RuntimeProfile.IsIsolated
+            && File.Exists(Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "presentation-audit.enabled")))
+        {
+            menu.Opened += (_, _) => RecordSubmenu("Opened", null, menu);
+            menu.Closed += (_, _) => RecordSubmenu("Closed", null, menu);
+        }
         return menu;
     }
 
@@ -465,8 +578,8 @@ public static class FileContextFlyout
             Glyph = glyph,
             FontSize = size,
             VerticalAlignment = VerticalAlignment.Center,
+            Style = new Style(typeof(FontIcon)),
         };
-        ThemeResources.Bind(icon, IconElement.ForegroundProperty, "FilesMate.Selection.AccentBrush");
 
         return icon;
     }

@@ -25,18 +25,22 @@
                 Style="{StaticResource SelectableHomePlaceStyle}"
                 Tag="{x:Bind}"
                 AutomationProperties.Name="{x:Bind Label}">
-                <StackPanel Orientation="Horizontal" Spacing="10">
+                <Grid ColumnSpacing="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
                     <Border Width="32" Height="32" CornerRadius="9"
                         Background="{ThemeResource FilesMate.Home.IconBackgroundBrush}">
                         <sidebar:PlaceGlyph Glyph="{x:Bind Glyph}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
-                    <TextBlock Tag="ItemName" HorizontalAlignment="Left"
+                    <TextBlock Grid.Column="1" Tag="ItemName" HorizontalAlignment="Left"
                         VerticalAlignment="Center"
                         FontSize="14"
                         FontWeight="SemiBold"
                         Text="{x:Bind Label}"
                         TextTrimming="CharacterEllipsis" />
-                </StackPanel>
+                </Grid>
             </home:HomeItemButton>
         </DataTemplate>
         <DataTemplate x:Key="HomeTagChip" x:DataType="nav:HomeFolderItem">
@@ -52,14 +56,18 @@
                 Style="{StaticResource SelectableHomePlaceStyle}"
                 Tag="{x:Bind}"
                 AutomationProperties.Name="{x:Bind Label}">
-                <StackPanel Orientation="Horizontal" Spacing="8">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
                     <sidebar:PlaceGlyph Glyph="{x:Bind Glyph}" VerticalAlignment="Center" />
-                    <TextBlock Tag="ItemName" HorizontalAlignment="Left"
+                    <TextBlock Grid.Column="1" Tag="ItemName" HorizontalAlignment="Left"
                         VerticalAlignment="Center"
                         FontSize="13"
                         Text="{x:Bind Label}"
                         TextTrimming="CharacterEllipsis" />
-                </StackPanel>
+                </Grid>
             </home:HomeItemButton>
         </DataTemplate>
     </UserControl.Resources>
@@ -100,6 +108,13 @@
                     <FontIcon FontFamily="Segoe Fluent Icons" FontSize="14" Glyph="&#xE713;" />
                 </Button>
             </Grid>
+            <Button x:Name="GlobalSearchButton" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                Style="{StaticResource GlassButtonStyle}" Click="GlobalSearch_Click" Padding="14,10">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE721;" />
+                    <TextBlock x:Name="GlobalSearchLabel" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
             <StackPanel x:Name="SectionsHost" Spacing="12">
                 <StackPanel x:Name="UserFoldersSection" Spacing="8">
                     <TextBlock

@@ -81,8 +81,16 @@
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
   <Target Name="BuildSearchHost" AfterTargets="Build" Condition="'$(DesignTimeBuild)' != 'true' and '$(FilesMateUITest)' != 'true'">
-    <MSBuild Projects="..\FilesMate.SearchHost\FilesMate.SearchHost.csproj" Targets="Restore;Publish" BuildInParallel="false"
-             Properties="Configuration=$(Configuration);Platform=x64;RuntimeIdentifier=win-x64;SelfContained=true;OutputPath=$(MSBuildProjectDirectory)\..\..\artifacts\search-host-build\$(Configuration)\;PublishDir=$(TargetDir)SearchHost\;DebugType=None;DebugSymbols=false" />
+    <!-- Restore-generated package imports require a fresh build evaluation.
+         Running Restore;Publish on the same MSBuild project instance loses
+         WebView2's manually supplied references on a clean checkout. -->
+    <PropertyGroup>
+      <FilesMateDotNetHost Condition="'$(FilesMateDotNetHost)' == '' and '$(DOTNET_HOST_PATH)' != ''">$(DOTNET_HOST_PATH)</FilesMateDotNetHost>
+      <FilesMateDotNetHost Condition="'$(FilesMateDotNetHost)' == '' and Exists('$(MSBuildToolsPath)/../../dotnet.exe')">$([System.IO.Path]::GetFullPath('$(MSBuildToolsPath)/../../dotnet.exe'))</FilesMateDotNetHost>
+      <FilesMateDotNetHost Condition="'$(FilesMateDotNetHost)' == ''">dotnet</FilesMateDotNetHost>
+    </PropertyGroup>
+    <Exec Command="&quot;$(FilesMateDotNetHost)&quot; msbuild &quot;$(MSBuildProjectDirectory)/../FilesMate.SearchHost/FilesMate.SearchHost.csproj&quot; -restore -target:Publish -m:1 -nr:false -p:UseSharedCompilation=false -p:Configuration=&quot;$(Configuration)&quot; -p:Platform=x64 -p:RuntimeIdentifier=win-x64 -p:SelfContained=true -p:OutputPath=&quot;$(MSBuildProjectDirectory)/../../artifacts/search-host-build/$(Configuration)/&quot; -p:PublishDir=&quot;$(TargetDir)SearchHost/&quot; -p:DebugType=None -p:DebugSymbols=false -p:Version=&quot;$(Version)&quot; -p:VersionPrefix=&quot;$(VersionPrefix)&quot; -p:VersionSuffix=&quot;$(VersionSuffix)&quot; -p:FileVersion=&quot;$(FileVersion)&quot; -p:AssemblyVersion=&quot;$(AssemblyVersion)&quot; -p:RestoreConfigFile=&quot;$(RestoreConfigFile)&quot; -p:FilesMateAllowLegacyImageSharpRisk=&quot;$(FilesMateAllowLegacyImageSharpRisk)&quot; -p:RestorePackagesPath=&quot;$(RestorePackagesPath)&quot;"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
   <Target Name="PublishSearchHost" AfterTargets="Publish" Condition="'$(FilesMateUITest)' != 'true'">
     <ItemGroup><SearchHostFiles Include="$(TargetDir)SearchHost\**\*" /></ItemGroup>

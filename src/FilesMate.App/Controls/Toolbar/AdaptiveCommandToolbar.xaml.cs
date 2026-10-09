@@ -20,21 +20,39 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
     private CommandContext _context = CommandContext.ForToolbar(0);
     private bool _overflowPending;
     public bool SearchMode { get; set; }
+    public void SetFilterHeader(FrameworkElement header)
+    {
+        FilterHeader.Content = header;
+        header.SizeChanged += (_, _) => ScheduleOverflow();
+        if (header is Panel panel)
+            foreach (var button in panel.Children.OfType<Button>())
+                button.SizeChanged += (_, _) => ScheduleOverflow();
+        ScheduleOverflow();
+    }
     private readonly List<MenuFlyoutItem> _extraOverflowSortItems = [];
     private readonly List<(AppCommandId Id, MenuFlyoutItem Item)> _overflowFileItems = [];
     private readonly MenuFlyoutSeparator _fileOverflowSeparator = new();
     private readonly List<(AppCommandId Id, MenuFlyoutItem Item)> _newDocumentItems = [];
     private readonly MenuFlyoutSubItem _overflowNew = new();
     private EntrySort _sort = EntrySort.Name;
-    private readonly MenuFlyoutSubItem _overflowDirection;
-    private readonly MenuFlyoutSubItem _overflowGrouping;
+    private readonly MenuFlyoutSubItem _overflowDirection = new();
+    private readonly MenuFlyoutSubItem _overflowGrouping = new();
     public event EventHandler<bool>? SortDirectionRequested;
     public event EventHandler<EntryGrouping>? GroupingRequested;
     public void SetSort(EntrySort sort) { _sort = sort; SyncGroupingIcon(); }
 
-    public AdaptiveCommandToolbar()
+    private readonly bool _isCustomizationPreview;
+
+    public AdaptiveCommandToolbar() : this(customizationPreview: false) { }
+
+    // Load the same XAML for the editor, without application subscriptions,
+    // command-menu construction or persistence-capable initialization.
+    private AdaptiveCommandToolbar(bool customizationPreview)
     {
+        _isCustomizationPreview = customizationPreview;
         InitializeComponent();
+        InitializeToolbarLayout();
+        if (customizationPreview) return;
         InitializeHiddenFiles();
         NewFolderItem.Text = StringTable.Get("Command_NewFolder");
         NewFileItem.Text = StringTable.Get("NewDocument_Text");
@@ -161,6 +179,7 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
         NewFileItem.IsEnabled = CommandCatalog.CanExecute(AppCommandId.NewFile, _context);
         HiddenFilesButton.Visibility = SearchMode ? Visibility.Collapsed : Visibility.Visible;
         ShelfButton.Visibility = PreviewButton.Visibility = Visibility.Visible;
+        _toolbarUnits[ToolbarTool.SplitView].Visibility = Visibility.Visible;
         GroupingGroup.Visibility = GroupingButton.Visibility = Visibility.Visible;
         FolderSizesButton.Visibility = DualPaneButton.Visibility = PaneArrangementButton.Visibility = SearchMode ? Visibility.Collapsed : Visibility.Visible;
         ApplyHiddenTools();
@@ -173,7 +192,7 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
     {
         _viewKind = kind;
         ViewIcon.Glyph = kind switch { FileLayoutKind.List => "\uEA37", FileLayoutKind.Grid => "\uF0E2", _ => "\uE8FD" };
-        var label = StringTable.Get(kind switch { FileLayoutKind.List => "Layout_List", FileLayoutKind.Grid => _viewSize.ZoomKey, _ => "Layout_Details" });
+        var label = _recursiveViewEnabled ? StringTable.Get("Recursive_Toggle") : StringTable.Get(kind switch { FileLayoutKind.List => "Layout_List", FileLayoutKind.Grid => _viewSize.ZoomKey, _ => "Layout_Details" });
         ToolTipService.SetToolTip(ViewMenuButton, StringTable.Get("View_Options") + " · " + label);
         AutomationProperties.SetName(ViewMenuButton, StringTable.Get("View_Options") + " · " + label);
     }
@@ -291,6 +310,7 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
         SortButton.Visibility = overflow.ShowSort && sortState.Visible && !Hidden(ToolbarTool.Sort) ? Visibility.Visible : Visibility.Collapsed;
         ViewMenuButton.Visibility = overflow.ShowView && !Hidden(ToolbarTool.ViewMenu) ? Visibility.Visible : Visibility.Collapsed;
         MoreButton.Visibility = overflow.ShowMore || fileOverflow ? Visibility.Visible : Visibility.Collapsed;
+        FilterHeader.Visibility = !SearchMode && !Hidden(ToolbarTool.Filters) && FilterHeader.Content is FrameworkElement { Visibility: Visibility.Visible } ? Visibility.Visible : Visibility.Collapsed;
 
         // Account for labels, font scaling and the always-visible utility buttons.
         ViewGroup.Measure(new Windows.Foundation.Size(double.PositiveInfinity, 40));
@@ -344,9 +364,18 @@ public sealed partial class AdaptiveCommandToolbar : UserControl
             foreach (var (id, item) in _overflowFileItems)
                 if (id is AppCommandId.NewFolder or AppCommandId.NewFile) item.Visibility = Visibility.Collapsed;
         }
+        _overflowFilters.Visibility = Visibility.Collapsed;
+        ViewGroup.Measure(new Windows.Foundation.Size(double.PositiveInfinity, 40));
+        if (ViewGroup.DesiredSize.Width > width && FilterHeader.Visibility == Visibility.Visible)
+        {
+            FilterHeader.Visibility = Visibility.Collapsed;
+            _overflowFilters.Visibility = Visibility.Visible;
+            MoreButton.Visibility = Visibility.Visible;
+        }
         if (!((MenuFlyout)MoreButton.Flyout).Items.Any(item => item is not MenuFlyoutSeparator && item.Visibility == Visibility.Visible))
             MoreButton.Visibility = Visibility.Collapsed;
         ApplyHiddenTools();
+        if (_overflowFilters.Visibility == Visibility.Visible) FilterHeader.Visibility = Visibility.Collapsed;
     }
 
     private void UpdateGroups()

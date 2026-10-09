@@ -38,6 +38,8 @@ public static class DetachedProcess
     /// <exception cref="Win32Exception">The executable could not be started by any route.</exception>
     public static int Start(string executable, IReadOnlyList<string> arguments, bool hidden = false)
     {
+        if (FilesMate.Core.Configuration.RuntimeProfile.IsIsolated)
+            arguments = FilesMate.Core.Configuration.RuntimeProfile.ForExecutable(executable, arguments);
         var directory = Path.GetDirectoryName(executable);
         var flags = hidden ? Kernel32.CreateNoWindow : 0u;
         if (TryCreateProcess(executable, arguments, directory, flags | Kernel32.CreateBreakawayFromJob, !hidden, out var pid, out var error)) return pid;

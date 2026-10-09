@@ -36,7 +36,7 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <ScrollViewer
+        <ScrollViewer Grid.Row="0"
             x:Name="PlacesScroll"
             Padding="{Binding IsCompact, ElementName=Root, Converter={StaticResource RailPadding}}"
             HorizontalScrollBarVisibility="Disabled"
@@ -109,6 +109,7 @@
                                     Margin="0,0,4,0"
                                     VerticalAlignment="Center"
                                     Click="SectionAction_Click"
+                                    Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
                                     Style="{StaticResource QuietButtonStyle}"
                                     Tag="{x:Bind}"
                                     ToolTipService.ToolTip="{x:Bind ActionLabel}"
@@ -117,7 +118,6 @@
                                     <FontIcon
                                         FontFamily="Segoe Fluent Icons"
                                         FontSize="11"
-                                        Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
                                         Glyph="&#xE710;" />
                                 </Button>
                             </Grid>
@@ -131,6 +131,7 @@
                                 DragItemsStarting="Place_DragItemsStarting"
                                 DragItemsCompleted="Place_DragItemsCompleted"
                                 ContextRequested="Item_ContextRequested"
+                                ContainerContentChanging="Place_ContainerContentChanging"
                                 Style="{StaticResource SidebarPlaceListStyle}"
                                 Visibility="{x:Bind IsExpanded, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
                                 <ListView.ItemTemplate>
@@ -169,13 +170,12 @@
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock
                                                     VerticalAlignment="Center"
-                                                    Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
                                                     Text="{x:Bind Label}"
                                                     TextTrimming="CharacterEllipsis" />
                                                 <TextBlock
                                                     Grid.Column="1"
                                                     VerticalAlignment="Center"
-                                                    Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
+                                                    Opacity="{ThemeResource FilesMate.Text.SecondaryOpacity}"
                                                     Style="{StaticResource CaptionTextBlockStyle}"
                                                     Text="{x:Bind Badge}" />
                                             </Grid>
@@ -210,13 +210,11 @@
                         VerticalAlignment="Center"
                         FontFamily="Segoe Fluent Icons"
                         FontSize="16"
-                        Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
                         Glyph="&#xE713;" />
                     <TextBlock
                         x:Name="SettingsLabel"
                         Margin="40,0,12,0"
                         VerticalAlignment="Center"
-                        Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
                         Text="Settings"
                         Visibility="{Binding IsCompact, ElementName=Root, Converter={StaticResource TrueCollapsed}}" />
                 </Grid>

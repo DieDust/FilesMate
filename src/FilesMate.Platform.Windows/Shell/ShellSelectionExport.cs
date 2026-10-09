@@ -117,3 +117,4 @@ public sealed class SelectionShellBrowser(nint handle, ShellSelectionDocument do
         finally { Marshal.Release(unknown); }
     }
 }
+

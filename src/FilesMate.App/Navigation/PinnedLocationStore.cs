@@ -45,9 +45,7 @@ public sealed class PinnedLocationStore
     public string FilePath { get; }
 
     public static string DefaultFilePath =>
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FilesMate",
+        Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath,
             "pinned-locations.json");
 
     public IReadOnlyList<string> Load() => LoadState().Paths;

@@ -2,7 +2,7 @@ using FilesMate.App.Localization;
 
 namespace FilesMate.App.Models;
 
-public sealed record SettingsSearchEntry(string Category, string TitleKey, string TargetName, string DescriptionKey = "", string Aliases = "")
+public sealed record SettingsSearchEntry(string Category, string TitleKey, string TargetName, string DescriptionKey = "", string Aliases = "", string? RevealContainerName = null)
 {
     public string Title => StringTable.Get(TitleKey);
     public string CategoryTitle => StringTable.Get(Category switch
@@ -24,6 +24,10 @@ public static class SettingsSearchCatalog
         new("general", "OpenInExistingWindowTitle", "OpenInExistingWindowCard", "OpenInExistingWindowDescription", ""),
         new("general", "OpenFoldersNewTabTitle", "OpenFoldersCard", "OpenFoldersNewTabDescription", ""),
         new("general", "Tab_MemoryMode", "TabMemoryBox", "Tab_MemoryHint", ""),
+        new("appearance", "Skin_Advanced", "SkinAdvancedExpander", "Skin_Lead", "skin palette advanced", "SkinAdvancedExpander"),
+        new("appearance", "Skin_Name", "SkinNameBox", "", "skin name", "SkinAdvancedExpander"),
+        new("appearance", "Skin_Hex", "SkinHexBox", "Skin_DerivedHint", "RGB HEX color", "SkinAdvancedExpander"),
+        new("appearance", "Skin_Import", "SkinImportButton", "", "skin import JSON", "SkinAdvancedExpander"),
         new("appearance", "UseBundledFileIcons", "FileIconsCard", "UseBundledFileIconsHint", ""),
         new("appearance", "ThemeSection", "ThemeCard", "ThemeDescription", ""),
         new("appearance", "Font_Family", "FileFontCard", "Font_Hint", "字体 字体大小 清晰 font typography"),
@@ -59,6 +63,7 @@ public static class SettingsSearchCatalog
         new("files-folders", "AlphabetDualPaneTitle", "AlphabetDualPaneCard", "AlphabetDualPaneDescription", ""),
         new("files-folders", "ConfirmDeleteSettingTitle", "ConfirmDeleteCard", "ConfirmDeleteSettingDescription", ""),
         new("files-folders", "Backup_Title", "BackupManageButton", "Backup_Policy", ""),
+        new("files-folders", "Backup_Enable", "BackupEnabledToggle", "Backup_EnableHint", ""),
         new("files-folders", "SidebarPinsTitle", "SidebarPinsCard", "SidebarPinsDescription", ""),
         new("search", "SearchIndexTitle", "IndexCard", "SearchIndexDescription", ""),
         new("search", "SearchProgress", "ProgressCard", "", ""),

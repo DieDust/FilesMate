@@ -9,9 +9,15 @@ public static class GlassMaterialPolicy
     // prevents wallpaper color from changing the contrast between those surfaces.
     public static double LayerCoverage(double opacity) => 0.40 + 0.60 * Curve(opacity);
     public static double ContentCoverage(double opacity) => LayerCoverage(opacity);
-    public static double FloatingCoverage(double opacity) =>
+    public static double ConnectedCoverage(double opacity) =>
         1 - (1 - FoundationCoverage(opacity)) * (1 - LayerCoverage(opacity));
+    // Floating text needs a stronger veil than a file canvas. This coverage is
+    // applied to the tint over blur, never to the popup or its foreground.
+    public static double FloatingCoverage(double opacity) => 1 - 0.34 * Math.Pow(1 - Curve(opacity), 2);
     public static double CardCoverage(double opacity) => LayerCoverage(opacity);
+
+    public static double EffectiveOpacity(double opacity, bool transparencyEnabled, bool highContrast) =>
+        transparencyEnabled && !highContrast ? Math.Clamp(opacity, 0, 1) : 1;
 
     // Preserve the palette's channel differences after alpha compositing rather
     // than making high-transparency layers opaque. Always use the original palette.

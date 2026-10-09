@@ -15,9 +15,7 @@ public sealed record SearchIndexSettings(
 
     public const int MaxAllowedDepth = 32;
 
-    public static string DefaultDatabaseDirectory => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "FilesMate");
+    public static string DefaultDatabaseDirectory => FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath;
 
     public static SearchIndexSettings Default => Sanitize(
         roots: null,
@@ -73,6 +71,7 @@ public sealed record SearchIndexSettings(
 
     private static string SanitizeDirectory(string? directory)
     {
+        if (FilesMate.Core.Configuration.RuntimeProfile.HasPrivateProfile) return DefaultDatabaseDirectory;
         if (string.IsNullOrWhiteSpace(directory))
         {
             return DefaultDatabaseDirectory;

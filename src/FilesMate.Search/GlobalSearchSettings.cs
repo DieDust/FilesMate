@@ -1,4 +1,7 @@
 using System.IO.Pipes;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -44,7 +47,7 @@ public readonly record struct SearchHotkey(uint Modifiers, uint Key)
 
 public static class GlobalSearchConfiguration
 {
-    public static string DefaultDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FilesMate");
+    public static string DefaultDirectory => FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath;
     public static string SettingsPath(string? directory = null) => Path.Combine(directory ?? DefaultDirectory, "global-search.json");
     public static GlobalSearchSettings Load(string? directory = null)
     {
@@ -52,10 +55,12 @@ public static class GlobalSearchConfiguration
         {
             var settings = JsonSerializer.Deserialize<GlobalSearchSettings>(File.ReadAllText(SettingsPath(directory)),
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            return settings?.Normalize() ?? new();
+            return PortableSettings(settings?.Normalize() ?? new());
         }
-        catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { return new(); }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { return PortableSettings(new()); }
     }
+    private static GlobalSearchSettings PortableSettings(GlobalSearchSettings settings) =>
+        FilesMate.Core.Configuration.RuntimeProfile.IsPortable ? settings with { StartAtLogin = false } : settings;
     public static void Save(GlobalSearchSettings settings, string? directory = null)
     {
         if (!SearchHotkey.TryParse(settings.Hotkey, out var key)) throw new ArgumentException("Use a modifier and Space, a letter, digit, or function key.");
@@ -64,7 +69,7 @@ public static class GlobalSearchConfiguration
         var temporary = path + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
         {
-            File.WriteAllText(temporary, JsonSerializer.Serialize(settings.Normalize()));
+            File.WriteAllText(temporary, JsonSerializer.Serialize(PortableSettings(settings.Normalize())));
             File.Move(temporary, path, overwrite: true);
         }
         finally { if (File.Exists(temporary)) File.Delete(temporary); }
@@ -72,6 +77,8 @@ public static class GlobalSearchConfiguration
     public static string ResolveDatabase(string? directory = null)
     {
         var root = directory ?? DefaultDirectory;
+        if (FilesMate.Core.Configuration.RuntimeProfile.HasPrivateProfile)
+            return Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "search-index.db");
         try
         {
             var document = SearchIndexConfigurationFile.Read(Path.Combine(root, "search-index.json"));
@@ -89,9 +96,15 @@ public static class GlobalSearchConfiguration
     }
 }
 
-public sealed record SearchHostRequest(string Command, GlobalSearchSettings? Settings = null, string? ManagerPath = null);
+public sealed record SearchHostRequest(string Command, GlobalSearchSettings? Settings = null, string? ManagerPath = null,
+    SearchAppearancePreview? AppearancePreview = null, int PreviewOwnerPid = 0,
+    string? PreviewSessionId = null, long PreviewEpoch = 0, long PreviewOwnerStartedUtcTicks = 0, string? PreviewOperation = null);
 public sealed record SearchHostReply(bool Ok, string Message, bool HotkeyRegistered = false, bool Visible = false, int Pid = 0, string? ErrorCode = null)
 {
+    // Set only by the client from the connected native pipe peer; never accepted from wire JSON.
+    [System.Text.Json.Serialization.JsonIgnore]
+    public long VerifiedServerStartedUtcTicks { get; init; }
+
     // Older resident hosts omit ErrorCode. Keep their conflict response actionable after upgrade.
     [System.Text.Json.Serialization.JsonIgnore]
     public bool IsHotkeyConflict => !Ok && (ErrorCode == "HotkeyConflict" || ErrorCode is null &&
@@ -131,12 +144,29 @@ public static class SearchHostClient
             await using var pipe = new NamedPipeClientStream(".", GlobalSearchConfiguration.PipeName(directory), PipeDirection.InOut,
                 PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
             await pipe.ConnectAsync(timeout.Token).ConfigureAwait(false);
+            using var server = OperatingSystem.IsWindows() ? OpenPipeServer(pipe.SafePipeHandle) : null;
+            if (OperatingSystem.IsWindows() && server is null) return null;
+            var serverStartedTicks = server?.StartTime.ToUniversalTime().Ticks ?? 0;
             using var writer = new StreamWriter(pipe, leaveOpen: true) { AutoFlush = true };
             using var reader = new StreamReader(pipe, leaveOpen: true);
             await writer.WriteLineAsync(message.AsMemory(), timeout.Token).ConfigureAwait(false);
             var response = await SearchHostProtocol.ReadAsync(reader, SearchHostProtocol.MaximumReplyCharacters, timeout.Token).ConfigureAwait(false);
-            return response is null ? null : JsonSerializer.Deserialize<SearchHostReply>(response);
+            var reply = response is null ? null : JsonSerializer.Deserialize<SearchHostReply>(response);
+            if (server is not null && (server.HasExited || reply?.Pid != server.Id)) return null;
+            return reply is null ? null : reply with { VerifiedServerStartedUtcTicks = serverStartedTicks };
         }
-        catch (Exception e) when (e is IOException or InvalidDataException or OperationCanceledException or UnauthorizedAccessException or JsonException) { return null; }
+        catch (Exception e) when (e is IOException or InvalidDataException or OperationCanceledException
+            or UnauthorizedAccessException or JsonException or ArgumentException or InvalidOperationException
+            or System.ComponentModel.Win32Exception) { return null; }
     }
+
+    private static Process? OpenPipeServer(SafePipeHandle pipe)
+    {
+        if (!GetNamedPipeServerProcessId(pipe, out var pid) || pid == 0 || pid > int.MaxValue) return null;
+        return Process.GetProcessById((int)pid);
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetNamedPipeServerProcessId(SafePipeHandle pipe, out uint serverProcessId);
 }

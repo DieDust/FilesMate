@@ -6,6 +6,7 @@ using FilesMate.App.Theming;
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
@@ -79,6 +80,7 @@ internal sealed class TagPickerPanel : UserControl
     private readonly Dictionary<long, Button> _removeButtons = [];
     private IReadOnlyList<TagDefinition> _tags = [];
     private HashSet<long> _appliedIds = [];
+    private HashSet<long> _removableIds = [];
     private bool _busy;
 
     public TagPickerPanel(
@@ -155,6 +157,7 @@ internal sealed class TagPickerPanel : UserControl
             }
 
             _appliedIds = TagPickerLogic.SharedIds(perFile);
+            _removableIds = TagPickerLogic.PresentIds(perFile);
             RebuildList();
         }
         catch (Exception error)
@@ -218,9 +221,10 @@ internal sealed class TagPickerPanel : UserControl
 
     private UIElement CreateTagRow(TagDefinition tag)
     {
-        var applied = _appliedIds.Contains(tag.Id);
         var remove = CreateRemoveButton(tag);
-        SetRemoveVisible(remove, applied);
+        // A mixed selection can still remove a tag present on only some files.
+        // Adding remains available until every selected file has the tag.
+        SetRemoveVisible(remove, _removableIds.Contains(tag.Id));
         _removeButtons[tag.Id] = remove;
         var add = CreateRowButton(tag.Name, tag.Color);
         var captured = tag.Id;
@@ -295,14 +299,18 @@ internal sealed class TagPickerPanel : UserControl
             button.Style = style;
         }
 
-        button.Width = 22;
-        button.Height = 22;
-        button.MinWidth = 22;
+        button.Width = 32;
+        button.Height = 32;
+        button.MinWidth = 32;
+        button.MinHeight = 32;
         button.Padding = new Thickness(0);
         button.VerticalAlignment = VerticalAlignment.Center;
+        button.HorizontalContentAlignment = HorizontalAlignment.Center;
+        button.VerticalContentAlignment = VerticalAlignment.Center;
 
-        AutomationProperties.SetName(button, StringTable.Get("Tag_Remove"));
-        ToolTipService.SetToolTip(button, StringTable.Get("Tag_Remove"));
+        var removeLabel = StringTable.Get("Tag_Remove") + " " + tag.Name;
+        AutomationProperties.SetName(button, removeLabel);
+        ToolTipService.SetToolTip(button, removeLabel);
         var id = tag.Id;
         button.Click += (_, _) => _ = DispatcherQueue.TryEnqueue(() => _ = ApplyAsync(id, apply: false));
         return button;
@@ -383,6 +391,7 @@ internal sealed class TagPickerPanel : UserControl
     private void MarkApplied(long id, bool apply)
     {
         _appliedIds = TagPickerLogic.With(_appliedIds, id, apply);
+        _removableIds = TagPickerLogic.With(_removableIds, id, apply);
         if (_removeButtons.TryGetValue(id, out var remove))
         {
             SetRemoveVisible(remove, apply);
@@ -398,8 +407,10 @@ internal sealed class TagPickerPanel : UserControl
     private static void SetRemoveVisible(Button button, bool visible)
     {
         button.Opacity = visible ? 1 : 0;
+        button.IsEnabled = visible;
         button.IsHitTestVisible = visible;
         button.IsTabStop = visible;
+        AutomationProperties.SetAccessibilityView(button, visible ? AccessibilityView.Content : AccessibilityView.Raw);
     }
 
     private static bool TryStyle(string key, out Style style)

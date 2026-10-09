@@ -17,6 +17,9 @@ public static class FileColumnLayout
     public const double ContentRight = 16;
     public const double AccentWidth = 3;
     public const double GlyphWidth = 24;
+    public const double RecursiveArrowWidth = 16;
+    // Tree depth is independent of icon size and reserves one compact step per level.
+    public const double RecursiveIndentWidth = 8;
     public const double NameWidth = 240;
     public const double ModifiedWidth = 148;
     public const double TypeWidth = 100;
@@ -139,6 +142,14 @@ public static class FileRowVisualStates
     public const string Focused = "Focused";
     public const string Dragging = "Dragging";
     public const string DropTarget = "DropTarget";
+    public const string UnfocusedItem = "UnfocusedItem";
+    public const string FocusedItem = "FocusedItem";
+    public const string FocusedSelectedItem = "FocusedSelectedItem";
+
+    // Focus remains visible while a selected item is hovered or pressed.
+    public static string ResolveFocus(bool focused, bool selected, bool pressed, bool dragging, bool dropTarget) =>
+        !focused || dragging || dropTarget ? UnfocusedItem
+        : selected || pressed ? FocusedSelectedItem : FocusedItem;
 
     public static readonly string[] All =
     [

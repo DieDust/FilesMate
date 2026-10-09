@@ -11,7 +11,9 @@ internal static class BackupHistoryDialog
 {
     internal static string Usage()
     {
-        ReplacementBackupBudget.Shared.CanReserve(0); // Refresh the shared ledger without scanning user folders.
+        try { ReplacementBackupBudget.Shared.Refresh(); }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        { return StringTable.Get("Backup_LocationUnavailable") + " " + error.Message; }
         return StringTable.Format("Backup_Usage", (ReplacementBackupBudget.Shared.UsedBytes / 1048576d).ToString("0.##"),
             ReplacementBackupBudget.Shared.Entries.Count);
     }

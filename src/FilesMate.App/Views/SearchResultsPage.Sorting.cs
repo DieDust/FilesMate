@@ -28,13 +28,13 @@ public sealed partial class SearchResultsPage
         var generation = _generation; var store = _resultStore; var rows = _rows;
         try
         {
+            var entries = store.CaptureSnapshot(cancellation.Token);
             // Name/size/date/type already exist in the result snapshot. Use the same
             // comparer as folder views, including pinyin and alphabet sections.
             var property = sort.Column switch
             {
                 EntrySortColumn.ShellProperty => sort.PropertyName,
-                EntrySortColumn.Created => "System.DateCreated", EntrySortColumn.Accessed => "System.DateAccessed",
-                EntrySortColumn.Attributes => "System.FileAttributes", _ => null
+                _ => null
             };
             ConcurrentDictionary<int, EntryPropertyValue>? values = null;
             var indexSort = sort;
@@ -42,7 +42,6 @@ public sealed partial class SearchResultsPage
             {
                 values = new();
                 indexSort = sort with { Column = EntrySortColumn.ShellProperty };
-                var entries = store.Observe(items => items.ToArray());
                 await Parallel.ForEachAsync(entries, new ParallelOptions { MaxDegreeOfParallelism = 3, CancellationToken = cancellation.Token }, async (entry, token) =>
                 {
                     var row = rows[entry.Id];
@@ -54,9 +53,12 @@ public sealed partial class SearchResultsPage
                     else values[entry.Id] = new(sort.Column == EntrySortColumn.Location ? row.Folder : row.Path);
                 });
             }
-            var index = await Task.Run(() => EntryViewIndex.Build(store, indexSort,
+            var index = await Task.Run(() => EntryViewIndex.Build(entries, indexSort,
                 EntryFilter.None, WindowsNameComparer.Instance, generation, null, cancellation.Token, propertyValues: values), cancellation.Token);
+            // Metadata-triggered sorting must also wait for ongoing pointer/rename work.
+            while (Results.IsMemoryReclamationBusy) await Task.Delay(50, cancellation.Token);
             if (_disposed || cancellation.IsCancellationRequested || generation != _generation || !ReferenceEquals(store, _resultStore) || _resultSort != sort) return;
+            if (!index.IsCurrent(store)) { _ = ApplyResultSortAsync(); return; }
             Results.Bind(store, index, generation); Results.SetSort(sort); UpdateStatusSelection();
         }
         catch (OperationCanceledException) { }

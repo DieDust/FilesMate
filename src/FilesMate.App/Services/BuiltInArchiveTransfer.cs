@@ -253,7 +253,7 @@ internal static class BuiltInArchiveTransfer
         if (record.Replacements.Count == 0) return record;
         var files = new List<string>();
         var directories = new HashSet<string>(record.CreatedDirectories, StringComparer.OrdinalIgnoreCase);
-        var backups = record.Replacements.Select(item => Path.GetDirectoryName(item.Backup)!)
+        var backups = record.Replacements.Select(item => ReplacementBackupLayout.ContainerDirectory(Path.GetDirectoryName(item.Backup)!))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         var replacementAncestors = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var replacement in record.Replacements)

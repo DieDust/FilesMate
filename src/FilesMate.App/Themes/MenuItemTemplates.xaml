@@ -38,25 +38,21 @@
                     <VisualState x:Name="NoPlaceholder" />
                     <VisualState x:Name="CheckPlaceholder">
                         <VisualState.Setters>
-                            <Setter Target="TextBlock.Margin" Value="{ThemeResource MenuFlyoutItemPlaceholderThemeThickness}" />
-                        </VisualState.Setters>
+                            </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="IconPlaceholder">
                         <VisualState.Setters>
-                            <Setter Target="TextBlock.Margin" Value="{ThemeResource MenuFlyoutItemPlaceholderThemeThickness}" />
                             <Setter Target="IconRoot.Visibility" Value="Visible" />
                         </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="CheckAndIconPlaceholder">
                         <VisualState.Setters>
-                            <Setter Target="TextBlock.Margin" Value="{ThemeResource MenuFlyoutItemDoublePlaceholderThemeThickness}" />
-                            <Setter Target="IconRoot.Margin" Value="{ThemeResource MenuFlyoutItemPlaceholderThemeThickness}" />
                             <Setter Target="IconRoot.Visibility" Value="Visible" />
                         </VisualState.Setters>
                     </VisualState>
                 </VisualStateGroup>
-                <!-- Narrow padding is only applied when flyout was invoked with pen, mouse or keyboard. -->
-                <!-- Default padding is applied for all other cases including touch. -->
+                
+                
                 <VisualStateGroup x:Name="PaddingSizeStates">
                     <VisualState x:Name="DefaultPadding" />
                     <VisualState x:Name="NarrowPadding">
@@ -76,100 +72,65 @@
                     </VisualState>
                 </VisualStateGroup>
             </VisualStateManager.VisualStateGroups>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <Viewbox x:Name="IconRoot" HorizontalAlignment="Left" VerticalAlignment="Center" Width="16" Height="16" Visibility="Collapsed">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="{StaticResource FilesMate.Menu.LeadingSlotWidth}" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><Viewbox x:Name="IconRoot" HorizontalAlignment="Left" VerticalAlignment="Center" Width="16" Height="16" Visibility="Collapsed" Grid.Column="0">
                 <ContentPresenter x:Name="IconContent" Content="{TemplateBinding Icon}" Foreground="{TemplateBinding Foreground}" />
             </Viewbox>
-            <TextBlock x:Name="TextBlock" Text="{TemplateBinding Text}" TextTrimming="{ThemeResource MenuFlyoutItemTextTrimming}" Foreground="{TemplateBinding Foreground}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-            <TextBlock x:Name="KeyboardAcceleratorTextBlock" Grid.Column="1" Style="{ThemeResource CaptionTextBlockStyle}" Text="{TemplateBinding KeyboardAcceleratorTextOverride}" MinWidth="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.KeyboardAcceleratorTextMinWidth}" Margin="24,4,0,0" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" TextAlignment="Right" HorizontalAlignment="Right" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
+            <TextBlock x:Name="TextBlock" Text="{TemplateBinding Text}" TextTrimming="{ThemeResource MenuFlyoutItemTextTrimming}" Foreground="{TemplateBinding Foreground}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Grid.Column="1" Margin="0" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" />
+            <TextBlock x:Name="KeyboardAcceleratorTextBlock" Grid.Column="2" Style="{ThemeResource CaptionTextBlockStyle}" Text="{TemplateBinding KeyboardAcceleratorTextOverride}" MinWidth="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.KeyboardAcceleratorTextMinWidth}" Margin="{StaticResource FilesMate.Menu.AcceleratorBaselineGap}" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" TextAlignment="Right" HorizontalAlignment="Right" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
         </Grid>
     </ControlTemplate>
     <ControlTemplate TargetType="ToggleMenuFlyoutItem" x:Key="FilesMate.ToggleMenuFlyoutItemTemplate">
-        <Grid x:Name="LayoutRoot" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Margin="{StaticResource MenuFlyoutItemMargin}" CornerRadius="{TemplateBinding CornerRadius}">
+        <Grid x:Name="LayoutRoot" Background="Transparent" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+            <Border x:Name="NormalFill" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}" IsHitTestVisible="False" />
+            <Border x:Name="SelectedFill" Background="{ThemeResource FilesMate.Menu.ItemSelectedBrush}" CornerRadius="{TemplateBinding CornerRadius}" Visibility="Collapsed" IsHitTestVisible="False" />
+            <Viewbox x:Name="IconRoot" Width="16" Height="16" Margin="{TemplateBinding Padding}" HorizontalAlignment="Left" VerticalAlignment="Center" Visibility="Collapsed"><ContentPresenter x:Name="IconContent" Content="{TemplateBinding Icon}" Foreground="{TemplateBinding Foreground}" /></Viewbox>
+            <Grid x:Name="NormalContent" Padding="{TemplateBinding Padding}">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="{ThemeResource FilesMate.Menu.LeadingSlotWidth}" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <TextBlock x:Name="TextBlock" Grid.Column="1" Text="{TemplateBinding Text}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" FontWeight="{TemplateBinding FontWeight}" Foreground="{TemplateBinding Foreground}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
+                <TextBlock x:Name="KeyboardAcceleratorTextBlock" Grid.Column="2" Text="{TemplateBinding KeyboardAcceleratorTextOverride}" MinWidth="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.KeyboardAcceleratorTextMinWidth}" FontSize="12" Margin="{StaticResource FilesMate.Menu.AcceleratorGap}" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" VerticalAlignment="Center" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
+            </Grid>
+            <Grid x:Name="SelectedContent" Padding="{TemplateBinding Padding}" Visibility="Collapsed">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="{ThemeResource FilesMate.Menu.LeadingSlotWidth}" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <TextBlock x:Name="SelectedTextBlock" Grid.Column="1" Text="{TemplateBinding Text}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" FontWeight="SemiBold" Foreground="{ThemeResource FilesMate.Menu.ItemSelectedForegroundBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" AutomationProperties.AccessibilityView="Raw" />
+                <TextBlock x:Name="SelectedAcceleratorTextBlock" Grid.Column="2" Text="{TemplateBinding KeyboardAcceleratorTextOverride}" MinWidth="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.KeyboardAcceleratorTextMinWidth}" FontSize="12" Margin="{StaticResource FilesMate.Menu.AcceleratorGap}" Foreground="{ThemeResource FilesMate.Menu.ItemSelectedForegroundBrush}" VerticalAlignment="Center" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
+            </Grid>
             <VisualStateManager.VisualStateGroups>
                 <VisualStateGroup x:Name="CommonStates">
                     <VisualState x:Name="Normal" />
-                    <VisualState x:Name="PointerOver">
-                        <VisualState.Setters>
-                            <Setter Target="LayoutRoot.Background" Value="{ThemeResource FilesMate.Menu.ItemHoverBrush}" />
-                            <Setter Target="TextBlock.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
-                            <Setter Target="CheckGlyph.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
-                            <Setter Target="IconContent.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
-                            <Setter Target="KeyboardAcceleratorTextBlock.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
-                        </VisualState.Setters>
-                    </VisualState>
-                    <VisualState x:Name="Pressed">
-                        <VisualState.Setters>
-                            <Setter Target="LayoutRoot.Background" Value="{ThemeResource FilesMate.Menu.ItemPressedBrush}" />
-                            <Setter Target="TextBlock.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
-                            <Setter Target="CheckGlyph.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
-                            <Setter Target="IconContent.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
-                            <Setter Target="KeyboardAcceleratorTextBlock.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
-                        </VisualState.Setters>
-                    </VisualState>
-                    <VisualState x:Name="Disabled">
-                        <VisualState.Setters>
-                            <Setter Target="TextBlock.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
-                            <Setter Target="CheckGlyph.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
-                            <Setter Target="IconContent.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
-                            <Setter Target="KeyboardAcceleratorTextBlock.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
-                        </VisualState.Setters>
-                    </VisualState>
+                    <VisualState x:Name="PointerOver"><VisualState.Setters>
+                        <Setter Target="NormalFill.Background" Value="{ThemeResource FilesMate.Menu.ItemHoverBrush}" />
+                        <Setter Target="SelectedFill.Background" Value="{ThemeResource FilesMate.Menu.ItemSelectedHoverBrush}" />
+                        <Setter Target="TextBlock.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                    </VisualState.Setters></VisualState>
+                    <VisualState x:Name="Pressed"><VisualState.Setters>
+                        <Setter Target="NormalFill.Background" Value="{ThemeResource FilesMate.Menu.ItemPressedBrush}" />
+                        <Setter Target="SelectedFill.Background" Value="{ThemeResource FilesMate.Menu.ItemSelectedPressedBrush}" />
+                        <Setter Target="TextBlock.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                    </VisualState.Setters></VisualState>
+                    <VisualState x:Name="Disabled"><VisualState.Setters>
+                        <Setter Target="TextBlock.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
+                        <Setter Target="SelectedTextBlock.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
+                        <Setter Target="IconRoot.Opacity" Value="0.45" />
+                        <Setter Target="KeyboardAcceleratorTextBlock.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
+                        <Setter Target="SelectedAcceleratorTextBlock.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
+                        <Setter Target="SelectedFill.Opacity" Value="0.5" />
+                    </VisualState.Setters></VisualState>
                 </VisualStateGroup>
                 <VisualStateGroup x:Name="CheckStates">
                     <VisualState x:Name="Unchecked" />
-                    <VisualState x:Name="Checked">
-                        <VisualState.Setters>
-                            <Setter Target="CheckGlyph.Opacity" Value="1" />
-                        </VisualState.Setters>
-                    </VisualState>
-                    <VisualState x:Name="UncheckedWithIcon">
-                        <VisualState.Setters>
-                            <Setter Target="TextBlock.Margin" Value="{ThemeResource MenuFlyoutItemPlaceholderThemeThickness}" />
-                            <Setter Target="IconRoot.Visibility" Value="Visible" />
-                        </VisualState.Setters>
-                    </VisualState>
-                    <VisualState x:Name="CheckedWithIcon">
-                        <VisualState.Setters>
-                            <Setter Target="TextBlock.Margin" Value="{ThemeResource MenuFlyoutItemPlaceholderThemeThickness}" />
-                            <Setter Target="IconRoot.Visibility" Value="Visible" />
-                            <Setter Target="CheckGlyph.Opacity" Value="1" />
-                        </VisualState.Setters>
-                    </VisualState>
+                    <VisualState x:Name="Checked"><VisualState.Setters>
+                        <Setter Target="SelectedFill.Visibility" Value="Visible" /><Setter Target="NormalFill.Visibility" Value="Collapsed" /><Setter Target="SelectedContent.Visibility" Value="Visible" /><Setter Target="NormalContent.Visibility" Value="Collapsed" />
+                    </VisualState.Setters></VisualState>
+                    <VisualState x:Name="UncheckedWithIcon"><VisualState.Setters><Setter Target="IconRoot.Visibility" Value="Visible" /></VisualState.Setters></VisualState>
+                    <VisualState x:Name="CheckedWithIcon"><VisualState.Setters>
+                        <Setter Target="SelectedFill.Visibility" Value="Visible" /><Setter Target="NormalFill.Visibility" Value="Collapsed" /><Setter Target="SelectedContent.Visibility" Value="Visible" /><Setter Target="NormalContent.Visibility" Value="Collapsed" /><Setter Target="IconRoot.Visibility" Value="Visible" /><Setter Target="IconContent.Foreground" Value="{ThemeResource FilesMate.Menu.ItemSelectedForegroundBrush}" />
+                    </VisualState.Setters></VisualState>
                 </VisualStateGroup>
-                <VisualStateGroup x:Name="PaddingSizeStates">
-                    <VisualState x:Name="DefaultPadding" />
-                    <VisualState x:Name="NarrowPadding">
-                        <Storyboard>
-                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LayoutRoot" Storyboard.TargetProperty="Padding">
-                                <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource MenuFlyoutItemThemePaddingNarrow}" />
-                            </ObjectAnimationUsingKeyFrames>
-                        </Storyboard>
-                    </VisualState>
-                </VisualStateGroup>
-                <VisualStateGroup x:Name="KeyboardAcceleratorTextVisibility">
-                    <VisualState x:Name="KeyboardAcceleratorTextCollapsed" />
-                    <VisualState x:Name="KeyboardAcceleratorTextVisible">
-                        <VisualState.Setters>
-                            <Setter Target="KeyboardAcceleratorTextBlock.Visibility" Value="Visible" />
-                        </VisualState.Setters>
-                    </VisualState>
-                </VisualStateGroup>
+                <VisualStateGroup x:Name="PaddingSizeStates"><VisualState x:Name="DefaultPadding" /><VisualState x:Name="NarrowPadding" /></VisualStateGroup>
+                <VisualStateGroup x:Name="KeyboardAcceleratorTextVisibility"><VisualState x:Name="KeyboardAcceleratorTextCollapsed" /><VisualState x:Name="KeyboardAcceleratorTextVisible"><VisualState.Setters>
+                    <Setter Target="KeyboardAcceleratorTextBlock.Visibility" Value="Visible" /><Setter Target="SelectedAcceleratorTextBlock.Visibility" Value="Visible" />
+                </VisualState.Setters></VisualState></VisualStateGroup>
             </VisualStateManager.VisualStateGroups>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <FontIcon x:Name="CheckGlyph" FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" Opacity="0" Margin="0,0,16,0" />
-            <Viewbox x:Name="IconRoot" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="16" Height="16" Visibility="Collapsed">
-                <ContentPresenter x:Name="IconContent" Content="{TemplateBinding Icon}" Foreground="{TemplateBinding Foreground}" />
-            </Viewbox>
-            <TextBlock x:Name="TextBlock" Grid.Column="1" Text="{TemplateBinding Text}" TextTrimming="{ThemeResource MenuFlyoutItemTextTrimming}" Foreground="{TemplateBinding Foreground}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-            <TextBlock x:Name="KeyboardAcceleratorTextBlock" Grid.Column="2" Style="{ThemeResource CaptionTextBlockStyle}" Text="{TemplateBinding KeyboardAcceleratorTextOverride}" MinWidth="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.KeyboardAcceleratorTextMinWidth}" Margin="24,0,0,0" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" HorizontalAlignment="Right" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
         </Grid>
     </ControlTemplate>
     <!-- Column choices share one leading slot with action icons. Keep native menu controls
@@ -180,13 +141,28 @@
                 <VisualStateGroup x:Name="CommonStates">
                     <VisualState x:Name="Normal" />
                     <VisualState x:Name="PointerOver">
-                        <VisualState.Setters><Setter Target="LayoutRoot.Background" Value="{ThemeResource FilesMate.Item.HoverBrush}" /></VisualState.Setters>
+                        <VisualState.Setters>
+                            <Setter Target="LayoutRoot.Background" Value="{ThemeResource FilesMate.Menu.ItemHoverBrush}" />
+                            <Setter Target="TextBlock.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                            <Setter Target="IconContent.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                            <Setter Target="KeyboardAcceleratorTextBlock.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                        </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="Pressed">
-                        <VisualState.Setters><Setter Target="LayoutRoot.Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}" /></VisualState.Setters>
+                        <VisualState.Setters>
+                            <Setter Target="LayoutRoot.Background" Value="{ThemeResource FilesMate.Menu.ItemPressedBrush}" />
+                            <Setter Target="TextBlock.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                            <Setter Target="IconContent.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                            <Setter Target="KeyboardAcceleratorTextBlock.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                        </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="Disabled">
-                        <VisualState.Setters><Setter Target="LayoutRoot.Opacity" Value="0.4" /></VisualState.Setters>
+                        <VisualState.Setters>
+                            <Setter Target="LayoutRoot.Background" Value="Transparent" />
+                            <Setter Target="TextBlock.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
+                            <Setter Target="IconContent.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
+                            <Setter Target="KeyboardAcceleratorTextBlock.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
+                        </VisualState.Setters>
                     </VisualState>
                 </VisualStateGroup>
                 <VisualStateGroup x:Name="CheckPlaceholderStates">
@@ -212,74 +188,53 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <Viewbox x:Name="IconRoot" Width="16" Height="16" HorizontalAlignment="Left" VerticalAlignment="Center">
-                <ContentPresenter x:Name="IconContent" Content="{TemplateBinding Icon}" />
+                <ContentPresenter x:Name="IconContent" Content="{TemplateBinding Icon}" Foreground="{ThemeResource FilesMate.Selection.AccentBrush}">
+                    <ContentPresenter.Resources>
+                        <Style TargetType="FontIcon" />
+                    </ContentPresenter.Resources>
+                </ContentPresenter>
             </Viewbox>
             <TextBlock x:Name="TextBlock" Grid.Column="1" Text="{TemplateBinding Text}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" Foreground="{TemplateBinding Foreground}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-            <TextBlock x:Name="KeyboardAcceleratorTextBlock" Grid.Column="2" Text="{TemplateBinding KeyboardAcceleratorTextOverride}" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" Margin="12,0,0,0" VerticalAlignment="Center" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
+            <TextBlock x:Name="KeyboardAcceleratorTextBlock" Grid.Column="2" Text="{TemplateBinding KeyboardAcceleratorTextOverride}" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" Margin="{StaticResource FilesMate.Menu.AcceleratorGap}" VerticalAlignment="Center" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
         </Grid>
     </ControlTemplate>
-    <ControlTemplate TargetType="ToggleMenuFlyoutItem" x:Key="FilesMate.ColumnMenuToggleTemplate">
-        <Grid x:Name="LayoutRoot" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
-            <VisualStateManager.VisualStateGroups>
-                <VisualStateGroup x:Name="CommonStates">
-                    <VisualState x:Name="Normal" />
-                    <VisualState x:Name="PointerOver">
-                        <VisualState.Setters><Setter Target="LayoutRoot.Background" Value="{ThemeResource FilesMate.Item.HoverBrush}" /></VisualState.Setters>
-                    </VisualState>
-                    <VisualState x:Name="Pressed">
-                        <VisualState.Setters><Setter Target="LayoutRoot.Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}" /></VisualState.Setters>
-                    </VisualState>
-                    <VisualState x:Name="Disabled">
-                        <VisualState.Setters><Setter Target="LayoutRoot.Opacity" Value="0.4" /></VisualState.Setters>
-                    </VisualState>
-                </VisualStateGroup>
-                <VisualStateGroup x:Name="CheckStates">
-                    <VisualState x:Name="Unchecked" />
-                    <VisualState x:Name="Checked">
-                        <VisualState.Setters><Setter Target="CheckGlyph.Opacity" Value="1" /></VisualState.Setters>
-                    </VisualState>
-                    <VisualState x:Name="UncheckedWithIcon" />
-                    <VisualState x:Name="CheckedWithIcon">
-                        <VisualState.Setters><Setter Target="CheckGlyph.Opacity" Value="1" /></VisualState.Setters>
-                    </VisualState>
-                </VisualStateGroup>
-                <VisualStateGroup x:Name="PaddingSizeStates">
-                    <VisualState x:Name="DefaultPadding" />
-                    <VisualState x:Name="NarrowPadding" />
-                </VisualStateGroup>
-                <VisualStateGroup x:Name="KeyboardAcceleratorTextVisibility">
-                    <VisualState x:Name="KeyboardAcceleratorTextCollapsed" />
-                    <VisualState x:Name="KeyboardAcceleratorTextVisible">
-                        <VisualState.Setters><Setter Target="KeyboardAcceleratorTextBlock.Visibility" Value="Visible" /></VisualState.Setters>
-                    </VisualState>
-                </VisualStateGroup>
-            </VisualStateManager.VisualStateGroups>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="{ThemeResource FilesMate.Menu.LeadingSlotWidth}" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <FontIcon x:Name="CheckGlyph" Width="16" Height="16" FontFamily="Segoe Fluent Icons" Glyph="&#xE73E;" FontSize="12" Foreground="{ThemeResource FilesMate.Selection.AccentBrush}" HorizontalAlignment="Left" VerticalAlignment="Center" Opacity="0" />
-            <TextBlock x:Name="TextBlock" Grid.Column="1" Text="{TemplateBinding Text}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" Foreground="{TemplateBinding Foreground}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-            <TextBlock x:Name="KeyboardAcceleratorTextBlock" Grid.Column="2" Text="{TemplateBinding KeyboardAcceleratorTextOverride}" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" Margin="12,0,0,0" VerticalAlignment="Center" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
-        </Grid>
-    </ControlTemplate>
+    <StaticResource x:Key="FilesMate.ColumnMenuToggleTemplate" ResourceKey="FilesMate.ToggleMenuFlyoutItemTemplate" />
     <ControlTemplate TargetType="MenuFlyoutSubItem" x:Key="FilesMate.CompactMenuSubItemTemplate">
         <Grid x:Name="LayoutRoot" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
             <VisualStateManager.VisualStateGroups>
                 <VisualStateGroup x:Name="CommonStates">
                     <VisualState x:Name="Normal" />
                     <VisualState x:Name="PointerOver">
-                        <VisualState.Setters><Setter Target="LayoutRoot.Background" Value="{ThemeResource FilesMate.Menu.ItemHoverBrush}" /></VisualState.Setters>
+                        <VisualState.Setters>
+                            <Setter Target="LayoutRoot.Background" Value="{ThemeResource FilesMate.Menu.ItemHoverBrush}" />
+                            <Setter Target="TextBlock.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                            <Setter Target="IconContent.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                            <Setter Target="SubItemChevron.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                        </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="Pressed">
-                        <VisualState.Setters><Setter Target="LayoutRoot.Background" Value="{ThemeResource FilesMate.Menu.ItemPressedBrush}" /></VisualState.Setters>
+                        <VisualState.Setters>
+                            <Setter Target="LayoutRoot.Background" Value="{ThemeResource FilesMate.Menu.ItemPressedBrush}" />
+                            <Setter Target="TextBlock.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                            <Setter Target="IconContent.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                            <Setter Target="SubItemChevron.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                        </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="SubMenuOpened">
-                        <VisualState.Setters><Setter Target="LayoutRoot.Background" Value="{ThemeResource FilesMate.Menu.ItemHoverBrush}" /></VisualState.Setters>
+                        <VisualState.Setters>
+                            <Setter Target="LayoutRoot.Background" Value="{ThemeResource FilesMate.Menu.ItemHoverBrush}" />
+                            <Setter Target="TextBlock.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                            <Setter Target="IconContent.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                            <Setter Target="SubItemChevron.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                        </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="Disabled">
-                        <VisualState.Setters><Setter Target="LayoutRoot.Opacity" Value="0.4" /></VisualState.Setters>
+                        <VisualState.Setters>
+                            <Setter Target="LayoutRoot.Background" Value="Transparent" />
+                            <Setter Target="TextBlock.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
+                            <Setter Target="IconContent.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
+                            <Setter Target="SubItemChevron.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
+                        </VisualState.Setters>
                     </VisualState>
                 </VisualStateGroup>
                 <VisualStateGroup x:Name="CheckPlaceholderStates">
@@ -299,10 +254,14 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <Viewbox x:Name="IconRoot" Width="16" Height="16" HorizontalAlignment="Left" VerticalAlignment="Center">
-                <ContentPresenter x:Name="IconContent" Content="{TemplateBinding Icon}" Foreground="{TemplateBinding Foreground}" />
+                <ContentPresenter x:Name="IconContent" Content="{TemplateBinding Icon}" Foreground="{ThemeResource FilesMate.Selection.AccentBrush}">
+                    <ContentPresenter.Resources>
+                        <Style TargetType="FontIcon" />
+                    </ContentPresenter.Resources>
+                </ContentPresenter>
             </Viewbox>
             <TextBlock x:Name="TextBlock" Grid.Column="1" Text="{TemplateBinding Text}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" Foreground="{TemplateBinding Foreground}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-            <FontIcon x:Name="SubItemChevron" Grid.Column="2" Glyph="&#xE974;" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" Margin="8,0,0,0" VerticalAlignment="Center" MirroredWhenRightToLeft="True" AutomationProperties.AccessibilityView="Raw" />
+            <FontIcon x:Name="SubItemChevron" Grid.Column="2" Glyph="&#xE974;" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" Margin="{StaticResource FilesMate.Menu.ChevronGap}" VerticalAlignment="Center" MirroredWhenRightToLeft="True" AutomationProperties.AccessibilityView="Raw" />
         </Grid>
     </ControlTemplate>
     <ControlTemplate TargetType="MenuFlyoutSubItem" x:Key="FilesMate.MenuFlyoutSubItemTemplate">
@@ -347,19 +306,15 @@
                     <VisualState x:Name="NoPlaceholder" />
                     <VisualState x:Name="CheckPlaceholder">
                         <VisualState.Setters>
-                            <Setter Target="TextBlock.Margin" Value="{ThemeResource MenuFlyoutItemPlaceholderThemeThickness}" />
-                        </VisualState.Setters>
+                            </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="IconPlaceholder">
                         <VisualState.Setters>
-                            <Setter Target="TextBlock.Margin" Value="{ThemeResource MenuFlyoutItemPlaceholderThemeThickness}" />
                             <Setter Target="IconRoot.Visibility" Value="Visible" />
                         </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="CheckAndIconPlaceholder">
                         <VisualState.Setters>
-                            <Setter Target="TextBlock.Margin" Value="{ThemeResource MenuFlyoutItemDoublePlaceholderThemeThickness}" />
-                            <Setter Target="IconRoot.Margin" Value="{ThemeResource MenuFlyoutItemPlaceholderThemeThickness}" />
                             <Setter Target="IconRoot.Visibility" Value="Visible" />
                         </VisualState.Setters>
                     </VisualState>
@@ -376,15 +331,11 @@
                 </VisualStateGroup>
             </VisualStateManager.VisualStateGroups>
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <Viewbox x:Name="IconRoot" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="16" Height="16" Visibility="Collapsed">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="{StaticResource FilesMate.Menu.LeadingSlotWidth}" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><Viewbox x:Name="IconRoot" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="16" Height="16" Visibility="Collapsed">
                     <ContentPresenter x:Name="IconContent" Content="{TemplateBinding Icon}" Foreground="{TemplateBinding Foreground}" />
                 </Viewbox>
-                <TextBlock x:Name="TextBlock" Grid.Column="0" Foreground="{TemplateBinding Foreground}" Text="{TemplateBinding Text}" TextTrimming="{ThemeResource MenuFlyoutItemTextTrimming}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-                <FontIcon x:Name="SubItemChevron" Grid.Column="1" Glyph="" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" AutomationProperties.AccessibilityView="Raw" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" Margin="{StaticResource MenuFlyoutItemChevronMargin}" MirroredWhenRightToLeft="True" />
+                <TextBlock x:Name="TextBlock" Grid.Column="1" Foreground="{TemplateBinding Foreground}" Text="{TemplateBinding Text}" TextTrimming="{ThemeResource MenuFlyoutItemTextTrimming}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Margin="0" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" />
+                <FontIcon x:Name="SubItemChevron" Grid.Column="2" Glyph="" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="12" AutomationProperties.AccessibilityView="Raw" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" Margin="{StaticResource MenuFlyoutItemChevronMargin}" MirroredWhenRightToLeft="True" />
             </Grid>
         </Grid>
     </ControlTemplate>

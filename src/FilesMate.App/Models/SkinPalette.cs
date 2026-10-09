@@ -19,6 +19,8 @@ public sealed record SkinPalette
     public required uint Muted { get; init; }
     public required uint Line { get; init; }
     public required uint Accent { get; init; }
+    // Null retains the historical translucent accent selection for legacy profiles.
+    public uint? Selection { get; init; }
 
     public static SkinPalette Light { get; } = new()
     {
@@ -33,23 +35,106 @@ public sealed record SkinPalette
         Text = 0xFFE8E8E8, Muted = 0xFFACACAC, Line = 0xFFFFFFFF, Accent = 0xFF96ABC7,
     };
     public static SkinPalette For(bool dark) => dark ? DarkSkin : Light;
+    public static SkinPalette For(bool dark, AppearanceSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        return settings.Skin?.Resolve(dark) ?? (For(dark) with
+        {
+            Accent = AccentPalette.Resolve(settings.Accent, settings.CustomAccent, dark),
+        });
+    }
 
     public byte SelectionAlpha => Dark ? (byte)0x30 : (byte)0x2B;
     public byte SelectionHoverAlpha => Dark ? (byte)0x3C : (byte)0x38;
-    public uint Selected => Alpha(Accent, SelectionAlpha);
-    public uint Hover => Alpha(Accent, 0x10);
+    public uint Selected => Selection ?? Alpha(Accent, SelectionAlpha);
+    public uint SelectedHover => Selection is { } selection
+        ? Mix(AccentPalette.Foreground(selection) == 0xFF000000 ? 0xFFFFFFFF : 0xFF000000, selection, .06)
+        : Alpha(Accent, SelectionHoverAlpha);
+    public uint SelectedInk => Selection is { } selection && (Contrast(Text, selection) < 4.5 || Contrast(Text, SelectedHover) < 4.5)
+        ? AccentPalette.Foreground(selection) : Text;
+    public uint SelectedMuted => Selection is { } selection && (Contrast(Muted, selection) < 4.5 || Contrast(Muted, SelectedHover) < 4.5)
+        ? SelectedInk : Muted;
+    public uint Hover => Selection is { } selection ? Mix(selection, Content, .25) : Alpha(Accent, 0x10);
     public uint Border => Alpha(Line, Dark ? (byte)0x1C : (byte)0x18);
     public uint Outline => Mix(Line, Floating, Dark ? .11 : .24);
-    public uint ControlHover => Mix(Text, Card, .055);
-    public uint ControlPressed => Mix(Text, Card, .10);
+    public uint InteractionAccent
+    {
+        get
+        {
+            var accent = Accent | 0xFF000000;
+            for (var step = 1; step <= 10 && Math.Min(Contrast(accent, Card),
+                Math.Min(Contrast(accent, Floating), Contrast(accent, Content))) < 1.6; step++)
+                accent = Mix(Text, Accent, step / 10d);
+            return accent;
+        }
+    }
+    public uint ControlHover => Mix(InteractionAccent, Card, Dark ? .22 : .18);
+    public uint ControlPressed => Mix(InteractionAccent, Card, Dark ? .32 : .28);
+    public uint MenuHover => Mix(InteractionAccent, Floating, Dark ? .22 : .18);
+    public uint MenuPressed => Mix(InteractionAccent, Floating, Dark ? .32 : .28);
+    public uint ChoiceSelected => SelectionFill(Card);
+    public uint ChoiceSelectedHover => Mix(InteractionAccent, ChoiceSelected, 0x28 / 255d);
+    public uint ChoiceSelectedPressed => Mix(InteractionAccent, ChoiceSelected, 0x40 / 255d);
+    public uint MenuSelected => SelectionFill(Floating);
+    public uint MenuSelectedHover => Mix(InteractionAccent, MenuSelected, 0x28 / 255d);
+    public uint MenuSelectedPressed => Mix(InteractionAccent, MenuSelected, 0x40 / 255d);
+    public uint ControlActiveInk => ReadableInk(ControlHover, ControlPressed);
+    public uint MenuActiveInk => ReadableInk(MenuHover, MenuPressed);
+    public uint ChoiceSelectedInk => ReadableInk(ChoiceSelected, ChoiceSelectedHover, ChoiceSelectedPressed);
+    public uint MenuSelectedInk => ReadableInk(MenuSelected, MenuSelectedHover, MenuSelectedPressed);
 
-    // File hover is neutral; selection owns the accent. Keep this separate from
-    // quieter navigation/control fills so multi-selection remains identifiable.
+    private uint SelectionFill(uint surface)
+    {
+        var accent = InteractionAccent;
+        // One selected foreground must remain readable through hover and press.
+        // Increase accent coverage only when the initial family straddles the
+        // black/white contrast boundary; preserve the requested accent hue.
+        for (var amount = Dark ? .34 : .28; amount < 1; amount += .02)
+        {
+            var fill = Mix(accent, surface, amount);
+            var hover = Mix(accent, fill, 0x28 / 255d);
+            var pressed = Mix(accent, fill, 0x40 / 255d);
+            var ink = ReadableInk(fill, hover, pressed);
+            if (Math.Min(Contrast(ink, fill), Math.Min(Contrast(ink, hover), Contrast(ink, pressed))) >= 4.5) return fill;
+        }
+        return accent;
+    }
+
+    private uint ReadableInk(params uint[] backgrounds)
+    {
+        double Minimum(uint ink) => backgrounds.Min(fill => Contrast(ink, fill));
+        if (Minimum(Text) >= 4.5) return Text;
+        return Minimum(0xFF000000) >= Minimum(0xFFFFFFFF) ? 0xFF000000 : 0xFFFFFFFF;
+    }
+
+    // Every interactive surface follows the skin accent. Selection remains a
+    // distinct fill and outline, including legacy custom selection colors.
     public IReadOnlyDictionary<string, uint> FileItemColors()
     {
         var selectedAlpha = Dark ? (byte)0x3D : (byte)0x35;
         var selectedHoverAlpha = Dark ? (byte)0x48 : (byte)0x43;
         var accent = Accent | 0xFF000000;
+        if (Selection is { } selected)
+        {
+            var selectedHover = SelectedHover;
+            var outline = accent;
+            if (Contrast(outline, selected) < 3 || Contrast(outline, selectedHover) < 3)
+                outline = AccentPalette.Foreground(selected);
+            var selectedInk = Text;
+            if (Contrast(selectedInk, selected) < 4.5 || Contrast(selectedInk, selectedHover) < 4.5)
+                selectedInk = AccentPalette.Foreground(selected);
+            return new Dictionary<string, uint>(StringComparer.Ordinal)
+            {
+                ["FilesMate.FileItem.HoverBrush"] = Mix(InteractionAccent, Content, Dark ? .18 : .14),
+                ["FilesMate.FileItem.HoverBorderBrush"] = Alpha(InteractionAccent, 0x70),
+                ["FilesMate.FileItem.HoverForegroundBrush"] = ReadableInk(Mix(InteractionAccent, Content, Dark ? .18 : .14)),
+                ["FilesMate.FileItem.SelectedBrush"] = selected,
+                ["FilesMate.FileItem.SelectedHoverBrush"] = selectedHover,
+                ["FilesMate.FileItem.SelectionBorderBrush"] = outline,
+                ["FilesMate.FileItem.SelectedForegroundBrush"] = selectedInk,
+                ["FilesMate.FileItem.CheckForegroundBrush"] = AccentPalette.Foreground(outline),
+            };
+        }
         // Custom white/black and low-contrast accents still need a visible outline.
         // Adjust only the file selection treatment, preserving the chosen hue.
         for (var step = 1; step <= 10 && Contrast(accent, Mix(accent, Content, selectedHoverAlpha / 255d)) < 3; step++)
@@ -58,8 +143,9 @@ public sealed record SkinPalette
         }
         return new Dictionary<string, uint>(StringComparer.Ordinal)
         {
-            ["FilesMate.FileItem.HoverBrush"] = Alpha(Text, Dark ? (byte)0x18 : (byte)0x14),
-            ["FilesMate.FileItem.HoverBorderBrush"] = Alpha(Text, Dark ? (byte)0x42 : (byte)0x3B),
+            ["FilesMate.FileItem.HoverBrush"] = Mix(InteractionAccent, Content, Dark ? .18 : .14),
+            ["FilesMate.FileItem.HoverBorderBrush"] = Alpha(InteractionAccent, 0x70),
+            ["FilesMate.FileItem.HoverForegroundBrush"] = ReadableInk(Mix(InteractionAccent, Content, Dark ? .18 : .14)),
             ["FilesMate.FileItem.SelectedBrush"] = Alpha(accent, selectedAlpha),
             ["FilesMate.FileItem.SelectedHoverBrush"] = Alpha(accent, selectedHoverAlpha),
             ["FilesMate.FileItem.SelectionBorderBrush"] = accent,
@@ -71,9 +157,16 @@ public sealed record SkinPalette
     public IReadOnlyDictionary<string, uint> CompanionColors() => new Dictionary<string, uint>
     {
         ["Surface"] = Floating, ["MenuSurface"] = Floating, ["PaletteCanvas"] = Dark ? Canvas : Floating,
-        ["ResultSurface"] = Content, ["PillSurface"] = Card, ["Ink"] = Text, ["Muted"] = Muted,
-        ["SelectedInk"] = Text, ["SelectedMuted"] = Muted, ["Line"] = Border, ["Outline"] = Outline,
-        ["Selected"] = Selected, ["Hover"] = Hover, ["Accent"] = Accent,
+        ["ResultSurface"] = Content, ["PillSurface"] = Card, ["PreviewSurface"] = Floating,
+        ["MenuHover"] = MenuHover, ["MenuActiveInk"] = MenuActiveInk,
+        ["ButtonHover"] = ControlHover, ["ButtonActiveInk"] = ControlActiveInk,
+        ["MenuPressed"] = MenuPressed, ["ResultHover"] = FileItemColors()["FilesMate.FileItem.HoverBrush"],
+        ["SelectionBorder"] = FileItemColors()["FilesMate.FileItem.SelectionBorderBrush"],
+        ["ScrollThumb"] = Muted, ["ScrollThumbActive"] = Text,
+        ["ToggleTrack"] = Accent, ["ToggleOff"] = Border,
+        ["OnAccent"] = AccentPalette.Foreground(Accent), ["DisabledInk"] = Mix(Text, Card, .45), ["Ink"] = Text, ["Muted"] = Muted,
+        ["SelectedInk"] = SelectedInk, ["SelectedMuted"] = SelectedMuted, ["Line"] = Border, ["Outline"] = Outline,
+        ["Selected"] = Selected, ["SelectedHover"] = SelectedHover, ["Hover"] = Hover, ["Accent"] = Accent,
     };
 
     public IReadOnlyDictionary<string, uint> ResourceColors()
@@ -83,12 +176,50 @@ public sealed record SkinPalette
         var prefix = "FilesMate.Palette." + (Dark ? "Dark" : "Light") + ".";
         var foreground = AccentPalette.Foreground(Accent);
         var accentHover = foreground == 0xFF000000 ? Lift(Accent, 20) : Mix(0xFF000000, Accent, .1);
+        Put(Accent, "AccentFillColorDefaultBrush", "SystemAccentColor");
+        Put(accentHover, "AccentFillColorSecondaryBrush", "AccentFillColorTertiaryBrush");
+        Put(AccentLift(Accent, 26), "SystemAccentColorLight1");
+        Put(AccentLift(Accent, 48), "SystemAccentColorLight2");
+        Put(AccentLift(Accent, 72), "SystemAccentColorLight3");
+        Put(Shade(Accent, .82), "SystemAccentColorDark1");
+        Put(Shade(Accent, .64), "SystemAccentColorDark2");
+        Put(Shade(Accent, .48), "SystemAccentColorDark3");
+        // Slider tracks are an opaque skin role, so light cards cannot erase the
+        // unfilled half. Derive them from the full skin rather than fixed white.
+        var track = Mix(Text, Card, Dark ? .57 : .61);
+        var trackHover = Mix(Text, Card, Dark ? .67 : .71);
+        var trackPressed = Mix(Text, Card, Dark ? .77 : .81);
+        var trackDisabled = Mix(Text, Card, .28);
+        Put(track, "FilesMate.Slider.TrackBrush", "SliderTrackFill", "SliderThumbBorderBrush", "SliderTickBarFill", "SliderInlineTickBarFill");
+        Put(trackHover, "FilesMate.Slider.TrackHoverBrush", "SliderTrackFillPointerOver");
+        Put(trackPressed, "FilesMate.Slider.TrackPressedBrush", "SliderTrackFillPressed");
+        Put(trackDisabled, "FilesMate.Slider.TrackDisabledBrush", "SliderTrackFillDisabled", "SliderTrackValueFillDisabled", "SliderThumbBackgroundDisabled", "SliderTickBarFillDisabled");
+        Put(Accent, "SliderTrackValueFill", "SliderThumbBackground");
+        Put(accentHover, "SliderTrackValueFillPointerOver", "SliderTrackValueFillPressed", "SliderThumbBackgroundPointerOver", "SliderThumbBackgroundPressed");
+        Put(Card, "SliderOuterThumbBackground");
+        Put(Text, "SliderHeaderForeground");
+        Put(Mix(Text, Card, .45), "SliderHeaderForegroundDisabled");
+        Put(Alpha(Card, 0), "SliderContainerBackground", "SliderContainerBackgroundPointerOver", "SliderContainerBackgroundPressed", "SliderContainerBackgroundDisabled");
         Put(Text, prefix + "Text.PrimaryBrush", "ComboBoxDropDownGlyphForeground", "ComboBoxDropDownGlyphForegroundFocused",
             "ComboBoxDropDownGlyphForegroundPointerOver", "CalendarDatePickerForeground", "CalendarDatePickerTextForeground",
             "CalendarDatePickerTextForegroundSelected", "CalendarDatePickerTextForegroundPointerOver", "CalendarDatePickerTextForegroundPressed",
             "CalendarDatePickerHeaderForeground", "CalendarDatePickerCalendarGlyphForeground",
             "CalendarDatePickerCalendarGlyphForegroundPointerOver", "CalendarDatePickerCalendarGlyphForegroundPressed");
         Put(Muted, prefix + "Text.SecondaryBrush");
+        Put(Text, "ExpanderForeground", "ExpanderForegroundPointerOver", "ExpanderForegroundPressed",
+            "ExpanderHeaderForeground", "ExpanderHeaderForegroundPointerOver", "ExpanderHeaderForegroundPressed",
+            "ExpanderChevronForeground", "ExpanderChevronPointerOverForeground", "ExpanderChevronPressedForeground");
+        Put(Mix(Text, Card, .45), "ExpanderDisabledForeground", "ExpanderHeaderDisabledForeground");
+        Put(Card, "ExpanderBackground", "ExpanderHeaderBackground", "ExpanderDropDownBackground", "ExpanderContentBackground");
+        Put(Border, "ExpanderBorderBrush", "ExpanderDropDownBorderBrush", "ExpanderDisabledBorderBrush",
+            "ExpanderHeaderBorderBrush", "ExpanderHeaderBorderPointerOverBrush", "ExpanderHeaderBorderPressedBrush",
+            "ExpanderHeaderDisabledBorderBrush", "ExpanderContentBorderBrush");
+        Put(Alpha(Card, 0), "ExpanderChevronBackground", "ExpanderChevronBorderBrush",
+            "ExpanderChevronBorderPointerOverBrush", "ExpanderChevronBorderPressedBrush");
+        Put(ControlHover, "ExpanderChevronPointerOverBackground");
+        Put(ControlPressed, "ExpanderChevronPressedBackground");
+        Put(SelectedInk, prefix + "Item.SelectedForegroundBrush");
+        Put(SelectedMuted, prefix + "Item.SelectedSecondaryBrush");
         Put(Alpha(Text, 0x66), prefix + "Text.DisabledBrush");
         Put(Canvas, "FilesMate.App.SolidBackgroundBrush", "FilesMate.CommandBar.BackgroundBrush", "FilesMate.FileArea.BackgroundBrush");
         Put(Navigation, "FilesMate.Sidebar.BackgroundBrush", "FilesMate.SettingsNav.BackgroundBrush");
@@ -102,15 +233,32 @@ public sealed record SkinPalette
             "FilesMate.SettingsPanel.BackgroundBrush", "ContentDialogBackground", "ComboBoxDropDownBackground",
             "FilesMate.Menu.BackgroundBrush", "FilesMate.LiquidGlass.FillBrush", "FilesMate.InfoPane.BackgroundBrush", "FilesMate.App.BackgroundBrush");
         Put(Input, prefix + "ComboBox.BackgroundBrush");
-        Put(ControlHover, "ButtonBackgroundPointerOver", "ComboBoxBackgroundPointerOver",
-            "CalendarDatePickerBackgroundPointerOver");
-        Put(ControlPressed, "ButtonBackgroundPressed", "ComboBoxBackgroundPressed",
-            "CalendarDatePickerBackgroundPressed", "FilesMate.Glass.SurfacePressedBrush");
+        Put(ControlHover, "FilesMate.Tab.CloseHoverBrush", "ButtonBackgroundPointerOver", "ComboBoxBackgroundPointerOver",
+            "CalendarDatePickerBackgroundPointerOver", "FilesMate.Button.HoverBrush");
+        Put(ControlPressed, "FilesMate.Tab.ClosePressedBrush", "ButtonBackgroundPressed", "ComboBoxBackgroundPressed",
+            "CalendarDatePickerBackgroundPressed", "FilesMate.Glass.SurfacePressedBrush", "FilesMate.Button.PressedBrush");
+        Put(ControlActiveInk, "FilesMate.Button.ActiveForegroundBrush", "ButtonForegroundPointerOver", "ButtonForegroundPressed",
+            "RepeatButtonForegroundPointerOver", "RepeatButtonForegroundPressed");
+        Put(MenuActiveInk, "FilesMate.Menu.ItemActiveForegroundBrush", "MenuFlyoutItemForegroundPointerOver", "MenuFlyoutItemForegroundPressed",
+            "ToggleMenuFlyoutItemForegroundPointerOver", "ToggleMenuFlyoutItemForegroundPressed",
+            "MenuFlyoutSubItemForegroundPointerOver", "MenuFlyoutSubItemForegroundPressed", "MenuFlyoutSubItemForegroundSubMenuOpened");
+        Put(ChoiceSelected, "FilesMate.Choice.SelectedBrush");
+        Put(ChoiceSelectedHover, "FilesMate.Choice.SelectedHoverBrush");
+        Put(ChoiceSelectedPressed, "FilesMate.Choice.SelectedPressedBrush");
+        Put(ChoiceSelectedInk, "FilesMate.Choice.SelectedForegroundBrush");
+        Put(MenuSelected, "FilesMate.Menu.ItemSelectedBrush");
+        Put(MenuSelectedHover, "FilesMate.Menu.ItemSelectedHoverBrush");
+        Put(MenuSelectedPressed, "FilesMate.Menu.ItemSelectedPressedBrush");
+        Put(MenuSelectedInk, "FilesMate.Menu.ItemSelectedForegroundBrush");
+        Put(Alpha(InteractionAccent, 0x28), "FilesMate.Choice.InteractionHoverBrush");
+        Put(Alpha(InteractionAccent, 0x40), "FilesMate.Choice.InteractionPressedBrush");
+        Put(Alpha(InteractionAccent, Dark ? (byte)0x40 : (byte)0x30), "FilesMate.NameMatch.BackgroundBrush");
+        Put(ReadableInk(InteractionAccent), "FilesMate.NameMatch.ForegroundBrush");
         // Menus float over a different surface than buttons. Cover every native item
         // type, including the persistent state while a child menu is open.
-        Put(Mix(Text, Floating, .09), "FilesMate.Menu.ItemHoverBrush", "MenuFlyoutItemBackgroundPointerOver", "ToggleMenuFlyoutItemBackgroundPointerOver",
+        Put(MenuHover, "FilesMate.Menu.ItemHoverBrush", "MenuFlyoutItemBackgroundPointerOver", "ToggleMenuFlyoutItemBackgroundPointerOver",
             "MenuFlyoutSubItemBackgroundPointerOver", "MenuFlyoutSubItemBackgroundSubMenuOpened");
-        Put(Mix(Text, Floating, .15), "FilesMate.Menu.ItemPressedBrush", "MenuFlyoutItemBackgroundPressed", "ToggleMenuFlyoutItemBackgroundPressed",
+        Put(MenuPressed, "FilesMate.Menu.ItemPressedBrush", "MenuFlyoutItemBackgroundPressed", "ToggleMenuFlyoutItemBackgroundPressed",
             "MenuFlyoutSubItemBackgroundPressed");
         Put(Mix(Line, Floating, .24), "MenuFlyoutSeparatorBackground");
         Put(Muted, "RadioButtonOuterEllipseStroke");
@@ -148,16 +296,18 @@ public sealed record SkinPalette
         Put(Mix(Muted, Canvas, .4), "ScrollBarThumbFillDisabled", "ScrollBarPanningThumbBackgroundDisabled", "ScrollBarButtonArrowForegroundDisabled");
         Put(Mix(Line, Canvas, .07), "ScrollBarTrackFill", "ScrollBarTrackFillPointerOver", "ScrollBarTrackFillDisabled",
             "ScrollBarTrackStroke", "ScrollBarTrackStrokePointerOver", "ScrollBarTrackStrokeDisabled");
-        Put(Accent, "FilesMate.Glass.AccentBrush", "FilesMate.Selection.AccentBrush", "ToggleSwitchFillOn", "ToggleSwitchStrokeOn",
+        Put(Accent, "FilesMate.Tab.SelectedIndicatorBrush", "FilesMate.Glass.AccentBrush", "FilesMate.Selection.AccentBrush", "ToggleSwitchFillOn", "ToggleSwitchStrokeOn",
             "AccentButtonBackground", "ToggleButtonBackgroundChecked", "RadioButtonOuterEllipseCheckedStroke", "RadioButtonOuterEllipseCheckedFill");
         Put(accentHover, "FilesMate.Glass.AccentHoverBrush", "ToggleSwitchFillOnPointerOver", "ToggleSwitchFillOnPressed",
             "ToggleSwitchStrokeOnPointerOver", "ToggleSwitchStrokeOnPressed", "AccentButtonBackgroundPointerOver", "AccentButtonBackgroundPressed",
             "ToggleButtonBackgroundCheckedPointerOver", "ToggleButtonBackgroundCheckedPressed",
             "RadioButtonOuterEllipseCheckedStrokePointerOver", "RadioButtonOuterEllipseCheckedStrokePressed",
             "RadioButtonOuterEllipseCheckedFillPointerOver", "RadioButtonOuterEllipseCheckedFillPressed");
-        Put(Selected, "FilesMate.Glass.AccentSoftBrush", "FilesMate.Compare.SourceFillBrush", "FilesMate.Item.SelectedBrush");
-        Put(Alpha(Accent, SelectionHoverAlpha), "FilesMate.Item.SelectedHoverBrush", "FilesMate.Item.DropTargetBrush", "ComboBoxItemBackgroundSelectedPointerOver");
-        Put(Hover, "FilesMate.Item.HoverBrush", "FilesMate.IconFrame.FillBrush", "ComboBoxItemBackgroundPointerOver", "FilesMate.Home.IconBackgroundBrush");
+        Put(Selected, "FilesMate.Glass.AccentSoftBrush", "FilesMate.Compare.SourceFillBrush", "FilesMate.Item.SelectedBrush",
+            "ListViewItemBackgroundSelected", "ComboBoxItemBackgroundSelected", "ComboBoxItemBackgroundSelectedUnfocused");
+        Put(SelectedHover, "FilesMate.Item.SelectedHoverBrush", "FilesMate.Item.DropTargetBrush", "ComboBoxItemBackgroundSelectedPointerOver",
+            "ListViewItemBackgroundSelectedPointerOver", "ListViewItemBackgroundSelectedPressed", "ComboBoxItemBackgroundSelectedPressed");
+        Put(Hover, "FilesMate.Tab.HoverBrush", "FilesMate.Item.HoverBrush", "FilesMate.IconFrame.FillBrush", "ComboBoxItemBackgroundPointerOver", "FilesMate.Home.IconBackgroundBrush");
         Put(Selected, "ComboBoxItemBackgroundPressed");
         Put(foreground, "FilesMate.Glass.AccentForegroundBrush", "TextOnAccentFillColorPrimaryBrush", "AccentButtonForeground",
             "AccentButtonForegroundPointerOver", "AccentButtonForegroundPressed", "ToggleButtonForegroundChecked",
@@ -204,9 +354,17 @@ public sealed record SkinPalette
         var b = Luminance(second);
         return (Math.Max(a, b) + .05) / (Math.Min(a, b) + .05);
     }
+    public static double ContrastRatio(uint first, uint second) => Contrast(first, second);
     private static uint Lift(uint color, byte amount)
     {
         uint Channel(int shift) => Math.Min(255, ((color >> shift) & 255) + amount);
         return 0xFF000000 | Channel(16) << 16 | Channel(8) << 8 | Channel(0);
+    }
+    private static uint AccentLift(uint color, byte amount) => (color & 0xFF000000) | (Lift(color, amount) & 0xFFFFFF);
+    private static uint Shade(uint color, double factor)
+    {
+        // Preserve the historical byte truncation and legacy custom-accent alpha.
+        uint Channel(int shift) => (uint)(((color >> shift) & 255) * factor);
+        return (color & 0xFF000000) | Channel(16) << 16 | Channel(8) << 8 | Channel(0);
     }
 }

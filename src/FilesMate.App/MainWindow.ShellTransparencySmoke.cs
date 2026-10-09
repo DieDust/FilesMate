@@ -39,6 +39,11 @@ public sealed partial class MainWindow
                     var brushes = keys.Select(key => (SolidColorBrush)FindTheme(Application.Current.Resources,
                         theme == AppThemeKind.Light ? "Light" : "Dark", key)!).ToArray();
                     var coverage = brushes.Select(b => b.Opacity * b.Color.A / 255d).ToArray();
+                    // Test the material attached to the production visual tree,
+                    // not only a resource that may never actually be painted.
+                    if (ShellFoundation.Background is not SolidColorBrush foundation
+                        || Math.Abs(foundation.Opacity * foundation.Color.A / 255d - coverage[3]) > .000001)
+                        throw new InvalidOperationException("The shell body is missing its shared foundation material.");
                     var opaque = backdrop == BackdropKind.Solid || effect == GlassEffectMode.Off;
                     if (coverage.Where((a, i) => Math.Abs(a - (opaque ? 1 : Coverage(i, .75))) > 0.000001).Any())
                         throw new InvalidOperationException($"Unexpected coverage: {theme}/{backdrop}/{effect}");
@@ -126,6 +131,17 @@ public sealed partial class MainWindow
                 await Task.Delay(300);
                 await Capture(root, $"transparency-slider-{theme}.png");
             }
+            // A preset selected during the slider debounce must win; the older
+            // preview must not overwrite the preset when its timer later fires.
+            slider.Value = 73;
+            var effectBox = FindDescendant<ComboBox>(root, item => item.Name == "GlassEffectBox")!;
+            effectBox.SelectedItem = effectBox.Items.OfType<ComboBoxItem>().Single(item => item.Tag as string == "Immersive");
+            await Task.Delay(500);
+            var presetSaved = new Services.AppearanceSettingsService(Program.SettingsPath(Services.AppearanceSettingsService.DefaultFilePath)).Load();
+            if (App.AppearanceViewModel.Current.EffectiveTransparencyPercent != 32 || label.Text != "32%"
+                || presetSaved.TransparencyPercent != 32)
+                throw new InvalidOperationException("A debounced slider value overwrote the newer preset choice.");
+            results.Add(new { PresetWinsOverEarlierSliderPreview = true });
             slider.Value = 73;
             CloseSettings();
             var saveWait = System.Diagnostics.Stopwatch.StartNew();

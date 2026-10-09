@@ -11,7 +11,7 @@ internal sealed record ArchivePreferences(ArchiveProvider Preferred = ArchivePro
 
 internal sealed class ArchivePreferencesStore(string path)
 {
-    internal static string DefaultPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FilesMate", "archives.json");
+    internal static string DefaultPath => Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "archives.json");
     internal ArchivePreferences Load()
     {
         try

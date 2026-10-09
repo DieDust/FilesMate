@@ -40,7 +40,10 @@ internal static class DesktopCursors
         // A copied bitmap cursor can be scaled again when it enters a high-DPI XAML island.
         var handle = LoadCursorW(0, id);
         if (handle == 0) return false;
-        SetCursor(handle);
+        // Preserve animated/custom cursor progress. Raw movement and native
+        // WM_SETCURSOR can resolve the same shape several times per mouse move.
+        // Still resolve shared handles each time so live scheme changes work.
+        if (GetCursor() != handle) SetCursor(handle);
         return true;
     }
 
@@ -51,4 +54,8 @@ internal static class DesktopCursors
     [DllImport("user32.dll", ExactSpelling = true)]
     [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
     private static extern nint SetCursor(nint cursor);
+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+    private static extern nint GetCursor();
 }

@@ -42,3 +42,4 @@ Start-Sleep -Milliseconds 150
 $visible=[SearchRecallProbe]::IsWindowVisible([SearchRecallProbe]::Find($state.Pid,$false))
 if($visible){[SearchRecallProbe]::Close($state.Pid)}
 [pscustomobject]@{VisibleMilliseconds=$times;RepeatedHotkeyCloses=(-not $visible)}|ConvertTo-Json
+

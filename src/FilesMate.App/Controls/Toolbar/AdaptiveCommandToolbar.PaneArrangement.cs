@@ -1,3 +1,4 @@
+using FilesMate.App.Animations;
 using FilesMate.App.Models;
 using FilesMate.App.Localization;
 using Microsoft.UI.Xaml;
@@ -11,11 +12,13 @@ public sealed partial class AdaptiveCommandToolbar
 {
     private PaneArrangement _arrangement;
     private bool _arrangementActive;
+    private FlyoutChevronMotion? _arrangementChevronMotion;
     public event EventHandler<PaneArrangement>? PaneArrangementChanged;
     public void SetPaneArrangement(PaneArrangement value) => _arrangement = value;
 
     private void PaneArrangement_Click(object sender, RoutedEventArgs e)
     {
+        if (_isCustomizationPreview) return;
         var grid = new Grid { ColumnSpacing = 4, RowSpacing = 4, Margin = new Thickness(4) };
         for (var i = 0; i < 3; i++) grid.ColumnDefinitions.Add(new ColumnDefinition());
         for (var i = 0; i < 2; i++) grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -52,6 +55,8 @@ public sealed partial class AdaptiveCommandToolbar
             button.Click += (_, _) => { flyout.Hide(); PaneArrangementChanged?.Invoke(this, kind); AnimateChoice(DualPaneButton); };
             grid.Children.Add(button);
         }
+        _arrangementChevronMotion?.Dispose();
+        _arrangementChevronMotion = new FlyoutChevronMotion(PaneArrangementChevron, flyout);
         Microsoft.UI.Xaml.Controls.Primitives.FlyoutBase.SetAttachedFlyout(PaneArrangementButton, flyout);
         flyout.ShowAt(PaneArrangementButton);
     }

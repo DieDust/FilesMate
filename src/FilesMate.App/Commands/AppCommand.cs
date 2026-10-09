@@ -62,6 +62,7 @@ public enum AppCommandId
     NewRichTextFile,
     NewHtmlFile,
     NewJsonFile,
+    ShowFolderFilters,
 }
 
 public enum CommandSurface

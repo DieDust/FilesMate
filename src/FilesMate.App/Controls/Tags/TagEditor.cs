@@ -112,7 +112,8 @@ public static class TagEditor
             MinWidth = 180,
             HorizontalAlignment = HorizontalAlignment.Stretch,
         };
-        foreach (var color in Palette)
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, StringTable.Get("Tag_Color"));
+        foreach (var color in TagColorChoices.IncludeCurrent(Palette, selectedColor))
         {
             var item = new ComboBoxItem
             {

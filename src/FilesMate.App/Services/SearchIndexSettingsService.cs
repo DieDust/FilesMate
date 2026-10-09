@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using FilesMate.App.Models;
@@ -27,9 +27,7 @@ public sealed class SearchIndexSettingsService
 
     public string FilePath { get; }
 
-    public static string DefaultFilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "FilesMate",
+    public static string DefaultFilePath => Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath,
         "search-index.json");
 
     public SearchIndexSettings Load()

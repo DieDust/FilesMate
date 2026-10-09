@@ -81,7 +81,8 @@ public sealed partial class SearchResultsPage
         Results.TerminalRequested += (_, path) => _ = new PaneFileActions(new WindowsLocalFileOperations(), () => [],
             () => path, () => null, ShowError, () => { }, App.VacateFoldersAsync, this).RunAsync(AppCommandId.OpenInTerminal);
         Results.DropRequested = request => request.TargetDirectory is { } target
-            ? _fileActions.DropAsync(request.Paths, target, request.Operation, request.AllowSameDirectoryCopy) : Task.CompletedTask;
+            ? _fileActions.DropAsync(request.Paths, target, request.Operation, request.AllowSameDirectoryCopy,
+                requireRecursiveCompatibility: request.RecursiveSource) : Task.CompletedTask;
         Commands.CommandInvoked += (_, id) => _ = RunActionAsync(id);
         Commands.CopyPathClicked += (_, _) => CopyPaths(false);
         Commands.LayoutChanged += (_, layout) => { Results.SetLayout(layout); Commands.SetLayout(layout); };
@@ -215,8 +216,19 @@ public sealed partial class SearchResultsPage
         }
         Results.RefreshRealizedTags();
     }
-    private async void ToggleQuickPreview()
+    internal bool InvokeWindowQuickPreview(long operation)
     {
+        if (Results.Selection.Count != 1 || Results.PrimaryPath() is null) return false;
+        ToggleQuickPreview(operation); return true;
+    }
+    private void ToggleQuickPreview() => ToggleQuickPreview(0);
+    private async void ToggleQuickPreview(long operation)
+    {
+        if (operation == 0) operation = FilesMate.Core.Diagnostics.PerformanceTrace.NextOperation();
+        FilesMate.Core.Diagnostics.PerformanceTrace.Record(FilesMate.Core.Diagnostics.PerformanceStage.PreviewRequest,
+            operation: operation, count: Results.Selection.Count, auxiliary: 2);
+        try
+        {
         if (_quickPreview is not null) { _quickPreview.Close(); return; }
         if (Results.Selection.Count != 1 || Results.PrimaryPath() is not { } path || App.WindowForElement(this) is not { } owner) return;
         var preview = _quickPreview = new QuickPreviewWindow(owner);
@@ -227,7 +239,21 @@ public sealed partial class SearchResultsPage
             if (_quickPreview == preview) { _quickPreview = null; _quickPreviewInput?.Dispose(); _quickPreviewInput = null; }
             if (_quickPreview is null && preview.RestoreOwnerFocus && IsLoaded && !_disposed) Results.Focus(FocusState.Programmatic);
         };
-        preview.Activate(); await preview.LoadAsync(path);
+        preview.Activate();
+        FilesMate.Core.Diagnostics.PerformanceTrace.Record(FilesMate.Core.Diagnostics.PerformanceStage.PreviewWindowShown,
+            operation: operation, outcome: FilesMate.Core.Diagnostics.PerformanceOutcome.Completed,
+            auxiliary: WinRT.Interop.WindowNative.GetWindowHandle(preview).ToInt64());
+        await preview.LoadAsync(path);
+        FilesMate.Core.Diagnostics.PerformanceTrace.Record(FilesMate.Core.Diagnostics.PerformanceStage.PreviewContentLoaded,
+            operation: operation, outcome: FilesMate.Core.Diagnostics.PerformanceOutcome.Completed);
+        }
+        catch (Exception error)
+        {
+            FilesMate.Core.Diagnostics.PerformanceTrace.Record(FilesMate.Core.Diagnostics.PerformanceStage.PreviewFailed,
+                operation: operation, outcome: FilesMate.Core.Diagnostics.PerformanceOutcome.Failed, auxiliary: error.HResult);
+            App.LogFailure("Search quick preview", error);
+            try { CloseQuickPreview(); } catch (Exception closeError) { App.LogFailure("Search quick preview close", closeError); }
+        }
     }
     private void CloseQuickPreview()
     {
@@ -311,19 +337,21 @@ public sealed partial class SearchResultsPage
     private async Task CustomizeFolderAsync(AppCommandId command)
     {
         var folder = Results.PrimaryIsDirectory() ? Results.PrimaryPath() : ActionFolder();
-        if (!System.IO.Directory.Exists(folder)) return;
-        if (command == AppCommandId.ResetFolderView) { await App.FolderCustomizations.SetViewAsync(folder!, null); return; }
+        if (folder is null) return;
+        if (command == AppCommandId.ResetFolderView)
+        {
+            if (await Task.Run(() => System.IO.Directory.Exists(folder)))
+                await App.FolderCustomizations.SetViewAsync(folder, null);
+            return;
+        }
         string? cover = null;
         if (command == AppCommandId.ChooseFolderCover)
         {
-            var picker = new Windows.Storage.Pickers.FileOpenPicker();
-            foreach (var ext in new[] { ".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif", ".mp4", ".mkv", ".mov" }) picker.FileTypeFilter.Add(ext);
-            WinRT.Interop.InitializeWithWindow.Initialize(picker, App.WindowForElement(this)!.NativeHandle);
-            var file = await picker.PickSingleFileAsync(); if (file is null || _disposed) return;
-            cover = file.Path;
-            if (!string.Equals(FolderCustomizationStore.Key(System.IO.Path.GetDirectoryName(cover)), FolderCustomizationStore.Key(folder), StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException(Loc.Get("Cover_DirectChild"));
+            cover = await FolderCoverPicker.PickAsync(this, folder);
+            if (cover is null || _disposed) return;
         }
+        else if (!await Task.Run(() => System.IO.Directory.Exists(folder)))
+            throw new System.IO.IOException(Loc.Get("Cover_FolderUnavailable"));
         await App.FolderCustomizations.SetCoverAsync(folder!, cover);
         Icons.FolderPreviewBinder.ClearCache(); App.NotifyFolderCoversChanged(); Results.RebindVisibleEntries();
     }

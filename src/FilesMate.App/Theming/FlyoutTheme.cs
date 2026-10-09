@@ -23,11 +23,20 @@ internal static class FlyoutTheme
         void Refresh()
         {
             var theme = ContentDialogTheme.Resolve(popup.Target);
-            var settings = App.AppearanceViewModel?.Current ?? AppearanceSettings.Default;
+            var settings = App.AppearanceViewModel?.Effective ?? AppearanceSettings.Default;
             var highContrast = new Windows.UI.ViewManagement.AccessibilitySettings().HighContrast;
-            popup.SystemBackdrop = highContrast ? null : FrostedBackdrop.CreateBackdrop(FrostedBackdrop.EffectiveBackdrop(settings));
-            Brush? background = highContrast ? null : new SolidColorBrush(FrostedBackdrop.FloatingColor(theme == ElementTheme.Dark))
-            { Opacity = GlassMaterialPolicy.FloatingCoverage(GlassSceneState.Resolve(settings).SurfaceOpacity) };
+            var kind = FrostedBackdrop.EffectiveBackdrop(settings);
+            popup.SystemBackdrop = highContrast ? null : FrostedBackdrop.CreateBackdrop(kind);
+            // Acrylic handles its own opaque fallback when desktop sampling is
+            // unavailable. A translucent solid fill would expose sharp text.
+            var color = FrostedBackdrop.FloatingColor(theme == ElementTheme.Dark, settings);
+            Brush? background = highContrast ? null : new AcrylicBrush
+            {
+                TintColor = color, FallbackColor = color,
+                TintOpacity = GlassMaterialPolicy.FloatingCoverage(GlassSceneState.Resolve(settings).SurfaceOpacity),
+                TintLuminosityOpacity = theme == ElementTheme.Dark ? .70 : .82,
+                AlwaysUseFallback = kind == BackdropKind.Solid,
+            };
             if (popup is Flyout flyout)
             {
                 flyout.FlyoutPresenterStyle = WithTheme(typeof(FlyoutPresenter), original, theme, background);

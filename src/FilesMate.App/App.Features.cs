@@ -41,23 +41,13 @@ public partial class App
         FeaturesChanged?.Invoke(null, EventArgs.Empty);
     }
 
-    private void ScheduleFeatureSetup(MainWindow window)
-    {
-        if (Features.Completed || (Program.IsUiTestBuild && Environment.GetEnvironmentVariable("FILESMATE_TEST_SETUP") != "1")) return;
-        if (window.Content is not FrameworkElement root) return;
-        if (root.IsLoaded) _ = ShowFeatureSetupAsync(root);
-        else
-        {
-            RoutedEventHandler? handler = null;
-            handler = async (_, _) => { root.Loaded -= handler; await ShowFeatureSetupAsync(root); };
-            root.Loaded += handler;
-        }
-    }
+    private void ScheduleFeatureSetup(MainWindow window) => ScheduleFeatureTour(window);
 
     internal static async Task ShowFeatureSetupAsync(FrameworkElement root)
     {
-        if (_setupShowing) return;
+        if (_setupShowing || root.XamlRoot is null) return;
         _setupShowing = true;
+        var previousFocus = Microsoft.UI.Xaml.Input.FocusManager.GetFocusedElement(root.XamlRoot) as Control;
         try
         {
             var settings = SearchIndexSettingsStore?.Load() ?? Models.SearchIndexSettings.Default;
@@ -72,7 +62,7 @@ public partial class App
                 card.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
                 card.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
                 var text = new StackPanel { Spacing = 4 };
-                text.Children.Add(new TextBlock { Text = title, FontSize = 14, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+                text.Children.Add(new TextBlock { Text = title, TextWrapping = TextWrapping.Wrap, FontSize = 14, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
                 text.Children.Add(new TextBlock { Text = description, TextWrapping = TextWrapping.Wrap, FontSize = 12, Opacity = 0.75 });
                 card.Children.Add(text);
                 var toggle = new ToggleSwitch { IsOn = enabled, OnContent = "", OffContent = "", MinWidth = 0, VerticalAlignment = VerticalAlignment.Center };
@@ -121,6 +111,35 @@ public partial class App
             startup.IsEnabled = search.IsOn;
             var favorites = Choice(Loc.Get("Favorites_Show"), Loc.Get("Favorites_SetupHint"), Features.Completed ? Features.FavoritesBarEnabled : true);
             var alphabet = Choice(Loc.Get("Alphabet_QuickNavigation"), Loc.Get("Alphabet_SetupHint"), ExplorerPreferences.ShowAlphabetNavigation);
+            ComboBox OpeningChoice(string key, string id, ItemOpeningMode current)
+            {
+                var box = new ComboBox { Header = Loc.Get(key), HorizontalAlignment = HorizontalAlignment.Stretch };
+                foreach (var mode in Enum.GetValues<ItemOpeningMode>())
+                {
+                    var item = new ComboBoxItem { Content = Loc.Get("Opening_" + mode), Tag = mode };
+                    box.Items.Add(item);
+                    if (mode == current) box.SelectedItem = item;
+                }
+                Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(box, id);
+                Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, Loc.Get(key));
+                panel.Children.Add(box);
+                return box;
+            }
+            var fileOpening = OpeningChoice("Opening_FileTitle", "SetupFileOpening", ExplorerPreferences.FileOpeningMode);
+            var folderOpening = OpeningChoice("Opening_FolderTitle", "SetupFolderOpening", ExplorerPreferences.FolderOpeningMode);
+            panel.Children.Add(new TextBlock { Text = Loc.Get("Opening_Hint"), TextWrapping = TextWrapping.Wrap, FontSize = 12, Opacity = 0.75 });
+            var defaultView = new ComboBox { Header = Loc.Get("DefaultViewTitle"), HorizontalAlignment = HorizontalAlignment.Stretch };
+            foreach (var (kind, key) in new[] { (FolderViewKind.Details, "Layout_Details"), (FolderViewKind.Icons, "Layout_LargeIcons"), (FolderViewKind.List, "Layout_List") })
+            {
+                var item = new ComboBoxItem { Content = Loc.Get(key), Tag = kind };
+                defaultView.Items.Add(item);
+                if (kind == ExplorerPreferences.DefaultView) defaultView.SelectedItem = item;
+            }
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(defaultView, "SetupDefaultView");
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(defaultView, Loc.Get("DefaultViewTitle"));
+            panel.Children.Add(defaultView);
+            var restoreSession = Choice(Loc.Get("RestoreLastSessionTitle"), Loc.Get("RestoreLastSessionDescription"), ExplorerPreferences.RestoreLastSession);
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(restoreSession, "SetupRestoreSession");
             var appearance = AppearanceViewModel?.Current ?? AppearanceSettings.Default;
             var theme = new ComboBox { Header = Loc.Get("AppearanceTitle"), HorizontalAlignment = HorizontalAlignment.Stretch, SelectedIndex = (int)appearance.Theme };
             theme.Items.Add(Loc.Get("ThemeSystem"));
@@ -182,6 +201,8 @@ public partial class App
             errorNotice.SizeChanged += (_, _) => ResizeContent();
             var dialog = new ContentDialog { Title = Loc.Get("Setup_Title"), Content = content, XamlRoot = root.XamlRoot,
                 PrimaryButtonText = Loc.Get("Setup_Start"), CloseButtonText = Loc.Get("Setup_Later"), DefaultButton = ContentDialogButton.Primary };
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(dialog, "FeatureSetupDialog");
+            dialog.Opened += (_, _) => MarkFeatureTourOffered(Program.ProfileWasNew && !Features.Completed);
             ContentDialogTheme.Apply(dialog, root);
             theme.SelectionChanged += (_, _) => dialog.RequestedTheme = theme.SelectedIndex switch { 1 => ElementTheme.Light, 2 => ElementTheme.Dark, _ => root.RequestedTheme };
             async Task<bool> SaveChoicesAsync(bool withoutSearch)
@@ -227,7 +248,14 @@ public partial class App
                     }
                     // Failed hotkey registration must not partially save the index choice.
                     if (SearchIndexSettingsStore is { } store) await store.SaveAsync(settings with { AutoRefresh = indexing.IsOn });
-                    await SetExplorerPreferencesAsync(ExplorerPreferences with { ShowAlphabetNavigation = alphabet.IsOn });
+                    await SetExplorerPreferencesAsync(ExplorerPreferences with
+                    {
+                        ShowAlphabetNavigation = alphabet.IsOn,
+                        FileOpeningMode = fileOpening.SelectedItem is ComboBoxItem { Tag: ItemOpeningMode files } ? files : ExplorerPreferences.FileOpeningMode,
+                        FolderOpeningMode = folderOpening.SelectedItem is ComboBoxItem { Tag: ItemOpeningMode folders } ? folders : ExplorerPreferences.FolderOpeningMode,
+                        DefaultView = defaultView.SelectedItem is ComboBoxItem { Tag: FolderViewKind view } ? view : ExplorerPreferences.DefaultView,
+                        RestoreLastSession = restoreSession.IsOn,
+                    });
                     if (AppearanceViewModel is { } appearanceModel)
                     {
                         await appearanceModel.SetThemeAndAccentAsync((AppThemeKind)Math.Max(0, theme.SelectedIndex), accent);
@@ -239,6 +267,7 @@ public partial class App
                     FeaturesChanged?.Invoke(null, EventArgs.Empty);
                     if (!indexing.IsOn) SearchIndex?.Cancel();
                     if (indexing.IsOn && !Program.IsUiTestBuild) _ = TryAutoIndexAsync(CancellationToken.None);
+                    FeatureTourHistory.Load(FeatureProfile).Completed(FeatureTourHistory.CurrentRelease).Save(FeatureProfile);
                     return true;
                 }
                 catch (Exception error)
@@ -303,10 +332,29 @@ public partial class App
             }
 #endif
             root.XamlRoot.Changed += RootChanged;
-            try { await dialog.ShowAsync(); }
+            try
+            {
+                var result = await dialog.ShowAsync();
+                if (result == ContentDialogResult.None)
+                {
+                    // Skip keeps every current/default option. Only first-run
+                    // bookkeeping changes, so it never applies an editor draft.
+                    if (!Features.Completed)
+                    {
+                        var skipped = Features with { Completed = true };
+                        skipped.Save(FeatureProfile); Features = skipped;
+                        FeaturesChanged?.Invoke(null, EventArgs.Empty);
+                    }
+                    (FeatureTourHistory.Load(FeatureProfile) with { Draft = null }).Save(FeatureProfile);
+                }
+            }
             finally { if (capturing) EndCapture(); root.XamlRoot.Changed -= RootChanged; }
         }
         catch (Exception error) { LogFailure("Feature setup", error); }
-        finally { _setupShowing = false; }
+        finally
+        {
+            _setupShowing = false;
+            if (previousFocus is { IsLoaded: true, IsEnabled: true }) previousFocus.Focus(FocusState.Programmatic);
+        }
     }
 }

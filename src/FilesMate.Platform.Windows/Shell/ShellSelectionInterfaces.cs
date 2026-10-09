@@ -65,3 +65,4 @@ public interface ISelectionShellBrowser
     [PreserveSig] public int OnViewWindowActive(nint view);
     [PreserveSig] public int SetToolbarItems(nint buttons, uint count, uint flags);
 }
+

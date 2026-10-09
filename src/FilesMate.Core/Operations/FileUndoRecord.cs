@@ -9,6 +9,7 @@ public enum FileUndoKind
     Merged,
     Copied,
     ShellTransfer,
+    ViewState,
 }
 
 public readonly record struct FilePathPair(string Source, string Destination)
@@ -22,6 +23,9 @@ public sealed record FileUndoRecord(
     IReadOnlyList<FilePathPair> Pairs)
 {
     public DateTimeOffset RecordedAt { get; init; } = DateTimeOffset.Now;
+    public IViewUndoChange? ViewChange { get; init; }
+    public static FileUndoRecord View(IViewUndoChange change) => new(FileUndoKind.ViewState, [], [])
+        { ViewChange = change ?? throw new ArgumentNullException(nameof(change)) };
     private FileUndoState _undoState = FileUndoState.Capture(
         Kind is FileUndoKind.Relocated or FileUndoKind.Merged or FileUndoKind.Grouped
             ? Pairs.Select(pair => pair.Destination)
@@ -44,11 +48,17 @@ public sealed record FileUndoRecord(
             ? Pairs.Select(pair => pair.Destination)
             : Kind is FileUndoKind.Created or FileUndoKind.Copied ? Paths : []);
 
-    internal void AcceptReplacementState(FileReplacement replacement)
+    internal void AcceptReplacementState(FileReplacement replacement, string previousBackup)
     {
         // These snapshots were captured by our successful swaps. Preserve all unrelated
         // original snapshots so a partial retry never accepts an external modification.
-        _undoState = _undoState.WithReplacement(replacement.DestinationState);
+        _undoState = _undoState.WithReplacement(replacement.DestinationState, replacement.BackupState, previousBackup, replacement.Backup);
+    }
+
+    internal void AcceptUndoDirectoryState(IEnumerable<string> paths) => _undoState = _undoState.WithDirectoryChanges(paths);
+    internal void AcceptRedoDirectoryState(IEnumerable<string> paths)
+    {
+        if (_redoState is not null) _redoState = _redoState.WithDirectoryChanges(paths);
     }
 
     internal bool HasOrdinaryActions => Paths.Count > 0 || Pairs.Count > 0 || CreatedDirectories.Count > 0;

@@ -63,6 +63,9 @@ public sealed partial class MainWindow
                 var view = (Button)toolbar.FindName("ViewMenuButton");
                 var menu = (MenuFlyout)view.Flyout;
                 menu.ShowAt(view); await Task.Delay(140);
+                var viewPresenter = Presenter(menu.Items[0]);
+                Require(viewPresenter.MinWidth == 0, "View menu still reserves a fixed blank width");
+                report["ViewMenuWidth-" + mode] = viewPresenter.ActualWidth;
                 foreach (var item in menu.Items.OfType<ToggleMenuFlyoutItem>())
                 foreach (var state in new[] { "Normal", "PointerOver", "Pressed" })
                 {
@@ -70,6 +73,7 @@ public sealed partial class MainWindow
                     await Task.Delay(35);
                     var text = Part<TextBlock>(item, "TextBlock");
                     var layout = Part<Grid>(item, "LayoutRoot");
+                    Require(!text.IsTextTrimmed && item.ActualHeight >= 32, "Compact view row clips text or reduces its hit target");
                     Require(BrushColor(text.Foreground) == palette.Text, mode + " menu text changed in " + state);
                     checks.Add(new { Theme = mode.ToString(), Control = item.Text, State = state, Text = BrushColor(text.Foreground), Fill = BrushColor(layout.Background) });
                     if (state == "PointerOver" && item == menu.Items[0]) await Capture(Presenter(item), "popup-menu-hover-" + mode + ".png");
@@ -90,6 +94,12 @@ public sealed partial class MainWindow
                 var expansion = (IExpandCollapseProvider)FrameworkElementAutomationPeer.CreatePeerForElement(submenu).GetPattern(PatternInterface.ExpandCollapse);
                 expansion.Expand(); await Task.Delay(220);
                 Require(expansion.ExpandCollapseState == Microsoft.UI.Xaml.Automation.ExpandCollapseState.Expanded, "Submenu did not expand");
+                var sizePresenter = Presenter(submenu.Items[0]);
+                Require(sizePresenter.MinWidth == 0, "Size submenu did not inherit content-sized width");
+                report["ViewSizeSubmenuWidth-" + mode] = sizePresenter.ActualWidth;
+                foreach (var choice in submenu.Items.OfType<ToggleMenuFlyoutItem>())
+                    Require(!Part<TextBlock>(choice, "TextBlock").IsTextTrimmed && choice.ActualHeight >= 32,
+                        "Compact size submenu clips text or reduces its hit target");
                 Require(BrushColor(Part<TextBlock>(submenu, "TextBlock").Foreground) == palette.Text, "Expanded submenu text is unreadable");
                 Require(VisibleFill(Part<Grid>(submenu, "LayoutRoot").Background, palette.Floating), "Expanded submenu has no feedback");
                 await Capture(Presenter(submenu), "popup-submenu-open-" + mode + ".png");
@@ -102,8 +112,9 @@ public sealed partial class MainWindow
                     var content = (FrameworkElement)flyout.Content;
                     if (name == "GroupingMenuButton")
                     {
-                        Require(content.ActualWidth < 250, "Grouping card still too wide: " + content.ActualWidth);
-                        report["GroupingWidth"] = content.ActualWidth;
+                        Require(double.IsNaN(content.Width) && content.MinWidth == 0 && double.IsPositiveInfinity(content.MaxWidth),
+                            "Grouping card must size to translated content without fixed width or clipping caps");
+                        report["GroupingWidth-" + mode] = content.ActualWidth;
                     }
                     var radios = PolishDescendants(content).OfType<RadioButton>().ToArray();
                     foreach (var radio in radios)

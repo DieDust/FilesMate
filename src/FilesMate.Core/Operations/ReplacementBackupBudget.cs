@@ -8,6 +8,8 @@ public sealed class ReplacementBackupBudget(long capacity = 256L * 1024 * 1024, 
     public static ReplacementBackupBudget Shared { get; } = new();
     public long Capacity { get; } = capacity;
     public long MaximumFile { get; } = maximumFile;
+    private int _enabled = 1;
+    public bool Enabled { get => Volatile.Read(ref _enabled) != 0; set => Volatile.Write(ref _enabled, value ? 1 : 0); }
     private readonly object _sync = new();
     private readonly Dictionary<string, BackupReservation> _entries = new(StringComparer.OrdinalIgnoreCase);
     private string? _journalDirectory;
@@ -44,7 +46,7 @@ public sealed class ReplacementBackupBudget(long capacity = 256L * 1024 * 1024, 
                 try { entry = JsonSerializer.Deserialize<BackupReservation>(file) ?? throw new IOException("Invalid undo backup journal."); }
                 catch (JsonException error) { throw new IOException("Invalid undo backup journal.", error); }
                 if (entry.Bytes < 0 || entry.Bytes > 64L * 1024 * 1024 || string.IsNullOrWhiteSpace(entry.Directory) || !Path.IsPathFullyQualified(entry.Directory)
-                    || !Path.GetFileName(entry.Directory).StartsWith(".filesmate-history-", StringComparison.Ordinal))
+                    || !ReplacementBackupLayout.IsRetainedLocation(entry.Directory))
                     throw new IOException("Invalid undo backup location.");
                 if (ConfirmedMissing(entry.Directory)) { file.Dispose(); File.Delete(path); continue; }
                 loaded.TryAdd(entry.Directory, entry);
@@ -53,11 +55,20 @@ public sealed class ReplacementBackupBudget(long capacity = 256L * 1024 * 1024, 
         foreach (var entry in loaded) _entries.Add(entry.Key, entry.Value);
     }
 
+    public void Refresh()
+    {
+        lock (_sync)
+        {
+            using var gate = OpenGate();
+            Reload();
+        }
+    }
+
     public bool CanReserve(long bytes)
     {
         lock (_sync)
         {
-            try { using var gate = OpenGate(); Reload(); return Fits(bytes); }
+            try { using var gate = OpenGate(); Reload(); return Enabled && Fits(bytes); }
             catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException) { return false; }
         }
     }
@@ -70,7 +81,7 @@ public sealed class ReplacementBackupBudget(long capacity = 256L * 1024 * 1024, 
         {
             using var gate = OpenGate();
             Reload();
-            if (!Fits(bytes)) throw new IOException("Undo backup limit reached. Choose again without an undo backup.");
+            if (!Enabled || !Fits(bytes)) throw new IOException("Undo backup is disabled or its limit was reached. Choose again without an undo backup.");
             var entry = new BackupReservation(directory, bytes, DateTimeOffset.UtcNow);
             createDirectory();
             try
@@ -93,6 +104,7 @@ public sealed class ReplacementBackupBudget(long capacity = 256L * 1024 * 1024, 
             catch
             {
                 Directory.Delete(directory, recursive: false);
+                ReplacementBackupLayout.RemoveEmptyParents(directory);
                 throw;
             }
             _entries.Add(directory, entry);

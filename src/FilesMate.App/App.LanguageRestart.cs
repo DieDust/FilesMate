@@ -16,12 +16,12 @@ public partial class App
         string? handoff = null;
         try
         {
-            while (FileOperationLifetime.IsBusy) await FileOperationLifetime.WhenIdleAsync();
+            await App.WhenPendingUserWorkIdleAsync();
             if (_windows.Count == 0) return;
             var profile = Path.GetDirectoryName(Program.SettingsPath(LanguageSettings.DefaultFilePath))!;
             await GlobalSearchService.RestartForLanguageAsync(profile);
             // File work may have started while the independent host was restarting.
-            while (FileOperationLifetime.IsBusy) await FileOperationLifetime.WhenIdleAsync();
+            await App.WhenPendingUserWorkIdleAsync();
             if (_windows.Count == 0) return;
             var windows = _windows.OrderBy(w => ReferenceEquals(w, CurrentWindow)).ToArray();
             using var process = Process.GetCurrentProcess();

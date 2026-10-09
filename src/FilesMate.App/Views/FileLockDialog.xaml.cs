@@ -117,6 +117,7 @@ public sealed partial class FileLockDialog : UserControl
     public FileLockDialog()
     {
         InitializeComponent();
+        FlyoutTheme.FollowHost(OtherFlyout);
         UnlockLabel.Text = StringTable.Get("Lock_Unlock");
         DeleteLabel.Text = StringTable.Get("Lock_Delete");
         OtherLabel.Text = StringTable.Get("Lock_Other");

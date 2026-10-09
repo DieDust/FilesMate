@@ -37,6 +37,8 @@
                         <Setter Target="Root.BorderThickness" Value="1" />
                         <Setter Target="Root.Padding" Value="1" />
                         <Setter Target="Root.Opacity" Value="1" />
+                        <Setter Target="NameText.Foreground" Value="{ThemeResource FilesMate.FileItem.HoverForegroundBrush}" />
+                        <Setter Target="SizeText.Foreground" Value="{ThemeResource FilesMate.FileItem.HoverForegroundBrush}" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState x:Name="Pressed">
@@ -86,9 +88,9 @@
                 <VisualState x:Name="Focused">
                     <VisualState.Setters>
                         <Setter Target="Root.Background" Value="Transparent" />
-                        <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
-                        <Setter Target="Root.BorderThickness" Value="1" />
-                        <Setter Target="Root.Padding" Value="1" />
+                        <Setter Target="Root.BorderBrush" Value="Transparent" />
+                        <Setter Target="Root.BorderThickness" Value="0" />
+                        <Setter Target="Root.Padding" Value="2" />
                         <Setter Target="Root.Opacity" Value="1" />
                     </VisualState.Setters>
                 </VisualState>
@@ -115,6 +117,23 @@
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
+            <VisualStateGroup x:Name="FocusStates">
+                <VisualState x:Name="UnfocusedItem">
+                    <VisualState.Setters><Setter Target="FocusVisual.Visibility" Value="Collapsed" /></VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="FocusedItem">
+                    <VisualState.Setters>
+                        <Setter Target="FocusVisual.Visibility" Value="Visible" />
+                        <Setter Target="FocusVisual.BorderBrush" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="FocusedSelectedItem">
+                    <VisualState.Setters>
+                        <Setter Target="FocusVisual.Visibility" Value="Visible" />
+                        <Setter Target="FocusVisual.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
         <Border
             x:Name="Root"
@@ -125,6 +144,7 @@
             BorderBrush="Transparent"
             BorderThickness="0"
             CornerRadius="{StaticResource FilesMate.Corner.Card}">
+            <Grid>
             <Grid HorizontalAlignment="Stretch" VerticalAlignment="Top">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -173,13 +193,14 @@
                         </Viewbox>
                     </Grid>
                 </Border>
-                <TextBlock
-                    x:Name="NameText"
-                    Grid.Row="1"
-                    Margin="0,4,0,0"
-                    HorizontalAlignment="Center"
-                    MaxLines="2"
-                    Style="{StaticResource FileTileNameStyle}" />
+                <Grid Grid.Row="1" Margin="0,4,0,0">
+                    <Canvas x:Name="NameMatchBackplates" IsHitTestVisible="False" />
+                    <TextBlock
+                        x:Name="NameText"
+                        HorizontalAlignment="Center"
+                        MaxLines="2"
+                        Style="{StaticResource FileTileNameStyle}" />
+                </Grid>
                 <TextBlock
                     x:Name="SizeText"
                     Grid.Row="2"
@@ -198,6 +219,11 @@
                         </Border>
                     </Viewbox>
                 </Canvas>
+            </Grid>
+                <!-- The focus ring spans the fixed tile chrome; folder content may omit the size row. -->
+                <Border x:Name="FocusVisual" BorderThickness="2"
+                        CornerRadius="{StaticResource FilesMate.Corner.Card}"
+                        Visibility="Collapsed" IsHitTestVisible="False" />
             </Grid>
         </Border>
         <StackPanel

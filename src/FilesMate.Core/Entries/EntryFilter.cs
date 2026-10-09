@@ -27,6 +27,8 @@ public sealed record EntryFilter
 
     public bool IncludeHidden { get; init; } = true;
 
+    public EntryMetadataFilter Metadata { get; init; } = EntryMetadataFilter.None;
+
     public bool Matches(in FileEntryCore entry)
     {
         if (FilesOnly && entry.Kind != EntryKind.File)
@@ -44,6 +46,8 @@ public sealed record EntryFilter
             return false;
         }
 
+        if (!Metadata.Matches(entry)) return false;
+
         if (string.IsNullOrEmpty(Query))
         {
             return true;
@@ -59,13 +63,14 @@ public sealed record EntryFilter
 
     private static bool HasExtension(string name, string query)
     {
-        var extension = Path.GetExtension(name);
+        // Preserve the original null-name failure for default/modified snapshots.
+        var extension = Path.GetExtension(name.AsSpan(0, name.Length));
         if (query.StartsWith('.'))
         {
             return extension.Equals(query, StringComparison.OrdinalIgnoreCase);
         }
 
-        return extension.Equals("." + query, StringComparison.OrdinalIgnoreCase)
+        return (extension.Length > 0 && extension[1..].Equals(query, StringComparison.OrdinalIgnoreCase))
             || name.EndsWith(query, StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -10,8 +10,6 @@ namespace FilesMate.App;
 
 public sealed partial class MainWindow
 {
-    private UpdateNoticeCard? _updateNotice;
-    private UpdateRelease? _noticeRelease;
     private bool _updateDialogOpen;
 #if FILESMATE_UI_TEST
     private ContentDialog? _updateDemoDialog;
@@ -21,47 +19,30 @@ public sealed partial class MainWindow
 
     internal void ShowUpdateNotice(UpdateRelease release)
     {
-        if (_windowClosed || Content is not Panel root) return;
-        if (_updateNotice is null)
-        {
-            _updateNotice = new UpdateNoticeCard { HorizontalAlignment = HorizontalAlignment.Left,
-                VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(16, 0, 16, 72), Width = 380 };
-            _updateNotice.DismissRequested += (_, _) => _updateNotice.Visibility = Visibility.Collapsed;
-            _updateNotice.UpdateRequested += async (_, _) =>
-            {
-                if (_noticeRelease is { } available) await DownloadAndInstallUpdateAsync(available);
-            };
-            root.SizeChanged += (_, _) => PositionUpdateNotice();
-            _updateNotice.Loaded += (_, _) => PositionUpdateNotice();
-            Grid.SetRowSpan(_updateNotice, 2);
-            Canvas.SetZIndex(_updateNotice, 20);
-            root.Children.Add(_updateNotice);
-        }
-        _noticeRelease = release;
-        _updateNotice.SetVersion(release.DisplayVersion);
-        _updateNotice.Visibility = Visibility.Visible;
-        PositionUpdateNotice();
-    }
-
-    private void PositionUpdateNotice()
-    {
-        if (_updateNotice is null || Content is not FrameworkElement root) return;
-        var left = 16d;
-        var bottom = 72d;
-        if (FindDescendant<Button>(root, b => b.Name == "SettingsButton" && b.IsLoaded && b.ActualHeight > 0) is { } settings)
-        {
-            var point = settings.TransformToVisual(root).TransformPoint(new Windows.Foundation.Point(0, 0));
-            left = Math.Max(12, point.X);
-            bottom = Math.Max(16, root.ActualHeight - point.Y + 8);
-        }
-        _updateNotice.Width = Math.Min(380, Math.Max(240, root.ActualWidth - left - 16));
-        _updateNotice.Margin = new Thickness(left, 0, 16, bottom);
+        if (!_windowClosed) QueueAvailableUpdate(release);
     }
 
     internal async Task DownloadAndInstallUpdateAsync(UpdateRelease release)
     {
         if (_windowClosed || _updateDialogOpen || App.Updates.IsInstalling || Content is not FrameworkElement root) return;
-        if (_updateNotice is not null) _updateNotice.Visibility = Visibility.Collapsed;
+        if (FilesMate.Core.Configuration.RuntimeProfile.IsPortable)
+        {
+            _updateDialogOpen = true;
+            try
+            {
+                var guidanceBody = new StackPanel { Spacing = 16 };
+                guidanceBody.Children.Add(new TextBlock { Text = Loc.Get("Portable_ManualUpdate"), TextWrapping = TextWrapping.Wrap, MaxWidth = 420 });
+                guidanceBody.Children.Add(new HyperlinkButton { Content = Loc.Get("Portable_OpenDownloads"),
+                    NavigateUri = new Uri("https://github.com/DieDust/FilesMate/releases") });
+                var guidance = new ContentDialog { Title = Loc.Get("Portable_UpdateAction"), Content = guidanceBody,
+                    CloseButtonText = Loc.Get("Close"), XamlRoot = root.XamlRoot };
+                ContentDialogTheme.Apply(guidance, root);
+                await guidance.ShowAsync();
+            }
+            finally { _updateDialogOpen = false; }
+            return;
+        }
+        HideAnnouncementImmediately();
         _updateDialogOpen = true;
         using var cancellation = new CancellationTokenSource();
         var body = new UpdateProgressView { Width = Math.Min(420, Math.Max(240, root.ActualWidth - 96)) };

@@ -72,7 +72,7 @@ public static partial class StringTable
         ["FileListSection"] = "ファイル一覧",
         ["AlphabetNavigationSection"] = "アルファベットナビゲーション",
         ["AlphabetNavigationTitle"] = "アルファベットナビゲーションを有効にする",
-        ["AlphabetNavigationDescription"] = "名前順で表示しているときに、アルファベット一覧、文字の吹き出し、範囲の目印を表示します。",
+        ["AlphabetNavigationDescription"] = "詳細表示で名前順に並べているときのみ、アルファベット一覧、文字の吹き出し、範囲の目印を表示します。",
         ["AlphabetMinimumItemsTitle"] = "表示に必要な最小項目数",
         ["AlphabetMinimumItemsDescription"] = "項目が少ないフォルダーでは通常のスクロールバーを使います。0 にすると項目数を制限しません。",
         ["AlphabetDualPaneTitle"] = "2 ペイン表示でも使用",

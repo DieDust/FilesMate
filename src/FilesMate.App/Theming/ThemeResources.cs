@@ -11,6 +11,8 @@ namespace FilesMate.App.Theming;
 internal static class ThemeResources
 {
     private static readonly ConditionalWeakTable<FrameworkElement, References> Bindings = new();
+    private static readonly ConditionalWeakTable<FrameworkElement, ResourceDictionary> LocalPalettes = new();
+    internal static void RegisterLocalPalette(FrameworkElement host, ResourceDictionary resources) => LocalPalettes.Add(host, resources);
 
     public static void Bind(FrameworkElement element, DependencyProperty property, string key)
     {
@@ -25,6 +27,15 @@ internal static class ThemeResources
 
     public static object? Resolve(FrameworkElement? element, string key)
     {
+        // A memory presentation can use a product palette without changing
+        // the application's saved appearance or any other window's resources.
+        for (DependencyObject? node = element; node is not null; node = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetParent(node))
+            if (node is FrameworkElement host && LocalPalettes.TryGetValue(host, out var local))
+            {
+                var localTheme = new Windows.UI.ViewManagement.AccessibilitySettings().HighContrast ? "HighContrast" : host.ActualTheme.ToString();
+                if ((Find(local, localTheme, key) ?? (local.TryGetValue(key, out var value) ? value : null)) is { } scoped) return scoped;
+                break;
+            }
         var theme = new Windows.UI.ViewManagement.AccessibilitySettings().HighContrast
             ? "HighContrast" : ContentDialogTheme.Resolve(element).ToString();
         return Find(Application.Current.Resources, theme, key)

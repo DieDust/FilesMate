@@ -30,7 +30,9 @@ public static class FillWrapLayoutMath
         }
 
         var width = UsableWidth(availableWidth, minItemWidth);
-        return Math.Max(minItemWidth, (width - (columnSpacing * (columns - 1))) / columns);
+        // MinItemWidth chooses the preferred wrap count. A single narrow pane
+        // must still fit its available width instead of forcing horizontal overflow.
+        return Math.Max(0, (width - (columnSpacing * (columns - 1))) / columns);
     }
 
     private static double UsableWidth(double availableWidth, double minItemWidth) =>

@@ -50,13 +50,15 @@ public sealed partial class NavigatorPage
 
     private void ConfigureConvenienceSurface(FileDetailsSurface surface, int paneIndex)
     {
+        ConfigureRecursiveSurface(surface, paneIndex);
         surface.ViewportLayoutChanged += (_, _) =>
         {
             var chrome = paneIndex == 2 ? _thirdChrome : paneIndex == 1 ? _rightChrome : PaneChrome;
             if (chrome is not null) chrome.ContentTopInset = surface.LayoutKind == FileLayoutKind.Details ? FileColumnLayout.RowHeight : 0;
         };
         surface.OtherPanePath = () => OtherPaneDestination(paneIndex);
-        surface.RenameRequested = _fileActions.RenamePathAsync;
+        surface.RenameRequested = (source, name) => _fileActions.RenamePathCapturedAsync(source, name,
+            surface.IsRecursiveView, surface.CaptureRecursiveOperationGuard());
         surface.QuickPreviewRequested += (_, _) =>
         {
             ActivatePane(paneIndex);
@@ -74,7 +76,8 @@ public sealed partial class NavigatorPage
     private async Task TransferToOtherPaneAsync(bool move)
     {
         var target = OtherPaneDestination(_thirdActive ? 2 : _rightActive ? 1 : 0);
-        var sources = SelectedPaths().ToArray();
+        var recursiveSource = ViewModel.IsRecursive;
+        var sources = ActiveSurface.SelectedOperationPaths().ToArray();
         if (target is null || sources.Length == 0) return;
         var deviceTransfer = ViewModel.IsPortableDevice || FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(target, out _);
         if (deviceTransfer && move) { ViewModel.ReportUserError(Loc.Get("Device_CopyOnly")); return; }
@@ -91,7 +94,8 @@ public sealed partial class NavigatorPage
         try
         {
             if (await dialog.ShowAsync() == ContentDialogResult.Primary)
-                await _fileActions.DropAsync(sources, target, move ? DataPackageOperation.Move : DataPackageOperation.Copy);
+                await _fileActions.DropAsync(sources, target, move ? DataPackageOperation.Move : DataPackageOperation.Copy,
+                    requireRecursiveCompatibility: recursiveSource);
         }
         catch (Exception error) { if (!_disposed) ViewModel.ReportUserError(error.Message); }
     }
@@ -182,6 +186,7 @@ public sealed partial class NavigatorPage
         Add(Loc.Get("Action_ReopenTab"), App.Shortcuts[ShortcutAction.ReopenTab].DisplayText, true, () => App.CurrentWindow?.ReopenClosedTab());
         FileAction(AppCommandId.NewFolder, hasFolder, App.Shortcuts[ShortcutAction.NewFolder].DisplayText);
         FileAction(AppCommandId.NewFile, hasFolder);
+        FileAction(AppCommandId.ShowFolderFilters, hasFolder && !ViewModel.IsPortableDevice, App.Shortcuts[ShortcutAction.ShowFolderFilters].DisplayText);
         FileAction(AppCommandId.NewFolderWithSelection, hasFolder && selected > 0);
         FileAction(selected > 1 ? AppCommandId.BatchRename : AppCommandId.Rename, selected > 0, App.Shortcuts[ShortcutAction.Rename].DisplayText);
         FileAction(AppCommandId.OpenInTerminal, hasFolder, App.Shortcuts[ShortcutAction.OpenTerminal].DisplayText);
@@ -254,7 +259,8 @@ public sealed partial class NavigatorPage
         _rightActive, _previewVisible,
         _paneCount == 3 && _thirdVm is not null && _thirdSurface is not null ? CapturePane(_thirdVm, _thirdSurface) : null, _thirdActive, _paneArrangement, WorkspaceSplit.SplitRatio, _trailingSplit?.SplitRatio ?? .5);
 
-    public bool CanHibernate => !_disposed && !_restoringClosedTab && !FileOperationLifetime.IsBusy && !PaneFileActions.IsBusy
+    public bool CanHibernate => !_disposed && !_restoringClosedTab
+        && !_leftVm.IsRecursive && _rightVm?.IsRecursive != true && _thirdVm?.IsRecursive != true && !FileOperationLifetime.IsBusy && !PaneFileActions.IsBusy
         && !_leftVm.IsLoading && _rightVm?.IsLoading != true && _thirdVm?.IsLoading != true && !FileSurface.IsRenaming && _rightSurface?.IsRenaming != true && _thirdSurface?.IsRenaming != true
         && !Omni.IsEditing && !Omni.IsSearchOpen && _commandDialog is null
         && _leftVm.TagFilterLabel is null && _rightVm?.TagFilterLabel is null && _thirdVm?.TagFilterLabel is null;
@@ -263,9 +269,11 @@ public sealed partial class NavigatorPage
         && !FileSurface.IsRenaming && _rightSurface?.IsRenaming != true && _thirdSurface?.IsRenaming != true && _commandDialog is null;
 
     private static ClosedPaneState CapturePane(PaneViewModel vm, FileDetailsSurface surface) =>
-        new(vm.AddressText, new FolderViewSettings(surface.LayoutKind == FileLayoutKind.Details,
-            surface.GridPreset.Slot, vm.Sort, surface.GetPresentationColumns(), surface.LayoutKind == FileLayoutKind.List, surface.ListZoomPercent), surface.ScrollOffset,
-            surface.SelectedPaths().Select(path => Path.GetFileName(path)).ToArray(), vm.FilterQuery, vm.Navigation.CaptureHistory());
+        new(vm.AddressText, new FolderViewSettings(surface.LayoutForPersistence == FileLayoutKind.Details,
+            surface.GridPreset.Slot, vm.SortForPersistence, surface.ColumnsForPersistence(), surface.LayoutForPersistence == FileLayoutKind.List, surface.ListZoomPercent),
+            vm.IsRecursive ? 0 : surface.ScrollOffset,
+            vm.IsRecursive ? [] : surface.SelectedPaths().Select(path => Path.GetFileName(path)).ToArray(),
+            vm.FilterForPersistence, vm.Navigation.CaptureHistory(), vm.MetadataFilter);
 
     public async Task RestoreClosedTabAsync(ClosedTabState state)
     {
@@ -305,16 +313,18 @@ public sealed partial class NavigatorPage
             if (!string.Equals(vm.AddressText, pane.Path, StringComparison.OrdinalIgnoreCase)) return;
             var generation = vm.Navigation.CurrentGeneration;
             if (pane.History is not null) vm.RestoreNavigationHistory(pane.History);
+            vm.SetMetadataFilter(pane.MetadataFilter ?? FilesMate.Core.Entries.EntryMetadataFilter.None);
             if (vm.FilterQuery != pane.FilterQuery) vm.SetFilterQuery(pane.FilterQuery);
             for (var i = 0; i < 200 && !_disposed; i++)
             {
                 await Task.Delay(50);
                 if (HomeLocation.IsHome(pane.Path) || !vm.IsLoading && vm.ViewIndex is { } index
-                    && index.Sort == vm.Sort && index.Filter.Query == pane.FilterQuery && surface.IsBoundTo(vm.Store, index)) break;
+                    && index.Sort == vm.Sort && index.Filter.Query == pane.FilterQuery
+                    && index.Filter.Metadata == vm.MetadataFilter && surface.IsBoundTo(vm.Store, index)) break;
             }
             if (_disposed || generation != vm.Navigation.CurrentGeneration) return;
             surface.RestoreSelectedNames(pane.SelectedNames ?? []);
-            surface.RestoreScrollOffset(pane.ScrollOffset);
+            surface.RestoreScrollOffset(pane.ScrollOffset, preserveExactOffset: true);
         }
 
         async Task<bool> Ready(PaneViewModel vm, string path)

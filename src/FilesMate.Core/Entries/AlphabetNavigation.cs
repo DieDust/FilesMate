@@ -92,3 +92,4 @@ public sealed class AlphabetNavigation
     public (int Start, int End) Range(int section) => (uint)section >= (uint)_sections.Length ? (0, 0)
         : (_sections[section].FirstIndex, section + 1 < _sections.Length ? _sections[section + 1].FirstIndex : Count);
 }
+

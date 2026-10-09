@@ -11,7 +11,7 @@ public sealed partial class SearchResultsPage
     {
         var window = App.WindowForElement(this);
         if (_disposed || window is null || window.FileShortcutRoutingBlocked || window.TextInputFocused
-            || Results.IsRenaming || _shelfPanel?.ContainsFocus() == true) return false;
+            || Results.OwnsTextEditing || _shelfPanel?.ContainsFocus() == true) return false;
         if (key is not (VirtualKey.Back or VirtualKey.Up)) return false;
         RevealSelected();
         return true;
@@ -23,7 +23,7 @@ public sealed partial class SearchResultsPage
         if (_disposed || window is null || window.FileShortcutRoutingBlocked) return false;
         if (action is ShortcutAction.FilterFolder or ShortcutAction.EditAddress)
         { QueryBox.Focus(FocusState.Keyboard); QueryBox.SelectAll(); return true; }
-        if (window.TextInputFocused || Results.IsRenaming || _shelfPanel?.ContainsFocus() == true) return false;
+        if (window.TextInputFocused || Results.OwnsTextEditing || _shelfPanel?.ContainsFocus() == true) return false;
         switch (action)
         {
             case ShortcutAction.Refresh: _ = SearchAsync(false); return true;
@@ -52,7 +52,7 @@ public sealed partial class SearchResultsPage
     internal bool HandleEscapeFromWindow()
     {
         var window = App.WindowForElement(this);
-        if (_disposed || window is null || window.FileShortcutRoutingBlocked || window.TextInputFocused || Results.IsRenaming) return false;
+        if (_disposed || window is null || window.FileShortcutRoutingBlocked || window.TextInputFocused || Results.OwnsTextEditing) return false;
         if (IsSearching) { Stop_Click(this, new()); return true; }
         return Results.ClearSelection();
     }
@@ -61,6 +61,6 @@ public sealed partial class SearchResultsPage
     {
         var window = App.WindowForElement(this);
         return !_disposed && window is not null && !window.FileShortcutRoutingBlocked
-            && !window.TextInputFocused && !Results.IsRenaming && _shelfPanel?.ContainsFocus() != true && Results.SelectAll();
+            && !window.TextInputFocused && !Results.OwnsTextEditing && _shelfPanel?.ContainsFocus() != true && Results.SelectAll();
     }
 }

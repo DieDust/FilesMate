@@ -1,4 +1,5 @@
 using System.Threading.Channels;
+using FilesMate.Core.Diagnostics;
 
 using FilesMate.Core.Navigation;
 using FilesMate.Core.Scheduling;
@@ -137,6 +138,7 @@ public sealed class DirectorySession : IAsyncDisposable
 
     private async Task RunAsync()
     {
+        PerformanceTrace.Record(PerformanceStage.EnumerationStart, PaneId.Value, Generation);
         try
         {
             var produce = ProduceAsync();
@@ -161,6 +163,14 @@ public sealed class DirectorySession : IAsyncDisposable
         }
         finally
         {
+            if (PerformanceTrace.Enabled) PerformanceTrace.Record(PerformanceStage.EnumerationEnd,
+                PaneId.Value, Generation, count: Store.Count, outcome: State switch
+                {
+                    DirectorySessionState.Completed => PerformanceOutcome.Completed,
+                    DirectorySessionState.Cancelled => PerformanceOutcome.Cancelled,
+                    DirectorySessionState.Failed => PerformanceOutcome.Failed,
+                    _ => PerformanceOutcome.Partial
+                });
             _batches.Complete();
             _changes.Writer.TryComplete();
             _completed.TrySetResult();
@@ -195,10 +205,16 @@ public sealed class DirectorySession : IAsyncDisposable
             {
                 if (batch.PaneId != PaneId || batch.Generation != Generation)
                 {
+                    if (PerformanceTrace.Enabled) PerformanceTrace.Record(PerformanceStage.EnumerationDropped,
+                        PaneId.Value, Generation, count: batch.Entries.Count,
+                        outcome: PerformanceOutcome.Dropped, auxiliary: batch.Generation);
                     continue;
                 }
 
                 Store.Append(batch.Entries);
+                if (PerformanceTrace.Enabled) PerformanceTrace.Record(PerformanceStage.EnumerationBatch,
+                    PaneId.Value, Generation, count: Store.Count, auxiliary: batch.Entries.Count,
+                    outcome: batch.Error is null ? PerformanceOutcome.Partial : PerformanceOutcome.Failed);
                 if (batch.Error is not null)
                 {
                     Error = batch.Error;

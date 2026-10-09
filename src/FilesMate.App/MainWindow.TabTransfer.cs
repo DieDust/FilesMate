@@ -146,7 +146,7 @@ public sealed partial class MainWindow
 
     private async void CloseEmptyWindowWhenIdle()
     {
-        while (FileOperationLifetime.IsBusy) await FileOperationLifetime.WhenIdleAsync();
+        await App.WhenPendingUserWorkIdleAsync();
         if (!_windowClosed && Tabs.TabItems.Count == 0) Close();
     }
 

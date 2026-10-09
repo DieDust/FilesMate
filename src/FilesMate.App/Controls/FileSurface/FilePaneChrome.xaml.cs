@@ -326,7 +326,9 @@ public sealed partial class FilePaneChrome : UserControl
     private void ApplyPaneShape()
     {
         PaneCaptionHost.Visibility = IsDualPane ? Visibility.Visible : Visibility.Collapsed;
-        PaneCard.Margin = new Thickness(8, 0, 8, 0);
+        // A 4-DIP inset and 1-DIP separator produce equal 9-DIP gutters on
+        // both axes, while keeping the splitter's independent 6-DIP hit area.
+        PaneCard.Margin = IsDualPane ? new Thickness(4) : new Thickness(4, 0, 4, 0);
         PaneCard.CornerRadius = InactiveOverlay.CornerRadius = CardCornerRadius();
     }
 

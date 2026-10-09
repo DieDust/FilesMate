@@ -104,7 +104,8 @@ public sealed partial class Omnibar
         if (paths.Length == 0 || operation == DataPackageOperation.None || !IsLoaded || DropRequested is null)
             return DataPackageOperation.None;
         await receive(new FileDropRequest(paths, destination, operation,
-            data.Properties.ContainsKey(FileDropRequest.ShelfMarker), control));
+            data.Properties.ContainsKey(FileDropRequest.ShelfMarker), control,
+            data.Contains(FileDropRequest.RecursiveMarker)));
         return operation;
     }
 

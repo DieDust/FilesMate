@@ -8,9 +8,15 @@ public static class GlobalSearchService
 {
     private static readonly SemaphoreSlim Gate = new(1, 1);
     private static string HostPath => Path.Combine(AppContext.BaseDirectory, "SearchHost", "FilesMate.SearchHost.exe");
+    internal static GlobalSearchSettings LoadSettings() => GlobalSearchConfiguration.Load(
+        Program.IsUiTestBuild ? Path.GetDirectoryName(Program.SettingsPath(GlobalSearchConfiguration.SettingsPath())) : null);
 
     public static async Task<SearchHostReply> EnsureStartedAsync(bool show = false)
     {
+#if FILESMATE_UI_TEST
+        await Task.CompletedTask;
+        return new(false, Loc.Get("Search_ComponentMissing"));
+#else
         await Gate.WaitAsync();
         try
         {
@@ -25,10 +31,15 @@ public static class GlobalSearchService
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Security.SecurityException or System.ComponentModel.Win32Exception or InvalidOperationException)
         { return new(false, Loc.Get("Search_StartFailed") + e.Message); }
         finally { Gate.Release(); }
+#endif
     }
 
     public static async Task<SearchHostReply> ApplyAsync(GlobalSearchSettings settings)
     {
+#if FILESMATE_UI_TEST
+        await Task.CompletedTask;
+        return new(false, Loc.Get("Search_ComponentMissing"));
+#else
         if (!SearchHotkey.TryParse(settings.Hotkey, out _)) return new(false, Loc.Get("Shortcut_ValidKeys"));
         await Gate.WaitAsync();
         try
@@ -51,13 +62,23 @@ public static class GlobalSearchService
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or System.Security.SecurityException or System.ComponentModel.Win32Exception)
         { return new(false, Loc.Get("Settings_SaveFailedDetail") + e.Message); }
         finally { Gate.Release(); }
+#endif
     }
 
     /// <summary>Current host status without starting anything; <c>null</c> when no host is running.</summary>
-    public static Task<SearchHostReply?> StatusAsync() => SearchHostClient.StatusAsync();
+    public static Task<SearchHostReply?> StatusAsync() =>
+#if FILESMATE_UI_TEST
+        Task.FromResult<SearchHostReply?>(null);
+#else
+        SearchHostClient.StatusAsync();
+#endif
 
     internal static async Task RestartForLanguageAsync(string? profile = null)
     {
+#if FILESMATE_UI_TEST
+        await Task.CompletedTask;
+        return;
+#else
         await Gate.WaitAsync();
         try
         {
@@ -85,6 +106,35 @@ public static class GlobalSearchService
             throw new IOException(Loc.Get("Search_StartTimeout"));
         }
         finally { Gate.Release(); }
+#endif
+    }
+
+    internal static void StopPortableHost()
+    {
+        if (!FilesMate.Core.Configuration.RuntimeProfile.IsPortable) return;
+        try
+        {
+            // A second process from this portable folder still owns the shared host.
+            using var current = System.Diagnostics.Process.GetCurrentProcess();
+            foreach (var peer in System.Diagnostics.Process.GetProcessesByName(current.ProcessName))
+            {
+                using (peer)
+                {
+                    if (peer.Id == Environment.ProcessId || peer.HasExited) continue;
+                    if (string.Equals(peer.MainModule?.FileName, Environment.ProcessPath, StringComparison.OrdinalIgnoreCase)) return;
+                }
+            }
+            var reply = SearchHostClient.SendAsync(new("stop-installation", ManagerPath: Environment.ProcessPath))
+                .GetAwaiter().GetResult();
+            if (reply is { Ok: true, Pid: > 0 })
+            {
+                using var host = System.Diagnostics.Process.GetProcessById(reply.Pid);
+                host.WaitForExit(3000);
+            }
+        }
+        catch (Exception error) when (error is ArgumentException or IOException or UnauthorizedAccessException
+            or InvalidOperationException or System.ComponentModel.Win32Exception)
+        { App.LogFailure("PortableSearchHostStop", error); }
     }
 
     private static async Task<SearchHostReply> ConnectOrStartAsync(string command, bool configure)

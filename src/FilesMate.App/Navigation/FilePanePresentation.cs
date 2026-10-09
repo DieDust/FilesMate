@@ -95,6 +95,7 @@ public sealed class FilePanePresentation
             Title = filtered ? StringTable.Get("Empty_FilteredTitle") : StringTable.Get("Empty_Title");
             Body = filtered ? StringTable.Get("Empty_FilteredBody") : StringTable.Get("Empty_Body");
             Glyph = "\uE8B7";
+            if (filtered) PrimaryAction = "ClearInlineFilter";
             return;
         }
 

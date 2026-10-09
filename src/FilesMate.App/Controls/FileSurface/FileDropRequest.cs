@@ -7,8 +7,10 @@ public sealed record FileDropRequest(
     string? TargetDirectory,
     DataPackageOperation Operation,
     bool FromShelf = false,
-    bool AllowSameDirectoryCopy = false)
+    bool AllowSameDirectoryCopy = false,
+    bool RecursiveSource = false)
 {
+    public const string RecursiveMarker = "FilesMate.RecursiveSelection";
     public const string ShelfMarker = "FilesMate.FileShelf";
     private const string PathsMarker = "FilesMate.DragPaths";
 

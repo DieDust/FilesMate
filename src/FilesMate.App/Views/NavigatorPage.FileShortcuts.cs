@@ -14,7 +14,7 @@ public sealed partial class NavigatorPage
         switch (key)
         {
             case VirtualKey.Back:
-            case VirtualKey.Up: ScheduleNavigation(ViewModel.Up); break;
+            case VirtualKey.Up: NavigateAddressUp(); break;
             case VirtualKey.Left: ScheduleNavigation(ViewModel.Back); break;
             case VirtualKey.Right: ScheduleNavigation(ViewModel.Forward); break;
             case VirtualKey.S: ToggleDualPane(); break;
@@ -30,6 +30,7 @@ public sealed partial class NavigatorPage
         {
             case ShortcutAction.EditAddress: Omni.BeginPathEdit(); return true;
             case ShortcutAction.FilterFolder: Omni.BeginSearch(); return true;
+            case ShortcutAction.ShowFolderFilters: InlineFilters.ShowEditor(); return true;
             case ShortcutAction.CommandPalette: _ = ShowCommandPaletteAsync(); return true;
         }
         if (FileAcceleratorsBlocked()) return false;

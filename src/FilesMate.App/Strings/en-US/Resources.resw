@@ -43,6 +43,9 @@
   <data name="Accent_CoolBlue" xml:space="preserve">
     <value>Cool blue</value>
   </data>
+  <data name="Accent_Custom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
   <data name="Accent_Default" xml:space="preserve">
     <value>Default</value>
   </data>
@@ -179,7 +182,7 @@
     <value>Minimum item count</value>
   </data>
   <data name="AlphabetNavigationDescription" xml:space="preserve">
-    <value>Show the alphabet rail, letter bubble, and range indicator while sorting by name.</value>
+    <value>Show the alphabet rail, letter bubble, and range indicator in Details view while sorting by name.</value>
   </data>
   <data name="AlphabetNavigationSection" xml:space="preserve">
     <value>Alphabet navigation</value>
@@ -216,6 +219,12 @@
   </data>
   <data name="AppearanceTitle" xml:space="preserve">
     <value>Appearance</value>
+  </data>
+  <data name="Appearance_MaterialMotion" xml:space="preserve">
+    <value>Material and motion</value>
+  </data>
+  <data name="Appearance_ThemeColors" xml:space="preserve">
+    <value>Theme and color</value>
   </data>
   <data name="Application" xml:space="preserve">
     <value>App</value>
@@ -1000,8 +1009,26 @@
   <data name="Cover_DirectChild" xml:space="preserve">
     <value>Choose an image or video directly inside this folder.</value>
   </data>
+  <data name="Cover_FolderUnavailable" xml:space="preserve">
+    <value>The folder is unavailable. Its cover was not changed.</value>
+  </data>
+  <data name="Cover_MediaFilter" xml:space="preserve">
+    <value>Images and videos</value>
+  </data>
+  <data name="Cover_PickerTitle" xml:space="preserve">
+    <value>Choose folder cover from any location</value>
+  </data>
+  <data name="Cover_ReferenceHint" xml:space="preserve">
+    <value>Uses the original file. If it becomes unavailable, the cover is chosen automatically.</value>
+  </data>
   <data name="Cover_Reset" xml:space="preserve">
     <value>Use automatic folder cover</value>
+  </data>
+  <data name="Cover_StartUnavailable" xml:space="preserve">
+    <value>The target folder could not be opened. Browsing starts in another location.</value>
+  </data>
+  <data name="Cover_Unavailable" xml:space="preserve">
+    <value>This file cannot be used as a cover. Choose a readable image or video with thumbnail support.</value>
   </data>
   <data name="DataFolderDescription" xml:space="preserve">
     <value>Shortcuts, appearance, and explorer preferences are stored in this folder.</value>
@@ -2332,6 +2359,60 @@ Modified: {1}</value>
   <data name="ProgramFile" xml:space="preserve">
     <value>Program file</value>
   </data>
+  <data name="Recursive_Cancelled" xml:space="preserve">
+    <value>Recursive · stopped: {0} matches / {1} scanned · {2}</value>
+  </data>
+  <data name="Recursive_Checking" xml:space="preserve">
+    <value>Checking recursive root…</value>
+  </data>
+  <data name="Recursive_Collapse" xml:space="preserve">
+    <value>Collapse folder</value>
+  </data>
+  <data name="Recursive_Completed" xml:space="preserve">
+    <value>Recursive · {0} matches / {1} scanned · {2}</value>
+  </data>
+  <data name="Recursive_DeleteChildren" xml:space="preserve">
+    <value>Selected folders include all their contents, including descendants hidden by filters or collapsed branches. Continue?</value>
+  </data>
+  <data name="Recursive_Expand" xml:space="preserve">
+    <value>Expand folder</value>
+  </data>
+  <data name="Recursive_Hint" xml:space="preserve">
+    <value>Scan subfolders in this pane. Esc stops the scan. Navigation turns this view off.</value>
+  </data>
+  <data name="Recursive_Limit" xml:space="preserve">
+    <value>Recursive · limit reached: {0} matches / {1} scanned. Choose a smaller root. · {2}</value>
+  </data>
+  <data name="Recursive_Loading" xml:space="preserve">
+    <value>Recursive · {0} matches / {1} scanned · {2} · Esc to stop</value>
+  </data>
+  <data name="Recursive_NotTraversed" xml:space="preserve">
+    <value>This folder was not scanned. Open it separately to inspect its contents.</value>
+  </data>
+  <data name="Recursive_OperationUnavailable" xml:space="preserve">
+    <value>This selection includes case-sensitive or unverified paths, or folders that have not been fully checked. File operations are unavailable here; exact-path Open and Copy Path remain available.</value>
+  </data>
+  <data name="Recursive_Partial" xml:space="preserve">
+    <value>Recursive · partial results: {0} matches / {1} scanned · {2} skipped · {3}</value>
+  </data>
+  <data name="Recursive_ShelfUnavailable" xml:space="preserve">
+    <value>File-shelf additions are unavailable in recursive view. Open the folder normally to add items; the shelf keeps its usual behavior there.</value>
+  </data>
+  <data name="Recursive_SortUnavailable" xml:space="preserve">
+    <value>Shell-property sorting is unavailable in recursive view. Choose a standard column or turn recursive view off.</value>
+  </data>
+  <data name="Recursive_Stale" xml:space="preserve">
+    <value>Recursive snapshot changed. Refresh to scan again; existing rows may be outdated.</value>
+  </data>
+  <data name="Recursive_Toggle" xml:space="preserve">
+    <value>Recursive folder tree</value>
+  </data>
+  <data name="Recursive_TransferHint" xml:space="preserve">
+    <value>Items are copied or moved directly into the destination. Selected folders retain their contents; duplicate names use the existing conflict dialog.</value>
+  </data>
+  <data name="Recursive_Unsupported" xml:space="preserve">
+    <value>Recursive view supports ordinary folders on local fixed or removable drives. Network locations and reparse-point roots are not scanned.</value>
+  </data>
   <data name="Recycle_ConfirmPrefix" xml:space="preserve">
     <value>Move the following items to the Recycle Bin?
 
@@ -2972,8 +3053,14 @@ Regex mode uses the entire query as a regular expression. Filters still apply. F
   <data name="Search_Clear" xml:space="preserve">
     <value>Clear search</value>
   </data>
+  <data name="Search_ClearFilters" xml:space="preserve">
+    <value>Clear filters</value>
+  </data>
   <data name="Search_ClearQuery" xml:space="preserve">
     <value>Clear query</value>
+  </data>
+  <data name="Search_Completed" xml:space="preserve">
+    <value>Search complete</value>
   </data>
   <data name="Search_ComponentMissing" xml:space="preserve">
     <value>The global search component is missing. Reinstall the full application.</value>
@@ -2981,14 +3068,32 @@ Regex mode uses the entire query as a regular expression. Filters still apply. F
   <data name="Search_ContinueWithout" xml:space="preserve">
     <value> You can continue with search disabled.</value>
   </data>
+  <data name="Search_Continuing" xml:space="preserve">
+    <value>Searching other locations…</value>
+  </data>
   <data name="Search_CopyAppHint" xml:space="preserve">
     <value>App entries can be launched directly. To copy files, open their location first.</value>
   </data>
   <data name="Search_Count" xml:space="preserve">
     <value>{0} matching items</value>
   </data>
+  <data name="Search_DefaultHint" xml:space="preserve">
+    <value>Type to search indexed locations</value>
+  </data>
+  <data name="Search_DefaultKeyboardHint" xml:space="preserve">
+    <value>Esc Hide</value>
+  </data>
   <data name="Search_Detecting" xml:space="preserve">
     <value>Checking background search…</value>
+  </data>
+  <data name="Search_EditQuery" xml:space="preserve">
+    <value>Edit keywords</value>
+  </data>
+  <data name="Search_EmptyHint" xml:space="preserve">
+    <value>Try shorter keywords or view all types</value>
+  </data>
+  <data name="Search_EmptyKeyboardHints" xml:space="preserve">
+    <value>Tab Actions    Enter Confirm    Esc Hide</value>
   </data>
   <data name="Search_EnableFailed" xml:space="preserve">
     <value>Global search could not be enabled</value>
@@ -2998,6 +3103,9 @@ Regex mode uses the entire query as a regular expression. Filters still apply. F
   </data>
   <data name="Search_ExitWhenHidden" xml:space="preserve">
     <value>Background search is off. It will exit when the search window is hidden.</value>
+  </data>
+  <data name="Search_FoundCount" xml:space="preserve">
+    <value>Found {0}</value>
   </data>
   <data name="Search_GlobalShortcut" xml:space="preserve">
     <value>Global search shortcut</value>
@@ -3028,6 +3136,9 @@ Regex mode uses the entire query as a regular expression. Filters still apply. F
   </data>
   <data name="Search_IndexUnavailable" xml:space="preserve">
     <value>The index is unavailable. Check index settings.</value>
+  </data>
+  <data name="Search_KeyboardHints" xml:space="preserve">
+    <value>↑ ↓ Navigate    Enter Open    Esc Hide</value>
   </data>
   <data name="Search_LeadShortcut" xml:space="preserve">
     <value>Search files and apps with one shortcut, without opening the file manager first.</value>
@@ -3083,8 +3194,20 @@ Regex mode uses the entire query as a regular expression. Filters still apply. F
   <data name="Search_Palette" xml:space="preserve">
     <value>Search window</value>
   </data>
+  <data name="Search_PaletteQueryHint" xml:space="preserve">
+    <value>Search files, folders and apps…</value>
+  </data>
   <data name="Search_Partial" xml:space="preserve">
     <value>Showing {0} matches (partial). Refine your search.</value>
+  </data>
+  <data name="Search_PartialReady" xml:space="preserve">
+    <value>Available results can be opened</value>
+  </data>
+  <data name="Search_PartialTimedOut" xml:space="preserve">
+    <value>Some search sources timed out. Showing available results. Retry the search to refresh.</value>
+  </data>
+  <data name="Search_PartialUnavailable" xml:space="preserve">
+    <value>Some search sources are unavailable. Showing available results. Retry the search to refresh.</value>
   </data>
   <data name="Search_PreviewCompactHint" xml:space="preserve">
     <value>Preview selected files on the right, not on hover</value>
@@ -3157,6 +3280,12 @@ Regex mode uses the entire query as a regular expression. Filters still apply. F
   </data>
   <data name="Search_StartupHint" xml:space="preserve">
     <value>Use the shortcut after signing in to Windows. Turning off background search also suspends startup.</value>
+  </data>
+  <data name="Search_StateEmpty" xml:space="preserve">
+    <value>No matching items</value>
+  </data>
+  <data name="Search_StateError" xml:space="preserve">
+    <value>Search unavailable</value>
   </data>
   <data name="Search_Timeout" xml:space="preserve">
     <value>Search took too long. Try a longer filename or a smaller folder.</value>
@@ -3520,6 +3649,144 @@ Ctrl+T new tab. Ctrl+W closes a tab. Ctrl+L path. Ctrl+F filter. F5 refresh. Ctr
   </data>
   <data name="Sidebar_RemoveCloud" xml:space="preserve">
     <value>Remove cloud entry</value>
+  </data>
+  <data name="Skin_Accent" xml:space="preserve">
+    <value>Accent</value>
+  </data>
+  <data name="Skin_AccentLead" xml:space="preserve">
+    <value>Choose a color to save it for the visible theme. This replaces any unsaved advanced edits.</value>
+  </data>
+  <data name="Skin_Advanced" xml:space="preserve">
+    <value>Advanced skin settings</value>
+  </data>
+  <data name="Skin_Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="Skin_ApplySkin" xml:space="preserve">
+    <value>Apply edits</value>
+  </data>
+  <data name="Skin_Background" xml:space="preserve">
+    <value>Background</value>
+  </data>
+  <data name="Skin_Cancel" xml:space="preserve">
+    <value>Cancel preview</value>
+  </data>
+  <data name="Skin_Colors" xml:space="preserve">
+    <value>Color picker</value>
+  </data>
+  <data name="Skin_ContrastWarning" xml:space="preserve">
+    <value>Some text colors have low contrast ({0}). Windows high contrast always takes priority.</value>
+  </data>
+  <data name="Skin_Current" xml:space="preserve">
+    <value>Current palette: {0}</value>
+  </data>
+  <data name="Skin_Dark" xml:space="preserve">
+    <value>Edit dark colors</value>
+  </data>
+  <data name="Skin_DerivedHint" xml:space="preserve">
+    <value>Related surfaces, hover colors and borders stay coordinated. Transparency is controlled separately below.</value>
+  </data>
+  <data name="Skin_EffectPreview" xml:space="preserve">
+    <value>{0} preview</value>
+  </data>
+  <data name="Skin_Export" xml:space="preserve">
+    <value>Export JSON</value>
+  </data>
+  <data name="Skin_Exported" xml:space="preserve">
+    <value>Skin exported. The package contains only color tokens, with no personal paths or other settings.</value>
+  </data>
+  <data name="Skin_FileFailed" xml:space="preserve">
+    <value>The skin file could not be read or saved. Check its permissions and try again.</value>
+  </data>
+  <data name="Skin_Hex" xml:space="preserve">
+    <value>HEX (#RRGGBB)</value>
+  </data>
+  <data name="Skin_Import" xml:space="preserve">
+    <value>Import JSON</value>
+  </data>
+  <data name="Skin_Imported" xml:space="preserve">
+    <value>Skin imported for preview. Review both color modes before applying.</value>
+  </data>
+  <data name="Skin_InvalidColor" xml:space="preserve">
+    <value>Enter a six-digit RGB color such as #3B6B59.</value>
+  </data>
+  <data name="Skin_InvalidName" xml:space="preserve">
+    <value>Enter a name of 1–80 characters without control characters.</value>
+  </data>
+  <data name="Skin_InvalidPackage" xml:space="preserve">
+    <value>This skin could not be imported. Use a supported JSON skin no larger than 64 KiB with valid RGB colors.</value>
+  </data>
+  <data name="Skin_Lead" xml:space="preserve">
+    <value>Choose a palette to apply and save it immediately. Advanced edits stay in preview until you apply them.</value>
+  </data>
+  <data name="Skin_Light" xml:space="preserve">
+    <value>Edit light colors</value>
+  </data>
+  <data name="Skin_Name" xml:space="preserve">
+    <value>Skin name</value>
+  </data>
+  <data name="Skin_Package" xml:space="preserve">
+    <value>FilesMate skin</value>
+  </data>
+  <data name="Skin_PreviewCancelledUnsaved" xml:space="preserve">
+    <value>The unsaved preview was cancelled when this window lost focus. Your saved skin has been restored.</value>
+  </data>
+  <data name="Skin_PreviewFailed" xml:space="preserve">
+    <value>The skin preview could not be displayed. The previous colors have been restored.</value>
+  </data>
+  <data name="Skin_PreviewHover" xml:space="preserve">
+    <value>Hovered item</value>
+  </data>
+  <data name="Skin_PreviewItem" xml:space="preserve">
+    <value>Selected item</value>
+  </data>
+  <data name="Skin_PreviewLocked" xml:space="preserve">
+    <value>Another settings window is previewing a skin. Finish or cancel its preview before editing here.</value>
+  </data>
+  <data name="Skin_PreviewMaterial" xml:space="preserve">
+    <value>Surface · border · menu</value>
+  </data>
+  <data name="Skin_PreviewTitle" xml:space="preserve">
+    <value>Files</value>
+  </data>
+  <data name="Skin_Previewing" xml:space="preserve">
+    <value>Previewing. Apply saves this skin; Cancel restores the current skin.</value>
+  </data>
+  <data name="Skin_Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="Skin_Revert" xml:space="preserve">
+    <value>Revert</value>
+  </data>
+  <data name="Skin_SaveFailed" xml:space="preserve">
+    <value>The skin could not be saved. The last saved colors have been restored.</value>
+  </data>
+  <data name="Skin_Saved" xml:space="preserve">
+    <value>Skin saved</value>
+  </data>
+  <data name="Skin_Saving" xml:space="preserve">
+    <value>Saving skin…</value>
+  </data>
+  <data name="Skin_Section" xml:space="preserve">
+    <value>Skins</value>
+  </data>
+  <data name="Skin_Selection" xml:space="preserve">
+    <value>Selection</value>
+  </data>
+  <data name="Skin_Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="Skin_forest" xml:space="preserve">
+    <value>Forest</value>
+  </data>
+  <data name="Skin_graphite" xml:space="preserve">
+    <value>Graphite</value>
+  </data>
+  <data name="Skin_mistBlue" xml:space="preserve">
+    <value>Mist blue</value>
+  </data>
+  <data name="Skin_warmWhite" xml:space="preserve">
+    <value>Warm white</value>
   </data>
   <data name="Sort" xml:space="preserve">
     <value>Sort</value>
@@ -4122,4 +4389,34 @@ Sleeping — select to restore</value>
   <data name="WindowsSection" xml:space="preserve">
     <value>Windows &amp; tabs</value>
   </data>
+  <data name="Column_RelativePath" xml:space="preserve"><value>Relative path</value></data>
+  <data name="Inline_Filter" xml:space="preserve"><value>Filter</value></data>
+  <data name="Inline_ClearFilters" xml:space="preserve"><value>Clear filters</value></data>
+  <data name="Inline_ClearSearchAndFilters" xml:space="preserve"><value>Clear search and filters</value></data>
+  <data name="Inline_CurrentScope" xml:space="preserve"><value>Current folder</value></data>
+  <data name="Inline_RecursiveScope" xml:space="preserve"><value>Current folder and subfolders</value></data>
+  <data name="Inline_ChooseTypes" xml:space="preserve"><value>Choose types or extensions</value></data>
+  <data name="Inline_Folders" xml:space="preserve"><value>Folders</value></data>
+  <data name="Inline_Documents" xml:space="preserve"><value>Documents</value></data>
+  <data name="Inline_Images" xml:space="preserve"><value>Images</value></data>
+  <data name="Inline_Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="Inline_Video" xml:space="preserve"><value>Video</value></data>
+  <data name="Inline_Archives" xml:space="preserve"><value>Archives</value></data>
+  <data name="Inline_Applications" xml:space="preserve"><value>Applications and scripts</value></data>
+  <data name="Inline_NoExtension" xml:space="preserve"><value>No extension</value></data>
+  <data name="Inline_Extensions" xml:space="preserve"><value>Custom extensions</value></data>
+  <data name="Inline_Done" xml:space="preserve"><value>Done</value></data>
+  <data name="Inline_CustomSize" xml:space="preserve"><value>Custom size</value></data>
+  <data name="Inline_BytesNote" xml:space="preserve"><value>KB/MB/GB use 1024 units. Inclusive bounds compare file bytes only.</value></data>
+  <data name="Inline_ClearCondition" xml:space="preserve"><value>Clear this condition</value></data>
+  <data name="Inline_PreviousRetained" xml:space="preserve"><value>Previous valid conditions remain active.</value></data>
+  <data name="Inline_InvalidExtensions" xml:space="preserve"><value>Invalid extension. Use jpg, .jpg or *.jpg; paths and arbitrary wildcards are not supported.</value></data>
+  <data name="Inline_IncompleteDates" xml:space="preserve"><value>Complete both start and end dates.</value></data>
+  <data name="Inline_InvalidSize" xml:space="preserve"><value>Enter a valid nonnegative size range in ascending order.</value></data>
+  <data name="Inline_All" xml:space="preserve"><value>All</value></data>
+  <data name="Inline_MultiSelect" xml:space="preserve"><value>Select multiple types. Matches use any selected type or extension.</value></data>
+  <data name="Inline_ExtensionChoices" xml:space="preserve"><value>Extensions</value></data>
+  <data name="Inline_Add" xml:space="preserve"><value>Add</value></data>
+  <data name="Inline_TypeHint" xml:space="preserve"><value>jpg, .jpg or *.jpg; separate with semicolons.</value></data>
+  <data name="Inline_DateHint" xml:space="preserve"><value>Includes both dates, in local time.</value></data>
 </root>

@@ -28,9 +28,7 @@ public sealed class WindowSessionStore
     public string FilePath { get; }
 
     public static string DefaultFilePath =>
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FilesMate",
+        Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath,
             "window-session.json");
 
     public WindowSession Load()
@@ -48,22 +46,7 @@ public sealed class WindowSessionStore
                 return Empty();
             }
 
-            var tabs = dto.Tabs
-                .Where(path => !string.IsNullOrWhiteSpace(path))
-                .Select(path => path.Trim())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-            if (tabs.Length == 0)
-            {
-                return Empty();
-            }
-
-            var selected = dto.SelectedTabIndex ?? 0;
-            if (selected < 0 || selected >= tabs.Length)
-            {
-                selected = 0;
-            }
-
+            var tabs = NormalizeTabs(dto.Tabs, dto.SelectedTabIndex ?? 0, out var selected);
             return new WindowSession(tabs, selected);
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
@@ -75,20 +58,10 @@ public sealed class WindowSessionStore
     public void Save(WindowSession session)
     {
         ArgumentNullException.ThrowIfNull(session);
-        var tabs = session.Tabs
-            .Where(path => !string.IsNullOrWhiteSpace(path))
-            .Select(path => path.Trim())
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
+        var tabs = NormalizeTabs(session.Tabs, session.SelectedTabIndex, out var selected);
         if (tabs.Length == 0)
         {
             return;
-        }
-
-        var selected = session.SelectedTabIndex;
-        if (selected < 0 || selected >= tabs.Length)
-        {
-            selected = 0;
         }
 
         var json = JsonSerializer.Serialize(new Dto
@@ -132,6 +105,30 @@ public sealed class WindowSessionStore
         {
             File.Move(temp, FilePath);
         }
+    }
+
+    private static string[] NormalizeTabs(IReadOnlyList<string> paths, int selectedTabIndex, out int selected)
+    {
+        var tabs = new List<string>(paths.Count);
+        // Duplicate folders are distinct tabs. Keep their order and map the original
+        // selected ordinal while filtering blanks; a removed/invalid selection uses the first tab.
+        selected = 0;
+        for (var i = 0; i < paths.Count; i++)
+        {
+            var path = paths[i];
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                continue;
+            }
+
+            if (i == selectedTabIndex)
+            {
+                selected = tabs.Count;
+            }
+            tabs.Add(path.Trim());
+        }
+
+        return tabs.ToArray();
     }
 
     private static WindowSession Empty() => new([], 0);

@@ -22,6 +22,10 @@ internal static class ApplicationShortcut
 
     [SupportedOSPlatform("windows")]
     internal static (string Target, string Arguments)? ReadStoredTarget(string path)
+        => ReadStoredTarget(path, scratch: null);
+
+    [SupportedOSPlatform("windows")]
+    internal static (string Target, string Arguments)? ReadStoredTarget(string path, TargetBuffer? scratch)
     {
         object? instance = null;
         nint buffer = 0;
@@ -29,20 +33,47 @@ internal static class ApplicationShortcut
         {
             instance = new ShellLinkCoClass();
             ((IPersistFile)instance).Load(path, 0);
-            buffer = Marshal.AllocCoTaskMem(32768 * 2);
+            buffer = scratch?.Prepare() ?? Marshal.AllocCoTaskMem(TargetBuffer.CharacterCapacity * sizeof(char));
             Marshal.WriteInt16(buffer, 0);
-            ((IShellLinkW)instance).GetPath(buffer, 32768, 0, 4); // SLGP_RAWPATH; no target resolution/network access.
+            ((IShellLinkW)instance).GetPath(buffer, TargetBuffer.CharacterCapacity, 0, 4); // SLGP_RAWPATH; no target resolution/network access.
             var target = Environment.ExpandEnvironmentVariables(Marshal.PtrToStringUni(buffer) ?? "");
             if (Path.GetExtension(target).ToLowerInvariant() is not (".exe" or ".com" or ".bat" or ".cmd" or ".appref-ms")) return null;
             Marshal.WriteInt16(buffer, 0);
-            ((IShellLinkW)instance).GetArguments(buffer, 32768);
+            ((IShellLinkW)instance).GetArguments(buffer, TargetBuffer.CharacterCapacity);
             return (target, Marshal.PtrToStringUni(buffer) ?? "");
         }
         catch (Exception error) when (error is COMException or IOException or UnauthorizedAccessException or ArgumentException) { return null; }
         finally
         {
-            if (buffer != 0) Marshal.FreeCoTaskMem(buffer);
+            if (scratch is null && buffer != 0) Marshal.FreeCoTaskMem(buffer);
+            // The COM calls take a raw pointer, so keep its owner alive until they finish.
+            GC.KeepAlive(scratch);
             if (instance is not null) Marshal.FinalReleaseComObject(instance);
+        }
+    }
+
+    /// <summary>
+    /// One lazy, scan-scoped scratch buffer. Confined to the catalog's STA worker;
+    /// never shared between scans or retained in a catalog snapshot.
+    /// </summary>
+    internal sealed class TargetBuffer() : SafeHandle(0, ownsHandle: true)
+    {
+        internal const int CharacterCapacity = 32768;
+        public override bool IsInvalid => handle == 0;
+
+        internal nint Prepare()
+        {
+            ObjectDisposedException.ThrowIf(IsClosed, this);
+            if (IsInvalid) SetHandle(Marshal.AllocCoTaskMem(CharacterCapacity * sizeof(char)));
+            // Some links have no path or arguments. Never read bytes left by the prior link.
+            Marshal.WriteInt16(handle, 0);
+            return handle;
+        }
+
+        protected override bool ReleaseHandle()
+        {
+            Marshal.FreeCoTaskMem(handle);
+            return true;
         }
     }
 

@@ -51,5 +51,35 @@ public sealed class ReplacementBackupBudgetTests : IDisposable
         Assert.False(budget.CanReserve(1)); Assert.Equal(100, budget.UsedBytes);
     }
 
+    [Fact]
+    public void FailedRefreshReportsErrorAndKeepsKnownReservations()
+    {
+        var journal = Path.Combine(_root, "journal");
+        var budget = new ReplacementBackupBudget(); budget.Initialize(journal);
+        var folder = Path.Combine(_root, ".filesmate-history-" + Guid.NewGuid().ToString("N"));
+        using var lease = budget.Reserve(folder, 8, () => Directory.CreateDirectory(folder));
+        File.WriteAllText(Path.Combine(journal, "damaged.json"), "{invalid");
+        budget.Enabled = false;
+        Assert.Throws<IOException>(budget.Refresh);
+        Assert.Equal(8, budget.UsedBytes);
+        Assert.Equal(folder, Assert.Single(budget.Entries).Directory);
+        Assert.False(budget.CanReserve(1));
+        Assert.True(Directory.Exists(folder));
+    }
+
+    [Fact]
+    public void DisabledRefreshStillLoadsPreviouslyRetainedEntries()
+    {
+        var journal = Path.Combine(_root, "journal");
+        var observer = new ReplacementBackupBudget { Enabled = false }; observer.Initialize(journal);
+        var writer = new ReplacementBackupBudget(); writer.Initialize(journal);
+        var folder = Path.Combine(_root, ".filesmate-history-" + Guid.NewGuid().ToString("N"));
+        using var lease = writer.Reserve(folder, 8, () => Directory.CreateDirectory(folder));
+        observer.Refresh();
+        Assert.Equal(8, observer.UsedBytes);
+        Assert.Equal(folder, Assert.Single(observer.Entries).Directory);
+        Assert.False(observer.Enabled);
+    }
+
     public void Dispose() => Directory.Delete(_root, recursive: true);
 }

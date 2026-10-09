@@ -5,8 +5,63 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:toolbar="using:FilesMate.App.Controls.Toolbar"
     SizeChanged="Root_SizeChanged">
-    <Grid Height="{StaticResource FilesMate.Control.Height.Toolbar}" Background="Transparent" RightTapped="Toolbar_RightTapped">
+    <UserControl.Resources>
+        <Style x:Key="ToolbarEditingItemStyle" TargetType="ListViewItem">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="1,0,1,0" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="32" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Small}" />
+            <Setter Property="UseSystemFocusVisuals" Value="False" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListViewItem">
+                        <ListViewItemPresenter x:Name="EditPresenter" Background="{TemplateBinding Background}"
+                                ContentMargin="0" CornerRadius="{TemplateBinding CornerRadius}"
+                                HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center"
+                                SelectionCheckMarkVisualEnabled="False"
+                                PointerOverBackground="{ThemeResource FilesMate.Button.HoverBrush}"
+                                PressedBackground="{ThemeResource FilesMate.Button.PressedBrush}"
+                                SelectedBackground="{ThemeResource FilesMate.Item.SelectedBrush}"
+                                SelectedPointerOverBackground="{ThemeResource FilesMate.Item.SelectedHoverBrush}"
+                                SelectedPressedBackground="{ThemeResource FilesMate.Item.SelectedBrush}"
+                                DragBackground="{ThemeResource FilesMate.Item.SelectedBrush}"
+                                DragForeground="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}"
+                                FocusBorderBrush="{ThemeResource FilesMate.Selection.AccentBrush}"
+                                FocusSecondaryBorderBrush="Transparent"
+                                PlaceholderBackground="Transparent">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal" /><VisualState x:Name="PointerOver" />
+                                    <VisualState x:Name="Pressed" /><VisualState x:Name="Selected" />
+                                    <VisualState x:Name="PointerOverSelected" /><VisualState x:Name="PressedSelected" />
+                                    <VisualState x:Name="PointerOverPressed" />
+                                </VisualStateGroup>
+                                <VisualStateGroup x:Name="FocusStates">
+                                    <VisualState x:Name="Focused" />
+                                    <VisualState x:Name="PointerFocused" /><VisualState x:Name="Unfocused" />
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                        </ListViewItemPresenter>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <ItemsPanelTemplate x:Key="ToolbarHorizontalItemsPanel">
+            <ItemsStackPanel Orientation="Horizontal" />
+        </ItemsPanelTemplate>
+    </UserControl.Resources>
+    <Grid Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid x:Name="LiveToolbarRow" Height="{StaticResource FilesMate.Control.Height.Toolbar}" Background="Transparent">
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
@@ -30,14 +85,13 @@
                         </MenuFlyout>
                     </Button.Flyout>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon Foreground="{ThemeResource FilesMate.Glass.AccentForegroundBrush}" FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE8F4;" />
+                        <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE8F4;" />
                         <TextBlock
                             x:Name="NewLabel"
                             VerticalAlignment="Center"
                             FontSize="13"
-                            Foreground="{ThemeResource FilesMate.Glass.AccentForegroundBrush}"
                             Visibility="Collapsed" />
-                        <FontIcon Foreground="{ThemeResource FilesMate.Glass.AccentForegroundBrush}" FontFamily="Segoe Fluent Icons" FontSize="8" Glyph="&#xE70D;" />
+                        <FontIcon FontFamily="Segoe Fluent Icons" FontSize="8" Glyph="&#xE70D;" />
                     </StackPanel>
                 </Button>
             </StackPanel>
@@ -123,9 +177,10 @@
                 </Button>
             </StackPanel>
         </StackPanel>
+
         <StackPanel
             x:Name="ViewGroup"
-            Grid.Column="1"
+            Grid.Column="2"
             Orientation="Horizontal">
             <Button
                 x:Name="ShelfButton"
@@ -159,7 +214,6 @@
                         x:Name="SortLabel"
                         VerticalAlignment="Center"
                         FontSize="13"
-                        Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
                         Visibility="Collapsed" />
                 </StackPanel>
             </Button>
@@ -168,7 +222,7 @@
                     <toolbar:EntryGroupingIcon x:Name="GroupingIcon" />
                 </Button>
                 <Button x:Name="GroupingMenuButton" Width="20" MinWidth="0" Padding="0" Style="{StaticResource CommandBarButtonStyle}">
-                    <FontIcon Glyph="&#xE70D;" FontSize="9"/>
+                    <FontIcon x:Name="GroupingChevron" Glyph="&#xE70D;" FontSize="9"/>
                 </Button>
             </StackPanel>
             <Button
@@ -183,7 +237,6 @@
                         x:Name="FolderSizesLabel"
                         VerticalAlignment="Center"
                         FontSize="13"
-                        Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
                         Visibility="Collapsed" />
                 </StackPanel>
             </Button>
@@ -193,11 +246,12 @@
                 Height="16"
                 Margin="4,0"
                 Background="{ThemeResource FilesMate.Divider.Brush}" />
+            <ContentControl x:Name="FilterHeader" HorizontalContentAlignment="Left" VerticalContentAlignment="Center"/>
             <Button x:Name="ViewMenuButton" Style="{StaticResource CommandBarButtonStyle}">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <FontIcon x:Name="ViewIcon" FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE8FD;" />
                     <TextBlock x:Name="ViewLabel" FontSize="13" VerticalAlignment="Center" />
-                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE70D;" FontSize="9" />
+                    <FontIcon x:Name="ViewChevron" FontFamily="Segoe Fluent Icons" Glyph="&#xE70D;" FontSize="9" />
                 </StackPanel>
             </Button>
             <Button
@@ -245,21 +299,23 @@
                 </Button.Flyout>
                 <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE712;" />
             </Button>
-            <Button
-                x:Name="DualPaneButton"
-                Click="DualPaneButton_Click"
-                AutomationProperties.Name="Dual pane"
-                Style="{StaticResource CommandBarButtonStyle}"
-                ToolTipService.ToolTip="Dual pane">
-                <Grid x:Name="PaneIcon" Width="19" Height="16">
-                    <Border BorderBrush="{ThemeResource FilesMate.Text.PrimaryBrush}" BorderThickness="1.2" CornerRadius="2" />
-                    <Border x:Name="PaneDividerOne" Width="1" Margin="6,2,0,2" HorizontalAlignment="Left" Background="{ThemeResource FilesMate.Text.PrimaryBrush}" />
-                    <Border x:Name="PaneDividerTwo" Width="1" Margin="12,2,0,2" HorizontalAlignment="Left" Background="{ThemeResource FilesMate.Text.PrimaryBrush}" Visibility="Collapsed" />
-                </Grid>
-            </Button>
-            <Button x:Name="PaneArrangementButton" Width="22" MinWidth="0" Padding="0" Click="PaneArrangement_Click" Style="{StaticResource CommandBarButtonStyle}">
-                <FontIcon Glyph="&#xE70D;" FontSize="9"/>
-            </Button>
+            <StackPanel x:Name="SplitViewGroup" Orientation="Horizontal">
+                <Button
+                    x:Name="DualPaneButton"
+                    Click="DualPaneButton_Click"
+                    AutomationProperties.Name="Dual pane"
+                    Style="{StaticResource CommandBarButtonStyle}"
+                    ToolTipService.ToolTip="Dual pane">
+                    <Grid x:Name="PaneIcon" Width="19" Height="16">
+                        <Border BorderBrush="{ThemeResource FilesMate.Text.PrimaryBrush}" BorderThickness="1.2" CornerRadius="2" />
+                        <Border x:Name="PaneDividerOne" Width="1" Margin="6,2,0,2" HorizontalAlignment="Left" Background="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+                        <Border x:Name="PaneDividerTwo" Width="1" Margin="12,2,0,2" HorizontalAlignment="Left" Background="{ThemeResource FilesMate.Text.PrimaryBrush}" Visibility="Collapsed" />
+                    </Grid>
+                </Button>
+                <Button x:Name="PaneArrangementButton" Width="22" MinWidth="0" Padding="0" Click="PaneArrangement_Click" Style="{StaticResource CommandBarButtonStyle}">
+                    <FontIcon x:Name="PaneArrangementChevron" Glyph="&#xE70D;" FontSize="9"/>
+                </Button>
+            </StackPanel>
             <Button
                 x:Name="PreviewButton"
                 Click="PreviewButton_Click"
@@ -269,5 +325,8 @@
                 <FontIcon FontFamily="Segoe Fluent Icons" FontSize="16" Glyph="&#xE946;" />
             </Button>
         </StackPanel>
+        </Grid>
+        <ContentControl x:Name="ToolbarEditingRow" Visibility="Collapsed" HorizontalContentAlignment="Stretch" />
+        <ContentControl x:Name="ToolbarEditingDetails" Grid.Row="1" Visibility="Collapsed" HorizontalContentAlignment="Stretch" />
     </Grid>
 </UserControl>

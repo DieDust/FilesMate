@@ -12,7 +12,7 @@ public static class FileUndoApplier
         {
             case FileUndoKind.Merged:
                 foreach (var folder in record.Paths.OrderBy(path => path.Length)) operations.CreateDirectory(folder);
-                Relocate(operations, Reverse(record.Pairs));
+                Relocate(operations, Reverse(record.Pairs), record.AcceptUndoDirectoryState);
                 RemoveEmptyDirectories(record.CreatedDirectories);
                 break;
             case FileUndoKind.Copied:
@@ -20,7 +20,7 @@ public static class FileUndoApplier
                 RemoveEmptyDirectories(record.CreatedDirectories);
                 break;
             case FileUndoKind.Grouped:
-                Relocate(operations, Reverse(record.Pairs));
+                Relocate(operations, Reverse(record.Pairs), record.AcceptUndoDirectoryState);
                 // Keep anything the user added after grouping. Only remove an empty folder.
                 foreach (var folder in record.Paths)
                 {
@@ -33,7 +33,7 @@ public static class FileUndoApplier
                 RecycleForHistory(operations, record, undo: true);
                 break;
             case FileUndoKind.Relocated:
-                Relocate(operations, Reverse(record.Pairs));
+                Relocate(operations, Reverse(record.Pairs), record.AcceptUndoDirectoryState);
                 break;
             case FileUndoKind.Recycled:
                 RestoreForHistory(operations, record, undo: true);
@@ -53,7 +53,7 @@ public static class FileUndoApplier
         {
             case FileUndoKind.Merged:
                 foreach (var folder in record.CreatedDirectories.OrderBy(path => path.Length)) operations.CreateDirectory(folder);
-                Relocate(operations, record.Pairs);
+                Relocate(operations, record.Pairs, record.AcceptRedoDirectoryState);
                 RemoveEmptyDirectories(record.Paths);
                 break;
             case FileUndoKind.Copied:
@@ -62,13 +62,13 @@ public static class FileUndoApplier
                 break;
             case FileUndoKind.Grouped:
                 foreach (var folder in record.Paths) operations.CreateDirectory(folder);
-                Relocate(operations, record.Pairs);
+                Relocate(operations, record.Pairs, record.AcceptRedoDirectoryState);
                 break;
             case FileUndoKind.Created:
                 RestoreForHistory(operations, record, undo: false);
                 break;
             case FileUndoKind.Relocated:
-                Relocate(operations, record.Pairs);
+                Relocate(operations, record.Pairs, record.AcceptRedoDirectoryState);
                 break;
             case FileUndoKind.Recycled:
                 RecycleForHistory(operations, record, undo: false);
@@ -89,11 +89,12 @@ public static class FileUndoApplier
         foreach (var replacement in undo ? record.Replacements.Reverse() : record.Replacements)
         {
             var wasApplied = replacement.IsApplied;
+            var previousBackup = replacement.Backup;
             try
             {
                 if (undo) replacement.Undo(); else replacement.Redo();
                 completed.Add(replacement);
-                record.AcceptReplacementState(replacement);
+                record.AcceptReplacementState(replacement, previousBackup);
             }
             catch (Exception error)
             {
@@ -101,7 +102,7 @@ public static class FileUndoApplier
                 if (replacement.IsApplied != wasApplied)
                 {
                     completed.Add(replacement);
-                    record.AcceptReplacementState(replacement);
+                    record.AcceptReplacementState(replacement, previousBackup);
                 }
                 if (completed.Count == 0 && (undo || !record.HasOrdinaryActions)) throw;
                 var done = record.Replacements.Where(completed.Contains).ToArray();
@@ -200,7 +201,7 @@ public static class FileUndoApplier
         return reversed;
     }
 
-    private static void Relocate(ILocalFileOperations operations, IReadOnlyList<FilePathPair> pairs)
+    private static void Relocate(ILocalFileOperations operations, IReadOnlyList<FilePathPair> pairs, Action<IEnumerable<string>> acceptRollback)
     {
         var needed = new List<FilePathPair>(pairs.Count);
         foreach (var pair in pairs)
@@ -223,19 +224,24 @@ public static class FileUndoApplier
             return;
         }
 
+        var sourceNames = needed.Select(pair => Path.TrimEndingDirectorySeparator(pair.Source)).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var movedToTemp = new List<(string Source, string Temp, string Target)>(needed.Count);
         var applied = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         try
         {
-            for (var i = 0; i < needed.Count; i++)
+            // A child's staging name must not travel with an ancestor staged later.
+            // Stage descendants outside the outermost moving source, then their parents.
+            foreach (var pair in needed.OrderByDescending(pair => PathDepth(pair.Source)))
             {
-                var pair = needed[i];
-                var temp = Path.Combine(Path.GetDirectoryName(pair.Source)!, ".filesmate-undo-" + Guid.NewGuid().ToString("N"));
+                var outermost = pair.Source;
+                for (var parent = Path.GetDirectoryName(pair.Source); parent is not null; parent = Path.GetDirectoryName(parent))
+                    if (sourceNames.Contains(parent)) outermost = parent;
+                var temp = Path.Combine(Path.GetDirectoryName(outermost)!, ".filesmate-undo-" + Guid.NewGuid().ToString("N"));
                 operations.Rename(pair.Source, temp);
                 movedToTemp.Add((pair.Source, temp, pair.Destination));
             }
 
-            foreach (var item in movedToTemp)
+            foreach (var item in movedToTemp.OrderBy(item => PathDepth(item.Target)))
             {
                 EnsureParent(operations, item.Target);
                 operations.Rename(item.Temp, item.Target);
@@ -245,11 +251,28 @@ public static class FileUndoApplier
         catch (Exception error)
         {
             var recoveryErrors = new List<string>();
+            var touchedDirectories = movedToTemp.Select(item => Path.GetDirectoryName(item.Source)!)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in movedToTemp.Where(item => applied.Contains(item.Temp)))
+            {
+                var parent = Path.GetDirectoryName(item.Target)!;
+                touchedDirectories.Add(parent);
+                // A published ancestor can receive a child, then carry the changed
+                // directory metadata back to its source during recovery.
+                foreach (var owner in movedToTemp.Where(owner => owner.Temp != item.Temp && IsWithin(parent, owner.Target)))
+                    touchedDirectories.Add(Path.GetFullPath(Path.Combine(owner.Source, Path.GetRelativePath(owner.Target, parent))));
+            }
             // Vacate all published targets first. In a cycle, a target is another
             // item's original name, so restoring originals in one pass is unsafe.
-            foreach (var item in movedToTemp.AsEnumerable().Reverse())
+            foreach (var item in movedToTemp.OrderByDescending(item => PathDepth(item.Target)))
             {
                 if (!applied.Contains(item.Temp)) continue;
+                if (movedToTemp.Any(child => child.Temp != item.Temp && applied.Contains(child.Temp)
+                    && IsWithin(child.Target, item.Target)))
+                {
+                    recoveryErrors.Add($"{item.Target}: contains a destination that could not be recovered; retained in place.");
+                    continue;
+                }
                 try
                 {
                     operations.Rename(item.Target, item.Temp);
@@ -260,12 +283,20 @@ public static class FileUndoApplier
                     recoveryErrors.Add($"{item.Target}: {recovery.Message}");
                 }
             }
-            foreach (var item in movedToTemp.AsEnumerable().Reverse())
+            var restored = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in movedToTemp.OrderBy(item => PathDepth(item.Source)))
             {
                 if (applied.Contains(item.Temp)) continue;
+                if (movedToTemp.Any(parent => parent.Temp != item.Temp && IsWithin(item.Source, parent.Source)
+                    && !restored.Contains(parent.Temp)))
+                {
+                    recoveryErrors.Add($"{item.Temp} → {item.Source}: parent could not be restored; item retained at its temporary path.");
+                    continue;
+                }
                 try
                 {
                     operations.Rename(item.Temp, item.Source);
+                    restored.Add(item.Temp);
                 }
                 catch (Exception recovery)
                 {
@@ -274,9 +305,18 @@ public static class FileUndoApplier
             }
             if (recoveryErrors.Count > 0)
                 throw new IOException(error.Message + Environment.NewLine + string.Join(Environment.NewLine, recoveryErrors), error);
+            // A fully rolled-back nested move still touched containing-directory timestamps.
+            // Keep original content snapshots, so unrelated edits are never adopted on retry.
+            acceptRollback(touchedDirectories);
             throw;
         }
     }
+
+    private static int PathDepth(string path) => Path.GetFullPath(path).Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar);
+
+    private static bool IsWithin(string path, string root) =>
+        string.Equals(path, root, StringComparison.OrdinalIgnoreCase)
+        || path.StartsWith(Path.TrimEndingDirectorySeparator(root) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
 
     private static void EnsureParent(ILocalFileOperations operations, string path)
     {

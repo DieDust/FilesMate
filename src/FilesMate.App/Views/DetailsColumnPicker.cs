@@ -88,14 +88,23 @@ internal sealed class DetailsColumnPicker : Grid
             </DataTemplate>
             """);
         _order.ItemsSource = _selected;
-        var footer = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-        footer.Children.Add(_up); footer.Children.Add(_down);
-        footer.Children.Add(new TextBlock { Text = StringTable.Get("Columns_Width"), VerticalAlignment = VerticalAlignment.Center });
-        _width.Width = 108; footer.Children.Add(_width); Add(footer, 3, 1);
+        var footer = new StackPanel { Spacing = 6 };
+        var reorder = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        reorder.Children.Add(_up); reorder.Children.Add(_down); footer.Children.Add(reorder);
+        var widthRow = new Grid { ColumnSpacing = 8 };
+        widthRow.ColumnDefinitions.Add(new() { Width = new GridLength(1, GridUnitType.Star) });
+        widthRow.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        widthRow.Children.Add(new TextBlock { Text = StringTable.Get("Columns_Width"), TextWrapping = TextWrapping.Wrap, VerticalAlignment = VerticalAlignment.Center });
+        _width.Width = 108; Grid.SetColumn(_width, 1); widthRow.Children.Add(_width);
+        footer.Children.Add(widthRow); Add(footer, 3, 1);
         var reset = new Button { Content = StringTable.Get("Columns_Reset") };
         foreach (var control in new Control[] { _up, _down, reset, _width, _search, _category }) control.CornerRadius = new CornerRadius(8);
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(_up, StringTable.Get("Columns_MoveUp"));
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(_down, StringTable.Get("Columns_MoveDown"));
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(_width, StringTable.Get("Columns_Width"));
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(_available, StringTable.Get("Columns_Search"));
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(_order, StringTable.Get("Columns_Selected"));
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(_category, StringTable.Get("Columns_Category_All"));
         reset.Click += (_, _) => Reset(); Add(reset, 3, 0);
         _initialKeys = current.Select(c => c.Key).ToHashSet(StringComparer.Ordinal);
         var seen = new HashSet<string>(StringComparer.Ordinal);

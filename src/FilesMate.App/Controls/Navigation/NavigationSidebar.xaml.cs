@@ -11,6 +11,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 
@@ -236,6 +237,25 @@ public sealed partial class NavigationSidebar : UserControl
         }
     }
 
+    private void Place_ContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
+    {
+        if (args.ItemContainer is not ListViewItem container) return;
+        if (args.InRecycleQueue)
+        {
+            container.ClearValue(NavigationCurrentInk.IsCurrentProperty);
+            Theming.ThemeResources.Clear(container, Control.ForegroundProperty);
+            return;
+        }
+        if (args.Phase != 0 || args.Item is not NavigationItem item) return;
+        container.SetBinding(NavigationCurrentInk.IsCurrentProperty, new Binding
+        {
+            Source = item,
+            Path = new PropertyPath(nameof(NavigationItem.Selected)),
+            Mode = BindingMode.OneWay,
+        });
+        NavigationCurrentInk.Refresh(container);
+    }
+
     private void Section_DragItemsStarting(object sender, DragItemsStartingEventArgs e)
     {
         if (!_sectionHeaderPressed
@@ -391,8 +411,10 @@ public sealed partial class NavigationSidebar : UserControl
                     try { TerminalLaunch.Open(path); }
                     catch (Exception error)
                     {
-                        await new ContentDialog { XamlRoot = XamlRoot, Content = error.Message,
-                            CloseButtonText = StringTable.Get("Close") }.ShowAsync();
+                        var dialog = new ContentDialog { XamlRoot = XamlRoot, Content = error.Message,
+                            CloseButtonText = StringTable.Get("Close") };
+                        Theming.ContentDialogTheme.Apply(dialog, this);
+                        await dialog.ShowAsync();
                     }
                 });
                 return;
@@ -453,11 +475,13 @@ public sealed partial class NavigationSidebar : UserControl
         }
         catch (Exception ex) when (ex is System.IO.IOException or UnauthorizedAccessException)
         {
-            await new ContentDialog
+            var dialog = new ContentDialog
             {
                 XamlRoot = XamlRoot, Content = StringTable.Get("Sidebar_CloudSaveFailed"),
                 CloseButtonText = StringTable.Get("Close"),
-            }.ShowAsync();
+            };
+            Theming.ContentDialogTheme.Apply(dialog, this);
+            await dialog.ShowAsync();
         }
     }
 
@@ -477,6 +501,7 @@ public sealed partial class NavigationSidebar : UserControl
             PrimaryButtonText = StringTable.Get("Save"), CloseButtonText = StringTable.Get("Cancel"),
             DefaultButton = ContentDialogButton.Primary,
         };
+        Theming.ContentDialogTheme.Apply(dialog, this);
         dialog.PrimaryButtonClick += async (_, args) =>
         {
             var deferral = args.GetDeferral();
@@ -651,6 +676,7 @@ public sealed partial class NavigationSidebar : UserControl
             menu.MenuFlyoutPresenterStyle = presenter;
         }
 
+        Theming.FlyoutTheme.FollowHost(menu);
         return menu;
     }
 

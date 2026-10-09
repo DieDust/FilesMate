@@ -23,7 +23,7 @@
             <TextBlock
                 x:Name="BodyText"
                 FontSize="14"
-                Opacity="0.72"
+                Opacity="{ThemeResource FilesMate.Text.SecondaryOpacity}"
                 Text="FilesMate kept the window open. Copy the diagnostics if you want to report this problem."
                 TextWrapping="Wrap" />
             <Button

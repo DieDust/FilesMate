@@ -1,5 +1,6 @@
 using FilesMate.App.Shortcuts;
 using FilesMate.App.Views;
+using FilesMate.Core.Diagnostics;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -63,7 +64,18 @@ public sealed partial class MainWindow
 
     private void FileShortcut_PreviewKeyDown(object sender, KeyRoutedEventArgs args)
     {
-        if (args.Handled || FileShortcutRoutingBlocked) return;
+        var previewOperation = args.Key == VirtualKey.Space ? PerformanceTrace.NextOperation() : 0;
+        if (args.Key == VirtualKey.Space) PerformanceTrace.Record(PerformanceStage.PreviewKeyReceived,
+            operation: previewOperation, count: args.Handled ? 1 : 0);
+        if (args.Handled || FileShortcutRoutingBlocked
+            || (IsTextInputElement(args.OriginalSource as DependencyObject)
+                && (args.Key == VirtualKey.V && Down(VirtualKey.Control)
+                    || args.Key == VirtualKey.Insert && Down(VirtualKey.Shift))))
+        {
+            if (args.Key == VirtualKey.Space) PerformanceTrace.Record(PerformanceStage.PreviewBlocked,
+                operation: previewOperation, outcome: PerformanceOutcome.Cancelled, auxiliary: 1);
+            return;
+        }
         var modifiers = VirtualKeyModifiers.None;
         if (Down(VirtualKey.Control)) modifiers |= VirtualKeyModifiers.Control;
         if (Down(VirtualKey.Menu)) modifiers |= VirtualKeyModifiers.Menu;
@@ -74,6 +86,22 @@ public sealed partial class MainWindow
             if (accelerator.Key != args.Key || accelerator.Modifiers != modifiers) continue;
             args.Handled = InvokeActiveFileShortcut(action);
             return;
+        }
+        // A focused preview toolbar Button consumes Space before the file surface's
+        // ordinary KeyDown. Route default Space in the preview phase while keeping
+        // text editors, other toolbar buttons and configured bindings unchanged.
+        if (args.Key == VirtualKey.Space && modifiers == VirtualKeyModifiers.None && !TextInputFocused && SpacePreviewFocus())
+        {
+            PerformanceTrace.Record(PerformanceStage.PreviewCommand, operation: previewOperation);
+            args.Handled = TabHost.Content switch
+            {
+                NavigatorPage page => page.InvokeWindowQuickPreview(previewOperation),
+                SearchResultsPage search => search.InvokeWindowQuickPreview(previewOperation),
+                _ => false,
+            };
+            if (args.Handled) return;
+            PerformanceTrace.Record(PerformanceStage.PreviewBlocked, operation: previewOperation,
+                outcome: PerformanceOutcome.Cancelled, auxiliary: 2);
         }
         foreach (var (key, required) in NavigationShortcuts)
         {
@@ -90,6 +118,18 @@ public sealed partial class MainWindow
             };
 
         static bool Down(VirtualKey key) => (InputKeyboardSource.GetKeyStateForCurrentThread(key) & CoreVirtualKeyStates.Down) != 0;
+    }
+
+    private bool SpacePreviewFocus()
+    {
+        if (((FrameworkElement)Content).XamlRoot is not { } root) return false;
+        for (var node = FocusManager.GetFocusedElement(root) as DependencyObject; node is not null; node = VisualTreeHelper.GetParent(node))
+        {
+            if (node is FilesMate.App.Controls.FileSurface.FileDetailsSurface) return true;
+            if (node is Button { Name: "PreviewButton" }) return true;
+            if (node is TextBox or RichEditBox or PasswordBox or AutoSuggestBox || node is ComboBox { IsEditable: true }) return false;
+        }
+        return false;
     }
 
     private bool InvokeActiveFileShortcut(ShortcutAction action) => TabHost.Content switch
@@ -109,7 +149,7 @@ public sealed partial class MainWindow
     internal bool FileShortcutRoutingBlocked => _windowClosed || App.IsShortcutCaptureActive
         || SettingsOverlay.Visibility == Visibility.Visible
         || ((FrameworkElement)Content).XamlRoot is not { } root
-        || VisualTreeHelper.GetOpenPopupsForXamlRoot(root).Count > 0;
+        || VisualTreeHelper.GetOpenPopupsForXamlRoot(root).Any(popup => popup.Child is not ToolTip);
 
     internal bool TextInputFocused
     {
@@ -117,10 +157,15 @@ public sealed partial class MainWindow
         {
             var root = ((FrameworkElement)Content).XamlRoot;
             if (root is null) return false;
-            for (var node = FocusManager.GetFocusedElement(root) as DependencyObject; node is not null; node = VisualTreeHelper.GetParent(node))
-                if (node is TextBox or RichEditBox or PasswordBox or AutoSuggestBox || node is ComboBox { IsEditable: true }) return true;
-            return false;
+            return IsTextInputElement(FocusManager.GetFocusedElement(root) as DependencyObject);
         }
+    }
+
+    private static bool IsTextInputElement(DependencyObject? node)
+    {
+        for (; node is not null; node = VisualTreeHelper.GetParent(node))
+            if (node is TextBox or RichEditBox or PasswordBox or AutoSuggestBox || node is ComboBox { IsEditable: true }) return true;
+        return false;
     }
 
     private bool ClearSelectionFromWindow() => TabHost.Content switch

@@ -4,9 +4,7 @@ namespace FilesMate.App.Shortcuts;
 
 public sealed class ShortcutSettingsService
 {
-    public static string DefaultFilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "FilesMate",
+    public static string DefaultFilePath => Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath,
         "shortcuts.json");
 
     private readonly string _filePath;

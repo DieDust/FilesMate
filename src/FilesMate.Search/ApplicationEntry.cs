@@ -31,13 +31,40 @@ public static class ApplicationCatalog
         ? NameIndexReader.Relevance(entry.Name, query)
         : 4 + NameIndexReader.Relevance(Path.GetFileNameWithoutExtension(entry.FilePath ?? entry.Name), query);
 
-    public static IReadOnlyList<ApplicationEntry> Normalize(IEnumerable<ApplicationEntry> entries) => entries
+    public static IReadOnlyList<ApplicationEntry> Normalize(IEnumerable<ApplicationEntry> entries)
+    {
+        var comparer = StringComparer.CurrentCultureIgnoreCase;
+        // Only our owned immutable snapshots can skip validation, deduplication
+        // and sorting. Arbitrary catalog implementations still take the full path.
+        if (entries is NormalizedSnapshot snapshot && snapshot.UsesComparer(comparer)) return snapshot;
+        return NormalizeCore(entries, comparer);
+    }
+
+    internal static IReadOnlyList<ApplicationEntry> CreateSnapshot(IEnumerable<ApplicationEntry> entries)
+    {
+        var comparer = StringComparer.CurrentCultureIgnoreCase;
+        return new NormalizedSnapshot(NormalizeCore(entries, comparer), comparer);
+    }
+
+    private static ApplicationEntry[] NormalizeCore(IEnumerable<ApplicationEntry> entries, StringComparer comparer) => entries
         .Where(entry => !string.IsNullOrWhiteSpace(entry.Name) && !string.IsNullOrWhiteSpace(entry.LaunchPath) && !Maintenance(entry))
         .OrderByDescending(entry => entry.IsFilesMate)
         .ThenByDescending(entry => entry.ShortcutPath is not null)
         .DistinctBy(entry => entry.Id, StringComparer.OrdinalIgnoreCase)
-        .DistinctBy(entry => entry.Identity, StringComparer.OrdinalIgnoreCase)
-        .OrderBy(entry => entry.Name, StringComparer.CurrentCultureIgnoreCase).ToArray();
+        .DistinctBy(entry => entry.Identity, ApplicationIdentityComparer.Instance)
+        .OrderBy(entry => entry.Name, comparer).ToArray();
+
+    // The array is freshly built by NormalizeCore and never exposed as a mutable
+    // collection. A culture change falls back to the original stable sort rather
+    // than reusing stale ordering or retaining an unbounded per-culture cache.
+    private sealed class NormalizedSnapshot(ApplicationEntry[] entries, StringComparer comparer) : IReadOnlyList<ApplicationEntry>
+    {
+        internal bool UsesComparer(StringComparer current) => comparer.Equals(current);
+        public int Count => entries.Length;
+        public ApplicationEntry this[int index] => entries[index];
+        public IEnumerator<ApplicationEntry> GetEnumerator() => ((IEnumerable<ApplicationEntry>)entries).GetEnumerator();
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    }
 
     private static bool Maintenance(ApplicationEntry entry)
     {
@@ -59,10 +86,15 @@ public static class ApplicationCatalog
     public static Func<string, bool, int> FileRank(IEnumerable<SearchHitKind> order, string query)
     {
         var priorities = SearchHitKinds.SanitizeOrder(order).Select((kind, index) => (kind, index)).ToDictionary(pair => pair.kind, pair => pair.index);
+        var rankingQuery = query?.Trim();
         return (path, directory) =>
         {
             var kind = FileKind(path, directory);
-            return priorities[kind] * RankStride + NameIndexReader.Relevance(Path.GetFileName(path), query);
+            // Keep invalid null inputs on the original failure path; a null span
+            // would otherwise silently become an empty filename or query.
+            return priorities[kind] * RankStride + (path is null || rankingQuery is null
+                ? NameIndexReader.Relevance(Path.GetFileName(path)!, rankingQuery!)
+                : NameIndexReader.RelevanceTrimmed(Path.GetFileName(path.AsSpan()), rankingQuery.AsSpan()));
         };
     }
 }

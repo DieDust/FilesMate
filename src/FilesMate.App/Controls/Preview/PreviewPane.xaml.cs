@@ -24,7 +24,11 @@ public sealed partial class PreviewPane : UserControl
     private MediaSource? _mediaSource;
     private string? _mediaPath;
 
+    // The shared service retains only this lightweight scope token, never the view.
+    private readonly object _previewOwner = new();
+    private readonly PreviewImageAdmission _imageAdmission = new();
     private PreviewService? _service;
+    private PreviewResult.Properties? _boundProperties;
     private CancellationTokenSource? _loadCts;
     private WebView2? _pdfContent;
     private string? _imagePath;
@@ -81,6 +85,7 @@ public sealed partial class PreviewPane : UserControl
         SizeLabel.Text = StringTable.Get("Column_Size");
         ItemsLabel.Text = StringTable.Get("Preview_Items");
         AttributesLabel.Text = StringTable.Get("Preview_Attributes");
+        InitializeMarkdownThemeTracking();
         Unloaded += (_, _) => CancelAndClear();
     }
 
@@ -149,7 +154,13 @@ public sealed partial class PreviewPane : UserControl
         if (Surface.Content is Grid layout) layout.RowSpacing = 0;
     }
 
-    public void Attach(PreviewService service) => _service = service ?? throw new ArgumentNullException(nameof(service));
+    public void Attach(PreviewService service)
+    {
+        ArgumentNullException.ThrowIfNull(service);
+        if (ReferenceEquals(_service, service)) return;
+        CancelAndClear();
+        _service = service;
+    }
 
     public void SetVisible(bool visible)
     {
@@ -169,6 +180,7 @@ public sealed partial class PreviewPane : UserControl
 
         _generation = generation;
         TracePreview("Load " + path);
+        _service.Cancel(_previewOwner);
         _loadCts?.Cancel();
         _loadCts?.Dispose();
         _loadCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -183,7 +195,7 @@ public sealed partial class PreviewPane : UserControl
                 if (!await TryNativeOfficeAsync(path, generation, token)) await ShowCompatibleOfficeAsync(path, generation, token);
                 return;
             }
-            var result = await _service.LoadAsync(new PreviewRequest(path, generation), token);
+            var result = await _service.LoadAsync(new PreviewRequest(path, generation), token, _previewOwner);
             if (generation != _generation || token.IsCancellationRequested)
             {
                 return;
@@ -198,6 +210,7 @@ public sealed partial class PreviewPane : UserControl
         }
         catch (OperationCanceledException)
         {
+            SettleCancelledLoad(token);
         }
         catch (Exception error)
         {
@@ -205,8 +218,17 @@ public sealed partial class PreviewPane : UserControl
         }
     }
 
+    private void SettleCancelledLoad(CancellationToken token)
+    {
+        // An obsolete continuation must not clear a newer load, even when the
+        // navigator reused its navigation generation for another selection.
+        if (_loadCts is { } current && current.Token == token) CancelAndClear();
+    }
+
     public void CancelAndClear()
     {
+        _service?.Cancel(_previewOwner);
+        _boundProperties = null;
         ReleaseNativeOffice();
         _loadCts?.Cancel();
         _loadCts?.Dispose();
@@ -240,6 +262,7 @@ public sealed partial class PreviewPane : UserControl
 
     private void ShowLoading()
     {
+        _boundProperties = null;
         ReleaseNativeOffice();
         _textLines = [];
         _visibleTextLines.Clear();
@@ -294,30 +317,36 @@ public sealed partial class PreviewPane : UserControl
                     await ShowPdfAsync(text.Path, generation, cancellationToken, text.Content);
                     cancellationToken.ThrowIfCancellationRequested();
                     // Keep rendered Markdown visible; truncation must not replace the browser.
-                    BindFromPath(text.Path);
+                    await BindFromPathAsync(text.Path, generation, cancellationToken);
                     break;
                 }
-                _textLines = (text.IsTruncated
-                    ? text.Content + Environment.NewLine + Environment.NewLine + StringTable.Get("PreviewTruncated")
-                    : text.Content).Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
-                AppendTextLines();
-                _textScroll?.ChangeView(0, 0, null, true);
-                TextHost.Visibility = Visibility.Visible;
-                BindFromPath(text.Path);
+                RenderText(text.Content, text.IsTruncated);
+                await BindFromPathAsync(text.Path, generation, cancellationToken);
                 break;
             case PreviewResult.Image image:
-                await ShowImageAsync(image.Path, generation, cancellationToken);
+                // Admission can wait behind a still-finishing native decode.
+                LoadingRing.IsActive = true;
+                LoadingRing.Visibility = Visibility.Visible;
+                try { await ShowImageAsync(image.Path, generation, cancellationToken); }
+                finally
+                {
+                    if (generation == _generation && !cancellationToken.IsCancellationRequested)
+                    {
+                        LoadingRing.IsActive = false;
+                        LoadingRing.Visibility = Visibility.Collapsed;
+                    }
+                }
                 cancellationToken.ThrowIfCancellationRequested();
                 if (ImageContent.Visibility == Visibility.Visible)
                 {
-                    BindFromPath(image.Path);
+                    await BindFromPathAsync(image.Path, generation, cancellationToken);
                 }
 
                 break;
             case PreviewResult.Media media:
                 await ShowMediaAsync(media.Path, cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
-                BindFromPath(media.Path);
+                await BindFromPathAsync(media.Path, generation, cancellationToken);
                 break;
             case PreviewResult.Properties properties:
                 BindProperties(properties);
@@ -325,15 +354,15 @@ public sealed partial class PreviewPane : UserControl
             case PreviewResult.Html html:
                 await ShowPdfAsync(html.Path, generation, cancellationToken, html: html.Content);
                 cancellationToken.ThrowIfCancellationRequested();
-                BindFromPath(html.Path);
+                await BindFromPathAsync(html.Path, generation, cancellationToken);
                 break;
             case PreviewResult.Pdf:
                 await ShowPdfAsync(result.Path, generation, cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
-                BindFromPath(result.Path);
+                await BindFromPathAsync(result.Path, generation, cancellationToken);
                 break;
             case PreviewResult.Unsupported unsupported:
-                BindFromPath(unsupported.Path);
+                await BindFromPathAsync(unsupported.Path, generation, cancellationToken);
                 ShowDetails(unsupported.Reason);
                 break;
         }
@@ -344,24 +373,17 @@ public sealed partial class PreviewPane : UserControl
         _imagePath = path;
         try
         {
-            var file = await StorageFile.GetFileFromPathAsync(path);
+            // A weak viewport lookup preserves late resize/DPI sizing without
+            // retaining this pane while canceled native work drains.
+            var viewport = new WeakReference<PreviewPane>(this);
+            var decoded = await _imageAdmission.RunAsync(
+                () => DecodeImageAsync(path, viewport, cancellationToken), cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
-            using var stream = await file.OpenReadAsync();
-            cancellationToken.ThrowIfCancellationRequested();
-            var decoder = await BitmapDecoder.CreateAsync(stream).AsTask(cancellationToken);
-            var size = PreviewImageSize.Fit(decoder.OrientedPixelWidth, decoder.OrientedPixelHeight,
-                ContentHost.ActualWidth, ContentHost.ActualHeight, XamlRoot?.RasterizationScale ?? 1);
-            stream.Seek(0);
-            var bitmap = new BitmapImage { DecodePixelWidth = size.Width, DecodePixelHeight = size.Height };
-            await bitmap.SetSourceAsync(stream);
-            if (generation != _generation || cancellationToken.IsCancellationRequested)
-            {
-                return;
-            }
+            if (generation != _generation || !IsPreviewVisible) return;
 
-            ImageContent.Source = bitmap;
+            ImageContent.Source = decoded.Bitmap;
             ImageContent.Visibility = Visibility.Visible;
-            TracePreview($"Image decode {size.Width}x{size.Height}");
+            TracePreview($"Image decode {decoded.Width}x{decoded.Height}");
             return;
         }
         catch (OperationCanceledException)
@@ -385,7 +407,39 @@ public sealed partial class PreviewPane : UserControl
             return;
         }
 
-        ShowFileProperties(path);
+        await BindFromPathAsync(path, generation, cancellationToken);
+    }
+
+    private static async Task<(BitmapImage Bitmap, int Width, int Height)> DecodeImageAsync(
+        string path, WeakReference<PreviewPane> viewport, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        // Logical cancellation is handled by admission. An already-started WinRT
+        // stage drains naturally before its stream and physical slot are released.
+        var file = await StorageFile.GetFileFromPathAsync(path);
+        token.ThrowIfCancellationRequested();
+        using var stream = await file.OpenReadAsync();
+        token.ThrowIfCancellationRequested();
+        var decoder = await BitmapDecoder.CreateAsync(stream);
+        token.ThrowIfCancellationRequested();
+        var bounds = ReadImageViewport(viewport);
+        var size = PreviewImageSize.Fit(decoder.OrientedPixelWidth, decoder.OrientedPixelHeight,
+            bounds.Width, bounds.Height, bounds.Dpi);
+        stream.Seek(0);
+        var bitmap = new BitmapImage { DecodePixelWidth = size.Width, DecodePixelHeight = size.Height };
+        token.ThrowIfCancellationRequested();
+        await bitmap.SetSourceAsync(stream);
+        token.ThrowIfCancellationRequested();
+        return (bitmap, size.Width, size.Height);
+    }
+
+    private static (double Width, double Height, double Dpi) ReadImageViewport(WeakReference<PreviewPane> reference)
+    {
+        // Called on the decode callback's original UI context, before allocation.
+        // This synchronous helper cannot retain the view across the next await.
+        return reference.TryGetTarget(out var pane)
+            ? (pane.ContentHost.ActualWidth, pane.ContentHost.ActualHeight, pane.XamlRoot?.RasterizationScale ?? 1)
+            : (0, 0, 1);
     }
 
     private async Task ShowMediaAsync(string path, CancellationToken cancellationToken)
@@ -474,48 +528,44 @@ public sealed partial class PreviewPane : UserControl
         });
     }
 
-    private void ImageContent_ImageFailed(object sender, ExceptionRoutedEventArgs e)
+    private async void ImageContent_ImageFailed(object sender, ExceptionRoutedEventArgs e)
     {
-        if (_imagePath is string path)
+        if (_imagePath is not string path || _loadCts is not { } request) return;
+        var token = request.Token;
+        var generation = _generation;
+        try { await BindFromPathAsync(path, generation, token); }
+        catch (OperationCanceledException) { }
+        catch (Exception error)
         {
-            ShowFileProperties(path);
+            if (ReferenceEquals(_loadCts, request) && !token.IsCancellationRequested) ShowDetails(error.Message);
         }
     }
 
-    private void BindFromPath(string path)
+    private async Task BindFromPathAsync(string path, long generation, CancellationToken cancellationToken, Func<bool>? isCurrent = null)
     {
         try
         {
-            if (Directory.Exists(path))
-            {
-                var directory = new DirectoryInfo(path);
-                BindProperties(new PreviewResult.Properties(
-                    path,
-                    0,
-                    directory.Exists ? directory.LastWriteTimeUtc : null,
-                    directory.Exists ? directory.Attributes : 0,
-                    IsDirectory: true,
-                    ChildCount: CountChildren(directory),
-                    CreationTimeUtc: directory.Exists ? directory.CreationTimeUtc : null));
-                return;
-            }
-
-            var info = new FileInfo(path);
-            BindProperties(new PreviewResult.Properties(
-                path,
-                info.Exists ? info.Length : 0,
-                info.Exists ? info.LastWriteTimeUtc : null,
-                info.Exists ? info.Attributes : 0,
-                CreationTimeUtc: info.Exists ? info.CreationTimeUtc : null));
+            // Reuse metadata already supplied for this load (including decoder failure
+            // callbacks), rather than issuing a second filesystem pass on the UI thread.
+            var properties = _boundProperties is { } existing
+                && string.Equals(existing.Path, path, StringComparison.OrdinalIgnoreCase)
+                ? existing
+                : await PreviewMetadataReader.Shared.ReadAsync(path, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (generation != _generation || !IsPreviewVisible || isCurrent?.Invoke() == false) return;
+            BindProperties(properties);
         }
+        catch (OperationCanceledException) { throw; }
         catch (Exception error)
         {
-            BindItem(path, Directory.Exists(path));
+            cancellationToken.ThrowIfCancellationRequested();
+            if (generation != _generation || !IsPreviewVisible || isCurrent?.Invoke() == false) return;
+            // Metadata failure must not abort setup of an already-open native
+            // preview. Keep the original local fallback without another IO probe.
+            BindItem(path, isDirectory: false);
             ShowDetails(error.Message);
         }
     }
-
-    private void ShowFileProperties(string path) => BindFromPath(path);
 
     private void BindItem(string path, bool isDirectory)
     {
@@ -528,6 +578,7 @@ public sealed partial class PreviewPane : UserControl
 
     private void BindProperties(PreviewResult.Properties properties)
     {
+        _boundProperties = properties;
         var format = App.ExplorerPreferences.DateFormat;
         BindItem(properties.Path, properties.IsDirectory);
         PropertyList.Visibility = Visibility.Visible;
@@ -541,28 +592,6 @@ public sealed partial class PreviewPane : UserControl
         var attributes = PreviewDetails.Attributes(properties.Attributes);
         AttributesRow.Visibility = attributes is null ? Visibility.Collapsed : Visibility.Visible;
         AttributesValue.Text = attributes ?? string.Empty;
-    }
-
-    private static int? CountChildren(DirectoryInfo directory)
-    {
-        try
-        {
-            var count = 0;
-            foreach (var _ in directory.EnumerateFileSystemInfos())
-            {
-                count++;
-                if (count > 500)
-                {
-                    return 501;
-                }
-            }
-
-            return count;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            return null;
-        }
     }
 
     private void ShowDetails(string text)
@@ -599,7 +628,7 @@ public sealed partial class PreviewPane : UserControl
         view.SizeChanged += (_, _) => TracePreview($"WebView size {view.ActualWidth}x{view.ActualHeight}");
         try
         {
-            var profile = Program.SettingsPath(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FilesMate", "document-preview"));
+            var profile = Program.SettingsPath(Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "document-preview"));
             var environment = await Microsoft.Web.WebView2.Core.CoreWebView2Environment.CreateWithOptionsAsync(null, profile, null);
             await view.EnsureCoreWebView2Async(environment);
             TracePreview("WebView ready");
@@ -611,10 +640,17 @@ public sealed partial class PreviewPane : UserControl
 
             view.NavigationCompleted += (_, args) =>
             {
+                if (!ReferenceEquals(_pdfContent, view) || generation != _generation) return;
+                if (html is null && !_readerThemes.IsNavigation(args.NavigationId)) return;
                 TracePreview($"Navigation {args.IsSuccess} {args.WebErrorStatus}");
-                if (!args.IsSuccess && ReferenceEquals(_pdfContent, view))
+                if (!args.IsSuccess && args.WebErrorStatus == Microsoft.Web.WebView2.Core.CoreWebView2WebErrorStatus.OperationCanceled) return;
+                if (!args.IsSuccess)
                 {
                     ShowDetails(failureText);
+                }
+                else if (args.IsSuccess && html is null)
+                {
+                    ReaderNavigationCompleted(view, generation, args.NavigationId);
                 }
             };
             var core = view.CoreWebView2;
@@ -658,12 +694,24 @@ public sealed partial class PreviewPane : UserControl
                 core.AddWebResourceRequestedFilter(PdfPreviewAssets.DocumentUri, Microsoft.Web.WebView2.Core.CoreWebView2WebResourceContext.All);
                 core.WebResourceRequested += (_, e) =>
                 {
+                    if (e.Request.Uri != PdfPreviewAssets.DocumentUri) return;
                     try
                     {
                         var response = PdfPreviewAssets.OpenResponse(path, e.Request.Headers.Contains("Range") ? e.Request.Headers.GetHeader("Range") : null);
                         e.Response = core.Environment.CreateWebResourceResponse(response.Body.AsRandomAccessStream(), response.Status, response.Status == 206 ? "Partial Content" : "OK", response.Headers);
                     }
                     catch (Exception error) when (error is IOException or UnauthorizedAccessException) { e.Response = core.Environment.CreateWebResourceResponse(null, 404, "Not Found", ""); }
+                };
+                var theme = BeginReaderDocument(view, generation, pdf: true);
+                core.Profile.PreferredColorScheme = theme.Dark
+                    ? Microsoft.Web.WebView2.Core.CoreWebView2PreferredColorScheme.Dark
+                    : Microsoft.Web.WebView2.Core.CoreWebView2PreferredColorScheme.Light;
+                await core.AddScriptToExecuteOnDocumentCreatedAsync(PdfPreviewTheme.InitializationScript(theme));
+                cancellationToken.ThrowIfCancellationRequested();
+                if (generation != _generation || !ReferenceEquals(_pdfContent, view)) return;
+                core.NavigationStarting += (_, args) =>
+                {
+                    if (!args.Cancel) ReaderNavigationStarting(view, generation, args.NavigationId);
                 };
                 core.Navigate(documentUri);
             }
@@ -672,6 +720,7 @@ public sealed partial class PreviewPane : UserControl
                 core.NavigationStarting += (_, args) =>
                 {
                     args.Cancel = !MarkdownPreview.IsDocumentNavigation(args.Uri, args.IsUserInitiated);
+                    if (!args.Cancel) ReaderNavigationStarting(view, generation, args.NavigationId);
                     if (args.Cancel && args.IsUserInitiated && Uri.TryCreate(args.Uri, UriKind.Absolute, out var link)
                         && link.Host != "filesmate-preview.local" && link.Scheme is "https" or "http")
                     {
@@ -680,19 +729,8 @@ public sealed partial class PreviewPane : UserControl
                     }
                 };
                 core.SetVirtualHostNameToFolderMapping("filesmate-preview.local", Path.GetDirectoryName(Path.GetFullPath(path))!, Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.DenyCors);
-                var dark = ActualTheme == ElementTheme.Dark;
-                string Color(string key, string fallback)
-                {
-                    if (Theming.ThemeResources.Resolve(this, key) is Microsoft.UI.Xaml.Media.SolidColorBrush brush)
-                        return $"#{brush.Color.R:X2}{brush.Color.G:X2}{brush.Color.B:X2}";
-                    return fallback;
-                }
-                var palette = Models.SkinPalette.For(dark);
-                string Rgb(uint color) => $"#{color & 0xFFFFFF:X6}";
-                var background = Color("FilesMate.SearchPanel.BackgroundBrush", Rgb(palette.Floating));
-                var foreground = Color("FilesMate.Text.PrimaryBrush", Rgb(palette.Text));
-                var accent = Color("FilesMate.Glass.AccentBrush", Rgb(palette.Accent));
-                var rendered = await Task.Run(() => MarkdownPreview.Render(markdown, dark, background, foreground, accent), cancellationToken);
+                var theme = BeginReaderDocument(view, generation);
+                var rendered = await Task.Run(() => MarkdownPreview.Render(markdown, theme), cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
                 if (generation != _generation || !ReferenceEquals(_pdfContent, view)) return;
                 core.NavigateToString(rendered);
@@ -725,6 +763,8 @@ public sealed partial class PreviewPane : UserControl
         UpdateNativeOfficeBounds();
         Theming.ThemeResources.Bind(ContentTab, Control.BackgroundProperty, information ? "FilesMate.TransparentBrush" : "FilesMate.Item.SelectedBrush");
         Theming.ThemeResources.Bind(InfoTab, Control.BackgroundProperty, information ? "FilesMate.Item.SelectedBrush" : "FilesMate.TransparentBrush");
+        Theming.ThemeResources.Bind(ContentTab, Control.ForegroundProperty, information ? "FilesMate.Text.PrimaryBrush" : "FilesMate.Item.SelectedForegroundBrush");
+        Theming.ThemeResources.Bind(InfoTab, Control.ForegroundProperty, information ? "FilesMate.Item.SelectedForegroundBrush" : "FilesMate.Text.PrimaryBrush");
     }
 
     private static void ConfigureOfficeDocument(Microsoft.Web.WebView2.Core.CoreWebView2 core, string html)
@@ -743,6 +783,7 @@ public sealed partial class PreviewPane : UserControl
 
     private void ReleasePdfPreview()
     {
+        ResetReaderDocument();
         var view = _pdfContent;
         _pdfContent = null;
         if (view is null)

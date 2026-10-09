@@ -10,10 +10,10 @@ namespace FilesMate.App;
 /// <summary>
 /// Single-instance routing via Windows App SDK AppInstance, following the Files app pattern.
 /// </summary>
-internal static class AppLifecycle
+internal static partial class AppLifecycle
 {
-    private const string InstanceKey = "FilesMate.Main";
-    private const string IncomingEventName = @"Local\FilesMate.IncomingLaunch";
+    private static string InstanceKey => FilesMate.Core.Configuration.RuntimeProfile.ScopedName("FilesMate.Main");
+    private static string IncomingEventName => FilesMate.Core.Configuration.RuntimeProfile.ScopedName(@"Local\FilesMate.IncomingLaunch");
     private const int AsfwAny = -1;
     private const int SwRestore = 9;
 
@@ -28,13 +28,14 @@ internal static class AppLifecycle
             return false;
         }
 
+        _mainInstance = instance;
         instance.Activated += Instance_Activated;
         _incoming = new EventWaitHandle(false, EventResetMode.AutoReset, IncomingEventName);
-        ThreadPool.RegisterWaitForSingleObject(_incoming, OnIncoming, null, -1, executeOnlyOnce: false);
+        _incomingWait = ThreadPool.RegisterWaitForSingleObject(_incoming, OnIncoming, null, -1, executeOnlyOnce: false);
         return true;
     }
 
-    public static LaunchTarget PendingLaunch { get; private set; } = LaunchPath.Parse(Environment.GetCommandLineArgs());
+    public static LaunchTarget PendingLaunch { get; private set; } = LaunchPath.Parse(FilesMate.Core.Configuration.RuntimeProfile.WithoutProfileArguments(Environment.GetCommandLineArgs()).ToArray());
 
     public static void SetPendingLaunch(LaunchTarget target) => PendingLaunch = target;
 
@@ -42,9 +43,7 @@ internal static class AppLifecycle
     {
         try
         {
-            var directory = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "FilesMate");
+            var directory = Path.GetDirectoryName(Program.SettingsPath(Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "launch.log")))!;
             Directory.CreateDirectory(directory);
             var line = string.Format(
                 System.Globalization.CultureInfo.InvariantCulture,
@@ -66,9 +65,7 @@ internal static class AppLifecycle
     {
         try
         {
-            var directory = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "FilesMate");
+            var directory = Path.GetDirectoryName(Program.SettingsPath(Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "launch.log")))!;
             Directory.CreateDirectory(directory);
             File.AppendAllText(
                 Path.Combine(directory, "launch.log"),
@@ -79,13 +76,7 @@ internal static class AppLifecycle
         }
     }
 
-    public static IEnumerable<LaunchTarget> TakePendingRedirects()
-    {
-        foreach (var raw in PendingLaunchExchange.DequeueAll())
-        {
-            yield return LaunchPath.Parse(raw);
-        }
-    }
+    public static IEnumerable<LaunchTarget> TakePendingRedirects() => ClaimPendingRedirects();
 
     public static void TryBringToForeground(nint hwnd)
     {
@@ -120,18 +111,15 @@ internal static class AppLifecycle
             return;
         }
 
-        if (targets.Count > 0)
-        {
-            PendingLaunch = targets[0];
-        }
+        foreach (var target in targets) EarlyIncoming.Enqueue(target);
     }
 
     private static List<LaunchTarget> ResolveRedirectedTargets(AppActivationArguments args)
     {
-        var pending = PendingLaunchExchange.DequeueAll();
+        var pending = ClaimPendingRedirects();
         if (pending.Count > 0)
         {
-            return pending.Select(LaunchPath.Parse).ToList();
+            return pending;
         }
 
         return [LaunchPath.Parse(ReadLaunchArgs(args))];
@@ -172,7 +160,7 @@ internal static class AppLifecycle
             System.Diagnostics.Trace.TraceError("Activation args read failed: {0}", ex);
         }
 
-        return LaunchPath.NormalizeLaunchArgs(lines);
+        return LaunchPath.NormalizeLaunchArgs(FilesMate.Core.Configuration.RuntimeProfile.WithoutProfileArguments(lines).Select(argument => argument == RecoveryArgument ? "--activate" : argument).ToArray());
     }
 
     private static void OnIncoming(object? state, bool timedOut)
@@ -198,7 +186,8 @@ internal static class AppLifecycle
 
     private static void RedirectActivationTo(AppInstance instance)
     {
-        PendingLaunchExchange.Enqueue(Environment.GetCommandLineArgs());
+        if (!Program.IsActivationRecovery)
+            PendingLaunchExchange.Enqueue(FilesMate.Core.Configuration.RuntimeProfile.WithoutProfileArguments(Environment.GetCommandLineArgs()).ToArray());
         _ = AllowSetForegroundWindow(AsfwAny);
         if (EventWaitHandle.TryOpenExisting(IncomingEventName, out var incoming))
         {
@@ -231,9 +220,7 @@ internal static class AppLifecycle
     {
         private static readonly TimeSpan MaxAge = TimeSpan.FromMinutes(2);
 
-        private static string DirectoryPath => Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FilesMate",
+        private static string DirectoryPath => Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath,
             "pending-launches");
 
         public static void Enqueue(IReadOnlyList<string> args)
@@ -243,26 +230,38 @@ internal static class AppLifecycle
             File.WriteAllLines(path, args);
         }
 
-        public static List<string[]> DequeueAll()
+        public static void EnqueueTarget(LaunchTarget target)
         {
-            var result = new List<string[]>();
+            Directory.CreateDirectory(DirectoryPath);
+            var path = Path.Combine(DirectoryPath, $"{DateTime.UtcNow.Ticks:D20}-{Guid.NewGuid():N}.activation.json");
+            var temporary = path + ".new";
+            File.WriteAllText(temporary, System.Text.Json.JsonSerializer.Serialize(target));
+            File.Move(temporary, path);
+        }
+
+        public static List<LaunchTarget> DequeueAll()
+        {
+            var result = new List<LaunchTarget>();
             if (!Directory.Exists(DirectoryPath))
             {
                 return result;
             }
 
-            foreach (var file in Directory.GetFiles(DirectoryPath, "*.txt").OrderBy(item => item, StringComparer.Ordinal))
+            foreach (var file in Directory.GetFiles(DirectoryPath, "*.txt").Concat(Directory.GetFiles(DirectoryPath, "*.activation.json")).OrderBy(item => item, StringComparer.Ordinal))
             {
                 try
                 {
                     var age = DateTime.UtcNow - File.GetCreationTimeUtc(file);
-                    if (age > MaxAge)
+                    if (age > MaxAge && !file.EndsWith(".activation.json", StringComparison.Ordinal))
                     {
                         File.Delete(file);
                         continue;
                     }
 
-                    result.Add(File.ReadAllLines(file));
+                    var target = file.EndsWith(".activation.json", StringComparison.Ordinal)
+                        ? System.Text.Json.JsonSerializer.Deserialize<LaunchTarget>(File.ReadAllText(file))
+                        : LaunchPath.Parse(File.ReadAllLines(file));
+                    if (target is not null) result.Add(target);
                     File.Delete(file);
                 }
                 catch (IOException)
@@ -271,6 +270,8 @@ internal static class AppLifecycle
                 catch (UnauthorizedAccessException)
                 {
                 }
+                catch (System.Text.Json.JsonException error)
+                { App.LogFailure("ActivationPayloadRead", error); }
             }
 
             return result;

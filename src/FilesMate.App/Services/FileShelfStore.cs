@@ -25,8 +25,7 @@ public sealed class FileShelfStore
         });
     }
 
-    public static string DefaultFilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FilesMate", "file-shelf.json");
+    public static string DefaultFilePath => Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "file-shelf.json");
 
     public async Task<IReadOnlyList<string>> GetAsync()
     {

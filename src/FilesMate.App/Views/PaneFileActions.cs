@@ -35,6 +35,11 @@ internal sealed partial class PaneFileActions
     private const string ClipboardTokenFormat = "FilesMate.ClipboardToken";
     private static bool _fileWorkActive;
     public Action<string>? NewItemCreated { get; set; }
+    public Func<bool>? RecursiveSelection { get; set; }
+    public Func<IReadOnlyList<string>>? OperationSelectionPaths { get; set; }
+    public Func<bool>? RecursiveSelectionAllowed { get; set; }
+    public Func<bool>? RecursiveRootAllowed { get; set; }
+    private IReadOnlyList<string> CaptureOperationPaths() => OperationSelectionPaths?.Invoke() ?? _selectedPaths();
 
     public PaneFileActions(
         ILocalFileOperations operations,
@@ -72,6 +77,18 @@ internal sealed partial class PaneFileActions
     public async Task RunAsync(AppCommandId id)
     {
         if (PortableDeviceLocation.TryParse(_folderPath(), out _) && !CommandCatalog.DeviceCommandSupported(id)) return;
+        if (RecursiveSelection?.Invoke() == true)
+        {
+            var usesSelection = id is AppCommandId.Cut or AppCommandId.Copy or AppCommandId.Rename or AppCommandId.BatchRename
+                or AppCommandId.Recycle or AppCommandId.PermanentDelete or AppCommandId.NewFolderWithSelection or AppCommandId.CreateShortcut
+                or AppCommandId.CompressZip or AppCommandId.Compress7z or AppCommandId.CompressNew or AppCommandId.ExtractHere
+                or AppCommandId.ExtractToFolder or AppCommandId.ExtractToOther or AppCommandId.SmartExtract or AppCommandId.OpenInCompactMate;
+            if (usesSelection && RecursiveSelectionAllowed?.Invoke() != true) return;
+            var usesRoot = NewDocumentCommands.IsDocument(id) || id is AppCommandId.NewFolder or AppCommandId.Paste
+                or AppCommandId.NewFolderWithSelection or AppCommandId.CreateShortcut or AppCommandId.CompressZip
+                or AppCommandId.Compress7z or AppCommandId.CompressNew or AppCommandId.ExtractHere or AppCommandId.ExtractToFolder or AppCommandId.SmartExtract;
+            if (usesRoot && RecursiveRootAllowed?.Invoke() != true) return;
+        }
         var mutates = NewDocumentCommands.IsDocument(id) || id is AppCommandId.NewFolder or AppCommandId.Paste
             or AppCommandId.Rename or AppCommandId.BatchRename or AppCommandId.Recycle or AppCommandId.PermanentDelete
             or AppCommandId.NewFolderWithSelection or AppCommandId.CreateShortcut
@@ -159,13 +176,20 @@ internal sealed partial class PaneFileActions
         IReadOnlyList<string> sources,
         string destinationDirectory,
         DataPackageOperation operation,
-        bool allowSameDirectoryCopy = false)
+        bool allowSameDirectoryCopy = false,
+        bool requireRecursiveCompatibility = false)
     {
-        if (_fileWorkActive || FileOperationLifetime.IsBusy) { _reportError(Loc.Get("Files_Busy")); return; }
+        if (_fileWorkActive || FileOperationLifetime.IsBusy)
+        {
+            _reportError(Loc.Get("Files_Busy"));
+            if (requireRecursiveCompatibility) throw new RecursiveCompatibilityException(Loc.Get("Files_Busy"));
+            return;
+        }
         using var lifetime = FileOperationLifetime.Begin();
         _fileWorkActive = true;
         try
         {
+            if (requireRecursiveCompatibility) await RecursiveTransferCompatibility.VerifyAsync(sources, destinationDirectory);
             if (PortableDeviceLocation.TryParse(destinationDirectory, out _) || sources.Any(path => PortableDeviceLocation.TryParse(path, out _)))
             {
                 if (operation == DataPackageOperation.Move) throw new IOException(Loc.Get("Device_CopyOnly"));
@@ -178,10 +202,18 @@ internal sealed partial class PaneFileActions
                 resolveConflict: FileConflictDialog.For(_host));
             RecordTransfer(result, move);
             _refresh();
+            if (requireRecursiveCompatibility && (result.Cancelled || result.Skipped > 0 || result.Errors.Count > 0))
+                throw new IOException(TransferFeedback.Format(result));
+        }
+        catch (RecursiveCompatibilityException error)
+        {
+            _reportError(error.Message);
+            throw; // The drop surface must report None rather than a successful Move.
         }
         catch (Exception error)
         {
             _reportError(error.Message);
+            if (requireRecursiveCompatibility) throw;
         }
 
         finally { _fileWorkActive = false; }
@@ -218,21 +250,24 @@ internal sealed partial class PaneFileActions
         NewItemCreated?.Invoke(path);
     }
 
-    private IReadOnlyList<string> SelectedOrFolder()
+    private IReadOnlyList<string> SelectedOrFolder(bool forOperation = false)
     {
-        var paths = _selectedPaths();
+        var paths = forOperation ? CaptureOperationPaths() : _selectedPaths();
         if (paths.Count > 0)
         {
             return paths;
         }
 
+        if (forOperation && RecursiveSelection?.Invoke() == true) return [];
         var folder = _folderPath();
         return string.IsNullOrWhiteSpace(folder) ? [] : [folder];
     }
 
     private async Task SetClipboardAsync(bool cut)
     {
-        var paths = SelectedOrFolder();
+        var context = CaptureRecursiveContext();
+        var recursiveSource = context.Active;
+        var paths = SelectedOrFolder(forOperation: true);
         if (paths.Count > 0 && paths.All(p => PortableDeviceLocation.TryParse(p, out _)))
         {
             if (cut) throw new IOException(Loc.Get("Device_CopyOnly"));
@@ -256,12 +291,14 @@ internal sealed partial class PaneFileActions
                 : await StorageFile.GetFileFromPathAsync(path));
         }
 
+        await CheckRecursiveSourcesAsync(context, paths);
         var data = new DataPackage
         {
             RequestedOperation = cut ? DataPackageOperation.Move : DataPackageOperation.Copy,
         };
         data.SetStorageItems(items);
         data.SetData(ClipboardTokenFormat, Guid.NewGuid().ToString("N"));
+        if (recursiveSource) data.SetData(Controls.FileSurface.FileDropRequest.RecursiveMarker, "1");
         Clipboard.SetContent(data);
         ShowClipboardNotice(cut, items.Count);
     }
@@ -274,6 +311,10 @@ internal sealed partial class PaneFileActions
     internal async Task PasteItemsAsync(DataPackageView view)
     {
         var folder = RequireFolder();
+        var requireRecursiveCompatibility = RecursiveSelection?.Invoke() == true
+            || view.Contains(Controls.FileSurface.FileDropRequest.RecursiveMarker);
+        if (requireRecursiveCompatibility && (PortableDeviceLocation.TryParse(folder, out _) || view.Contains(DeviceTransferUI.ClipboardFormat)))
+            throw new IOException(StringTable.Get("Recursive_OperationUnavailable"));
         if (PortableDeviceLocation.TryParse(folder, out _) || view.Contains(DeviceTransferUI.ClipboardFormat))
         {
             if (view.RequestedOperation == DataPackageOperation.Move) throw new IOException(Loc.Get("Device_CopyOnly"));
@@ -300,7 +341,7 @@ internal sealed partial class PaneFileActions
         var move = view.RequestedOperation == DataPackageOperation.Move;
         var token = view.Contains(ClipboardTokenFormat) ? await view.GetDataAsync(ClipboardTokenFormat) as string : null;
         var result = await FileShelfTransfer.RunAsync(_operations, sources, folder, move, allowSameDirectoryCopy: !move,
-            resolveConflict: FileConflictDialog.For(_host));
+            resolveConflict: FileConflictDialog.For(_host), requireRecursiveCompatibility: requireRecursiveCompatibility);
         RecordTransfer(result, move);
         if (move && result.Errors.Count == 0 && result.Skipped == 0 && !result.Cancelled)
         {
@@ -316,6 +357,7 @@ internal sealed partial class PaneFileActions
 
     private async Task RenameAsync()
     {
+        var context = CaptureRecursiveContext();
         var source = _primaryPath();
         if (string.IsNullOrEmpty(source))
         {
@@ -350,12 +392,13 @@ internal sealed partial class PaneFileActions
             return;
         }
 
-        await RenameCoreAsync(source, name);
+        await RenameCoreAsync(source, name, context);
     }
 
     private async Task BatchRenameAsync()
     {
-        var paths = _selectedPaths();
+        var context = CaptureRecursiveContext();
+        var paths = CaptureOperationPaths();
         if (paths.Count < 2)
         {
             return;
@@ -376,8 +419,10 @@ internal sealed partial class PaneFileActions
             return;
         }
 
+        var capturedPlan = editor.CurrentPlan;
+        await CheckRecursiveSourcesAsync(context, paths);
         var result = await new WindowsBatchRenameExecutor(_operations)
-            .ExecuteAsync(editor.CurrentPlan);
+            .ExecuteAsync(capturedPlan);
         if (result.Errors.Count > 0)
         {
             _reportError(string.Join(Environment.NewLine, result.Errors));
@@ -385,7 +430,7 @@ internal sealed partial class PaneFileActions
             return;
         }
 
-        var pairs = editor.CurrentPlan.Entries
+        var pairs = capturedPlan.Entries
             .Where(entry => entry.RequiresRename)
             .Select(entry => new FilePathPair(entry.Source, entry.Target))
             .ToArray();
@@ -400,18 +445,21 @@ internal sealed partial class PaneFileActions
 
     private async Task PermanentDeleteAsync()
     {
-        var paths = _selectedPaths();
+        var context = CaptureRecursiveContext();
+        var paths = CaptureOperationPaths();
         if (paths.Count == 0)
         {
             return;
         }
 
-        if (App.ExplorerPreferences.ConfirmPermanentDelete)
+        var recursiveFolders = context.Active
+            && await Task.Run(() => paths.Any(Directory.Exists));
+        if (App.ExplorerPreferences.ConfirmPermanentDelete || recursiveFolders)
         {
             var dialog = new ContentDialog
             {
                 Title = StringTable.Get("ConfirmDeleteTitle"),
-                Content = StringTable.Get("ConfirmDeleteBody"),
+                Content = StringTable.Get("ConfirmDeleteBody") + (recursiveFolders ? "\n\n" + StringTable.Get("Recursive_DeleteChildren") : string.Empty),
                 PrimaryButtonText = StringTable.Get("Command_PermanentDelete"),
                 CloseButtonText = StringTable.Get("Cancel"),
                 DefaultButton = ContentDialogButton.Close,
@@ -424,6 +472,7 @@ internal sealed partial class PaneFileActions
             }
         }
 
+        await CheckRecursiveSourcesAsync(context, paths);
         await _prepareDelete(paths).ConfigureAwait(true);
         try { await ShellOperationWorker.RunAsync(() => _operations.PermanentDelete(paths)); }
         finally { _refresh(); }
@@ -435,12 +484,30 @@ internal sealed partial class PaneFileActions
 
     private async Task RecycleSelectedAsync()
     {
-        var paths = _selectedPaths().Where(Path.Exists).ToArray();
+        var context = CaptureRecursiveContext();
+        var captured = CaptureOperationPaths().ToArray();
+        var recursive = context.Active;
+        var paths = recursive ? await Task.Run(() => captured.Where(Path.Exists).ToArray()) : captured.Where(Path.Exists).ToArray();
         if (paths.Length == 0)
         {
             return;
         }
 
+        if (recursive && await Task.Run(() => paths.Any(Directory.Exists)))
+        {
+            var dialog = new ContentDialog
+            {
+                Title = StringTable.Get("Command_Recycle"),
+                Content = StringTable.Get("Recursive_DeleteChildren"),
+                PrimaryButtonText = StringTable.Get("Command_Recycle"),
+                CloseButtonText = StringTable.Get("Cancel"),
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = _host.XamlRoot,
+            };
+            ContentDialogTheme.Apply(dialog, _host);
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+        }
+        await CheckRecursiveSourcesAsync(context, paths);
         await _prepareDelete(paths).ConfigureAwait(true);
         var completed = new List<RecycleItemResult>();
         try
@@ -468,6 +535,7 @@ internal sealed partial class PaneFileActions
         if (_fileWorkActive || FileOperationLifetime.IsBusy) { report(Loc.Get("Files_Busy")); return; }
         using var lifetime = FileOperationLifetime.Begin();
         _fileWorkActive = true;
+        var viewOnly = (redo ? App.FileUndo.LatestRedo : App.FileUndo.Latest)?.Kind == FileUndoKind.ViewState;
         try
         {
             await App.FileUndo.TryApplyAsync(_operations, redo, action => ShellOperationWorker.RunAsync(action));
@@ -489,7 +557,7 @@ internal sealed partial class PaneFileActions
         {
             report(ex.Message);
         }
-        finally { _fileWorkActive = false; _refresh(); }
+        finally { _fileWorkActive = false; if (!viewOnly) _refresh(); }
     }
 
     private static void RecordCreated(IReadOnlyList<string> paths)
@@ -504,7 +572,7 @@ internal sealed partial class PaneFileActions
 
     private void RecordTransfer(ShelfTransferResult result, bool move)
     {
-        if (result.WithoutUndo > 0) App.FileUndo.Clear();
+        if (result.WithoutUndo > 0 && !result.PreservesOrdinaryUndo) App.FileUndo.Clear();
         if (result.Undo is not null) App.FileUndo.Push(result.Undo);
         if (_host is NavigatorPage page) page.ShowTransferFeedback(result);
         if (TransferFeedback.NeedsAttention(result)) _reportError(TransferFeedback.Format(result));
@@ -646,13 +714,16 @@ internal sealed partial class PaneFileActions
             return;
         }
 
-        var paths = _selectedPaths();
+        var context = CaptureRecursiveContext();
+        var paths = CaptureOperationPaths();
         if (paths.Count == 0)
         {
             return;
         }
 
-        var result = await ArchiveOperationUI.RunAsync(_host, verb, paths, _folderPath(), _operations);
+        var result = await ArchiveOperationUI.RunAsync(_host, verb, paths, _folderPath(), _operations,
+            requireRecursiveCompatibility: context.Active,
+            recursiveOperationCurrent: context.Active ? () => { CheckRecursiveContext(context); return true; } : null);
         if (result is null) return;
         RecordTransfer(ArchiveOperationUI.AsShelfResult(result), move: false);
         if (_host.IsLoaded) _refresh();

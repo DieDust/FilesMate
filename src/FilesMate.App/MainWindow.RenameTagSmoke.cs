@@ -105,11 +105,13 @@ public sealed partial class MainWindow
 
                 await using var store = new SqliteFileMetadataStore(Path.Combine(fixture, "tags-" + theme + "-" + Guid.NewGuid().ToString("N") + ".db"));
                 var identity = FileIdentity.FromNormalizedPath(paths[0]);
+                var otherIdentity = FileIdentity.FromNormalizedPath(paths[1]);
                 var work = await store.CreateTagAsync("工作", "#5B8DEF");
-                await store.CreateTagAsync("待整理", "#E9A23B");
+                var review = await store.CreateTagAsync("待整理", "#E9A23B");
                 await store.CreateTagAsync("名称很长的标签应该在容器边缘省略", "#32A873");
                 await store.SetTagsAsync(identity, [work.Id]);
-                var panel = TagPickerFlyout.CreatePanel(store, [identity], null);
+                await store.SetTagsAsync(otherIdentity, [review.Id]);
+                var panel = TagPickerFlyout.CreatePanel(store, [identity, otherIdentity], null);
                 var menu = FileContextFlyout.Create(FileContextMenuBuilder.BuildLayout(CommandContext.Multi with
                     { TagsAvailable = true, BatchRenameAvailable = true, FolderPath = fixture }), _ => { }, tagPicker: panel);
                 menu.ShowAt((FrameworkElement)Content, new FlyoutShowOptions { Position = new Windows.Foundation.Point(50, 90) });
@@ -124,6 +126,37 @@ public sealed partial class MainWindow
                 File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "tag-layout.json"), JsonSerializer.Serialize(new { panel.ActualWidth, panel.ActualHeight, panel.IsLoaded, menu.IsOpen }));
                 await CapturePopupAsync(panel, $"tags-{theme}.png");
                 results.Add(new { Area = "tags", Theme = filter.ActualTheme.ToString(), Background = (filter.Background as SolidColorBrush)?.Color.ToString(), panel.ActualWidth, panel.ActualHeight });
+                var removeWork = Descendants(panel).OfType<Button>().Single(b => Microsoft.UI.Xaml.Automation.AutomationProperties.GetName(b)
+                    == Localization.StringTable.Get("Tag_Remove") + " " + work.Name);
+                if (removeWork.Opacity != 1 || !removeWork.IsEnabled || !removeWork.IsHitTestVisible || !removeWork.IsTabStop
+                    || removeWork.ActualWidth < 32 || removeWork.ActualHeight < 32)
+                    throw new InvalidOperationException("A tag present on part of the selection has no usable remove target.");
+                ((IInvokeProvider)new ButtonAutomationPeer(removeWork).GetPattern(PatternInterface.Invoke)).Invoke();
+                await WaitForWorkTagAsync(false);
+                if (!(await store.GetTagsAsync(otherIdentity)).Any(t => t.Id == review.Id) || (await store.ListTagsAsync()).Count != 3)
+                    throw new InvalidOperationException("Removing a file tag changed an unrelated tag or deleted its definition.");
+                var addWork = Descendants(panel).OfType<Button>().Single(b => Microsoft.UI.Xaml.Automation.AutomationProperties.GetName(b) == work.Name);
+                ((IInvokeProvider)new ButtonAutomationPeer(addWork).GetPattern(PatternInterface.Invoke)).Invoke();
+                await WaitForWorkTagAsync(true);
+                if (removeWork.Opacity != 1) throw new InvalidOperationException("Applying a tag did not restore its remove button.");
+                ((IInvokeProvider)new ButtonAutomationPeer(removeWork).GetPattern(PatternInterface.Invoke)).Invoke();
+                await WaitForWorkTagAsync(false);
+                results.Add(new { Area = "tag-actions", Theme = theme.ToString(), MixedRemove = true, ApplyAll = true, RemoveAll = true, DefinitionsPreserved = true });
+
+                async Task WaitForWorkTagAsync(bool expected)
+                {
+                    for (var attempt = 0; attempt < 100; attempt++)
+                    {
+                        var firstHas = (await store.GetTagsAsync(identity)).Any(t => t.Id == work.Id);
+                        var otherHas = (await store.GetTagsAsync(otherIdentity)).Any(t => t.Id == work.Id);
+                        var accessibility = Microsoft.UI.Xaml.Automation.AutomationProperties.GetAccessibilityView(removeWork);
+                        if (firstHas == expected && otherHas == expected && (removeWork.Opacity == 1) == expected
+                            && removeWork.IsEnabled == expected && removeWork.IsTabStop == expected && removeWork.IsHitTestVisible == expected
+                            && accessibility == (expected ? AccessibilityView.Content : AccessibilityView.Raw)) return;
+                        await Task.Delay(30);
+                    }
+                    throw new TimeoutException("Tag row/remove action did not update the selected files and button state.");
+                }
                 filter.Text = "新标签";
                 await Task.Delay(250);
                 await CapturePopupAsync(panel, $"tags-{theme}-create.png");

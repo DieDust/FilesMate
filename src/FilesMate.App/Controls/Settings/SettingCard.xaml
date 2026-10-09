@@ -8,7 +8,7 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <Grid x:Name="LayoutGrid" Padding="18,14" ColumnSpacing="20" SizeChanged="LayoutGrid_SizeChanged">
+        <Grid x:Name="LayoutGrid" Padding="16,14" ColumnSpacing="16" SizeChanged="LayoutGrid_SizeChanged">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -36,13 +36,14 @@
                 x:Name="ActionHost"
                 Grid.Column="1"
                 VerticalAlignment="Center"
+                SizeChanged="ActionHost_SizeChanged"
                 Content="{x:Bind Action, Mode=OneWay}" />
         </Grid>
         <Border
             x:Name="Divider"
             Grid.Row="1"
             Height="1"
-            Margin="18,0"
+            Margin="16,0"
             Background="{ThemeResource FilesMate.Divider.Brush}"
             Visibility="Collapsed" />
     </Grid>

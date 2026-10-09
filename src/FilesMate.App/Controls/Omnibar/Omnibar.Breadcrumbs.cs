@@ -30,11 +30,12 @@ public sealed partial class Omnibar
         for (var i = 0; i < _segments.Count; i++)
         {
             var segment = _segments[i];
-            var label = new Grid { ColumnSpacing = segment.HasIcon ? 8 : 0 };
+            var isFile = IsFileCrumb(segment.Path);
+            var label = new Grid { ColumnSpacing = segment.HasIcon || isFile ? 8 : 0 };
             label.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             label.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            if (segment.HasIcon)
-                label.Children.Add(new FontIcon { Glyph = segment.Glyph, FontSize = 14, FontFamily = new FontFamily("Segoe Fluent Icons") });
+            if (segment.HasIcon || isFile)
+                label.Children.Add(new FontIcon { Glyph = isFile ? "\uE8A5" : segment.Glyph, FontSize = 14, FontFamily = new FontFamily("Segoe Fluent Icons") });
             var text = new TextBlock { Text = segment.Name, FontSize = 14, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
             Grid.SetColumn(text, 1);
             label.Children.Add(text);
@@ -45,8 +46,10 @@ public sealed partial class Omnibar
                 HorizontalContentAlignment = HorizontalAlignment.Stretch,
             };
             AutomationProperties.SetName(name, segment.Name);
+            if (isFile) AutomationProperties.SetName(name, StringTable.Get("Address_SelectedFile") + ": " + segment.Name);
             ToolTipService.SetToolTip(name, segment.Path);
             name.Click += CrumbName_Click;
+            ConfigurePathContext(name, segment.Path, isFile);
             var chevron = new Button
             {
                 Content = new FontIcon { Glyph = "\uE76C", FontFamily = new FontFamily("Segoe Fluent Icons"), FontSize = 10 },
@@ -54,10 +57,11 @@ public sealed partial class Omnibar
             };
             AutomationProperties.SetName(chevron, segment.Name);
             chevron.Click += CrumbChevron_Click;
+            if (isFile) chevron.Visibility = Visibility.Collapsed;
             var view = new Grid { Margin = new Thickness(2, 0, 0, 0), MinHeight = 28,
                 Tag = segment.Path, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(4) };
             Theming.ThemeResources.Bind(view, Grid.BackgroundProperty, "FilesMate.TransparentBrush");
-            ConfigureCrumbDrop(view, segment.Path);
+            if (!isFile) ConfigureCrumbDrop(view, segment.Path);
             view.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             view.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             view.Children.Add(name);
@@ -106,7 +110,9 @@ public sealed partial class Omnibar
     {
         if (_crumbMeasurementPending || _ancestorButton is null || PathViewport.ActualWidth <= 0) return;
         // Leave a small, reliable blank target for entering the full path editor.
-        var layout = BreadcrumbOverflow.Fit(_crumbWidths, Math.Max(0, PathViewport.ActualWidth - 16));
+        var cueWidth = RecursiveRootCue.Visibility == Visibility.Visible ? RecursiveRootCue.ActualWidth + 8 : 0;
+        var labelWidth = SelectionLocationLabel.Visibility == Visibility.Visible ? SelectionLocationLabel.ActualWidth + 8 : 0;
+        var layout = BreadcrumbOverflow.Fit(_crumbWidths, Math.Max(0, PathViewport.ActualWidth - labelWidth - cueWidth - 16));
         if (layout == _breadcrumbLayout) return;
         var structureChanged = _breadcrumbLayout is null
             || layout.ShowRoot != _breadcrumbLayout.ShowRoot

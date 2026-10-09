@@ -6,9 +6,19 @@ public sealed record HiddenSearchResult(string Key, string Name, string Location
 
 public static class HiddenSearchResults
 {
+    private static readonly IEqualityComparer<string> KeyComparer = new HiddenKeyComparer();
+    private sealed class HiddenKeyComparer : IEqualityComparer<string>
+    {
+        public bool Equals(string? left, string? right) => left is not null && right is not null
+            && left.StartsWith("app:", StringComparison.OrdinalIgnoreCase)
+            && right.StartsWith("app:", StringComparison.OrdinalIgnoreCase)
+                ? ApplicationIdentityComparer.Instance.Equals(left, right)
+                : StringComparer.OrdinalIgnoreCase.Equals(left, right);
+        public int GetHashCode(string key) => key.StartsWith("app:", StringComparison.OrdinalIgnoreCase)
+            ? ApplicationIdentityComparer.Instance.GetHashCode(key) : StringComparer.OrdinalIgnoreCase.GetHashCode(key);
+    }
     private static readonly object Gate = new();
-    private static string FilePath(string? profile) => Path.Combine(profile ?? Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FilesMate"), "hidden-search-results.json");
+    private static string FilePath(string? profile) => Path.Combine(profile ?? FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "hidden-search-results.json");
     public static string FileKey(string path) => "file:" + path.ToUpperInvariant();
     public static string Key(NameHit hit) => hit.Application is { } app ? "app:" + app.Identity : FileKey(hit.Path);
     public static bool Contains(IReadOnlyDictionary<string, HiddenSearchResult> hidden, NameHit hit) =>
@@ -21,11 +31,11 @@ public static class HiddenSearchResults
             try
             {
                 return (JsonSerializer.Deserialize<HiddenSearchResult[]>(File.ReadAllText(FilePath(profile))) ?? [])
-                    .Where(item => !string.IsNullOrWhiteSpace(item.Key)).DistinctBy(item => item.Key, StringComparer.OrdinalIgnoreCase)
-                    .ToDictionary(item => item.Key, StringComparer.OrdinalIgnoreCase);
+                    .Where(item => !string.IsNullOrWhiteSpace(item.Key)).DistinctBy(item => item.Key, KeyComparer)
+                    .ToDictionary(item => item.Key, KeyComparer);
             }
             catch (Exception error) when (error is IOException or UnauthorizedAccessException or JsonException)
-            { return new Dictionary<string, HiddenSearchResult>(StringComparer.OrdinalIgnoreCase); }
+            { return new Dictionary<string, HiddenSearchResult>(KeyComparer); }
         }
     }
 
@@ -33,7 +43,7 @@ public static class HiddenSearchResults
     {
         lock (Gate)
         {
-            var items = Load(profile).ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.OrdinalIgnoreCase);
+            var items = Load(profile).ToDictionary(pair => pair.Key, pair => pair.Value, KeyComparer);
             foreach (var hit in hits)
                 items[Key(hit)] = new(Key(hit), hit.Name, hit.Application?.LocationPath ?? (hit.Application is null ? hit.Path : "Windows 应用入口"));
             Save(items.Values, profile);
@@ -44,7 +54,7 @@ public static class HiddenSearchResults
     {
         lock (Gate)
         {
-            var removed = keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var removed = keys.ToHashSet(KeyComparer);
             Save(Load(profile).Values.Where(item => !removed.Contains(item.Key)), profile);
         }
     }

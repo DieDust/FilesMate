@@ -21,37 +21,30 @@ public static class JumpListService
             return;
         }
 
-        try
+        var jumpList = await JumpList.LoadCurrentAsync().AsTask().ConfigureAwait(false);
+        jumpList.Items.Clear();
+        foreach (var path in folders)
         {
-            var jumpList = await JumpList.LoadCurrentAsync().AsTask().ConfigureAwait(false);
-            jumpList.Items.Clear();
-            foreach (var path in folders)
+            if (string.IsNullOrWhiteSpace(path))
             {
-                if (string.IsNullOrWhiteSpace(path))
-                {
-                    continue;
-                }
-
-                var name = Path.GetFileName(path.TrimEnd('\\', '/'));
-                if (string.IsNullOrEmpty(name))
-                {
-                    name = path;
-                }
-
-                var item = JumpListItem.CreateWithArguments("/open \"" + path + "\"", name);
-                item.Description = path;
-                item.GroupName = RecentGroup;
-                // Leaving Logo unset uses the application icon. Absolute file
-                // URIs (and ICO files) are not accepted by JumpListItem.Logo.
-                jumpList.Items.Add(item);
+                continue;
             }
 
-            jumpList.SystemGroupKind = JumpListSystemGroupKind.Recent;
-            await jumpList.SaveAsync().AsTask().ConfigureAwait(false);
+            var name = Path.GetFileName(path.TrimEnd('\\', '/'));
+            if (string.IsNullOrEmpty(name))
+            {
+                name = path;
+            }
+
+            var item = JumpListItem.CreateWithArguments("/open \"" + path + "\"", name);
+            item.Description = path;
+            item.GroupName = RecentGroup;
+            // Leaving Logo unset uses the application icon. Absolute file
+            // URIs (and ICO files) are not accepted by JumpListItem.Logo.
+            jumpList.Items.Add(item);
         }
-        catch (Exception ex) when (ex is UnauthorizedAccessException or InvalidOperationException)
-        {
-            System.Diagnostics.Trace.TraceError("Jump list update failed: {0}", ex);
-        }
+
+        jumpList.SystemGroupKind = JumpListSystemGroupKind.Recent;
+        await jumpList.SaveAsync().AsTask().ConfigureAwait(false);
     }
 }

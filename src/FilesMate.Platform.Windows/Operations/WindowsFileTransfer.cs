@@ -7,6 +7,7 @@ public sealed record FileTransferResult(IReadOnlyList<FilePathPair> Completed, I
     bool Cancelled, int Skipped, FileUndoRecord? Undo)
 {
     public int WithoutUndo { get; init; }
+    public bool PreservesOrdinaryUndo { get; init; }
     public IReadOnlyList<string> RemovedSourceDirectories { get; init; } = [];
 }
 
@@ -30,6 +31,9 @@ public static class WindowsFileTransfer
             var cancelled = false;
             var withoutUndo = 0;
             var budget = backupBudget ?? ReplacementBackupBudget.Shared;
+            var backupBatch = Guid.NewGuid();
+            var backupsEnabled = budget.Enabled;
+            var unprotected = new List<FilePathPair>();
             foreach (var request in requests)
             {
                 if (token.IsCancellationRequested || cancelled) break;
@@ -45,6 +49,8 @@ public static class WindowsFileTransfer
                             throw new IOException("Cannot merge a folder into its ancestor.");
                     }
                     if (move && string.Equals(source, target, StringComparison.OrdinalIgnoreCase)) { skipped++; continue; }
+                    if (IsRetainedPath(target))
+                        throw new IOException("Recovery backups cannot be overwritten by a file transfer. Copy the required versions to a normal folder first.");
                     operations.CreateDirectory(parent);
                     await Transfer(source, target, 0).ConfigureAwait(false);
                 }
@@ -52,6 +58,16 @@ public static class WindowsFileTransfer
                 catch (Exception error) when (IsOperationError(error)) { errors.Add($"{request.Source}: {error.Message}"); }
             }
             FileUndoRecord? undo = null;
+            if (withoutUndo > 0 && !backupsEnabled)
+            {
+                // Only the overwritten versions are unavailable. Keep unrelated
+                // new-file and move actions undoable, including in a mixed batch.
+                static bool Within(string path, string parent) => string.Equals(path, parent, StringComparison.OrdinalIgnoreCase)
+                    || path.StartsWith(Path.TrimEndingDirectorySeparator(parent) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+                ordinary.RemoveAll(p => unprotected.Any(u => string.Equals(p.Destination, u.Destination, StringComparison.OrdinalIgnoreCase)));
+                createdDirectories.RemoveAll(d => unprotected.Any(u => Within(u.Destination, d)));
+                removedDirectories.RemoveAll(d => unprotected.Any(u => Within(u.Source, d)));
+            }
             if (ordinary.Count + replacements.Count + createdDirectories.Count + removedDirectories.Count > 0)
                 undo = move
                     ? removedDirectories.Count + createdDirectories.Count == 0
@@ -59,7 +75,7 @@ public static class WindowsFileTransfer
                         : FileUndoRecord.Merged(removedDirectories, ordinary) with { CreatedDirectories = createdDirectories.ToArray() }
                     : FileUndoRecord.Copied(ordinary.Select(p => p.Destination).ToArray(), createdDirectories);
             if (undo is not null) undo = undo with { Replacements = replacements.ToArray() };
-            if (withoutUndo > 0)
+            if (withoutUndo > 0 && backupsEnabled)
             {
                 // The explicit destructive choice invalidates this whole batch's
                 // undo, including earlier writes to a destination replaced again.
@@ -67,7 +83,11 @@ public static class WindowsFileTransfer
                 undo = null;
             }
             return new FileTransferResult(completed, errors, cancelled || token.IsCancellationRequested, skipped, undo)
-            { WithoutUndo = withoutUndo, RemovedSourceDirectories = removedDirectories.ToArray() };
+            { WithoutUndo = withoutUndo, PreservesOrdinaryUndo = withoutUndo > 0 && !backupsEnabled,
+                RemovedSourceDirectories = removedDirectories.ToArray() };
+
+            bool IsRetainedPath(string path) => ReplacementBackupLayout.IsInsideOwnedRoot(path)
+                || budget.Entries.Any(entry => IsWithin(path, entry.Directory));
 
             async Task Transfer(string source, string originalTarget, int depth)
             {
@@ -77,6 +97,13 @@ public static class WindowsFileTransfer
                 if ((attributes & FileAttributes.ReparsePoint) != 0)
                     throw new IOException("Linked items cannot be transferred by this operation.");
                 var directory = (attributes & FileAttributes.Directory) != 0;
+                if (move && IsRetainedPath(source))
+                    throw new IOException("Recovery copies must remain at their stable paths. Copy the required version to a normal folder first.");
+                if (directory && (ReplacementBackupLayout.IsOwnedRoot(source)
+                    || budget.Entries.Any(entry => string.Equals(entry.Directory, source, StringComparison.OrdinalIgnoreCase))))
+                    throw new IOException("Choose individual recovery files instead of moving a retained backup directory.");
+                if (IsRetainedPath(originalTarget))
+                    throw new IOException("Recovery backups cannot be overwritten by a file transfer.");
                 var target = originalTarget;
                 var numberOnCollision = !move && (copyCollisionPolicy == FileCopyCollisionPolicy.KeepBoth
                     || copyCollisionPolicy == FileCopyCollisionPolicy.KeepBothForSamePath
@@ -102,7 +129,7 @@ public static class WindowsFileTransfer
                             var existing = IsNormalFile(target) ? FileConflictDetails.Read(target) : null;
                             var existingIdentity = canReplace ? targetIdentity : null;
                             var backupBytes = canReplace ? Math.Max(FileStreamSize.Read(source), FileStreamSize.Read(target)) : 0;
-                            var backupUnavailable = canReplace && !budget.CanReserve(backupBytes);
+                            var backupUnavailable = canReplace && (!backupsEnabled || !budget.CanReserve(backupBytes));
                             var kind = (canMerge, canReplace, sameItem);
                             FileConflictChoice choice;
                             if (remembered.TryGetValue(kind, out var action) && !(action == FileConflictAction.Replace && backupUnavailable)) choice = new(action);
@@ -115,7 +142,8 @@ public static class WindowsFileTransfer
                                         ChangedSinceDecision = changedSinceDecision,
                                         CanReplace = canReplace, IsSameItem = sameItem, DestinationIsLink = destinationIsLink,
                                         Incoming = incoming, Existing = existing, BackupBytes = backupBytes,
-                                        BackupUsedBytes = budget.UsedBytes, BackupUnavailable = backupUnavailable }, token).ConfigureAwait(false);
+                                        BackupUsedBytes = budget.UsedBytes, BackupUnavailable = backupUnavailable,
+                                        BackupDisabled = !backupsEnabled }, token).ConfigureAwait(false);
                                 if (choice.ApplyToAll && choice.Action != FileConflictAction.Cancel
                                     && (choice.Action != FileConflictAction.Merge || canMerge)
                                     && (choice.Action is not (FileConflictAction.Replace or FileConflictAction.ReplaceWithoutUndo) || canReplace))
@@ -134,8 +162,10 @@ public static class WindowsFileTransfer
                                     continue;
                                 }
                                 var replacement = await ReplaceFileAsync(source, target, move, incoming!, existing!, sourceIdentity!, existingIdentity!, token,
-                                    budget, retainUndo: choice.Action == FileConflictAction.Replace, byteProgress).ConfigureAwait(false);
-                                if (replacement is not null) replacements.Add(replacement); else withoutUndo++;
+                                    budget, retainUndo: choice.Action == FileConflictAction.Replace && backupsEnabled,
+                                    byteProgress, backupBatch).ConfigureAwait(false);
+                                if (replacement is not null) replacements.Add(replacement);
+                                else { withoutUndo++; unprotected.Add(new(source, target)); }
                                 completed.Add(new(source, target)); progress?.Report(completed.Count); return;
                             }
                             merge = choice.Action == FileConflictAction.Merge && canMerge;
@@ -149,7 +179,9 @@ public static class WindowsFileTransfer
                     {
                         if (directory)
                         {
-                            if (!merge && move && string.Equals(Path.GetPathRoot(source), Path.GetPathRoot(target), StringComparison.OrdinalIgnoreCase))
+                            if (!merge && move && string.Equals(Path.GetPathRoot(source), Path.GetPathRoot(target), StringComparison.OrdinalIgnoreCase)
+                                && !budget.Entries.Any(entry => IsWithin(entry.Directory, source))
+                                && !ReplacementBackupLayout.IsOwnedRoot(Path.Combine(source, ReplacementBackupLayout.RootName)))
                             {
                                 try
                                 {
@@ -198,6 +230,8 @@ public static class WindowsFileTransfer
                 foreach (var child in Directory.EnumerateFileSystemEntries(source))
                 {
                     if (cancelled || token.IsCancellationRequested) break;
+                    if (ReplacementBackupLayout.IsOwnedRoot(child)
+                        || budget.Entries.Any(entry => string.Equals(entry.Directory, child, StringComparison.OrdinalIgnoreCase))) continue;
                     try { await Transfer(child, Path.Combine(target, Path.GetFileName(child)), depth + 1).ConfigureAwait(false); }
                     catch (OperationCanceledException) when (token.IsCancellationRequested) { cancelled = true; break; }
                     catch (Exception error) when (IsOperationError(error)) { errors.Add($"{child}: {error.Message}"); }
@@ -214,6 +248,9 @@ public static class WindowsFileTransfer
     private static bool IsOperationError(Exception error) => error is IOException or UnauthorizedAccessException or ArgumentException
         or NotSupportedException or InvalidOperationException or System.ComponentModel.Win32Exception or System.Security.SecurityException;
 
+    private static bool IsWithin(string path, string root) => string.Equals(path, root, StringComparison.OrdinalIgnoreCase)
+        || path.StartsWith(Path.TrimEndingDirectorySeparator(root) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+
     private static string NumberedPath(string path, bool directory) =>
         UniquePath.CombineAvailable(Path.GetDirectoryName(path)!, Path.GetFileName(path), Path.Exists, directory);
 
@@ -222,11 +259,11 @@ public static class WindowsFileTransfer
 
     private static async Task<FileReplacement?> ReplaceFileAsync(string source, string target, bool move,
         FileConflictDetails incoming, FileConflictDetails existing, string sourceIdentity, string targetIdentity, CancellationToken token,
-        ReplacementBackupBudget budget, bool retainUndo, IProgress<FileCopyProgress>? byteProgress)
+        ReplacementBackupBudget budget, bool retainUndo, IProgress<FileCopyProgress>? byteProgress, Guid backupBatch)
     {
         var parent = Path.GetDirectoryName(target)!;
         var staged = Path.Combine(parent, ".filesmate-copy-" + Guid.NewGuid().ToString("N"));
-        var backupDirectory = Path.Combine(parent, ".filesmate-history-" + Guid.NewGuid().ToString("N"));
+        var backupDirectory = retainUndo ? ReplacementBackupLayout.EntryDirectory(parent, backupBatch, Guid.NewGuid()) : null;
         // Copying a replacement needs its incoming bytes free even without undo.
         // Leave a reserve for the filesystem and other work; never start by removing the old version.
         var space = new DriveInfo(Path.GetPathRoot(parent)!);
@@ -239,13 +276,13 @@ public static class WindowsFileTransfer
         IDisposable? lease = null;
         if (retainUndo)
         {
-            lease = budget.Reserve(backupDirectory, backupBytes,
-                () => new WindowsLocalFileOperations().CreateDirectory(backupDirectory, failIfExists: true));
+            lease = budget.Reserve(backupDirectory!, backupBytes,
+                () => ReplacementBackupLayout.CreateEntryDirectory(backupDirectory!));
         }
         // Even an operation without retained undo needs a temporary previous version while
         // ReplaceFile commits. Native errors 1176/1177 can otherwise remove the old target.
-        if (!retainUndo) new WindowsLocalFileOperations().CreateDirectory(backupDirectory, failIfExists: true);
-        var backup = Path.Combine(backupDirectory, Path.GetFileName(target));
+        var backup = backupDirectory is not null ? Path.Combine(backupDirectory, Path.GetFileName(target))
+            : Path.Combine(parent, ".filesmate-rollback-" + Guid.NewGuid().ToString("N"));
         var leaseTransferred = false;
         var stagedOwned = false;
         var sourceWasMoved = false;
@@ -253,7 +290,7 @@ public static class WindowsFileTransfer
         var sourceRemoved = false;
         try
         {
-            File.SetAttributes(backupDirectory, FileAttributes.Hidden);
+            if (backupDirectory is not null) File.SetAttributes(backupDirectory, FileAttributes.Hidden);
             // Deny concurrent writers while preparing the full replacement. Delete sharing
             // permits the subsequent filesystem rename; no file is ever opened for truncation.
             using var sourceGuard = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
@@ -316,7 +353,7 @@ public static class WindowsFileTransfer
             if (File.Exists(backup))
             {
                 // A recoverable exceptional result must be visible even with hidden files disabled.
-                try { File.SetAttributes(backupDirectory, File.GetAttributes(backupDirectory) & ~FileAttributes.Hidden); }
+                try { if (backupDirectory is not null) File.SetAttributes(backupDirectory, File.GetAttributes(backupDirectory) & ~FileAttributes.Hidden); }
                 catch (Exception visibilityError) when (IsOperationError(visibilityError)) { /* The explicit path below remains available. */ }
                 if (replacementPublished)
                 {
@@ -348,7 +385,11 @@ public static class WindowsFileTransfer
             // A successful replacement keeps its previous version until its undo record expires.
             try
             {
-                if (!File.Exists(backup) && Directory.Exists(backupDirectory)) Directory.Delete(backupDirectory, recursive: false);
+                if (backupDirectory is not null && !File.Exists(backup) && Directory.Exists(backupDirectory))
+                {
+                    Directory.Delete(backupDirectory, recursive: false);
+                    ReplacementBackupLayout.RemoveEmptyParents(backupDirectory);
+                }
             }
             finally { if (!leaseTransferred) lease?.Dispose(); }
         }

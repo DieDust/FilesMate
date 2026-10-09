@@ -6,7 +6,8 @@ namespace FilesMate.App.Views;
 public sealed partial class NavigatorPage
 {
     private sealed record NavigationViewport(double Offset, string[] SelectedNames);
-    private sealed record PendingNavigationViewport(string Path, long Generation, NavigationViewport Viewport);
+    private sealed record PendingNavigationViewport(string Path, long Generation, NavigationViewport Viewport,
+        long UserInteractionVersion);
     private readonly Dictionary<PaneViewModel, Dictionary<string, NavigationViewport>> _navigationViewports = [];
     private readonly Dictionary<PaneViewModel, PendingNavigationViewport> _pendingNavigationViewports = [];
 
@@ -16,13 +17,16 @@ public sealed partial class NavigatorPage
             : ReferenceEquals(sender, _rightVm?.Navigation) ? _rightVm
             : ReferenceEquals(sender, _thirdVm?.Navigation) ? _thirdVm : null;
         if (_disposed || vm is null) return;
+        // Refresh can keep the same path and editor text. It still supersedes
+        // an earlier clipboard read owned by this active pane.
+        if (ReferenceEquals(vm, ViewModel)) Omni.CancelPendingPathPaste();
         if (!_navigationViewports.TryGetValue(vm, out var locations))
             _navigationViewports[vm] = locations = new(StringComparer.OrdinalIgnoreCase);
         var surface = SurfaceOf(vm);
         // The controller still exposes the folder being left, and its entries
         // have not been cleared. Do not overwrite a saved position with a view
         // that is still loading or waiting for its own restoration.
-        if (!_restoringClosedTab && !_pendingNavigationViewports.ContainsKey(vm)
+        if (!_restoringClosedTab && surface.ViewBinding?.Recursive is null && !_pendingNavigationViewports.ContainsKey(vm)
             && !vm.IsLoading && vm.Navigation.CurrentPath is { } path
             && vm.Store is not null && vm.ViewIndex is { } index && surface.IsBoundTo(vm.Store, index))
         {
@@ -32,22 +36,25 @@ public sealed partial class NavigatorPage
         }
         _pendingNavigationViewports.Remove(vm);
         if (!_restoringClosedTab && locations.TryGetValue(intent.Path, out var saved))
-            _pendingNavigationViewports[vm] = new(intent.Path, intent.Generation, saved);
+            _pendingNavigationViewports[vm] = new(intent.Path, intent.Generation, saved, surface.UserInteractionVersion);
     }
 
     private void TryRestoreNavigationViewport(PaneViewModel vm)
     {
-        if (_disposed || !_pendingNavigationViewports.TryGetValue(vm, out var pending)) return;
+        if (_disposed || vm.IsRecursive || !_pendingNavigationViewports.TryGetValue(vm, out var pending)) return;
+        var surface = SurfaceOf(vm);
         if (vm.Navigation.CurrentGeneration != pending.Generation
-            || !string.Equals(vm.Navigation.CurrentPath, pending.Path, StringComparison.OrdinalIgnoreCase))
+            || !string.Equals(vm.Navigation.CurrentPath, pending.Path, StringComparison.OrdinalIgnoreCase)
+            || surface.UserInteractionVersion != pending.UserInteractionVersion)
         {
+            // First content can be used before enumeration finishes. Once the user
+            // takes control, the old location's viewport no longer owns this load.
             _pendingNavigationViewports.Remove(vm);
             return;
         }
         if (!IsLoaded || vm.IsLoading || _restoringViews.ContainsKey(vm) || _applyingView.Contains(vm)
             || vm.ViewIndex is not { } index || index.Generation != pending.Generation || index.Sort != vm.Sort)
             return;
-        var surface = SurfaceOf(vm);
         if (!surface.IsBoundTo(vm.Store, index)) return;
         _pendingNavigationViewports.Remove(vm);
         // An explicit reveal (search result, newly created file, etc.) takes priority.
@@ -55,6 +62,11 @@ public sealed partial class NavigatorPage
             && string.Equals(FolderCustomizationStore.Key(Path.GetDirectoryName(selected)),
                 FolderCustomizationStore.Key(pending.Path), StringComparison.OrdinalIgnoreCase)) return;
         surface.RestoreSelectedNames(pending.Viewport.SelectedNames);
-        surface.RestoreScrollOffset(pending.Viewport.Offset);
+        // Selection notifications can synchronously navigate or accept new input.
+        // Do not queue an old scroll restoration after that ownership changed.
+        if (_disposed || vm.Navigation.CurrentGeneration != pending.Generation
+            || !string.Equals(vm.Navigation.CurrentPath, pending.Path, StringComparison.OrdinalIgnoreCase)
+            || surface.UserInteractionVersion != pending.UserInteractionVersion) return;
+        surface.RestoreScrollOffset(pending.Viewport.Offset, preserveExactOffset: true);
     }
 }

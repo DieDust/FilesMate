@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -22,4 +22,16 @@
     <ProjectReference Include="..\..\src\FilesMate.Core\FilesMate.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="../../src/FilesMate.App/Models/ExplorerPreferences.cs" Link="DepthPreferences/Models/ExplorerPreferences.cs" />
+    <Compile Include="../../src/FilesMate.App/Models/ToolbarToolCatalog.cs" Link="DepthPreferences/Models/ToolbarToolCatalog.cs" />
+    <Compile Include="../../src/FilesMate.App/Models/PaneArrangement.cs" Link="DepthPreferences/Models/PaneArrangement.cs" />
+    <Compile Include="../../src/FilesMate.App/Models/ItemOpeningMode.cs" Link="DepthPreferences/Models/ItemOpeningMode.cs" />
+    <Compile Include="../../src/FilesMate.App/Models/TabMemoryMode.cs" Link="DepthPreferences/Models/TabMemoryMode.cs" />
+    <Compile Include="../../src/FilesMate.App/Models/ThumbnailQuality.cs" Link="DepthPreferences/Models/ThumbnailQuality.cs" />
+    <Compile Include="../../src/FilesMate.App/Services/ExplorerPreferencesService.cs" Link="DepthPreferences/Services/ExplorerPreferencesService.cs" />
+    <Compile Include="../../src/FilesMate.App/Services/SettingsFileWriter.cs" Link="DepthPreferences/Services/SettingsFileWriter.cs" />
+  </ItemGroup>
+
+  <ItemGroup><Compile Include="..\..\src\FilesMate.App\Services\FileOperationLifetime.cs" Link="Lifetime\FileOperationLifetime.cs" /></ItemGroup>
 </Project>

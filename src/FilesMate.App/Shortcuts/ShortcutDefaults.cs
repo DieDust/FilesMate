@@ -15,6 +15,7 @@ public static class ShortcutDefaults
         Define(ShortcutAction.CommandPalette, "CommandPalette", ShortcutKey.P, ShortcutModifiers.Control | ShortcutModifiers.Shift),
         Define(ShortcutAction.EditAddress, "Shortcut_EditAddress", ShortcutKey.L, ShortcutModifiers.Control),
         Define(ShortcutAction.FilterFolder, "Shortcut_FilterFolder", ShortcutKey.F, ShortcutModifiers.Control),
+        Define(ShortcutAction.ShowFolderFilters, "Inline_Filter", ShortcutKey.None),
         Define(ShortcutAction.Refresh, "Command_Refresh", ShortcutKey.F5),
         Define(ShortcutAction.Cut, "Command_Cut", ShortcutKey.X, ShortcutModifiers.Control),
         Define(ShortcutAction.Copy, "Command_Copy", ShortcutKey.C, ShortcutModifiers.Control),

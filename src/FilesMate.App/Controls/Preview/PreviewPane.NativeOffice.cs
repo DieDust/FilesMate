@@ -41,13 +41,16 @@ public sealed partial class PreviewPane
         if (!session.IsAlive) { ReleaseNativeOffice(); return false; }
         LoadingRing.IsActive = false;
         LoadingRing.Visibility = Visibility.Collapsed;
-        BindFromPath(path);
         CompatiblePreviewButton.Visibility = Visibility.Visible;
         CompatiblePreviewButton.Content = Localization.StringTable.Get("PreviewCompatible");
         _hasContent = true;
         ApplyPaneMode();
         ContentHost.LayoutUpdated += NativeOffice_LayoutUpdated;
         UpdateNativeOfficeBounds();
+        // A healthy native preview must remain usable while unrelated slow
+        // filesystem requests occupy the bounded metadata workers.
+        await BindFromPathAsync(path, generation, token, () => ReferenceEquals(_nativeOffice, session));
+        token.ThrowIfCancellationRequested();
         return true;
     }
 
@@ -67,14 +70,14 @@ public sealed partial class PreviewPane
         ShowLoading();
         try
         {
-            var result = await _service!.LoadAsync(new PreviewRequest(path, generation), token);
+            var result = await _service!.LoadAsync(new PreviewRequest(path, generation), token, _previewOwner);
             if (token.IsCancellationRequested || generation != _generation) return;
             await ShowResultAsync(result, generation, token);
             if (token.IsCancellationRequested) return;
             _hasContent = true;
             ApplyPaneMode();
         }
-        catch (OperationCanceledException) { return; }
+        catch (OperationCanceledException) { SettleCancelledLoad(token); return; }
         catch (Exception error) { if (!token.IsCancellationRequested) ShowDetails(error.Message); }
         if (token.IsCancellationRequested || generation != _generation) return;
         _nativeRetry = async () =>

@@ -22,4 +22,5 @@ public enum ShortcutAction
     OpenTerminal,
     ReopenTab,
     CommandPalette,
+    ShowFolderFilters,
 }

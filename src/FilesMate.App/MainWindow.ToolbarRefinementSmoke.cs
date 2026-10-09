@@ -33,7 +33,7 @@ public sealed partial class MainWindow
             var fixture = Directory.CreateDirectory(Path.Combine(AppContext.BaseDirectory, "refinement-fixture-" + Guid.NewGuid().ToString("N")[..6])).FullName;
             for (var i = 0; i < 60; i++) File.WriteAllText(Path.Combine(fixture, $"Photo-{i:D2}.txt"), "test");
             Directory.CreateDirectory(Path.Combine(fixture, "Albums"));
-            await App.SetExplorerPreferencesAsync(App.ExplorerPreferences with { HiddenToolbarTools = null, GroupingClickCycle = null, DefaultEntryGrouping = EntryGrouping.Mixed });
+            await App.SetExplorerPreferencesAsync(App.ExplorerPreferences with { HiddenToolbarTools = null, ToolbarOrder = null, GroupingClickCycle = null, DefaultEntryGrouping = EntryGrouping.Mixed });
             AddNavigatorTab(fixture);
             await Wait(() => TabHost.Content is NavigatorPage p && p.ViewModel.AddressText == fixture && !p.ViewModel.IsLoading && p.ViewModel.ItemCount == 61, "fixture");
             var page = (NavigatorPage)TabHost.Content;
@@ -51,20 +51,93 @@ public sealed partial class MainWindow
                 Require(((FontIcon)toolbar.FindName("HiddenFilesIcon")).Glyph == (shown ? "\uE890" : "\uED1A"), "Eye state did not change.");
             }
             report["HiddenFilesTwoDistinctGlyphs"] = true;
-            var custom = (Flyout)Call(toolbar, "CreateCustomizationMenu")!;
-            custom.ShowAt(toolbar); await Task.Delay(160);
-            var checks = PolishDescendants(custom.Content).OfType<CheckBox>().ToArray();
-            Require(checks.Length >= 16, "Flat toolbar choices are missing.");
-            var copy = checks.Single(c => c.Tag is ToolbarTool.Copy);
-            Toggle(copy); await Wait(() => App.ExplorerPreferences.HiddenToolbarTools?.Contains(ToolbarTool.Copy) == true, "hide copy");
-            Require(custom.IsOpen, "Customization closed on selection.");
-            Toggle(copy); await Wait(() => App.ExplorerPreferences.HiddenToolbarTools?.Contains(ToolbarTool.Copy) != true, "show copy");
-            var groupingCheck = checks.Single(c => c.Tag is ToolbarTool.Grouping);
-            Toggle(groupingCheck); await Wait(() => ((FrameworkElement)toolbar.FindName("GroupingGroup")).Visibility == Visibility.Collapsed, "hide grouping tool");
-            Toggle(groupingCheck); await Wait(() => ((Button)toolbar.FindName("GroupingButton")).Visibility == Visibility.Visible, "restore grouping tool");
-            await Task.Delay(180);
-            await CapturePopupAsync((FrameworkElement)custom.Content, "refinement-toolbar-light.png"); custom.Hide();
-            report["FlatCustomizationStaysOpen"] = true;
+            var preferencesBefore = JsonSerializer.Serialize(App.ExplorerPreferences);
+            var custom = await OpenToolbarEditor();
+            var lists = PolishDescendants(custom.Content).OfType<ListView>().ToArray();
+            Require(lists.Length == 2 && lists.All(list => list.ItemsPanelRoot is ItemsStackPanel { Orientation: Orientation.Horizontal }), "The toolbar editor is not two horizontal groups.");
+            Require(lists.Sum(list => list.Items.Count) == ToolbarToolCatalog.All.Count, "The shared toolbar catalog has missing preview commands.");
+            var previewNew = PolishDescendants(EditorRow(custom, ToolbarTool.New)).OfType<Button>().Single();
+            Require(!ReferenceEquals(previewNew, toolbar.FindName("NewButton")) && previewNew.Style == ((Button)toolbar.FindName("NewButton")).Style,
+                "New preview does not reuse the actual primary command styling.");
+            Require(previewNew.Flyout is null && !previewNew.IsHitTestVisible && !previewNew.IsTabStop, "Preview commands are interactive.");
+            var shownBefore = App.ExplorerPreferences.ShowHiddenFiles;
+            Invoke(PolishDescendants(EditorRow(custom, ToolbarTool.HiddenFiles)).OfType<Button>().Single());
+            Require(App.ExplorerPreferences.ShowHiddenFiles == shownBefore, "Inert preview changed the hidden-files preference.");
+            await RemoveDraftTool(custom, ToolbarTool.Copy);
+            SelectDraftTool(custom, ToolbarTool.Paste); Invoke(EditorButton(custom, "ToolbarMoveLeft"));
+            await Wait(() => Array.IndexOf(EditorOrder(custom, ToolbarZone.FileCommands), ToolbarTool.Paste) < Array.IndexOf(EditorOrder(custom, ToolbarZone.FileCommands), ToolbarTool.Cut), "draft move left");
+            Require(JsonSerializer.Serialize(App.ExplorerPreferences) == preferencesBefore, "Draft edit persisted before Save.");
+            await CapturePopupAsync((FrameworkElement)custom.Content, "refinement-toolbar-horizontal-light.png");
+            Invoke(EditorButton(custom, "ToolbarCancel"));
+            await Wait(() => !custom.IsOpen, "cancel toolbar draft");
+            Require(JsonSerializer.Serialize(App.ExplorerPreferences) == preferencesBefore, "Cancel persisted toolbar changes.");
+            report["HorizontalActualPreviewAndCancelIsolation"] = true;
+
+            custom = await OpenToolbarEditor(); await RemoveDraftTool(custom, ToolbarTool.Copy);
+            custom.Hide(); await Task.Delay(100);
+            Require(JsonSerializer.Serialize(App.ExplorerPreferences) == preferencesBefore, "Dismiss persisted toolbar changes.");
+            report["ProgrammaticDismissDiscardsToolbarDraft"] = true;
+
+            custom = await OpenToolbarEditor();
+            await RemoveDraftTool(custom, ToolbarTool.Copy); await RemoveDraftTool(custom, ToolbarTool.Filters);
+            SelectDraftTool(custom, ToolbarTool.Paste); Invoke(EditorButton(custom, "ToolbarMoveLeft"));
+            await Wait(() => Array.IndexOf(EditorOrder(custom, ToolbarZone.FileCommands), ToolbarTool.Paste) < Array.IndexOf(EditorOrder(custom, ToolbarZone.FileCommands), ToolbarTool.Cut), "draft move left");
+            var expectedFiles = EditorOrder(custom, ToolbarZone.FileCommands);
+            var expectedViews = EditorOrder(custom, ToolbarZone.ViewTools);
+            Require(expectedFiles.Take(3).SequenceEqual(new[] { ToolbarTool.New, ToolbarTool.Paste, ToolbarTool.Cut }), "Move-left did not change horizontal order.");
+            Require(JsonSerializer.Serialize(App.ExplorerPreferences) == preferencesBefore, "Remove/order persisted before Save.");
+            Invoke(EditorButton(custom, "ToolbarSave"));
+            await Wait(() => !custom.IsOpen && App.ExplorerPreferences.HiddenToolbarTools?.Contains(ToolbarTool.Copy) == true, "save toolbar draft");
+            Require(App.ExplorerPreferences.HiddenToolbarTools!.Contains(ToolbarTool.Filters), "New Filter command cannot be hidden.");
+            var savedToolbar = new ExplorerPreferencesService(Program.SettingsPath(ExplorerPreferencesService.DefaultFilePath)).Load();
+            Require(savedToolbar.HiddenToolbarTools?.Contains(ToolbarTool.Copy) == true && savedToolbar.HiddenToolbarTools!.Contains(ToolbarTool.Filters), "Toolbar hidden choices did not reach storage.");
+            Require(ToolbarToolCatalog.NormalizeOrder(savedToolbar.ToolbarOrder).SequenceEqual(ToolbarToolCatalog.NormalizeOrder(App.ExplorerPreferences.ToolbarOrder)), "Toolbar order did not round-trip through storage.");
+            custom = await OpenToolbarEditor();
+            Require(EditorOrder(custom, ToolbarZone.FileCommands).SequenceEqual(expectedFiles) && EditorOrder(custom, ToolbarZone.ViewTools).SequenceEqual(expectedViews), "Saved preview order changed on reopen.");
+            Invoke(EditorButton(custom, "ToolbarAddCopy"));
+            await Wait(() => EditorOrder(custom, ToolbarZone.FileCommands).Contains(ToolbarTool.Copy), "add copy draft");
+            Invoke(EditorButton(custom, "ToolbarAddFilters"));
+            await Wait(() => EditorOrder(custom, ToolbarZone.ViewTools).Contains(ToolbarTool.Filters), "add filters draft");
+            Require(EditorOrder(custom, ToolbarZone.FileCommands).Contains(ToolbarTool.Copy) && EditorOrder(custom, ToolbarZone.ViewTools).Contains(ToolbarTool.Filters), "Hidden command palette did not restore Copy/Filters.");
+            var savedBeforeReset = JsonSerializer.Serialize(App.ExplorerPreferences);
+            Invoke(EditorButton(custom, "ToolbarRestore"));
+            await Wait(() => Enum.GetValues<ToolbarZone>().All(zone => EditorOrder(custom, zone).SequenceEqual(ToolbarToolCatalog.Ordered(null, zone, false).Select(d => d.Id))), "reset draft order");
+            Require(JsonSerializer.Serialize(App.ExplorerPreferences) == savedBeforeReset, "Reset persisted before Save.");
+            Invoke(EditorButton(custom, "ToolbarCancel")); await Wait(() => !custom.IsOpen, "cancel toolbar reset");
+            Require(JsonSerializer.Serialize(App.ExplorerPreferences) == savedBeforeReset, "Cancel after Reset changed settings.");
+            report["ToolbarSaveReopenPaletteAndResetCancel"] = true;
+
+            custom = await OpenToolbarEditor(); Invoke(EditorButton(custom, "ToolbarRestore"));
+            await Wait(() => Enum.GetValues<ToolbarZone>().All(zone => EditorOrder(custom, zone).SequenceEqual(ToolbarToolCatalog.Ordered(null, zone, false).Select(d => d.Id))), "reset draft order");
+            AppWindow.Resize(new(760, 900)); await Task.Delay(180);
+            var horizontal = PolishDescendants(custom.Content).OfType<ScrollViewer>().Single(item => Microsoft.UI.Xaml.Automation.AutomationProperties.GetAutomationId(item) == "ToolbarHorizontalPreview");
+            Require(horizontal.ScrollableWidth > 0, "Narrow preview has no horizontal overflow.");
+            horizontal.ChangeView(horizontal.ScrollableWidth, null, null, true); await Task.Delay(100);
+            Require(horizontal.HorizontalOffset > 0, "Narrow preview cannot scroll horizontally.");
+            await CapturePopupAsync((FrameworkElement)custom.Content, "refinement-toolbar-horizontal-narrow.png");
+            Invoke(EditorButton(custom, "ToolbarSave"));
+            await Wait(() => !custom.IsOpen && App.ExplorerPreferences.HiddenToolbarTools is null && App.ExplorerPreferences.ToolbarOrder is null, "save default toolbar");
+            AppWindow.Resize(new(2400, 1250)); await Task.Delay(120);
+            report["ToolbarDraftResetSaveAndHorizontalOverflow"] = true;
+            report["ToolbarPhysicalDragCtrlArrowAndPointerLightDismiss"] = "Not exercised by this managed smoke; separate native input gates remain required.";
+
+            async Task<Flyout> OpenToolbarEditor()
+            {
+                var editor = (Flyout)Call(toolbar, "CreateCustomizationMenu")!;
+                editor.ShowAt(toolbar); await Task.Delay(160); return editor;
+            }
+            static Button EditorButton(Flyout editor, string id) => PolishDescendants(editor.Content).OfType<Button>()
+                .Single(button => Microsoft.UI.Xaml.Automation.AutomationProperties.GetAutomationId(button) == id);
+            static ListView EditorList(Flyout editor, ToolbarZone zone) => PolishDescendants(editor.Content).OfType<ListView>()
+                .Single(list => Microsoft.UI.Xaml.Automation.AutomationProperties.GetAutomationId(list) == "ToolbarOrder" + zone);
+            static Grid EditorRow(Flyout editor, ToolbarTool id) => EditorList(editor, ToolbarToolCatalog.Get(id).Zone).Items.OfType<Grid>().Single(item => item.Tag is ToolbarTool tool && tool == id);
+            static ToolbarTool[] EditorOrder(Flyout editor, ToolbarZone zone) => EditorList(editor, zone).Items.OfType<Grid>().Select(item => (ToolbarTool)item.Tag).ToArray();
+            static void SelectDraftTool(Flyout editor, ToolbarTool id) => EditorList(editor, ToolbarToolCatalog.Get(id).Zone).SelectedItem = EditorRow(editor, id);
+            static async Task RemoveDraftTool(Flyout editor, ToolbarTool id)
+            {
+                SelectDraftTool(editor, id); Invoke(EditorButton(editor, "ToolbarRemove"));
+                await Wait(() => !EditorOrder(editor, ToolbarToolCatalog.Get(id).Zone).Contains(id), "remove draft " + id);
+            }
 
             var sort = (Flyout)((Button)toolbar.FindName("SortButton")).Flyout;
             sort.ShowAt((Button)toolbar.FindName("SortButton")); await Task.Delay(160);
@@ -124,7 +197,9 @@ public sealed partial class MainWindow
             Require(row.ActualWidth >= surface.ActualWidth - 50, "Detail backgrounds do not span the viewport.");
             var menu = (MenuFlyout)((Button)toolbar.FindName("ViewMenuButton")).Flyout;
             menu.ShowAt((Button)toolbar.FindName("ViewMenuButton")); await Task.Delay(140);
-            Require(menu.Items.OfType<ToggleMenuFlyoutItem>().Count() == 3 && menu.Items.OfType<MenuFlyoutSubItem>().First().Items.Count == 7, "View options missing.");
+            Require(menu.Items.OfType<ToggleMenuFlyoutItem>().Count() == 4
+                && menu.Items.OfType<ToggleMenuFlyoutItem>().Any(item => item.Text == StringTable.Get("Recursive_Toggle"))
+                && menu.Items.OfType<MenuFlyoutSubItem>().First().Items.Count == 7, "View options missing.");
             await Capture(VisualTreeHelper.GetOpenPopupsForXamlRoot(surface.XamlRoot).Select(p => p.Child).OfType<MenuFlyoutPresenter>().Last(), "refinement-view-menu.png"); menu.Hide();
             report["ListZoomKeepsLayoutAndScalesRows"] = true;
             report["IntegratedViewMenuAndFullWidthRows"] = true;

@@ -16,18 +16,39 @@ public sealed partial class FileDetailsSurface
     private readonly ListScrollState _listWheel = new();
     private ScrollContentPresenter? _listWheelPresenter;
     private TextBlock? _listNameMeasure;
-    private DetailsColumn[]? _listColumns;
+    private readonly Dictionary<double, DetailsColumn[]> _listColumnsByWidth = [];
+    private AppearanceSettings? _listTypographySource;
+    private AppearanceSettings? _listTypography;
+    private double _listTypographyScale;
     private CompactListGeometry _listGeometry = CompactListGeometry.Uniform(1, 0, CompactListMetrics.ColumnWidth);
     private double[] _listPendingWidths = [];
     private int _listMeasureRows;
     private int _listMeasureIndex;
+    private int[] _listMeasuredEntries = [];
+    private DispatcherQueueTimer? _listMeasureTimer;
+    private long _listMeasureQuietUntil;
     private long _listMeasureVersion;
     private bool _listMeasurePending;
     private bool _updatingColumnScroller;
+    private bool _listColumnThumbDragging;
     public int ListZoomPercent { get; private set; } = 100;
     private double ListScale => _layout == FileLayoutKind.List ? ListZoomPercent / 100d : 1;
-    private AppearanceSettings RowTypography => _layout == FileLayoutKind.List ? _typography with
-    { FileNameFontSize = _typography.FileNameFontSize * ListScale, FileDetailsFontSize = _typography.FileDetailsFontSize * ListScale } : _typography;
+    private AppearanceSettings RowTypography
+    {
+        get
+        {
+            if (_layout != FileLayoutKind.List) return _typography;
+            var scale = ListScale;
+            if (!ReferenceEquals(_listTypographySource, _typography) || _listTypographyScale != scale)
+            {
+                _listTypographySource = _typography;
+                _listTypographyScale = scale;
+                _listTypography = _typography with
+                { FileNameFontSize = _typography.FileNameFontSize * scale, FileDetailsFontSize = _typography.FileDetailsFontSize * scale };
+            }
+            return _listTypography!;
+        }
+    }
 
     public void SetListZoom(int percent)
     {
@@ -83,25 +104,30 @@ public sealed partial class FileDetailsSurface
             row.ApplyColumns(_detailColumns);
             row.MinWidth = 0;
             row.ApplyTypography(RowTypography, XamlRoot?.RasterizationScale ?? 1);
-            row.SetIconScale(1);
             return;
         }
         row.MinWidth = 0;
         var width = ListGeometry.WidthAt(Math.Max(0, viewIndex ?? row.ViewIndex) / ListRows);
         var nameWidth = width - CompactListMetrics.ColumnGap - FileColumnLayout.ContentLeft - FileColumnLayout.ContentRight
             - Math.Max(FileColumnLayout.GlyphWidth, FileColumnLayout.DetailsIconSize * ListScale + 4) - FileColumnLayout.AccentWidth;
-        if (_listColumns is null || _listColumns[0].Width != nameWidth)
-            _listColumns = DetailsColumn.Defaults().Select(c => c with
+        if (!_listColumnsByWidth.TryGetValue(nameWidth, out var columns))
+        {
+            // Realized columns repeatedly reuse these immutable descriptions.
+            // Retention is bounded independently of directory size or zooms.
+            if (_listColumnsByWidth.Count >= 32) _listColumnsByWidth.Clear();
+            columns = DetailsColumn.Defaults().Select(c => c with
             { Visible = c.Id == DetailsColumnId.Name, Width = c.Id == DetailsColumnId.Name ? nameWidth : c.Width }).ToArray();
-        row.ApplyColumns(_listColumns);
+            _listColumnsByWidth.Add(nameWidth, columns);
+        }
+        row.ApplyColumns(columns);
         row.ApplyTypography(RowTypography, XamlRoot?.RasterizationScale ?? 1);
-        row.SetIconScale(ListScale);
     }
 
     private void ScheduleListNameMeasurement()
     {
-        var version = ++_listMeasureVersion;
+        ++_listMeasureVersion;
         _listMeasurePending = false;
+        _listMeasureTimer?.Stop();
         if (_layout != FileLayoutKind.List || _resourcesReleased) return;
         _listNameMeasure ??= new TextBlock
         {
@@ -109,55 +135,115 @@ public sealed partial class FileDetailsSurface
             TextWrapping = TextWrapping.NoWrap,
         };
         _listNameMeasure.XamlRoot = XamlRoot;
-        FileTypography.Apply(_listNameMeasure, RowTypography, RowTypography.FileNameFontSize);
-        if (RowTypography.FileFontFamily is null) _listNameMeasure.FontFamily = FontFamily;
+        var typography = RowTypography;
+        FileTypography.Apply(_listNameMeasure, typography, typography.FileNameFontSize);
+        if (typography.FileFontFamily is null) _listNameMeasure.FontFamily = FontFamily;
         _listMeasureIndex = 0;
         _listMeasureRows = CompactListMetrics.Rows(Scroller.ActualHeight, RowHeight);
         _listPendingWidths = new double[(int)Math.Ceiling(_items.Count / (double)_listMeasureRows)];
         Array.Fill(_listPendingWidths, CompactListMetrics.WidthForName(0, ListScale));
-        _listMeasurePending = DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () => MeasureListNames(version));
+        _listMeasuredEntries = new int[_listPendingWidths.Length];
+        _listMeasurePending = true;
+        _listMeasureTimer ??= CreateListMeasureTimer();
+        _listMeasureTimer.Start();
+    }
+
+    private DispatcherQueueTimer CreateListMeasureTimer()
+    {
+        var timer = DispatcherQueue.CreateTimer();
+        timer.IsRepeating = false;
+        timer.Interval = TimeSpan.FromMilliseconds(32);
+        timer.Tick += (_, _) => MeasureListNames(_listMeasureVersion);
+        return timer;
     }
 
     private void MeasureListNames(long version)
     {
         if (version != _listMeasureVersion || !_listMeasurePending) return;
         if (_layout != FileLayoutKind.List || !IsLoaded || _resourcesReleased) { _listMeasurePending = false; return; }
-        // Measure the whole view, including offscreen names, without blocking input
-        // or keeping a width/cache object per file in large folders.
+        // Yield during movement. Continuous low-priority dispatcher callbacks
+        // otherwise occupy a core until every name in a large folder is shaped.
+        if (_inputClock.ElapsedMilliseconds < _listMeasureQuietUntil
+            || _listWheel.HasTarget || _thumbnailDecision.Fast || _listColumnThumbDragging || _scrollbarDragging || IsMemoryReclamationBusy)
+        { _listMeasureTimer?.Start(); return; }
         var watch = Stopwatch.StartNew();
-        while (_listMeasureIndex < _items.Count)
+        var first = ListGeometry.ClampedColumnAt(Scroller.HorizontalOffset);
+        var last = ListGeometry.ClampedColumnAt(Scroller.HorizontalOffset + Scroller.ViewportWidth) + 1;
+        last = Math.Min(last, _listPendingWidths.Length - 1);
+        var visibleChanged = false;
+        while (_listMeasureIndex < _listPendingWidths.Length)
         {
-            var column = _listMeasureIndex / _listMeasureRows;
-            if (_items.TryGetEntry(_listMeasureIndex++, out var entry))
+            // Finish visible columns first, then fill the rest in bounded idle
+            // slices. Only per-column progress/width is retained, never a layout
+            // or measured string object for each file.
+            var column = -1;
+            for (var c = first; c <= last; c++)
+                if (_listMeasuredEntries[c] < Math.Min(_listMeasureRows, _items.Count - c * _listMeasureRows))
+                { column = c; break; }
+            if (column < 0)
+            {
+                while (_listMeasureIndex < _listPendingWidths.Length
+                    && _listMeasuredEntries[_listMeasureIndex] >= Math.Min(_listMeasureRows, _items.Count - _listMeasureIndex * _listMeasureRows))
+                    ++_listMeasureIndex;
+                if (_listMeasureIndex == _listPendingWidths.Length) break;
+                column = _listMeasureIndex;
+            }
+            var index = column * _listMeasureRows + _listMeasuredEntries[column]++;
+            if (_items.TryGetEntry(index, out var entry))
             {
                 _listNameMeasure!.Text = entry.Name;
                 _listNameMeasure.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                if (version != _listMeasureVersion || !_listMeasurePending || _layout != FileLayoutKind.List) return;
                 var width = CompactListMetrics.WidthForName(_listNameMeasure.DesiredSize.Width + 1 / (XamlRoot?.RasterizationScale ?? 1), ListScale);
                 _listPendingWidths[column] = Math.Max(_listPendingWidths[column], width);
             }
             if (_listPendingWidths[column] >= CompactListMetrics.MaximumColumnWidth * ListScale)
-                _listMeasureIndex = Math.Min(_items.Count, (column + 1) * _listMeasureRows);
-            if (watch.Elapsed.TotalMilliseconds >= 4)
+                _listMeasuredEntries[column] = Math.Min(_listMeasureRows, _items.Count - column * _listMeasureRows);
+            if (column >= first && column <= last
+                && _listMeasuredEntries[column] == Math.Min(_listMeasureRows, _items.Count - column * _listMeasureRows))
+                visibleChanged = true;
+            if (watch.Elapsed.TotalMilliseconds >= .75)
             {
-                _listMeasurePending = DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () => MeasureListNames(version));
+                PublishListMeasuredWidths(first, last, all: false);
+                _listMeasureTimer?.Start();
                 return;
             }
         }
+        if (visibleChanged) PublishListMeasuredWidths(first, last, all: false);
         _listMeasurePending = false;
-        _listGeometry = new CompactListGeometry(_listMeasureRows, _items.Count, _listPendingWidths);
+        PublishListMeasuredWidths(first, last, all: true);
         _listPendingWidths = [];
+        _listMeasuredEntries = [];
         _listNameMeasure!.Text = string.Empty;
-        UpdateListMetrics();
         SchedulePendingReveal();
+    }
+
+    private void PublishListMeasuredWidths(int first, int last, bool all)
+    {
+        if (_listGeometry.Rows != _listMeasureRows || _listGeometry.Count != _items.Count) return;
+        var geometry = _listGeometry.WithMeasuredWidths(_listPendingWidths, _listMeasuredEntries,
+            all ? 0 : first, all ? _listPendingWidths.Length - 1 : last);
+        if (ReferenceEquals(geometry, _listGeometry)) return;
+        var anchor = _listGeometry.ClampedColumnAt(Scroller.HorizontalOffset);
+        var within = Scroller.HorizontalOffset - _listGeometry.LeftAt(anchor);
+        _listGeometry = geometry;
+        UpdateListMetrics();
+        // Preserve the same first file while widths before it change.
+        Scroller.ChangeView(_listGeometry.LeftAt(anchor) + Math.Min(within, _listGeometry.WidthAt(anchor)), 0, null, true);
     }
 
     private void CancelListNameMeasurement()
     {
         ++_listMeasureVersion;
         _listMeasurePending = false;
+        _listMeasureTimer?.Stop();
         _listPendingWidths = [];
+        _listMeasuredEntries = [];
         if (_listNameMeasure is not null) _listNameMeasure.Text = string.Empty;
     }
+
+    private void DeferListNameMeasurementForInput() =>
+        _listMeasureQuietUntil = _inputClock.ElapsedMilliseconds + 250;
 
     private void InitializeListScrolling()
     {
@@ -206,7 +292,7 @@ public sealed partial class FileDetailsSurface
     internal bool HandleListWheelFromWindow(UIElement root, Point position, int delta, bool horizontal)
     {
         if (_layout != FileLayoutKind.List || _resourcesReleased || !IsLoaded) return false;
-        CancelScrollRestore();
+        NotifyUserInteraction();
         _marqueePointer = root.TransformToVisual(Scroller).TransformPoint(position);
         ScrollListWheel(delta, horizontal);
         return true;
@@ -227,7 +313,10 @@ public sealed partial class FileDetailsSurface
             ListColumnScroller.ViewportSize = Math.Max(1,
                 ListGeometry.ClampedColumnAt(Scroller.HorizontalOffset + Scroller.ViewportWidth)
                 - ListGeometry.ClampedColumnAt(Scroller.HorizontalOffset));
-            ListColumnScroller.Value = ListGeometry.ClampedColumnAt(Scroller.HorizontalOffset);
+            // ChangeView may be applied after this sample. While the thumb owns
+            // the requested column, stale viewport feedback must not move it back.
+            if (!_listColumnThumbDragging)
+                ListColumnScroller.Value = ListGeometry.ClampedColumnAt(Scroller.HorizontalOffset);
         }
         finally { _updatingColumnScroller = false; }
     }
@@ -235,10 +324,13 @@ public sealed partial class FileDetailsSurface
     private void ListColumnScroller_ValueChanged(object sender, RangeBaseValueChangedEventArgs args)
     {
         if (_updatingColumnScroller || _layout != FileLayoutKind.List) return;
+        DeferListNameMeasurementForInput();
         var column = (int)Math.Round(args.NewValue, MidpointRounding.AwayFromZero);
         _updatingColumnScroller = true;
         try { ListColumnScroller.Value = column; }
         finally { _updatingColumnScroller = false; }
+        // Publish requested columns during the gesture. Thumbnail/metadata
+        // admission still follows the common viewport speed/settle policy.
         Scroller.CancelDirectManipulations();
         ChangeScrollOffset(ListGeometry.LeftAt(column));
     }

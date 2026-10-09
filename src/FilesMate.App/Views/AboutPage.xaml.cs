@@ -14,6 +14,8 @@ namespace FilesMate.App.Views;
 public sealed partial class AboutPage : UserControl
 {
     private bool _syncingUpdates;
+    private async void FeatureGuide_Click(object sender, RoutedEventArgs e) => await App.ShowFeatureSetupAsync(this);
+    private async void ReleaseGuide_Click(object sender, RoutedEventArgs e) => await App.ShowReleaseTourAsync(this);
     public AboutPage()
     {
         InitializeComponent();

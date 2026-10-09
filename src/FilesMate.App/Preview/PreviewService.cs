@@ -4,8 +4,7 @@ public sealed class PreviewService : IAsyncDisposable
 {
     private readonly IReadOnlyList<IPreviewProvider> _providers;
     private readonly object _gate = new();
-    private CancellationTokenSource? _active;
-    private long _generation;
+    private readonly Dictionary<object, CancellationTokenSource> _active = new(ReferenceEqualityComparer.Instance);
     private bool _disposed;
 
     public PreviewService(IEnumerable<IPreviewProvider> providers)
@@ -20,29 +19,25 @@ public sealed class PreviewService : IAsyncDisposable
 
     public async Task<PreviewResult> LoadAsync(
         PreviewRequest request,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        object? owner = null)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
         request = request.Normalize();
+        owner ??= this;
         CancellationTokenSource current;
         CancellationTokenSource? previous;
         lock (_gate)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
-            previous = _active;
+            _active.TryGetValue(owner, out previous);
             current = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            _active = current;
-            _generation = request.Generation;
+            _active[owner] = current;
         }
 
-        try
-        {
-            previous?.Cancel();
-        }
-        catch (ObjectDisposedException)
-        {
-        }
+        CancelRequest(previous);
 
+        Task<PreviewResult>? pending = null;
         try
         {
             current.Token.ThrowIfCancellationRequested();
@@ -52,11 +47,12 @@ public sealed class PreviewService : IAsyncDisposable
                 return new PreviewResult.Unsupported(request.Path, "No preview provider is registered for this file type.");
             }
 
-            var result = await provider.CreateAsync(request, current.Token).ConfigureAwait(false);
+            pending = provider.CreateAsync(request, current.Token);
+            var result = await pending.WaitAsync(current.Token).ConfigureAwait(false);
             lock (_gate)
             {
                 if (_disposed || current.IsCancellationRequested ||
-                    !ReferenceEquals(_active, current) || _generation != request.Generation)
+                    !_active.TryGetValue(owner, out var active) || !ReferenceEquals(active, current))
                 {
                     throw new OperationCanceledException(current.Token);
                 }
@@ -68,19 +64,43 @@ public sealed class PreviewService : IAsyncDisposable
         {
             lock (_gate)
             {
-                if (ReferenceEquals(_active, current))
+                if (_active.TryGetValue(owner, out var active) && ReferenceEquals(active, current))
                 {
-                    _active = null;
+                    _active.Remove(owner);
                 }
             }
 
-            current.Dispose();
+            if (pending is null || pending.IsCompleted)
+            {
+                _ = pending?.Exception; // Observe a fault racing cancellation.
+                current.Dispose();
+            }
+            else
+            {
+                // Let the view leave promptly even when a provider cannot stop
+                // native work. That work, not the departed view, owns CTS disposal.
+                _ = pending.ContinueWith(completed =>
+                {
+                    _ = completed.Exception;
+                    current.Dispose();
+                }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            }
         }
+    }
+
+    internal int ActiveOwnerCount { get { lock (_gate) return _active.Count; } }
+
+    /// <summary>Release one view's admission immediately; its async frame owns CTS disposal.</summary>
+    public void Cancel(object? owner = null)
+    {
+        CancellationTokenSource? active;
+        lock (_gate) _active.Remove(owner ?? this, out active);
+        CancelRequest(active);
     }
 
     public ValueTask DisposeAsync()
     {
-        CancellationTokenSource? active;
+        CancellationTokenSource[] active;
         lock (_gate)
         {
             if (_disposed)
@@ -89,18 +109,27 @@ public sealed class PreviewService : IAsyncDisposable
             }
 
             _disposed = true;
-            active = _active;
-            _active = null;
+            active = _active.Values.ToArray();
+            _active.Clear();
         }
 
-        try
+        foreach (var request in active)
         {
-            active?.Cancel();
-        }
-        catch (ObjectDisposedException)
-        {
+            CancelRequest(request);
         }
 
         return ValueTask.CompletedTask;
+    }
+
+    private static void CancelRequest(CancellationTokenSource? request)
+    {
+        try { request?.Cancel(); }
+        catch (ObjectDisposedException) { }
+        catch (AggregateException error)
+        {
+            // A faulty provider callback must not prevent other owners from
+            // closing or leave a newly admitted replacement outside its finally.
+            System.Diagnostics.Trace.TraceError("Preview provider cancellation callback failed: {0}", error);
+        }
     }
 }

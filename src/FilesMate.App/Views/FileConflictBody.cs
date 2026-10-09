@@ -54,7 +54,7 @@ internal sealed class FileConflictBody : Grid, IAsyncDisposable
         if (conflict.CanMerge) Action("Conflict_Merge", "Conflict_MergeHint", "\uE8B7", FileConflictAction.Merge, batch);
         if (conflict.CanReplace)
             Action("Conflict_ReplaceFile",
-                conflict.BackupUnavailable ? "Backup_DestructiveHint" : "Conflict_ReplaceHint", "\uE8AB",
+                conflict.BackupDisabled ? "Backup_DisabledHint" : conflict.BackupUnavailable ? "Backup_DestructiveHint" : "Conflict_ReplaceHint", "\uE8AB",
                 conflict.BackupUnavailable ? FileConflictAction.ReplaceWithoutUndo : FileConflictAction.Replace,
                 batch);
         Action("Conflict_SkipFile", "Conflict_SkipHint", "\uE72A", FileConflictAction.Skip, batch);
@@ -112,7 +112,8 @@ internal sealed class FileConflictBody : Grid, IAsyncDisposable
     private void AddNecessaryNotice()
     {
         if (_conflict.ChangedSinceDecision) _header.Children.Add(Label(StringTable.Get("Conflict_Changed"), 12));
-        if (_conflict.BackupUnavailable) _header.Children.Add(Label(StringTable.Get("Conflict_BackupUnavailable"), 12));
+        if (_conflict.BackupDisabled) _header.Children.Add(Label(StringTable.Get("Backup_DisabledHint"), 12));
+        else if (_conflict.BackupUnavailable) _header.Children.Add(Label(StringTable.Get("Conflict_BackupUnavailable"), 12));
         if (_conflict.IsSameItem) _header.Children.Add(Label(StringTable.Get("Transfer_SameItemHint"), 12));
         else if (!_conflict.CanMerge && !_conflict.CanReplace)
             _header.Children.Add(Label(StringTable.Get(_conflict.DestinationIsLink ? "Transfer_LinkHint" : "Transfer_TypeHint"), 12));
@@ -179,7 +180,7 @@ internal sealed class FileConflictBody : Grid, IAsyncDisposable
         {
             FileConflictAction.KeepBoth => StringTable.Format("Transfer_NumberedName", _conflict.NumberedName),
             FileConflictAction.Replace => StringTable.Get("Conflict_ReplaceHint"),
-            FileConflictAction.ReplaceWithoutUndo => StringTable.Get("Backup_DestructiveHint"),
+            FileConflictAction.ReplaceWithoutUndo => StringTable.Get(_conflict.BackupDisabled ? "Backup_DisabledHint" : "Backup_DestructiveHint"),
             FileConflictAction.Skip => StringTable.Get("Conflict_SkipHint"),
             _ => StringTable.Get(key),
         };

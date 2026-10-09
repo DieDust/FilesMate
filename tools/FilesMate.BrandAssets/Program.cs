@@ -23,7 +23,7 @@ internal static class Program
         }
 
         var icoFrames = IcoSizes
-            .Select(size => (Size: size, Png: ImageFormats.WritePng(size, size, IconMark.RenderGlyph(size))))
+            .Select(size => (Size: size, Rgba: IconMark.RenderGlyph(size)))
             .ToArray();
         File.WriteAllBytes(Path.Combine(output, "FilesMate.ico"), ImageFormats.WriteIco(icoFrames));
 

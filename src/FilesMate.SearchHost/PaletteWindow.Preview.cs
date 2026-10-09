@@ -15,6 +15,7 @@ namespace FilesMate.SearchHost;
 public partial class PaletteWindow
 {
     private ICSharpCode.AvalonEdit.TextEditor? _previewText;
+    private string? _previewTextPath;
     private ICSharpCode.AvalonEdit.TextEditor PreviewText
     {
         get
@@ -25,7 +26,7 @@ public partial class PaletteWindow
                 IsReadOnly = true, ShowLineNumbers = true,
                 WordWrap = false, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-                Background = Brushes.Transparent, BorderThickness = new Thickness(0),
+                Background = new SolidColorBrush(OpaqueSurfaceColor()), BorderThickness = new Thickness(0),
                 FontFamily = new FontFamily("Cascadia Mono, Consolas"), FontSize = 12,
                 Padding = new Thickness(0), Visibility = Visibility.Collapsed,
             };
@@ -46,6 +47,7 @@ public partial class PaletteWindow
 
     private void ClearTextPreview()
     {
+        _previewTextPath = null;
         if (_previewText is null) return;
         _previewText.Text = "";
         _previewText.SyntaxHighlighting = null;
@@ -57,6 +59,29 @@ public partial class PaletteWindow
         ClearTextPreview();
         PreviewTextHost.Content = null;
         _previewText = null;
+    }
+
+    private void RefreshCodePreviewTheme()
+    {
+        if (_previewText is not { } editor || _previewTextPath is not { } path) return;
+        var background = CaptureCodePreviewBackground();
+        editor.Background = new SolidColorBrush(background);
+        var rgb = 0xFF000000u | ((uint)background.R << 16) | ((uint)background.G << 8) | background.B;
+        editor.SyntaxHighlighting = PreviewHighlighting.ForPath(path, rgb);
+    }
+
+    private Color CaptureCodePreviewBackground()
+    {
+        var background = OpaqueSurfaceColor();
+        if (SystemParameters.HighContrast) return background;
+        var brush = PreviewCard.Background as SolidColorBrush ?? TryFindResource("PreviewSurface") as SolidColorBrush;
+        if (brush is null) return background;
+        // Syntax contrast needs known pixels. Flatten only the code-reading
+        // viewport over its skin surface; surrounding popup material is unchanged.
+        var color = brush.Color;
+        var alpha = color.A / 255d * brush.Opacity;
+        byte Channel(byte front, byte back) => (byte)Math.Clamp(Math.Round(front * alpha + back * (1 - alpha)), 0, 255);
+        return Color.FromRgb(Channel(color.R, background.R), Channel(color.G, background.G), Channel(color.B, background.B));
     }
 
     private readonly TextPreviewProvider _textPreview = new();
@@ -97,6 +122,7 @@ public partial class PaletteWindow
 
     private void ApplyPreviewRoundRegion()
     {
+        if (ApplyPopupAppearance(PreviewCard)) return;
         // An opaque popup can host native WebView2; clip its HWND to the same
         // silhouette as the themed card instead of using a layered window.
         if (!PreviewPopup.IsOpen || PresentationSource.FromVisual(PreviewCard) is not HwndSource popup ||
@@ -186,7 +212,7 @@ public partial class PaletteWindow
 
     private async void QueuePreview(SearchRow? row, int delay = 140)
     {
-        if (_contextOpen || _suppressPreviewSelection || !_host.Settings.PreviewEnabled || row is null || row.IsApplication || row.Hit.IsDirectory ||
+        if (_pending || _contextOpen || _suppressPreviewSelection || !_host.Settings.PreviewEnabled || row is null || row.IsApplication || row.Hit.IsDirectory ||
             (!_textPreview.CanHandle(row.Path) && !_pdfPreview.CanHandle(row.Path) && !_officePreview.CanHandle(row.Path) && !FileTypeIconCatalog.IsThumbnailPath(row.Path)))
         { ClearPreview(); return; }
         if (_previewRow == row && _previewQuery is not null) return;
@@ -198,7 +224,7 @@ public partial class PaletteWindow
         try
         {
             await Task.Delay(delay, token);
-            if (!IsVisible || !SearchPanel.IsVisible || _contextOpen) return;
+            if (_pending || _previewQuery != request || !IsVisible || !SearchPanel.IsVisible || _contextOpen) return;
             ReleaseDocumentPreview();
             PreviewTitle.Text = row.DisplayName;
             PreviewTitle.ToolTip = row.Path;
@@ -233,7 +259,8 @@ public partial class PaletteWindow
                         return;
                     }
                     PreviewText.Text = text.Content;
-                    PreviewText.SyntaxHighlighting = PreviewHighlighting.ForPath(row.Path, PaletteAppearance.IsDark(_appearance));
+                    _previewTextPath = row.Path;
+                    RefreshCodePreviewTheme();
                     foreach (var margin in PreviewText.TextArea.LeftMargins.OfType<FrameworkElement>())
                         if (margin.GetType().Name == "LineNumberMargin") margin.Margin = new Thickness(0, 0, 8, 0);
                     PreviewText.ScrollToHome();

@@ -16,7 +16,7 @@
         <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
             <StackPanel>
                 <settings:SettingCard Title="{loc:LocalizedText Key=Archive_Preferred}" Description="{loc:LocalizedText Key=Archive_PreferredHint}" ShowDivider="True">
-                    <ComboBox x:Name="ArchiveProviderBox" Width="220" SelectionChanged="ArchiveProvider_Changed"
+                    <ComboBox x:Name="ArchiveProviderBox" MinWidth="160" MaxWidth="260" HorizontalAlignment="Stretch" SelectionChanged="ArchiveProvider_Changed"
                               AutomationProperties.AutomationId="ArchiveProviderBox" AutomationProperties.Name="{loc:LocalizedText Key=Archive_Preferred}" />
                 </settings:SettingCard>
                 <StackPanel Padding="16,8,16,16" Spacing="10">
@@ -53,6 +53,15 @@
                         <ComboBoxItem Content="{loc:LocalizedText Key=Opening_SingleClick}" />
                         <ComboBoxItem Content="{loc:LocalizedText Key=Opening_NameClick}" />
                     </ComboBox>
+                </settings:SettingCard>
+
+                <settings:SettingCard Title="{loc:LocalizedText Key=Recursive_DepthSetting}" Description="{loc:LocalizedText Key=Recursive_DepthHint}" ShowDivider="True">
+                    <ComboBox x:Name="RecursiveDepthBox" MinWidth="180" MinHeight="34" SelectionChanged="RecursiveDepth_Changed"
+                              AutomationProperties.AutomationId="RecursiveDepthBox" AutomationProperties.Name="{loc:LocalizedText Key=Recursive_DepthSetting}" />
+                </settings:SettingCard>
+                <settings:SettingCard Title="{loc:LocalizedText Key=Recursive_AltDepthSetting}" Description="{loc:LocalizedText Key=Recursive_AltDepthHint}" ShowDivider="True">
+                    <ComboBox x:Name="RecursiveAltDepthBox" MinWidth="180" MinHeight="34" SelectionChanged="RecursiveAltDepth_Changed"
+                              AutomationProperties.AutomationId="RecursiveAltDepthBox" AutomationProperties.Name="{loc:LocalizedText Key=Recursive_AltDepthSetting}" />
                 </settings:SettingCard>
                 <settings:SettingCard Title="{loc:LocalizedText Key=Favorites_Bar}" Description="{loc:LocalizedText Key=Favorites_SettingsHint}" ShowDivider="True">
                     <ToggleSwitch x:Name="FavoritesToggle" MinWidth="0" Toggled="FavoritesToggle_Toggled" />
@@ -224,9 +233,14 @@
         </glass:LiquidGlassSurface>
         <TextBlock Style="{StaticResource FilesMate.SettingsSectionHeaderStyle}" Text="{loc:LocalizedText Key=Backup_Title}" />
         <glass:LiquidGlassSurface Padding="0" Style="{StaticResource FilesMate.GlassCardStyle}">
+          <StackPanel>
+            <settings:SettingCard Title="{loc:LocalizedText Key=Backup_Enable}" Description="{loc:LocalizedText Key=Backup_EnableHint}" ShowDivider="True">
+                <ToggleSwitch x:Name="BackupEnabledToggle" MinWidth="0" Toggled="BackupEnabledToggle_Toggled" AutomationProperties.Name="{loc:LocalizedText Key=Backup_Enable}" />
+            </settings:SettingCard>
             <settings:SettingCard Title="{loc:LocalizedText Key=Backup_Title}" Description="{loc:LocalizedText Key=Backup_SettingsHint}">
                 <Button x:Name="BackupManageButton" Content="{loc:LocalizedText Key=Backup_Manage}" Click="BackupManage_Click" />
             </settings:SettingCard>
+          </StackPanel>
         </glass:LiquidGlassSurface>
         <TextBlock
             x:Name="SidebarHeader"

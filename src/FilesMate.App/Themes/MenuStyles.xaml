@@ -4,10 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style x:Key="FilesMate.MenuShortcutStyle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
-        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.SecondaryBrush}" />
     </Style>
     <Style x:Key="FilesMate.MenuChevronStyle" TargetType="FontIcon">
-        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.SecondaryBrush}" />
     </Style>
     <Style x:Key="FilesMate.MenuSeparatorStyle" TargetType="Border">
         <Setter Property="Background" Value="{ThemeResource FilesMate.Divider.Brush}" />
@@ -35,8 +33,8 @@
         <Setter Property="Template" Value="{StaticResource FilesMate.MenuFlyoutItemTemplate}" />
         <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="MinHeight" Value="{StaticResource FilesMate.Control.Height.Row}" />
-        <Setter Property="Margin" Value="4,0" />
-        <Setter Property="Padding" Value="12,0,12,0" />
+        <Setter Property="Margin" Value="{StaticResource FilesMate.Menu.ItemMargin}" />
+        <Setter Property="Padding" Value="{StaticResource FilesMate.Menu.ItemPadding}" />
         <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Small}" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
@@ -56,7 +54,7 @@
         <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="MinHeight" Value="26" />
         <Setter Property="Margin" Value="2,0" />
-        <Setter Property="Padding" Value="8,0,8,0" />
+        <Setter Property="Padding" Value="{StaticResource FilesMate.Menu.CompactItemPadding}" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Omnibar}" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -101,6 +99,7 @@
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+        <Setter Property="Template" Value="{StaticResource FilesMate.MenuButtonTemplate}" />
     </Style>
     <Style x:Key="FilesMate.ColumnMenuPresenterStyle" TargetType="MenuFlyoutPresenter" BasedOn="{StaticResource FilesMate.MenuFlyoutPresenterStyle}">
         <Setter Property="Padding" Value="4,6" />
@@ -111,7 +110,7 @@
     <Style x:Key="FilesMate.ColumnMenuItemStyle" TargetType="MenuFlyoutItem" BasedOn="{StaticResource FilesMate.MenuFlyoutItemStyle}">
         <Setter Property="Template" Value="{StaticResource FilesMate.ColumnMenuItemTemplate}" />
         <Setter Property="MinHeight" Value="{StaticResource FilesMate.Control.Height.ContextItem}" />
-        <Setter Property="Margin" Value="2,0" />
+        <Setter Property="Margin" Value="2,2" />
         <Setter Property="Padding" Value="10,0" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="BorderThickness" Value="0" />
@@ -123,7 +122,7 @@
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
         <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Small}" />
         <Setter Property="MinHeight" Value="{StaticResource FilesMate.Control.Height.ContextItem}" />
-        <Setter Property="Margin" Value="2,0" />
+        <Setter Property="Margin" Value="2,2" />
         <Setter Property="Padding" Value="10,0" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="BorderThickness" Value="0" />
@@ -188,8 +187,8 @@
     <Style x:Key="FilesMate.ToggleMenuFlyoutItemStyle" TargetType="ToggleMenuFlyoutItem">
         <Setter Property="Template" Value="{StaticResource FilesMate.ToggleMenuFlyoutItemTemplate}" />
         <Setter Property="MinHeight" Value="{StaticResource FilesMate.Control.Height.Row}" />
-        <Setter Property="Margin" Value="4,0" />
-        <Setter Property="Padding" Value="12,0,12,0" />
+        <Setter Property="Margin" Value="{StaticResource FilesMate.Menu.ItemMargin}" />
+        <Setter Property="Padding" Value="{StaticResource FilesMate.Menu.ItemPadding}" />
         <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Small}" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
     </Style>
@@ -200,8 +199,8 @@
         <Setter Property="Template" Value="{StaticResource FilesMate.MenuFlyoutSubItemTemplate}" />
         <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="MinHeight" Value="{StaticResource FilesMate.Control.Height.Row}" />
-        <Setter Property="Margin" Value="4,0" />
-        <Setter Property="Padding" Value="12,0,12,0" />
+        <Setter Property="Margin" Value="{StaticResource FilesMate.Menu.ItemMargin}" />
+        <Setter Property="Padding" Value="{StaticResource FilesMate.Menu.ItemPadding}" />
         <Setter Property="CornerRadius" Value="{StaticResource FilesMate.Corner.Small}" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
     </Style>

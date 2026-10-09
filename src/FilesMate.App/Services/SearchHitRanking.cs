@@ -25,10 +25,16 @@ public static class SearchHitRanking
 
         if (recognizeApplicationShortcuts && FilesMate.Search.ApplicationShortcut.IsApplication(path)) return SearchHitKind.Program;
 
-        var extension = Path.GetExtension(path ?? string.Empty).ToLowerInvariant();
-        if (extension is ".exe" or ".com")
+        var extension = Path.GetExtension(path.AsSpan());
+        if (extension.Length == 4)
         {
-            return SearchHitKind.Executable;
+            // Preserve invariant lowercase matching without allocating an extension string.
+            Span<char> normalizedExtension = stackalloc char[4];
+            extension.ToLowerInvariant(normalizedExtension);
+            if (normalizedExtension.SequenceEqual(".exe") || normalizedExtension.SequenceEqual(".com"))
+            {
+                return SearchHitKind.Executable;
+            }
         }
 
         var icon = FileTypeIconCatalog.ClassifyPath(path, false);

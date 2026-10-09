@@ -22,6 +22,12 @@ public partial class PaletteWindow
     };
     private readonly System.Windows.Threading.DispatcherTimer _categoryEditTimer = new() { Interval = TimeSpan.FromMilliseconds(500) };
     private Action? _categoryCommit;
+    private readonly Dictionary<CategoryEditorIdentity, Control> _categoryEditorControls = [];
+    private long _categoryEditorGeneration;
+    private bool _buildingCategoryEditors;
+
+    private sealed record CategoryEditorIdentity(string CategoryId, string Role);
+    private sealed record CategoryEditorFocus(CategoryEditorIdentity Identity, int RowIndex, int SelectionStart, int SelectionLength);
 
     private static string CategoryLabel(SearchCategory category) => category.Builtin is { } builtin
         ? Loc.Get(builtin switch
@@ -150,7 +156,7 @@ public partial class PaletteWindow
             var name = CategoryName.Text.Trim();
             if (name.Length == 0) throw new ArgumentException(Loc.Get("Category_NameRequired"));
             var category = new SearchCategory(Guid.NewGuid().ToString("N"), name, null, ParseCategoryExtensions(CategoryExtensions.Text));
-            if (PersistCategories([.. _categories, category])) { CategoryName.Clear(); CategoryExtensions.Clear(); }
+            if (PersistCategories([.. _categories, category])) { CategoryName.Clear(); CategoryExtensions.Clear(); CategoryName.Focus(); }
         }
         catch (ArgumentException error) { CategoryStatus.Text = error.Message; }
     }
@@ -164,6 +170,7 @@ public partial class PaletteWindow
             _categories = SearchCategories.Normalize(proposed);
             RenderCategoryButtons();
             if (render) RenderCategoryEditors();
+            else RefreshCategoryEditorNames();
             CategoryStatus.Text = "";
             return true;
         }
@@ -172,7 +179,11 @@ public partial class PaletteWindow
     }
     private void RenderCategoryEditors()
     {
+        var focus = CaptureCategoryEditorFocus();
+        ++_categoryEditorGeneration;
         _categoryEditTimer.Stop(); _categoryCommit = null;
+        _buildingCategoryEditors = true;
+        _categoryEditorControls.Clear();
         CategoryEditors.Children.Clear();
         foreach (var category in _categories)
         {
@@ -182,16 +193,22 @@ public partial class PaletteWindow
                 line.ColumnDefinitions.Add(new ColumnDefinition { Width = width });
             var name = new TextBox { Text = category.Name, MaxLength = 24, IsReadOnly = category.Builtin is not null, Margin = new Thickness(0, 0, 8, 0) };
             var fields = new StackPanel();
-            if (category.Builtin is null) fields.Children.Add(name);
+            if (category.Builtin is null)
+            {
+                RegisterCategoryEditor(name, category, "name");
+                fields.Children.Add(name);
+            }
             else fields.Children.Add(new TextBlock { Text = CategoryLabel(category), Margin = new Thickness(6), VerticalAlignment = VerticalAlignment.Center });
             line.Children.Add(fields);
             TextBox? suffix = null;
             if (category.Builtin is null)
             {
                 suffix = new TextBox { Text = string.Join(", ", category.Extensions), MaxLength = 1024, Margin = new Thickness(0, 6, 8, 0), ToolTip = Loc.Get("Category_ExtensionsExample") };
+                RegisterCategoryEditor(suffix, category, "extensions");
                 fields.Children.Add(suffix);
                 void Commit(object s, RoutedEventArgs e)
                 {
+                    if (_buildingCategoryEditors) return;
                     try
                     {
                         var title = name.Text.Trim();
@@ -204,6 +221,7 @@ public partial class PaletteWindow
                 name.LostKeyboardFocus += Commit; suffix.LostKeyboardFocus += Commit;
                 void Schedule(object s, TextChangedEventArgs e)
                 {
+                    if (_buildingCategoryEditors) return;
                     _categoryEditTimer.Stop();
                     _categoryCommit = () => Commit(s, e);
                     _categoryEditTimer.Start();
@@ -211,11 +229,16 @@ public partial class PaletteWindow
                 name.TextChanged += Schedule; suffix.TextChanged += Schedule;
             }
             var toggle = new ToggleButton { Style = (Style)FindResource("Switch"), IsChecked = category.Visible, VerticalAlignment = VerticalAlignment.Center, ToolTip = Loc.Get("Category_Show") };
+            RegisterCategoryEditor(toggle, category, "visibility");
             Grid.SetColumn(toggle, 1); line.Children.Add(toggle);
             toggle.Click += (_, _) => { if (!PersistCategories(_categories.Select(c => c.Id == id ? c with { Visible = toggle.IsChecked == true } : c).ToList())) toggle.IsChecked = category.Visible; };
             void AddButton(int column, string label, int move)
             {
                 var button = new Button { Content = label, Padding = new Thickness(4), VerticalAlignment = VerticalAlignment.Center };
+                RegisterCategoryEditor(button, category, move == 0 ? "remove" : move < 0 ? "up" : "down");
+                var position = _categories.FindIndex(item => item.Id == id);
+                button.IsEnabled = move == 0 || move < 0 && position > 0 || move > 0 && position < _categories.Count - 1;
+                button.ToolTip = System.Windows.Automation.AutomationProperties.GetName(button);
                 Grid.SetColumn(button, column); line.Children.Add(button);
                 button.Click += (_, _) =>
                 {
@@ -227,7 +250,71 @@ public partial class PaletteWindow
             }
             AddButton(2, "↑", -1); AddButton(3, "↓", 1);
             if (category.Builtin is null) AddButton(4, "×", 0);
-            CategoryEditors.Children.Add(new Border { Style = (Style)FindResource("SettingsCard"), Child = line });
+            CategoryEditors.Children.Add(new Border { Style = (Style)FindResource("SettingsCard"), Child = line, Tag = id });
         }
+        _buildingCategoryEditors = false;
+        RestoreCategoryEditorFocus(focus);
+        Center();
+    }
+
+    private void RegisterCategoryEditor(Control control, SearchCategory category, string role)
+    {
+        var identity = new CategoryEditorIdentity(category.Id, role);
+        control.Tag = identity;
+        System.Windows.Automation.AutomationProperties.SetAutomationId(control, "category-" + category.Id + "-" + role);
+        SetCategoryEditorName(control, category, role);
+        _categoryEditorControls[identity] = control;
+    }
+
+    private static void SetCategoryEditorName(Control control, SearchCategory category, string role)
+    {
+        var action = Loc.Get(role switch
+        {
+            "name" => "Category_Name", "extensions" => "FileExtensions", "visibility" => "Category_Show",
+            "up" => "MoveUp", "down" => "MoveDown", _ => "Remove",
+        });
+        System.Windows.Automation.AutomationProperties.SetName(control, action + ": " + CategoryLabel(category));
+        if (control is Button) control.ToolTip = System.Windows.Automation.AutomationProperties.GetName(control);
+    }
+
+    private void RefreshCategoryEditorNames()
+    {
+        foreach (var (identity, control) in _categoryEditorControls)
+        {
+            var category = _categories.FirstOrDefault(item => item.Id == identity.CategoryId);
+            if (category is not null) SetCategoryEditorName(control, category, identity.Role);
+        }
+    }
+
+    private CategoryEditorFocus? CaptureCategoryEditorFocus()
+    {
+        if (Keyboard.FocusedElement is not FrameworkElement { Tag: CategoryEditorIdentity identity } element) return null;
+        var rows = CategoryEditors.Children.OfType<Border>().ToArray();
+        var index = Array.FindIndex(rows, row => row.Tag is string id && id == identity.CategoryId);
+        if (index < 0) return null;
+        return element is TextBox text ? new(identity, index, text.SelectionStart, text.SelectionLength) : new(identity, index, 0, 0);
+    }
+
+    private void RestoreCategoryEditorFocus(CategoryEditorFocus? focus)
+    {
+        if (focus is null || _categories.Count == 0) return;
+        var generation = _categoryEditorGeneration;
+        var id = _categories.Any(category => category.Id == focus.Identity.CategoryId) ? focus.Identity.CategoryId
+            : _categories[Math.Clamp(focus.RowIndex, 0, _categories.Count - 1)].Id;
+        Control? target = null;
+        foreach (var role in new[] { focus.Identity.Role, "name", "visibility", "down", "up", "extensions", "remove" }.Distinct())
+        {
+            if (_categoryEditorControls.TryGetValue(new(id, role), out var candidate) && candidate.IsEnabled)
+            { target = candidate; break; }
+        }
+        if (target is null) return;
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (generation != _categoryEditorGeneration || !CategoriesPanel.IsVisible || !target.IsLoaded || !target.IsEnabled) return;
+            target.BringIntoView();
+            if (!target.Focus() || target is not TextBox text) return;
+            var start = Math.Min(focus.SelectionStart, text.Text.Length);
+            text.Select(start, Math.Min(focus.SelectionLength, text.Text.Length - start));
+        }), DispatcherPriority.Loaded);
     }
 }

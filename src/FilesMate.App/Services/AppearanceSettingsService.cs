@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 
 using FilesMate.App.Models;
 
@@ -27,9 +27,7 @@ public sealed class AppearanceSettingsService : IAppearanceSettingsService
     public string FilePath { get; }
 
     public static string DefaultFilePath =>
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FilesMate",
+        Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath,
             "appearance.json");
 
     public AppearanceSettings Load()
@@ -59,7 +57,8 @@ public sealed class AppearanceSettingsService : IAppearanceSettingsService
                 dto.CustomAccent,
                 dto.TransparencyPercent,
                 dto.UseBundledFileIcons,
-                dto.FileFontFamily, dto.FileNameFontSize, dto.FileDetailsFontSize);
+                dto.FileFontFamily, dto.FileNameFontSize, dto.FileDetailsFontSize,
+                ReadSkin(dto.Skin));
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
         {
@@ -86,10 +85,17 @@ public sealed class AppearanceSettingsService : IAppearanceSettingsService
                 FileFontFamily = settings.FileFontFamily,
                 FileNameFontSize = settings.FileNameFontSize,
                 FileDetailsFontSize = settings.FileDetailsFontSize,
+                Skin = settings.Skin is { } skin ? SkinPackageSerializer.ToJsonElement(skin) : null,
             },
             JsonOptions);
 
         await SettingsFileWriter.WriteAsync(FilePath, json, _saveGate, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static SkinPackage? ReadSkin(JsonElement? element)
+    {
+        if (element is not { ValueKind: JsonValueKind.Object } skin) return null;
+        return SkinPackageSerializer.TryDeserialize(skin.GetRawText(), out var package, out _) ? package : null;
     }
 
     private sealed class AppearanceDto
@@ -114,5 +120,6 @@ public sealed class AppearanceSettingsService : IAppearanceSettingsService
         public string? FileFontFamily { get; set; }
         public double? FileNameFontSize { get; set; }
         public double? FileDetailsFontSize { get; set; }
+        public JsonElement? Skin { get; set; }
     }
 }

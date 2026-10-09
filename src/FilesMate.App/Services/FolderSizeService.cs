@@ -39,7 +39,7 @@ public sealed class FolderSizeService
         size = 0;
         if (!_cache.TryGetValue(key, out var entry)) return false;
         if (entry.Expires == DateTimeOffset.MinValue || (!useUnchanged && _time.GetUtcNow() >= entry.Expires)) return false;
-        _cache[key] = entry with { Access = ++_access };
+        entry.Access = ++_access;
         size = entry.Size;
         return true;
     }
@@ -54,7 +54,7 @@ public sealed class FolderSizeService
         {
             var key = Normalize(path);
             if (!_cache.TryGetValue(key, out var entry)) return false;
-            _cache[key] = entry with { Access = ++_access };
+            entry.Access = ++_access;
             size = entry.Size;
             return true;
         }
@@ -72,21 +72,22 @@ public sealed class FolderSizeService
         token.ThrowIfCancellationRequested();
         var key = Normalize(path);
         Request request;
-        var subscriber = new Subscriber(progress);
+        Subscriber subscriber;
         lock (_sync)
         {
             if (TryGetCore(key, out var cached, useUnchanged)) return cached;
+            subscriber = new Subscriber(progress);
             if (!_inflight.TryGetValue(key, out request!))
             {
                 request = new Request();
                 _inflight.Add(key, request);
                 request.Task = RunAsync(key, request);
                 // Observe the worker even when all callers have already canceled.
-                _ = request.Task.ContinueWith(task =>
+                _ = request.Task.ContinueWith(static (task, state) =>
                 {
                     _ = task.Exception;
-                    request.Cancellation.Dispose();
-                }, CancellationToken.None, TaskContinuationOptions.None, TaskScheduler.Default);
+                    ((Request)state!).Cancellation.Dispose();
+                }, request, CancellationToken.None, TaskContinuationOptions.None, TaskScheduler.Default);
             }
             request.Subscribers.Add(subscriber);
         }
@@ -167,10 +168,12 @@ public sealed class FolderSizeService
         lock (_sync)
         {
             bool Affected(string candidate) => candidate.Equals(key, StringComparison.OrdinalIgnoreCase)
-                || key.StartsWith(WithSeparator(candidate), StringComparison.OrdinalIgnoreCase)
-                || (includeDescendants && candidate.StartsWith(WithSeparator(key), StringComparison.OrdinalIgnoreCase));
-            foreach (var cached in _cache.Where(pair => Affected(pair.Key)).ToArray())
-                _cache[cached.Key] = cached.Value with { Expires = DateTimeOffset.MinValue };
+                || IsDescendant(key, candidate)
+                || (includeDescendants && IsDescendant(candidate, key));
+            // Keep selection and updates separate for broad invalidations; values
+            // stay private under _sync, and already-dirty entries need no update.
+            foreach (var cached in _cache.Where(pair => pair.Value.Expires != DateTimeOffset.MinValue && Affected(pair.Key)).ToArray())
+                cached.Value.Expires = DateTimeOffset.MinValue;
             foreach (var active in _inflight.Where(pair => Affected(pair.Key)).ToArray())
             {
                 _inflight.Remove(active.Key);
@@ -181,10 +184,15 @@ public sealed class FolderSizeService
 
     private static bool Related(string first, string second) =>
         first.Equals(second, StringComparison.OrdinalIgnoreCase)
-        || first.StartsWith(WithSeparator(second), StringComparison.OrdinalIgnoreCase)
-        || second.StartsWith(WithSeparator(first), StringComparison.OrdinalIgnoreCase);
+        || IsDescendant(first, second)
+        || IsDescendant(second, first);
 
-    private static string WithSeparator(string path) => Path.EndsInDirectorySeparator(path) ? path : path + Path.DirectorySeparatorChar;
+    // Equivalent to StartsWith(parent plus a separator), including roots and the
+    // host platform's separator rules, without allocating the concatenated path.
+    private static bool IsDescendant(string path, string parent) =>
+        (Path.EndsInDirectorySeparator(parent)
+            || (path.Length > parent.Length && path[parent.Length] == Path.DirectorySeparatorChar))
+        && path.StartsWith(parent, StringComparison.OrdinalIgnoreCase);
     private static string Normalize(string path) => Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
 
     private sealed class Request
@@ -197,5 +205,11 @@ public sealed class FolderSizeService
     {
         public Action<ulong>? Progress { get; } = progress;
     }
-    private sealed record CacheEntry(ulong Size, DateTimeOffset Expires, long Access);
+    // Cache entries never escape _sync; hits can touch LRU state without allocating.
+    private sealed class CacheEntry(ulong size, DateTimeOffset expires, long access)
+    {
+        public ulong Size { get; } = size;
+        public DateTimeOffset Expires { get; set; } = expires;
+        public long Access { get; set; } = access;
+    }
 }

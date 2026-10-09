@@ -43,6 +43,9 @@
   <data name="Accent_CoolBlue" xml:space="preserve">
     <value>冷蓝</value>
   </data>
+  <data name="Accent_Custom" xml:space="preserve">
+    <value>自定义</value>
+  </data>
   <data name="Accent_Default" xml:space="preserve">
     <value>默认</value>
   </data>
@@ -179,7 +182,7 @@
     <value>最少项目数</value>
   </data>
   <data name="AlphabetNavigationDescription" xml:space="preserve">
-    <value>按名称排序时显示字母栏、字母气泡和范围提示。关闭后使用普通滚动条。</value>
+    <value>仅在详细信息视图按名称排序时显示字母栏、字母气泡和范围提示。其他视图使用普通滚动条。</value>
   </data>
   <data name="AlphabetNavigationSection" xml:space="preserve">
     <value>字母快速定位</value>
@@ -216,6 +219,12 @@
   </data>
   <data name="AppearanceTitle" xml:space="preserve">
     <value>外观</value>
+  </data>
+  <data name="Appearance_MaterialMotion" xml:space="preserve">
+    <value>材质与动效</value>
+  </data>
+  <data name="Appearance_ThemeColors" xml:space="preserve">
+    <value>主题与配色</value>
   </data>
   <data name="Application" xml:space="preserve">
     <value>应用</value>
@@ -1000,8 +1009,26 @@
   <data name="Cover_DirectChild" xml:space="preserve">
     <value>请选择直接位于此文件夹中的图片或视频。</value>
   </data>
+  <data name="Cover_FolderUnavailable" xml:space="preserve">
+    <value>文件夹暂时不可用，未更改封面。</value>
+  </data>
+  <data name="Cover_MediaFilter" xml:space="preserve">
+    <value>图片和视频</value>
+  </data>
+  <data name="Cover_PickerTitle" xml:space="preserve">
+    <value>选择文件夹封面（可从任意位置选择）</value>
+  </data>
+  <data name="Cover_ReferenceHint" xml:space="preserve">
+    <value>引用原文件；原文件失效时恢复自动封面。</value>
+  </data>
   <data name="Cover_Reset" xml:space="preserve">
     <value>恢复自动封面</value>
+  </data>
+  <data name="Cover_StartUnavailable" xml:space="preserve">
+    <value>目标文件夹暂时无法打开，已从其他位置开始选择。</value>
+  </data>
+  <data name="Cover_Unavailable" xml:space="preserve">
+    <value>无法使用此文件作为封面，请选择可读取且支持预览的图片或视频。</value>
   </data>
   <data name="DataFolderDescription" xml:space="preserve">
     <value>快捷键、外观和资源管理器偏好都保存在此文件夹。</value>
@@ -2332,6 +2359,60 @@
   <data name="ProgramFile" xml:space="preserve">
     <value>程序文件</value>
   </data>
+  <data name="Recursive_Cancelled" xml:space="preserve">
+    <value>递归 · 已停止：{0} 项匹配 / 已扫描 {1} 项 · {2}</value>
+  </data>
+  <data name="Recursive_Checking" xml:space="preserve">
+    <value>正在检查递归根目录…</value>
+  </data>
+  <data name="Recursive_Collapse" xml:space="preserve">
+    <value>折叠文件夹</value>
+  </data>
+  <data name="Recursive_Completed" xml:space="preserve">
+    <value>递归 · {0} 项匹配 / 已扫描 {1} 项 · {2}</value>
+  </data>
+  <data name="Recursive_DeleteChildren" xml:space="preserve">
+    <value>所选文件夹包含其全部内容，包括被筛选隐藏或已折叠的后代。是否继续？</value>
+  </data>
+  <data name="Recursive_Expand" xml:space="preserve">
+    <value>展开文件夹</value>
+  </data>
+  <data name="Recursive_Hint" xml:space="preserve">
+    <value>扫描当前面板的子文件夹。Esc 停止扫描，导航到其他位置会关闭递归。</value>
+  </data>
+  <data name="Recursive_Limit" xml:space="preserve">
+    <value>递归 · 已达到限制：{0} 项匹配 / 已扫描 {1} 项，请缩小扫描范围 · {2}</value>
+  </data>
+  <data name="Recursive_Loading" xml:space="preserve">
+    <value>递归 · {0} 项匹配 / 已扫描 {1} 项 · {2} · Esc 停止</value>
+  </data>
+  <data name="Recursive_NotTraversed" xml:space="preserve">
+    <value>此文件夹未递归扫描，可单独打开查看内容。</value>
+  </data>
+  <data name="Recursive_OperationUnavailable" xml:space="preserve">
+    <value>所选项目包含大小写敏感或尚未核实的路径，或未完整检查的文件夹，暂不能在递归视图中执行文件操作；仍可按准确路径打开或复制路径。</value>
+  </data>
+  <data name="Recursive_Partial" xml:space="preserve">
+    <value>递归 · 部分结果：{0} 项匹配 / 已扫描 {1} 项 · 跳过 {2} 项 · {3}</value>
+  </data>
+  <data name="Recursive_ShelfUnavailable" xml:space="preserve">
+    <value>递归视图暂不支持添加到文件架。请先正常打开所在文件夹，再添加项目；普通视图中的文件架功能不变。</value>
+  </data>
+  <data name="Recursive_SortUnavailable" xml:space="preserve">
+    <value>递归视图暂不支持系统扩展属性排序，请选择标准列或关闭递归视图。</value>
+  </data>
+  <data name="Recursive_Stale" xml:space="preserve">
+    <value>递归快照对应的内容已变化，请刷新重新扫描；现有行可能已过期。</value>
+  </data>
+  <data name="Recursive_Toggle" xml:space="preserve">
+    <value>递归文件树</value>
+  </data>
+  <data name="Recursive_TransferHint" xml:space="preserve">
+    <value>所选项目直接复制或移动到目标目录，所选文件夹保留其内容；同名冲突通过现有对话框处理。</value>
+  </data>
+  <data name="Recursive_Unsupported" xml:space="preserve">
+    <value>递归视图支持本地固定磁盘和可移动磁盘中的普通文件夹，暂不扫描网络位置或重解析点根目录。</value>
+  </data>
   <data name="Recycle_ConfirmPrefix" xml:space="preserve">
     <value>是否将以下项目移到回收站？
 
@@ -2972,8 +3053,14 @@ dm:today · dm:7days · dm:2026-01-01..2026-12-31
   <data name="Search_Clear" xml:space="preserve">
     <value>清空搜索</value>
   </data>
+  <data name="Search_ClearFilters" xml:space="preserve">
+    <value>清除筛选</value>
+  </data>
   <data name="Search_ClearQuery" xml:space="preserve">
     <value>清空关键词</value>
+  </data>
+  <data name="Search_Completed" xml:space="preserve">
+    <value>搜索完成</value>
   </data>
   <data name="Search_ComponentMissing" xml:space="preserve">
     <value>缺少全局搜索组件，请重新安装完整版本。</value>
@@ -2981,14 +3068,32 @@ dm:today · dm:7days · dm:2026-01-01..2026-12-31
   <data name="Search_ContinueWithout" xml:space="preserve">
     <value> 可选择“暂不启用搜索”继续。</value>
   </data>
+  <data name="Search_Continuing" xml:space="preserve">
+    <value>继续搜索其他位置…</value>
+  </data>
   <data name="Search_CopyAppHint" xml:space="preserve">
     <value>应用入口可直接启动；复制文件请先打开所在位置。</value>
   </data>
   <data name="Search_Count" xml:space="preserve">
     <value>找到 {0} 个匹配项目</value>
   </data>
+  <data name="Search_DefaultHint" xml:space="preserve">
+    <value>直接输入，搜索已索引的位置</value>
+  </data>
+  <data name="Search_DefaultKeyboardHint" xml:space="preserve">
+    <value>Esc 收起</value>
+  </data>
   <data name="Search_Detecting" xml:space="preserve">
     <value>正在检测后台搜索…</value>
+  </data>
+  <data name="Search_EditQuery" xml:space="preserve">
+    <value>修改关键词</value>
+  </data>
+  <data name="Search_EmptyHint" xml:space="preserve">
+    <value>试试缩短关键词，或查看全部类型</value>
+  </data>
+  <data name="Search_EmptyKeyboardHints" xml:space="preserve">
+    <value>Tab 切换操作    Enter 确认    Esc 收起</value>
   </data>
   <data name="Search_EnableFailed" xml:space="preserve">
     <value>全局搜索暂时无法启用</value>
@@ -2998,6 +3103,9 @@ dm:today · dm:7days · dm:2026-01-01..2026-12-31
   </data>
   <data name="Search_ExitWhenHidden" xml:space="preserve">
     <value>已关闭后台驻留，收起搜索框后退出</value>
+  </data>
+  <data name="Search_FoundCount" xml:space="preserve">
+    <value>已找到 {0} 项</value>
   </data>
   <data name="Search_GlobalShortcut" xml:space="preserve">
     <value>全局搜索快捷键</value>
@@ -3028,6 +3136,9 @@ dm:today · dm:7days · dm:2026-01-01..2026-12-31
   </data>
   <data name="Search_IndexUnavailable" xml:space="preserve">
     <value>索引暂时不可用，请检查索引设置。</value>
+  </data>
+  <data name="Search_KeyboardHints" xml:space="preserve">
+    <value>↑ ↓ 选择    Enter 打开    Esc 收起</value>
   </data>
   <data name="Search_LeadShortcut" xml:space="preserve">
     <value>用一个快捷键随时搜索文件和应用，不必先打开文件管理窗口。</value>
@@ -3083,8 +3194,20 @@ dm:today · dm:7days · dm:2026-01-01..2026-12-31
   <data name="Search_Palette" xml:space="preserve">
     <value>搜索框</value>
   </data>
+  <data name="Search_PaletteQueryHint" xml:space="preserve">
+    <value>搜索文件、文件夹与应用</value>
+  </data>
   <data name="Search_Partial" xml:space="preserve">
     <value>显示 {0} 项（部分结果），请细化关键词。</value>
+  </data>
+  <data name="Search_PartialReady" xml:space="preserve">
+    <value>首批结果可直接打开</value>
+  </data>
+  <data name="Search_PartialTimedOut" xml:space="preserve">
+    <value>部分搜索来源超时。已保留可用结果，请重新搜索以刷新。</value>
+  </data>
+  <data name="Search_PartialUnavailable" xml:space="preserve">
+    <value>部分搜索来源暂不可用。已显示可用结果，请重新搜索以刷新。</value>
   </data>
   <data name="Search_PreviewCompactHint" xml:space="preserve">
     <value>选中后在右侧预览，鼠标悬停不加载</value>
@@ -3157,6 +3280,12 @@ dm:today · dm:7days · dm:2026-01-01..2026-12-31
   </data>
   <data name="Search_StartupHint" xml:space="preserve">
     <value>登录 Windows 后即可使用搜索快捷键；关闭后台驻留时，开机启动也会一并停用。</value>
+  </data>
+  <data name="Search_StateEmpty" xml:space="preserve">
+    <value>没有找到匹配项</value>
+  </data>
+  <data name="Search_StateError" xml:space="preserve">
+    <value>搜索暂不可用</value>
   </data>
   <data name="Search_Timeout" xml:space="preserve">
     <value>搜索范围较大，请输入更完整的文件名或进入更小的文件夹。</value>
@@ -3520,6 +3649,144 @@ Ctrl+T 新标签　　Ctrl+W 关闭标签　　Ctrl+L 路径　　Ctrl+F 筛选�
   </data>
   <data name="Sidebar_RemoveCloud" xml:space="preserve">
     <value>移除云盘入口</value>
+  </data>
+  <data name="Skin_Accent" xml:space="preserve">
+    <value>强调色</value>
+  </data>
+  <data name="Skin_AccentLead" xml:space="preserve">
+    <value>选择颜色即为当前主题保存，并放弃未应用的高级编辑。</value>
+  </data>
+  <data name="Skin_Advanced" xml:space="preserve">
+    <value>高级皮肤设置</value>
+  </data>
+  <data name="Skin_Apply" xml:space="preserve">
+    <value>应用</value>
+  </data>
+  <data name="Skin_ApplySkin" xml:space="preserve">
+    <value>应用编辑</value>
+  </data>
+  <data name="Skin_Background" xml:space="preserve">
+    <value>背景色</value>
+  </data>
+  <data name="Skin_Cancel" xml:space="preserve">
+    <value>取消预览</value>
+  </data>
+  <data name="Skin_Colors" xml:space="preserve">
+    <value>颜色选择器</value>
+  </data>
+  <data name="Skin_ContrastWarning" xml:space="preserve">
+    <value>部分文字颜色对比度偏低（{0}）。Windows 高对比度始终优先。</value>
+  </data>
+  <data name="Skin_Current" xml:space="preserve">
+    <value>当前配色：{0}</value>
+  </data>
+  <data name="Skin_Dark" xml:space="preserve">
+    <value>编辑深色配色</value>
+  </data>
+  <data name="Skin_DerivedHint" xml:space="preserve">
+    <value>相关材质、悬停和边框颜色会协调变化。透明度在下方单独设置。</value>
+  </data>
+  <data name="Skin_EffectPreview" xml:space="preserve">
+    <value>{0}效果预览</value>
+  </data>
+  <data name="Skin_Export" xml:space="preserve">
+    <value>导出 JSON</value>
+  </data>
+  <data name="Skin_Exported" xml:space="preserve">
+    <value>皮肤已导出。皮肤包只包含配色，不含个人路径或其他设置。</value>
+  </data>
+  <data name="Skin_FileFailed" xml:space="preserve">
+    <value>无法读取或保存皮肤文件，请检查文件权限后重试。</value>
+  </data>
+  <data name="Skin_Hex" xml:space="preserve">
+    <value>HEX（#RRGGBB）</value>
+  </data>
+  <data name="Skin_Import" xml:space="preserve">
+    <value>导入 JSON</value>
+  </data>
+  <data name="Skin_Imported" xml:space="preserve">
+    <value>皮肤已导入预览，请检查浅色和深色配色后再应用。</value>
+  </data>
+  <data name="Skin_InvalidColor" xml:space="preserve">
+    <value>请输入六位 RGB 颜色，例如 #3B6B59。</value>
+  </data>
+  <data name="Skin_InvalidName" xml:space="preserve">
+    <value>请输入 1–80 个字符的名称，不含控制字符。</value>
+  </data>
+  <data name="Skin_InvalidPackage" xml:space="preserve">
+    <value>无法导入此皮肤。请使用不超过 64 KiB、版本受支持且 RGB 颜色有效的 JSON 皮肤包。</value>
+  </data>
+  <data name="Skin_Lead" xml:space="preserve">
+    <value>选择配色即可立即应用并保存。高级编辑需点应用后保存。</value>
+  </data>
+  <data name="Skin_Light" xml:space="preserve">
+    <value>编辑浅色配色</value>
+  </data>
+  <data name="Skin_Name" xml:space="preserve">
+    <value>皮肤名称</value>
+  </data>
+  <data name="Skin_Package" xml:space="preserve">
+    <value>FilesMate 皮肤包</value>
+  </data>
+  <data name="Skin_PreviewCancelledUnsaved" xml:space="preserve">
+    <value>窗口失焦，未保存的预览已取消，已恢复保存的皮肤。</value>
+  </data>
+  <data name="Skin_PreviewFailed" xml:space="preserve">
+    <value>无法显示皮肤预览，已恢复之前的配色。</value>
+  </data>
+  <data name="Skin_PreviewHover" xml:space="preserve">
+    <value>悬停项目</value>
+  </data>
+  <data name="Skin_PreviewItem" xml:space="preserve">
+    <value>选中项目</value>
+  </data>
+  <data name="Skin_PreviewLocked" xml:space="preserve">
+    <value>另一个设置窗口正在预览皮肤，请先在该窗口应用或取消预览，再在此处编辑。</value>
+  </data>
+  <data name="Skin_PreviewMaterial" xml:space="preserve">
+    <value>材质 · 边框 · 菜单</value>
+  </data>
+  <data name="Skin_PreviewTitle" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="Skin_Previewing" xml:space="preserve">
+    <value>正在预览。应用后保存这套皮肤；取消会恢复当前皮肤。</value>
+  </data>
+  <data name="Skin_Reset" xml:space="preserve">
+    <value>重置</value>
+  </data>
+  <data name="Skin_Revert" xml:space="preserve">
+    <value>恢复上一套</value>
+  </data>
+  <data name="Skin_SaveFailed" xml:space="preserve">
+    <value>皮肤保存失败，已恢复最后保存的配色。</value>
+  </data>
+  <data name="Skin_Saved" xml:space="preserve">
+    <value>皮肤已保存</value>
+  </data>
+  <data name="Skin_Saving" xml:space="preserve">
+    <value>正在保存皮肤…</value>
+  </data>
+  <data name="Skin_Section" xml:space="preserve">
+    <value>皮肤</value>
+  </data>
+  <data name="Skin_Selection" xml:space="preserve">
+    <value>选中色</value>
+  </data>
+  <data name="Skin_Text" xml:space="preserve">
+    <value>文字色</value>
+  </data>
+  <data name="Skin_forest" xml:space="preserve">
+    <value>森林绿</value>
+  </data>
+  <data name="Skin_graphite" xml:space="preserve">
+    <value>石墨黑</value>
+  </data>
+  <data name="Skin_mistBlue" xml:space="preserve">
+    <value>雾蓝</value>
+  </data>
+  <data name="Skin_warmWhite" xml:space="preserve">
+    <value>暖白</value>
   </data>
   <data name="Sort" xml:space="preserve">
     <value>排序</value>
@@ -4122,4 +4389,34 @@ Ctrl+T 新标签　　Ctrl+W 关闭标签　　Ctrl+L 路径　　Ctrl+F 筛选�
   <data name="WindowsSection" xml:space="preserve">
     <value>窗口与标签页</value>
   </data>
+  <data name="Column_RelativePath" xml:space="preserve"><value>相对路径</value></data>
+  <data name="Inline_Filter" xml:space="preserve"><value>筛选</value></data>
+  <data name="Inline_ClearFilters" xml:space="preserve"><value>清除筛选</value></data>
+  <data name="Inline_ClearSearchAndFilters" xml:space="preserve"><value>清除搜索和筛选</value></data>
+  <data name="Inline_CurrentScope" xml:space="preserve"><value>当前文件夹</value></data>
+  <data name="Inline_RecursiveScope" xml:space="preserve"><value>当前文件夹及子文件夹</value></data>
+  <data name="Inline_ChooseTypes" xml:space="preserve"><value>选择类型或扩展名</value></data>
+  <data name="Inline_Folders" xml:space="preserve"><value>文件夹</value></data>
+  <data name="Inline_Documents" xml:space="preserve"><value>文档</value></data>
+  <data name="Inline_Images" xml:space="preserve"><value>图片</value></data>
+  <data name="Inline_Audio" xml:space="preserve"><value>音频</value></data>
+  <data name="Inline_Video" xml:space="preserve"><value>视频</value></data>
+  <data name="Inline_Archives" xml:space="preserve"><value>压缩包</value></data>
+  <data name="Inline_Applications" xml:space="preserve"><value>程序与脚本</value></data>
+  <data name="Inline_NoExtension" xml:space="preserve"><value>无扩展名</value></data>
+  <data name="Inline_Extensions" xml:space="preserve"><value>自定义扩展名</value></data>
+  <data name="Inline_Done" xml:space="preserve"><value>完成</value></data>
+  <data name="Inline_CustomSize" xml:space="preserve"><value>自定义大小</value></data>
+  <data name="Inline_BytesNote" xml:space="preserve"><value>KB/MB/GB 沿用 1024 进制；上下限包含边界，仅比较文件字节。</value></data>
+  <data name="Inline_ClearCondition" xml:space="preserve"><value>清除此条件</value></data>
+  <data name="Inline_PreviousRetained" xml:space="preserve"><value>保留上次有效条件。</value></data>
+  <data name="Inline_InvalidExtensions" xml:space="preserve"><value>扩展名格式无效。仅支持 jpg、.jpg 或 *.jpg，不支持路径或任意通配符。</value></data>
+  <data name="Inline_IncompleteDates" xml:space="preserve"><value>请完成开始和结束日期。</value></data>
+  <data name="Inline_InvalidSize" xml:space="preserve"><value>请填写有效且顺序正确的非负大小范围。</value></data>
+  <data name="Inline_All" xml:space="preserve"><value>全部</value></data>
+  <data name="Inline_MultiSelect" xml:space="preserve"><value>可多选，匹配任一所选类型或扩展名。</value></data>
+  <data name="Inline_ExtensionChoices" xml:space="preserve"><value>扩展名</value></data>
+  <data name="Inline_Add" xml:space="preserve"><value>添加</value></data>
+  <data name="Inline_TypeHint" xml:space="preserve"><value>支持 jpg、.jpg 或 *.jpg，以分号分隔。</value></data>
+  <data name="Inline_DateHint" xml:space="preserve"><value>按本地时间，包含起止日期。</value></data>
 </root>

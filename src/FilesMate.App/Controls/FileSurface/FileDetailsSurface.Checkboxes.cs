@@ -11,6 +11,7 @@ public sealed partial class FileDetailsSurface
     {
         var index = sender switch { FileRow row => row.ViewIndex, FileTile tile => tile.ViewIndex, _ => -1 };
         if (IsRenaming || !_items.TryGetEntry(index, out var entry) || entry.Id != entryId) return;
+        NotifyUserInteraction();
         CancelMarquee();
         ItemActivation.CancelPendingClick(this);
         _selection.Toggle(entryId);
@@ -23,7 +24,7 @@ public sealed partial class FileDetailsSurface
     {
         while (source is not null)
         {
-            if (source is CheckBox { Name: "SelectionBox" }) return true;
+            if (source is CheckBox { Name: "SelectionBox" } or Button { Name: "RecursiveToggle" }) return true;
             source = VisualTreeHelper.GetParent(source);
         }
         return false;

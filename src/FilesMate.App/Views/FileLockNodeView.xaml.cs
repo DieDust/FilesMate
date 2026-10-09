@@ -111,6 +111,8 @@ public sealed partial class FileLockNodeView : UserControl
             : hover ? "FilesMate.Item.HoverBrush" : null;
         Theming.ThemeResources.Bind(Root, Panel.BackgroundProperty, fill ?? "FilesMate.TransparentBrush");
         Theming.ThemeResources.Bind(Root, Grid.BorderBrushProperty, selected ? "FilesMate.Glass.BorderStrongBrush" : "FilesMate.TransparentBrush");
+        Theming.ThemeResources.Bind(TitleText, TextBlock.ForegroundProperty, selected ? "FilesMate.Item.SelectedForegroundBrush" : "FilesMate.Text.PrimaryBrush");
+        Theming.ThemeResources.Bind(SubtitleText, TextBlock.ForegroundProperty, selected ? "FilesMate.Item.SelectedSecondaryBrush" : "FilesMate.Text.SecondaryBrush");
     }
 
     private void Detach()

@@ -10,6 +10,7 @@ namespace FilesMate.App.Services;
 public sealed class RecentFolderStore
 {
     public const int MaxEntries = 10;
+    private readonly Action<string, string> _commit;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -18,6 +19,11 @@ public sealed class RecentFolderStore
     };
 
     public RecentFolderStore(string filePath)
+        : this(filePath, Commit)
+    {
+    }
+
+    internal RecentFolderStore(string filePath, Action<string, string> commit)
     {
         if (string.IsNullOrWhiteSpace(filePath))
         {
@@ -25,29 +31,37 @@ public sealed class RecentFolderStore
         }
 
         FilePath = filePath;
+        _commit = commit;
     }
 
     public string FilePath { get; }
 
     public static string DefaultFilePath =>
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FilesMate",
+        Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath,
             "recent-folders.json");
 
     public IReadOnlyList<string> Load()
     {
         try
         {
-            if (!File.Exists(FilePath))
-            {
-                return [];
-            }
+            return Read();
+        }
+        catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
+        {
+            return [];
+        }
+    }
 
+    // Unlike Load's legacy best-effort API, the background owner must distinguish
+    // an unreadable existing file from empty history before replacing it.
+    internal IReadOnlyList<string> Read()
+    {
+        try
+        {
             var paths = JsonSerializer.Deserialize<string[]>(File.ReadAllText(FilePath), JsonOptions) ?? [];
             return Normalize(paths);
         }
-        catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
+        catch (Exception error) when (error is FileNotFoundException or DirectoryNotFoundException)
         {
             return [];
         }
@@ -70,7 +84,7 @@ public sealed class RecentFolderStore
         return next;
     }
 
-    private void Save(IReadOnlyList<string> paths)
+    internal void Save(IReadOnlyList<string> paths)
     {
         var json = JsonSerializer.Serialize(paths, JsonOptions);
         var directory = Path.GetDirectoryName(FilePath);
@@ -79,15 +93,37 @@ public sealed class RecentFolderStore
             Directory.CreateDirectory(directory);
         }
 
-        var temp = FilePath + ".tmp";
-        File.WriteAllText(temp, json);
-        if (File.Exists(FilePath))
+        // Each writer owns its staging file, including separate app instances.
+        // Never delete the destination or fall back to an in-place partial write.
+        var temp = FilePath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
         {
-            File.Replace(temp, FilePath, destinationBackupFileName: null);
+            using (var writer = new StreamWriter(new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None)))
+            {
+                writer.Write(json);
+            }
+
+            _commit(temp, FilePath);
+        }
+        finally
+        {
+            try { File.Delete(temp); }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            {
+                System.Diagnostics.Trace.TraceError("Recent folder staging cleanup failed: {0}", error);
+            }
+        }
+    }
+
+    private static void Commit(string temp, string destination)
+    {
+        if (File.Exists(destination))
+        {
+            File.Replace(temp, destination, destinationBackupFileName: null);
         }
         else
         {
-            File.Move(temp, FilePath);
+            File.Move(temp, destination);
         }
     }
 
@@ -103,7 +139,7 @@ public sealed class RecentFolderStore
         return PinnedLocationStore.Normalize(path);
     }
 
-    private static string[] Normalize(IEnumerable<string> paths) =>
+    internal static string[] Normalize(IEnumerable<string> paths) =>
         paths
             .Select(NormalizePath)
             .Where(path => path is not null)

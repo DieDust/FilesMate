@@ -48,6 +48,7 @@ public sealed partial class MainWindow
 
     private nint TitleBarMessage(nint window, uint message, nuint wParam, nint lParam, nuint id, nuint data)
     {
+        Input.DesktopCursorBinding.RecordAcceptanceBoundary("TopLevelMessage", window, message, wParam, lParam);
         if (message == WmNcDestroy) _titleBarSubclassHandle = 0;
         // DefWindowProc turns this caption click into the legacy system menu.
         // The tab items remain XAML passthrough regions with their own menus.
@@ -80,6 +81,9 @@ public sealed partial class MainWindow
         if (TryStyle("FilesMate.MenuFlyoutPresenterStyle", out var presenter))
         {
             var themedPresenter = new Style { TargetType = typeof(MenuFlyoutPresenter), BasedOn = presenter };
+            // Window commands have no icon/submenu columns. Let their labels and
+            // accelerator text determine width instead of the shared file-menu floor.
+            themedPresenter.Setters.Add(new Setter(FrameworkElement.MinWidthProperty, 0d));
             themedPresenter.Setters.Add(new Setter(FrameworkElement.RequestedThemeProperty, AppTitleBar.ActualTheme));
             menu.MenuFlyoutPresenterStyle = themedPresenter;
         }
@@ -92,6 +96,7 @@ public sealed partial class MainWindow
         AddWindowCommand(menu, window, "TitleBar_Maximize", ScMaximize, !maximized && state?.IsMaximizable != false);
         menu.Items.Add(new MenuFlyoutSeparator());
         AddWindowCommand(menu, window, "TitleBar_Close", ScClose, true, "Alt+F4");
+        Theming.FlyoutTheme.FollowHost(menu);
         menu.ShowAt(AppTitleBar, new FlyoutShowOptions { Position = position });
 #if FILESMATE_UI_TEST
         _titleBarMenuShowCount++;
@@ -102,7 +107,7 @@ public sealed partial class MainWindow
 
     private void AddWindowCommand(MenuFlyout menu, nint window, string label, nuint command, bool enabled, string? accelerator = null)
     {
-        var item = new MenuFlyoutItem { Text = StringTable.Get(label), IsEnabled = enabled };
+        var item = new MenuFlyoutItem { Text = StringTable.Get(label), IsEnabled = enabled, MinWidth = 0 };
         if (accelerator is not null) item.KeyboardAcceleratorTextOverride = accelerator;
         if (TryStyle("FilesMate.MenuFlyoutItemStyle", out var style)) item.Style = style;
         item.Click += (_, _) =>

@@ -21,6 +21,22 @@ public static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        try { FilesMate.Core.Configuration.RuntimeProfile.Initialize(args); }
+        catch (Exception error) when (error is ArgumentException or IOException or UnauthorizedAccessException or NotSupportedException)
+        { Console.Error.WriteLine(error.Message); Environment.ExitCode = 2; return; }
+        args = FilesMate.Core.Configuration.RuntimeProfile.WithoutProfileArguments(args).ToArray();
+        if (args is ["--test-profile-check"] && FilesMate.Core.Configuration.RuntimeProfile.IsIsolated)
+        {
+            File.WriteAllText(Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "profile-check-host.json"),
+                JsonSerializer.Serialize(new
+                {
+                    Profile = GlobalSearchConfiguration.DefaultDirectory,
+                    Language = FilesMate.App.Localization.LanguageSettings.DefaultFilePath,
+                    Database = GlobalSearchConfiguration.ResolveDatabase(), Pipe = GlobalSearchConfiguration.PipeName(),
+                    PersistentIntegration = false,
+                }));
+            return;
+        }
         if (args.Length == 5 && args[0] == "--native-office-preview")
         {
             FilesMate.App.Localization.LanguageSettings.Apply(FilesMate.App.Localization.LanguageSettings.DefaultFilePath);
@@ -35,8 +51,13 @@ public static class Program
         }
         string? Value(string key) { var index = Array.IndexOf(args, key); return index >= 0 && index + 1 < args.Length ? args[index + 1] : null; }
         var profile = Value("--profile") ?? GlobalSearchConfiguration.DefaultDirectory;
+        if (FilesMate.Core.Configuration.RuntimeProfile.HasPrivateProfile && !string.Equals(Path.GetFullPath(profile), GlobalSearchConfiguration.DefaultDirectory, StringComparison.OrdinalIgnoreCase))
+        { Environment.ExitCode = 2; return; }
         FilesMate.App.Localization.LanguageSettings.Apply(Path.Combine(profile, "language.json"));
         var manager = Value("--manager") ?? Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "FilesMate.App.exe"));
+        if (FilesMate.Core.Configuration.RuntimeProfile.HasPrivateProfile && !string.Equals(Path.GetFullPath(manager),
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "FilesMate.App.exe")), StringComparison.OrdinalIgnoreCase))
+        { Environment.ExitCode = 2; return; }
         if (Array.IndexOf(args, "--sync-startup") >= 0 || Array.IndexOf(args, "--remove-startup") >= 0)
         {
             try
@@ -139,6 +160,7 @@ internal sealed partial class SearchHost : IDisposable
         _app = app;
         Profile = profile;
         ManagerPath = manager;
+        InitializeAppearancePreview();
         var catalog = new WindowsApplicationCatalog(() => ManagerPath);
         _searchProvider = new ConfiguredSearchProvider(catalog, profile);
         _ = catalog.GetAsync(CancellationToken.None);
@@ -147,10 +169,10 @@ internal sealed partial class SearchHost : IDisposable
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or System.Security.SecurityException or ArgumentException)
         { _status = Loc.Get("Startup_SaveFailed") + error.Message; }
         _source = new HotkeyWindow(id => { if (id == _hotkeyId) { if (_window is { IsVisible: true, IsClosing: false }) _window.DismissAnimated(); else Show(); } });
-        if (Settings.Enabled && SearchHotkey.TryParse(Settings.Hotkey, out var key) && RegisterHotKey(_source.Handle, 1, key.Modifiers | 0x4000, key.Key)) _hotkeyId = 1;
-        if (Settings.Enabled && !Registered) _status = Loc.Get("Shortcut_InUseHint");
+        if (!FilesMate.Core.Configuration.RuntimeProfile.IsIsolated && Settings.Enabled && SearchHotkey.TryParse(Settings.Hotkey, out var key) && RegisterHotKey(_source.Handle, 1, key.Modifiers | 0x4000, key.Key)) _hotkeyId = 1;
+        if (!FilesMate.Core.Configuration.RuntimeProfile.IsIsolated && Settings.Enabled && !Registered) _status = Loc.Get("Shortcut_InUseHint");
         _icon = System.Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath!) ?? System.Drawing.SystemIcons.Application;
-        var menu = new TrayMenu(Profile, () => Show(), () => Show(true), OpenManagerFromTray, Stop);
+        var menu = new TrayMenu(Profile, () => Show(), () => Show(true), OpenManagerFromTray, Stop, () => EffectiveAppearance);
         _tray = new Forms.NotifyIcon { Icon = _icon, Text = Loc.Get("Search_WindowTitle"), ContextMenuStrip = menu, Visible = true };
         long lastClick = 0;
         _tray.MouseClick += (_, e) =>
@@ -179,6 +201,7 @@ internal sealed partial class SearchHost : IDisposable
     public void Show(bool settings = false)
     {
         _window ??= new PaletteWindow(this, _searchProvider);
+        if (_appearancePreview is { } preview) _window.ApplyAppearancePreview(preview);
         _window.Open(settings, _status);
     }
     public void WindowDismissed()
@@ -194,7 +217,7 @@ internal sealed partial class SearchHost : IDisposable
         settings = settings.Normalize();
         var same = _hotkeyId != 0 && SearchHotkey.TryParse(Settings.Hotkey, out var previous) && previous == key;
         var nextId = _hotkeyId == 1 ? 2 : 1;
-        var acquired = settings.Enabled && !same;
+        var acquired = !FilesMate.Core.Configuration.RuntimeProfile.IsIsolated && settings.Enabled && !same;
         if (acquired && !RegisterHotKey(_source.Handle, nextId, key.Modifiers | 0x4000, key.Key))
         {
             var error = Marshal.GetLastWin32Error();
@@ -258,10 +281,17 @@ internal sealed partial class SearchHost : IDisposable
                 using var writer = new StreamWriter(pipe, leaveOpen: true) { AutoFlush = true };
                 var message = await SearchHostProtocol.ReadAsync(reader, SearchHostProtocol.MaximumRequestCharacters, timeout.Token).ConfigureAwait(false);
                 if (message is null) continue;
-                var request = JsonSerializer.Deserialize<SearchHostRequest>(message);
+                var validRequest = SearchHostProtocol.TryReadRequest(message, out var request);
+                uint previewClientPid = 0;
+                if (request?.Command == "appearance-preview") GetNamedPipeClientProcessId(pipe.SafePipeHandle, out previewClientPid);
                 var response = await _app.Dispatcher.InvokeAsync(() =>
                 {
+                    if (!validRequest) return Reply(false, "Invalid request envelope.", "InvalidSearchHostRequest");
                     if (request is null) return Reply(false, "Invalid request.");
+                    if (FilesMate.Core.Configuration.RuntimeProfile.IsIsolated && request.ManagerPath is { } isolatedManager
+                        && !string.Equals(Path.GetFullPath(isolatedManager), ManagerPath, StringComparison.OrdinalIgnoreCase))
+                        return Reply(false, "The isolated manager cannot be changed.", "InvalidIsolatedManager");
+                    if (request.Command == "appearance-preview") return ApplyAppearancePreview(request, previewClientPid);
                     if (request.Command == "stop-installation") return Reply(string.Equals(request.ManagerPath, ManagerPath, StringComparison.OrdinalIgnoreCase));
                     if (request.ManagerPath is { } manager && Path.GetFileName(manager).Equals("FilesMate.App.exe", StringComparison.OrdinalIgnoreCase) && File.Exists(manager)) ManagerPath = manager;
                     if (request.Command == "show") Show();
@@ -283,6 +313,7 @@ internal sealed partial class SearchHost : IDisposable
     public void Dispose()
     {
         _stopping = true;
+        _appearancePreviewLease.Stop();
         _lifetime.Cancel();
         if (_hotkeyId != 0) UnregisterHotKey(_source.Handle, _hotkeyId);
         _window?.CancelSearch();
@@ -295,6 +326,8 @@ internal sealed partial class SearchHost : IDisposable
     }
     [DllImport("user32.dll", SetLastError = true)] private static extern bool RegisterHotKey(IntPtr hwnd, int id, uint modifiers, uint key);
     [DllImport("user32.dll")] private static extern bool UnregisterHotKey(IntPtr hwnd, int id);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool GetNamedPipeClientProcessId(Microsoft.Win32.SafeHandles.SafePipeHandle pipe, out uint clientPid);
 }
 
 internal sealed class HotkeyWindow : Forms.NativeWindow, IDisposable

@@ -6,8 +6,7 @@ namespace FilesMate.App.Localization;
 /// <summary>Shared by the file manager and the independently running search host.</summary>
 public static class LanguageSettings
 {
-    public static string DefaultFilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FilesMate", "language.json");
+    public static string DefaultFilePath => Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "language.json");
 
     public static string Normalize(string? language) => language switch
     {

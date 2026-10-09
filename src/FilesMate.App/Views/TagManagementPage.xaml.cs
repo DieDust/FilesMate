@@ -55,7 +55,7 @@ public sealed partial class TagManagementPage : UserControl
         var row = new Grid
         {
             MinHeight = 60,
-            Padding = new Thickness(16, 8, 12, 8),
+            Padding = new Thickness(16, 8, 16, 8),
             ColumnSpacing = 10,
             ColumnDefinitions =
             {
@@ -80,7 +80,10 @@ public sealed partial class TagManagementPage : UserControl
             FontSize = 14,
             FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
             VerticalAlignment = VerticalAlignment.Center,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            TextWrapping = TextWrapping.NoWrap,
         };
+        ToolTipService.SetToolTip(name, tag.Name);
         Grid.SetColumn(name, 1);
         row.Children.Add(name);
 

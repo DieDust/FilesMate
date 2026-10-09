@@ -21,6 +21,7 @@ public sealed partial class FileTile
 
     private void UpdateTileFolderSize()
     {
+        if (_tileSizeOwner.IsCancellationRequested) return;
         var path = _path!;
         if (FolderSizeCache.TryGet(path, out var bytes)
             || _tileRetainKnownSize && FolderSizeCache.TryGetUnchanged(path, out bytes))
@@ -29,9 +30,12 @@ public sealed partial class FileTile
             return;
         }
         if (_tileSizeRequest?.IsCancellationRequested == false && _tileSizeTask is { IsCompleted: false }) return;
-        CancelTileFolderSize();
         var hadKnown = FolderSizeCache.TryGetLastKnown(path, out var previous);
         SizeText.Text = hadKnown ? DisplayTileBytes(previous) : "…";
+        // Recycled/transient tiles may show warm text, but never start a
+        // directory walk before the viewport admits their heavy work.
+        if (_thumbnailLoadMode != FilesMate.App.Icons.ThumbnailLoadMode.Active) return;
+        CancelTileFolderSize();
         _tileSizeRequest = CancellationTokenSource.CreateLinkedTokenSource(_tileSizeOwner);
         _tileSizeTask = FillTileFolderSizeAsync(path, _tileSizeVersion, _tileSizeRequest.Token, hadKnown);
     }

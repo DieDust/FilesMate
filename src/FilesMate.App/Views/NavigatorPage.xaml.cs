@@ -59,7 +59,8 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         {
             if (_homeDashboard is not null) return _homeDashboard;
             _homeDashboard = new HomeDashboard { Visibility = Visibility.Collapsed, IsHitTestVisible = false, Opacity = 0 };
-            _homeDashboard.PlaceChosen += HomeDashboard_PlaceChosen;
+            _homeDashboard.GlobalSearchRequested += (_, _) => Omni.BeginGlobalSearch();
+        _homeDashboard.PlaceChosen += HomeDashboard_PlaceChosen;
             _homeDashboard.PlaceActionRequested += HomeDashboard_PlaceActionRequested;
             HomeContainer.Content = _homeDashboard;
             HomeContainer.Visibility = Visibility.Visible;
@@ -127,7 +128,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         ViewModel = CreatePaneViewModel();
         _leftVm = ViewModel;
         InitializeComponent();
-        Omni.SearchDeviceFolder = SearchCurrentDeviceFolder;
+        Commands.SetFilterHeader(InlineFilters.DetachToolbarHeader());
         Omni.DropRequested = request => HandleFileDropAsync(request, ViewModel);
         App.DevicesChanged += DevicesChanged;
         FavoritesSlot.Visibility = App.Features.FavoritesBarEnabled ? Visibility.Visible : Visibility.Collapsed;
@@ -165,15 +166,14 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             _pendingCreatedItemRename = true;
             _selectAttempts = 0;
             // A new item must be visible even when the previous list was filtered.
-            if (!string.IsNullOrEmpty(ViewModel.FilterQuery)) ViewModel.SetFilterQuery(string.Empty);
+            if (ViewModel.HasInlineFilter) ViewModel.ClearInlineSearchAndFilters();
             TryApplyPendingSelection(ViewModel);
         };
         InitializeConvenience();
+        InitializeRecursiveView();
         AutomationProperties.SetName(PaneToggle, StringTable.Get("ShowNavigation"));
         ToolTipService.SetToolTip(PaneToggle, StringTable.Get("ShowNavigation"));
-        FileSurface.ResolvePath = entry => _leftVm.FullPath(entry);
-        FileSurface.ResolveFolder = () => _leftVm.Navigation.CurrentPath ?? _leftVm.AddressText;
-        FileSurface.ResolveTags = entry => ResolveTags(_leftVm, entry);
+        FileSurface.ResolveTags = entry => ResolveTags(FileSurface, entry);
         FileSurface.CreateTagPicker = CreateTagPickerPanel;
         Omni.ResolveTagName = id =>
         {
@@ -356,6 +356,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         _leftVm.RestoreSort(_leftVm.Sort with { MixChineseAndLatin = preferences.MixChineseAndLatin });
         if (_rightVm is not null) _rightVm.RestoreSort(_rightVm.Sort with { MixChineseAndLatin = preferences.MixChineseAndLatin });
         if (_thirdVm is not null) _thirdVm.RestoreSort(_thirdVm.Sort with { MixChineseAndLatin = preferences.MixChineseAndLatin });
+        SyncInlineFilters();
         // DefaultView is for new tabs. Column-width saves must not switch layout.
         FileSurface.RebindVisibleEntries();
         _rightSurface?.RebindVisibleEntries();
@@ -626,10 +627,11 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         ScheduleNavigation(ViewModel.Forward);
 
     private void Toolbar_UpClicked(object sender, RoutedEventArgs e) =>
-        ScheduleNavigation(ViewModel.Up);
+        NavigateAddressUp();
 
     private void Toolbar_RefreshClicked(object sender, RoutedEventArgs e)
     {
+        SupersedePendingAddressInput();
         Icons.FolderPreviewBinder.ClearCache();
         if (HomeLocation.IsHome(ViewModel.AddressText))
         {
@@ -640,78 +642,6 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         ViewModel.Refresh();
     }
 
-    private int _addressSubmissionVersion;
-
-    private async void Omni_PathSubmitted(object? sender, string path)
-    {
-        var version = ++_addressSubmissionVersion;
-        if (SpecialLocation.ShellName(path) is { } shellName)
-        {
-            try
-            {
-                // An actual child named "文档" wins over the convenience alias.
-                var actualChild = await Task.Run(() =>
-                {
-                    if (path.Contains(':')) return false;
-                    try
-                    {
-                        var candidate = AddressPath.Normalize(path, ViewModel.AddressText);
-                        return Directory.Exists(candidate) || File.Exists(candidate);
-                    }
-                    catch (ArgumentException) { return false; }
-                });
-                if (!IsCurrentSubmission()) return;
-                if (!actualChild)
-                {
-                    var folder = await FilesMate.Platform.Windows.Shell.ShellLocation.ResolveFileSystemPathAsync(shellName);
-                    if (!IsCurrentSubmission()) return;
-                    if (folder is null)
-                    {
-                        await FilesMate.Platform.Windows.Associations.ClassicExplorer.OpenLocationAsync(shellName);
-                        if (IsCurrentSubmission()) Omni.CancelMode();
-                    }
-                    else if (Omni.TryCommitPath(_ => CommitFolderPath(folder)))
-                        ScheduleNavigation(() => ViewModel.Navigate(folder));
-                    return;
-                }
-            }
-            catch (Exception error)
-            {
-                if (IsCurrentSubmission())
-                {
-                    Omni.TryCommitPath(_ => throw new IOException(Loc.Get("SystemLocation_Failed"), error));
-                    ViewModel.ReportUserError(Loc.Get("SystemLocation_Failed"));
-                }
-                return;
-            }
-        }
-        if (!Omni.TryCommitPath(CommitFolderPath))
-        {
-            return;
-        }
-
-        ScheduleNavigation(() => ViewModel.Navigate(Omni.Text));
-
-        bool IsCurrentSubmission() => !_disposed && version == _addressSubmissionVersion
-            && Omni.IsEditing && Omni.DraftText == path;
-    }
-
-    private string CommitFolderPath(string draft)
-    {
-        if (HomeLocation.TryParse(draft, out var home))
-        {
-            return home;
-        }
-
-        var normalized = AddressPath.Normalize(draft, ViewModel.AddressText);
-        if (Directory.Exists(normalized) || File.Exists(normalized)
-            || FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(normalized, out _))
-        {
-            return normalized;
-        }
-
-        throw new DirectoryNotFoundException("This path does not exist.");
-    }
 
     private async void HomeDashboard_PlaceChosen(object? sender, string path)
     {
@@ -803,6 +733,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private void Omni_ModeCanceled(object? sender, EventArgs e)
     {
+        CancelAddressSubmission();
         // Finish the TextBox/Popup input event before moving focus out of it.
         _ = DispatcherQueue.TryEnqueue(() =>
         {
@@ -811,8 +742,15 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         });
     }
 
-    private void Address_CrumbClicked(object? sender, string path) =>
-        ScheduleNavigation(() => ViewModel.Navigate(path));
+    private void Address_CrumbClicked(object? sender, string path)
+    {
+        var pane = ViewModel;
+        if (pane.IsRecursive && ActiveSurface.GetSelectedLocation() is { IsFile: true } selected
+            && string.Equals(selected.Path, path, StringComparison.Ordinal)
+            && Path.GetDirectoryName(path) is { } parent)
+            ScheduleNavigation(() => NavigateAddressTarget(pane, parent, path));
+        else ScheduleNavigation(() => pane.NavigateDirectory(path));
+    }
 
     private void PaneToggle_Click(object sender, RoutedEventArgs e) => _ownerWindow.ToggleNavigation();
 
@@ -889,15 +827,16 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private void FileSurface_OpenRequested(object? sender, FileEntryCore entry)
     {
+        var capturedPath = (sender as FileDetailsSurface)?.ResolvePath?.Invoke(entry);
         ActivateFromSurface(sender as FileDetailsSurface);
-        var path = ViewModel.FullPath(entry);
+        var path = capturedPath ?? ViewModel.FullPath(entry);
         if (entry.Kind == EntryKind.Directory)
         {
             OpenFolderFromUser(path);
             return;
         }
 
-        ViewModel.Open(entry);
+        ViewModel_OpenFileRequested(ViewModel, path);
     }
 
     private void RefreshAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
@@ -905,6 +844,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private void RefreshCurrentFolder()
     {
+        SupersedePendingAddressInput();
         Icons.FolderPreviewBinder.ClearCache();
         if (HomeLocation.IsHome(ViewModel.AddressText))
         {
@@ -920,7 +860,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     private void FileSurface_UpRequested(object? sender, EventArgs e)
     {
         ActivateFromSurface(sender as FileDetailsSurface);
-        ScheduleNavigation(ViewModel.Up);
+        NavigateAddressUp();
     }
 
     private void FileSurface_BackRequested(object? sender, EventArgs e)
@@ -976,6 +916,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     {
         Icons.FolderPreviewBinder.ClearCache();
         ActivateFromSurface(sender as FileDetailsSurface);
+        SupersedePendingAddressInput();
         if (HomeLocation.IsHome(ViewModel.AddressText))
         {
             ActiveHome.Reload();
@@ -992,14 +933,16 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             return;
         }
 
+        var capturedPath = (sender as FileDetailsSurface)?.ResolvePath?.Invoke(entry);
         ActivateFromSurface(sender as FileDetailsSurface);
-        var path = ViewModel.FullPath(entry);
+        var path = capturedPath ?? ViewModel.FullPath(entry);
         App.WindowForElement(this)?.OpenFolderInNewTab(path, ViewModel.Navigation.HistoryForNewTab(path));
     }
 
     private bool _selectionPreviewRequested;
     private void FileSurface_SelectionChanged(object? sender, EventArgs e)
     {
+        ScheduleChrome();
         if (sender is FileDetailsSurface surface)
         {
             var chrome = ReferenceEquals(surface, _thirdSurface) ? _thirdChrome! : ReferenceEquals(surface, _rightSurface) ? _rightChrome! : PaneChrome;
@@ -1105,6 +1048,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
     {
         if (ViewModel.IsPortableDevice && !CommandCatalog.CanExecute(id, DeviceCommandContext())) return;
         if (id == AppCommandId.SearchCommands) { _ = ShowCommandPaletteAsync(); return; }
+        if (id == AppCommandId.ShowFolderFilters) { InlineFilters.ShowEditor(); return; }
         if (id == AppCommandId.SelectSameType) { ActiveSurface.SelectSameType(); return; }
         if (id == AppCommandId.InvertSelection) { ActiveSurface.InvertSelection(); return; }
         if (id is AppCommandId.CopyToOtherPane or AppCommandId.MoveToOtherPane) { _ = TransferToOtherPaneAsync(id == AppCommandId.MoveToOtherPane); return; }
@@ -1187,6 +1131,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private async Task AddSelectedFavoritesAsync()
     {
+        if (!ActiveSurface.ValidateRecursiveSelection(FilesMate.Core.Recursive.RecursiveOperationScope.IdentityOnly)) return;
         try { await Favorites.AddPathsAsync(SelectedPaths()); }
         catch (Exception error) { ViewModel.ReportUserError(error.Message); }
     }
@@ -1200,6 +1145,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private async Task ShareSelectedAsync()
     {
+        if (!ActiveSurface.ValidateRecursiveSelection()) return;
         var service = App.ShareService;
         var paths = SelectedPaths();
         if (paths.Count == 0)
@@ -1365,14 +1311,18 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
         return request.FromShelf
             ? TransferShelfDropAsync(request, destination, vm)
-            : _fileActions.DropAsync(request.Paths, destination, request.Operation, request.AllowSameDirectoryCopy);
+            : _fileActions.DropAsync(request.Paths, destination, request.Operation, request.AllowSameDirectoryCopy,
+                requireRecursiveCompatibility: request.RecursiveSource || vm.IsRecursive);
     }
 
     internal Task ReceiveTabFileDropAsync(FileDropRequest request) => HandleFileDropAsync(request, ViewModel);
 
-    private IReadOnlyList<TagDefinition> ResolveTags(PaneViewModel vm, FileEntryCore entry)
+    private IReadOnlyList<TagDefinition> ResolveTags(FileDetailsSurface surface, FileEntryCore entry)
     {
-        if (vm.IsPortableDevice) return [];
+        var binding = surface.ViewBinding;
+        if (binding is null || FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(binding.FolderPath, out _)) return [];
+        if (binding.Recursive is { } recursive && (!recursive.IsOperationSafe(entry.Id,
+            FilesMate.Core.Recursive.RecursiveOperationScope.IdentityOnly) || binding.RecursiveOperationsCurrent?.Invoke() != true)) return [];
         var store = App.MetadataStore;
         var provider = App.FileIdentityProvider;
         if (store is null || provider is null)
@@ -1391,7 +1341,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             return [];
         }
 
-        var path = vm.FullPath(entry);
+        var path = binding.ResolvePath(entry);
         lock (_tagCacheGate)
         {
             if (_tagCache.TryGetValue(path, out var tags))
@@ -1403,8 +1353,6 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             {
                 _ = LoadTagsAsync(
                     path,
-                    entry.Id,
-                    vm.Navigation.CurrentGeneration,
                     _tagLoadCts.Token);
             }
         }
@@ -1476,8 +1424,6 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private async Task LoadTagsAsync(
         string path,
-        int entryId,
-        long generation,
         CancellationToken cancellationToken)
     {
         var enteredGate = false;
@@ -1496,8 +1442,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             var tags = await store.GetTagsAsync(identity, cancellationToken).ConfigureAwait(false);
             await EnqueueUiAsync(() =>
             {
-                if (cancellationToken.IsCancellationRequested
-                    || generation != ViewModel.Navigation.CurrentGeneration)
+                if (cancellationToken.IsCancellationRequested || _disposed)
                 {
                     return;
                 }
@@ -1512,9 +1457,11 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
                     }
                 }
 
-                FileSurface.RefreshRealizedTags(entryId);
-                _rightSurface?.RefreshRealizedTags(entryId);
-                _thirdSurface?.RefreshRealizedTags(entryId);
+                // Loads are deduplicated across panes by path. Repaint only rows
+                // whose presenter and current snapshot both still own that path.
+                FileSurface.RefreshRealizedTags(path, tags);
+                _rightSurface?.RefreshRealizedTags(path, tags);
+                _thirdSurface?.RefreshRealizedTags(path, tags);
             });
         }
         catch (OperationCanceledException)
@@ -1560,6 +1507,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private (IFileMetadataStore Store, IReadOnlyList<FileIdentity> Identities)? TryCreateTagPicker()
     {
+        if (!ActiveSurface.ValidateRecursiveSelection(FilesMate.Core.Recursive.RecursiveOperationScope.IdentityOnly)) return null;
         var store = App.MetadataStore;
         var provider = App.FileIdentityProvider;
         if (store is null || provider is null)
@@ -1676,13 +1624,22 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private bool FileAcceleratorsBlocked() =>
         _ownerWindow.FileShortcutRoutingBlocked || _ownerWindow.TextInputFocused || Omni.IsEditing
-            || ActiveSurface.IsRenaming || _shelfPanel?.ContainsFocus() == true;
+            || ActiveSurface.OwnsTextEditing || _shelfPanel?.ContainsFocus() == true
+            || (_pendingCreatedItemRename && _selectAttempts < 20 && _pendingSelectPath is not null
+                && ReferenceEquals(_pendingSelectPane, ViewModel)
+                && string.Equals(FolderCustomizationStore.Key(Path.GetDirectoryName(_pendingSelectPath)),
+                    FolderCustomizationStore.Key(ViewModel.Navigation.CurrentPath), StringComparison.OrdinalIgnoreCase));
 
     private void Commands_SortRequested(object? sender, EntrySortColumn column) =>
         ViewModel.SetSortColumn(column, App.ExplorerPreferences.DefaultSortAscending);
 
     private void Commands_LayoutChanged(object? sender, FileLayoutKind kind)
     {
+        if (ViewModel.IsRecursive)
+        {
+            _ = LeaveRecursiveForLayoutAsync(kind);
+            return;
+        }
         DispatcherQueue.TryEnqueue(() =>
         {
             if (_disposed) return;
@@ -1761,6 +1718,12 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
     private async Task LoadSelectedPreviewAsync()
     {
+        if (_pinnedPreviewPath is null && !ActiveSurface.ValidateRecursiveSelection(FilesMate.Core.Recursive.RecursiveOperationScope.IdentityOnly, report: false))
+        {
+            _loadedPreviewPath = null;
+            _previewHost?.CancelAndClear();
+            return;
+        }
         var path = _pinnedPreviewPath ?? PrimarySelectedPath();
         if (string.IsNullOrWhiteSpace(path))
         {
@@ -1842,6 +1805,19 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
 
         var surface = SurfaceOf(vm);
         var isActive = ReferenceEquals(vm, ViewModel);
+        surface.SetNameHighlightQuery(vm.FilterQuery);
+        if (e.PropertyName == nameof(PaneViewModel.IsRecursive))
+        {
+            if (isActive)
+            {
+                // Recursive refresh has an asynchronous preflight before the
+                // navigation generation advances. Cancel its older input now.
+                Omni.CancelPendingPathPaste();
+                if (Omni.IsEditing) CancelAddressSubmission();
+            }
+            ApplyRecursivePresentation(vm);
+        }
+        if (isActive && e.PropertyName is nameof(PaneViewModel.FilterQuery) or nameof(PaneViewModel.MetadataFilter) or nameof(PaneViewModel.IsRecursive) or nameof(PaneViewModel.AddressText)) SyncInlineFilters();
         if (e.PropertyName == nameof(PaneViewModel.AddressText))
         {
             if (_pendingCreatedItemRename && ReferenceEquals(vm, _pendingSelectPane)
@@ -1880,7 +1856,9 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         {
             if (!HomeLocation.IsHome(vm.AddressText))
             {
-                surface.Bind(vm.Store, vm.ViewIndex, vm.Navigation.CurrentGeneration);
+                var binding = vm.ViewBinding;
+                if (binding is null) surface.Bind(null, null, vm.Navigation.CurrentGeneration);
+                else surface.Bind(binding.Store, binding.Index, binding.Generation, append: binding.Recursive is not null, binding: binding);
                 surface.SetSort(vm.Sort);
                 UpdateFolderStatus(vm);
                 ScheduleChrome();
@@ -1901,6 +1879,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             or nameof(PaneViewModel.IsLoading)
             or nameof(PaneViewModel.ErrorText)
             or nameof(PaneViewModel.FilterQuery)
+            or nameof(PaneViewModel.MetadataFilter)
             or nameof(PaneViewModel.StatusText))
         {
             if (HomeLocation.IsHome(vm.AddressText))
@@ -1993,6 +1972,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         ResetTagLoads();
         _tagCatalogProbe = null;
         Omni.ApplyCommittedPath(ViewModel.AddressText);
+        SyncInlineFilters();
         SelectSidebarPath(FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(ViewModel.AddressText, out var device)
             ? (device with { Segments = [] }).Uri : ViewModel.AddressText);
         ApplyTabCaption(ViewModel.AddressText);
@@ -2047,7 +2027,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         App.WindowForElement(this)?.UpdateFavoritesPlacement(this);
         Omni.CanGoBack = ViewModel.CanGoBack;
         Omni.CanGoForward = ViewModel.CanGoForward;
-        Omni.CanGoUp = ViewModel.CanGoUp;
+        Omni.CanGoUp = SelectedAddressParent(ViewModel) is not null || ViewModel.CanGoUp;
         Omni.CanRefresh = ViewModel.CanRefresh;
         ActiveSurface.CanRefresh = ViewModel.CanRefresh;
         SyncCommandBar();
@@ -2057,38 +2037,55 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             Omni.Text = ViewModel.AddressText;
             ApplyTabCaption(ViewModel.AddressText);
         }
+        var selectedLocation = ViewModel.IsRecursive ? ActiveSurface.GetSelectedLocation() : null;
+        Omni.SetSelectionLocation(selectedLocation?.Path, selectedLocation?.IsFile ?? false,
+            selectedLocation?.Count ?? 0, selectedLocation?.CrossDirectories ?? false,
+            ViewModel.IsRecursive ? ViewModel.AddressText : null);
+        SyncInlineFilters();
     }
 
     private void PaneChrome_RetryRequested(object sender, RoutedEventArgs e)
     {
         ActivateFromChrome(sender as FilePaneChrome);
-        ViewModel.Refresh();
+        SupersedePendingAddressInput();
+        if (ChromeOf(ViewModel).ItemCount == 0 && ViewModel.HasInlineFilter) ViewModel.ClearInlineSearchAndFilters();
+        else ViewModel.Refresh();
     }
 
     private void PaneChrome_GoUpRequested(object sender, RoutedEventArgs e)
     {
         ActivateFromChrome(sender as FilePaneChrome);
-        ScheduleNavigation(ViewModel.Up);
+        NavigateAddressUp();
     }
 
-    private void ScheduleNavigation(Action navigate)
+    private void ScheduleNavigation(Action navigate, Func<bool>? isCurrent = null)
     {
+        var tracePane = ViewModel;
+        var traceOperation = FilesMate.Core.Diagnostics.PerformanceTrace.NextOperation();
+        FilesMate.Core.Diagnostics.PerformanceTrace.Record(FilesMate.Core.Diagnostics.PerformanceStage.NavigationQueued,
+            operation: traceOperation);
         if (!DispatcherQueue.TryEnqueue(() =>
             {
-                if (_disposed)
+                if (_disposed || isCurrent?.Invoke() == false)
                 {
                     return;
                 }
 
+                FilesMate.Core.Diagnostics.PerformanceTrace.Record(FilesMate.Core.Diagnostics.PerformanceStage.NavigationExecuting,
+                    operation: traceOperation);
+                tracePane.TraceNextNavigation(traceOperation);
                 navigate();
                 AfterNavigate();
             }))
         {
-            if (_disposed)
+            if (_disposed || isCurrent?.Invoke() == false)
             {
                 return;
             }
 
+            FilesMate.Core.Diagnostics.PerformanceTrace.Record(FilesMate.Core.Diagnostics.PerformanceStage.NavigationExecuting,
+                operation: traceOperation);
+            tracePane.TraceNextNavigation(traceOperation);
             navigate();
             AfterNavigate();
         }
@@ -2101,8 +2098,8 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         chrome.ErrorText = vm.ErrorText;
         chrome.IsLoading = vm.IsLoading;
         chrome.ItemCount = vm.ItemCount;
-        chrome.FilterQuery = vm.FilterQuery;
-        chrome.CanGoUp = vm.CanGoUp;
+        chrome.FilterQuery = vm.HasInlineFilter ? string.IsNullOrEmpty(vm.FilterQuery) ? StringTable.Get("Inline_Filter") : vm.FilterQuery : string.Empty;
+        chrome.CanGoUp = SelectedAddressParent(vm) is not null || vm.CanGoUp;
         chrome.NavigationGeneration = vm.Navigation.CurrentGeneration;
         chrome.StatusText = vm.StatusText;
         UpdateFolderStatus(vm);
@@ -2117,6 +2114,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         Commands.SetSort(ViewModel.Sort);
         Commands.SetLayout(ActiveSurface.LayoutKind);
         Commands.SetViewSize(ActiveSurface.GridPreset, ActiveSurface.ListZoomPercent);
+        Commands.SetRecursiveState(ViewModel.IsRecursive, ViewModel.CanUseRecursive);
         UpdateFolderStatus(ViewModel);
     }
 
@@ -2223,6 +2221,8 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         if (_thirdChrome is not null) _thirdChrome.IsActive = index == 2;
         UpdateSharedStatus();
         if (!changed) return;
+        CancelAddressSubmission();
+        Omni.InvalidateAddressInput();
         UpdateShellWindow();
 
         if (!DispatcherQueue.TryEnqueue(() =>
@@ -2321,9 +2321,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         _rightVm.OpenFileRequested += ViewModel_OpenFileRequested;
 
         _rightSurface = new FileDetailsSurface();
-        _rightSurface.ResolvePath = entry => _rightVm.FullPath(entry);
-        _rightSurface.ResolveFolder = () => _rightVm.Navigation.CurrentPath ?? _rightVm.AddressText;
-        _rightSurface.ResolveTags = entry => ResolveTags(_rightVm, entry);
+        _rightSurface.ResolveTags = entry => ResolveTags(_rightSurface, entry);
         _rightSurface.CreateTagPicker = CreateTagPickerPanel;
         _rightSurface.IsPinnedPath = path => WindowsNavigationSource.IsPinned(path, _pinnedLocations);
         _rightSurface.PresentationChanged += (_, _) =>
@@ -2360,6 +2358,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             Opacity = 0,
             IsHitTestVisible = false,
         };
+        _rightHome.GlobalSearchRequested += (_, _) => Omni.BeginGlobalSearch();
         _rightHome.PlaceChosen += HomeDashboard_PlaceChosen;
         _rightHome.PlaceActionRequested += HomeDashboard_PlaceActionRequested;
 
@@ -2398,9 +2397,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
         _thirdVm.OpenFileRequested += ViewModel_OpenFileRequested;
 
         _thirdSurface = new FileDetailsSurface();
-        _thirdSurface.ResolvePath = entry => _thirdVm.FullPath(entry);
-        _thirdSurface.ResolveFolder = () => _thirdVm.Navigation.CurrentPath ?? _thirdVm.AddressText;
-        _thirdSurface.ResolveTags = entry => ResolveTags(_thirdVm, entry);
+        _thirdSurface.ResolveTags = entry => ResolveTags(_thirdSurface, entry);
         _thirdSurface.CreateTagPicker = CreateTagPickerPanel;
         _thirdSurface.IsPinnedPath = path => WindowsNavigationSource.IsPinned(path, _pinnedLocations);
         _thirdSurface.PresentationChanged += (_, _) =>
@@ -2437,6 +2434,7 @@ public sealed partial class NavigatorPage : Page, IAsyncDisposable
             Opacity = 0,
             IsHitTestVisible = false,
         };
+        _thirdHome.GlobalSearchRequested += (_, _) => Omni.BeginGlobalSearch();
         _thirdHome.PlaceChosen += HomeDashboard_PlaceChosen;
         _thirdHome.PlaceActionRequested += HomeDashboard_PlaceActionRequested;
 

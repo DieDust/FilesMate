@@ -1,4 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <!-- Explicit preview-release opt-in: preserve audit output; package.ps1 rejects unapproved findings. -->
+  <PropertyGroup Condition="'$(FilesMateAllowLegacyImageSharpRisk)' == 'true'">
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1902;NU1903</WarningsNotAsErrors>
+  </PropertyGroup>
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
@@ -16,6 +20,7 @@
   <ItemGroup>
     <Compile Include="..\FilesMate.App\Models\ItemOpeningMode.cs;..\FilesMate.App\Models\ItemClickTracker.cs" Link="Models\%(Filename)%(Extension)" />
     <Content Include="..\FilesMate.App\Assets\PdfPreview\**\*" Link="Assets\PdfPreview\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="..\FilesMate.App\Preview\CodePreviewPalette.cs;..\FilesMate.App\Preview\PdfPreviewTheme.cs;..\FilesMate.App\Preview\ReaderThemeDocument.cs" Link="Preview\%(Filename)%(Extension)" />
     <Compile Include="..\FilesMate.App\Preview\PdfPreviewAssets.cs" Link="Preview\PdfPreviewAssets.cs" />
     <PackageReference Include="AvalonEdit" Version="6.3.1.120" />
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3719.77" />
@@ -33,12 +38,15 @@
     <ProjectReference Include="..\FilesMate.Platform.Windows\FilesMate.Platform.Windows.csproj" />
     <Compile Include="..\FilesMate.App\Models\AppearanceSettings.cs" Link="Models\AppearanceSettings.cs" />
     <Compile Include="..\FilesMate.App\Animations\GlassMaterialPolicy.cs" Link="Models\GlassMaterialPolicy.cs" />
+    <Compile Include="..\FilesMate.App\Animations\MotionDurations.cs;..\FilesMate.App\Animations\ReduceMotionGate.cs" Link="Animations\%(Filename)%(Extension)" />
     <Compile Include="..\FilesMate.App\Preview\IPreviewProvider.cs;..\FilesMate.App\Preview\PreviewRequest.cs;..\FilesMate.App\Preview\PreviewResult.cs;..\FilesMate.App\Preview\Providers\TextPreviewProvider.cs" Link="Preview\%(Filename)%(Extension)" />
     <Compile Include="..\FilesMate.App\Preview\MarkdownPreview.cs;..\FilesMate.App\Preview\Providers\PdfPreviewProvider.cs" Link="Preview\%(Filename)%(Extension)" />
     <Compile Include="..\FilesMate.App\Icons\ShellThumbnailService.cs;..\FilesMate.App\Services\VividThumbnailCache.cs" Link="Preview\%(Filename)%(Extension)" />
+    <Compile Include="..\FilesMate.App\Services\ThumbnailMetadataScheduler.cs" Link="Services\ThumbnailMetadataScheduler.cs" />
     <Compile Include="..\FilesMate.App\Models\AccentPalette.cs" Link="Models\AccentPalette.cs" />
     <Compile Include="..\FilesMate.App\Models\SurfacePalette.cs" Link="Models\SurfacePalette.cs" />
     <Compile Include="..\FilesMate.App\Models\SkinPalette.cs" Link="Models\SkinPalette.cs" />
+    <Compile Include="..\FilesMate.App\Models\SkinPackage.cs;..\FilesMate.App\Models\SkinPackageSerializer.cs;..\FilesMate.App\Models\AppearancePreviewCodec.cs" Link="Models\%(Filename)%(Extension)" />
     <Compile Include="..\FilesMate.App\Commands\AppCommand.cs;..\FilesMate.App\Commands\CommandContext.cs;..\FilesMate.App\Commands\CommandCatalog.cs;..\FilesMate.App\Commands\NewDocumentCommands.cs" Link="Commands\%(Filename)%(Extension)" />
     <Compile Include="..\FilesMate.App\Controls\Menus\FileContextMenuBuilder.cs" Link="Commands\FileContextMenuBuilder.cs" />
     <Compile Include="..\FilesMate.App\Services\CompactMateSession.cs" Link="Commands\CompactMateSession.cs" />
@@ -47,6 +55,7 @@
     <Compile Include="..\FilesMate.App\Localization\LanguageSettings.cs" Link="Commands\LanguageSettings.cs" />
     <Compile Include="..\FilesMate.App\Navigation\HomeLocation.cs;..\FilesMate.App\Navigation\TagLocation.cs" Link="Commands\%(Filename)%(Extension)" />
     <EmbeddedResource Include="..\FilesMate.App\Themes\AppThemeResources.xaml" LogicalName="FilesMate.ThemeColors" />
+    <EmbeddedResource Include="..\FilesMate.App\Themes\DesignTokens.xaml" LogicalName="FilesMate.ThemeMetrics" />
     <Resource Include="Assets\FileIcons\*.png" />
     <Resource Include="..\FilesMate.App\Assets\Branding\FilesMate-32.png" Link="Assets\FilesMate.png" />
     <Using Include="System" />

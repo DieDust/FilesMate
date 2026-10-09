@@ -8,6 +8,24 @@ public sealed class ItemClickTracker
 
     public void CancelPendingClick() => _previous = null;
 
+    // Read-only diagnostics, called only by the opt-in collector on the same
+    // UI thread immediately before ShouldOpen with the same clock/coordinates.
+    internal int ExplainNextClick(string identity, ItemOpeningMode mode, bool onName, long milliseconds,
+        double x, double y, int doubleClickMilliseconds, double toleranceX, double toleranceY)
+    {
+        bool CloseTo(Click earlier) => milliseconds >= earlier.Milliseconds
+            && milliseconds - earlier.Milliseconds <= doubleClickMilliseconds
+            && Math.Abs(x - earlier.X) <= toleranceX && Math.Abs(y - earlier.Y) <= toleranceY;
+        if (mode == ItemOpeningMode.NameClick && !onName) return 1;
+        if (_opened is { } opened && CloseTo(opened)) return 2;
+        if (mode != ItemOpeningMode.DoubleClick) return 7;
+        if (_previous is not { } previous) return 3;
+        if (previous.Identity != identity) return 4;
+        if (milliseconds < previous.Milliseconds || milliseconds - previous.Milliseconds > doubleClickMilliseconds) return 5;
+        if (!CloseTo(previous)) return 6;
+        return 8;
+    }
+
     public bool ShouldOpen(string identity, ItemOpeningMode mode, bool onName, long milliseconds, double x, double y,
         int doubleClickMilliseconds, double toleranceX, double toleranceY)
     {

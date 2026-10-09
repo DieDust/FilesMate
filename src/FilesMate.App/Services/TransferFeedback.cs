@@ -11,7 +11,7 @@ public static class TransferFeedback
     {
         var summary = StringTable.Format("Transfer_ResultCounts", result.Completed.Count, result.Skipped, result.Errors.Count);
         if (result.Cancelled) summary = StringTable.Get("Files_OperationCancelled") + " · " + summary;
-        if (result.WithoutUndo > 0) summary += " · " + StringTable.Format("Backup_UnprotectedCount", result.WithoutUndo);
+        if (result.WithoutUndo > 0) summary += " · " + StringTable.Format(result.PreservesOrdinaryUndo ? "Backup_UnprotectedPartialCount" : "Backup_UnprotectedCount", result.WithoutUndo);
         return summary;
     }
 

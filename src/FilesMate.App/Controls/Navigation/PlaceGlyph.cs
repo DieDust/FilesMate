@@ -3,6 +3,7 @@ using FilesMate.App.Icons;
 using FilesMate.Core.Entries;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
 
 namespace FilesMate.App.Controls.Navigation;
 
@@ -27,8 +28,18 @@ public sealed class PlaceGlyph : UserControl
         host.Children.Add(_icon);
         host.Children.Add(_image);
         Content = host;
-        Loaded += (_, _) => Refresh();
-        Unloaded += (_, _) => ShellIconBinder.Clear(_image, _icon);
+        Loaded += (_, _) =>
+        {
+            App.AppearanceChanged -= AppearanceChanged;
+            App.AppearanceChanged += AppearanceChanged;
+            Refresh();
+        };
+        Unloaded += (_, _) =>
+        {
+            App.AppearanceChanged -= AppearanceChanged;
+            ShellIconBinder.Clear(_image, _icon);
+        };
+        ActualThemeChanged += (_, _) => RefreshInk();
     }
 
     public static readonly DependencyProperty GlyphProperty = DependencyProperty.Register(
@@ -60,6 +71,7 @@ public sealed class PlaceGlyph : UserControl
             _ => "Neutral"
         };
         _icon.Style = (Style)Application.Current.Resources[$"FilesMate.Place.{tone}Style"];
+        RefreshInk();
         if (folder && IsLoaded)
         {
             var entry = new FileEntryCore(0, System.IO.Path.GetFileName(Target!), 0, 0, 0,
@@ -68,5 +80,20 @@ public sealed class PlaceGlyph : UserControl
         }
         else
             ShellIconBinder.Clear(_image, _icon);
+    }
+
+    private bool? _inheritedContrastInk;
+    private void AppearanceChanged(object? sender, Models.AppearanceSettings settings) => RefreshInk();
+    private void RefreshInk()
+    {
+        var highContrast = Theming.GlassEnvironment.HighContrast;
+        if (_inheritedContrastInk == highContrast) return;
+        _inheritedContrastInk = highContrast;
+        if (highContrast)
+            _icon.SetBinding(FontIcon.ForegroundProperty, new Binding
+            {
+                Source = this, Path = new PropertyPath(nameof(Foreground)), Mode = BindingMode.OneWay,
+            });
+        else _icon.ClearValue(FontIcon.ForegroundProperty);
     }
 }

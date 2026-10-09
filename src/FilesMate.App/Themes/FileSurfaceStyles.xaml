@@ -205,6 +205,7 @@
     <Style x:Key="FilesMate.ActivePaneChoiceStyle" TargetType="Button" BasedOn="{StaticResource FilesMate.PaneChoiceStyle}">
         <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}"/>
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Item.SelectedForegroundBrush}"/>
     </Style>
     <Style x:Key="FilesMate.PaneDiagramStyle" TargetType="Border">
         <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.Text.SecondaryBrush}"/>
@@ -249,6 +250,8 @@
     </Style>
     <Style x:Key="FilesMate.Type.NeutralStyle" TargetType="Border">
         <Setter Property="Background" Value="{ThemeResource FilesMate.Type.Neutral.BackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.Type.Neutral.BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="6,1" />
     </Style>
     <Style x:Key="FilesMate.Type.NeutralTextStyle" TargetType="TextBlock">
@@ -262,6 +265,8 @@
     </Style>
     <Style x:Key="FilesMate.Type.BlueStyle" TargetType="Border">
         <Setter Property="Background" Value="{ThemeResource FilesMate.Type.Blue.BackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.Type.Blue.BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="6,1" />
     </Style>
     <Style x:Key="FilesMate.Type.BlueTextStyle" TargetType="TextBlock">
@@ -275,6 +280,8 @@
     </Style>
     <Style x:Key="FilesMate.Type.TealStyle" TargetType="Border">
         <Setter Property="Background" Value="{ThemeResource FilesMate.Type.Teal.BackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.Type.Teal.BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="6,1" />
     </Style>
     <Style x:Key="FilesMate.Type.TealTextStyle" TargetType="TextBlock">
@@ -288,6 +295,8 @@
     </Style>
     <Style x:Key="FilesMate.Type.AmberStyle" TargetType="Border">
         <Setter Property="Background" Value="{ThemeResource FilesMate.Type.Amber.BackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.Type.Amber.BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="6,1" />
     </Style>
     <Style x:Key="FilesMate.Type.AmberTextStyle" TargetType="TextBlock">
@@ -301,6 +310,8 @@
     </Style>
     <Style x:Key="FilesMate.Type.VioletStyle" TargetType="Border">
         <Setter Property="Background" Value="{ThemeResource FilesMate.Type.Violet.BackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.Type.Violet.BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="6,1" />
     </Style>
     <Style x:Key="FilesMate.Type.VioletTextStyle" TargetType="TextBlock">
@@ -314,6 +325,8 @@
     </Style>
     <Style x:Key="FilesMate.Type.RoseStyle" TargetType="Border">
         <Setter Property="Background" Value="{ThemeResource FilesMate.Type.Rose.BackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.Type.Rose.BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="6,1" />
     </Style>
     <Style x:Key="FilesMate.Type.RoseTextStyle" TargetType="TextBlock">

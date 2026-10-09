@@ -27,7 +27,7 @@
                                             <Setter Target="CloseGlyph.Foreground" Value="{ThemeResource FilesMate.Close.ForegroundBrush}"/>
                                         </VisualState.Setters>
                                     </VisualState>
-                                    <VisualState x:Name="Disabled"><VisualState.Setters><Setter Target="CloseRoot.Opacity" Value="0.4"/></VisualState.Setters></VisualState>
+                                    <VisualState x:Name="Disabled"><VisualState.Setters><Setter Target="CloseGlyph.Foreground" Value="{ThemeResource TextFillColorDisabledBrush}"/></VisualState.Setters></VisualState>
                                 </VisualStateGroup>
                             </VisualStateManager.VisualStateGroups>
                         </Grid>
@@ -40,7 +40,7 @@
                 <Grid.ColumnDefinitions><ColumnDefinition Width="22"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <Image Width="20" Height="20" Source="ms-appx:///Assets/FileIcons/bookmark-group.svg"/>
                 <TextBlock Grid.Column="1" Text="{Binding Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                <TextBlock Grid.Column="2" Text="{Binding Count}" Opacity="0.6" FontSize="12" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="2" Text="{Binding Count}" Opacity="{ThemeResource FilesMate.Text.SecondaryOpacity}" FontSize="12" VerticalAlignment="Center"/>
             </Grid>
         </DataTemplate>
         <DataTemplate x:Key="EntryTemplate">
@@ -49,7 +49,7 @@
                 <Image Source="{Binding Icon}" Width="28" Height="28" Loaded="EntryIcon_Loaded" DataContextChanged="EntryIcon_DataContextChanged"/>
                 <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
                     <TextBlock Text="{Binding Name}" FontSize="14" TextTrimming="CharacterEllipsis"/>
-                    <TextBlock Text="{Binding Detail}" FontSize="12" Opacity="0.65" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding Detail}" FontSize="12" Opacity="{ThemeResource FilesMate.Text.SecondaryOpacity}" TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
             </Grid>
         </DataTemplate>
@@ -71,7 +71,7 @@
         </Grid>
         <Grid Grid.Row="1" Padding="12,0,4,0" ColumnSpacing="8">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="32"/></Grid.ColumnDefinitions>
-            <TextBlock Text="{loc:LocalizedText Key=Favorites_Group}" FontSize="13" Opacity="0.7" VerticalAlignment="Center"/>
+            <TextBlock Text="{loc:LocalizedText Key=Favorites_Group}" FontSize="13" Opacity="{ThemeResource FilesMate.Text.SecondaryOpacity}" VerticalAlignment="Center"/>
             <Button x:Name="NewGroupButton" Grid.Column="1" Width="32" Height="32" MinWidth="32" MinHeight="32"
                 Padding="0" Background="Transparent" BorderThickness="0" CornerRadius="8" VerticalAlignment="Center"
                 Click="NewGroup_Click" AutomationProperties.Name="{loc:LocalizedText Key=NewGroup}" ToolTipService.ToolTip="{loc:LocalizedText Key=NewGroup}">
@@ -81,7 +81,7 @@
         <Grid Grid.Row="1" Grid.Column="1" ColumnSpacing="6">
             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
             <TextBlock x:Name="LocationText" VerticalAlignment="Center" FontSize="12" TextTrimming="CharacterEllipsis"/>
-            <TextBlock x:Name="SelectionCount" Grid.Column="1" VerticalAlignment="Center" FontSize="12" Opacity="0.65"/>
+            <TextBlock x:Name="SelectionCount" Grid.Column="1" VerticalAlignment="Center" FontSize="12" Opacity="{ThemeResource FilesMate.Text.SecondaryOpacity}"/>
             <Button Grid.Column="2" Content="{loc:LocalizedText Key=Command_SelectAll}" Height="32" VerticalAlignment="Center" Click="SelectAll_Click"/>
             <Button x:Name="MoveButton" Grid.Column="3" Content="{loc:LocalizedText Key=MoveToMenu}" Height="32" VerticalAlignment="Center" Click="Move_Click" IsEnabled="False"/>
             <Button x:Name="RemoveButton" Grid.Column="4" Content="{loc:LocalizedText Key=Remove}" Height="32" VerticalAlignment="Center" Click="Remove_Click" IsEnabled="False"/>
@@ -97,7 +97,7 @@
                 DragItemsStarting="Entries_DragItemsStarting" DragItemsCompleted="Entries_DragItemsCompleted"
                 ContainerContentChanging="Entries_ContainerContentChanging" SelectionChanged="Entries_SelectionChanged"
                 DoubleTapped="Entries_DoubleTapped" KeyDown="Entries_KeyDown" AutomationProperties.Name="{loc:LocalizedText Key=Favorites_Contents}"/>
-            <TextBlock x:Name="Empty" Text="{loc:LocalizedText Key=Favorites_GroupEmpty}" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.6" IsHitTestVisible="False"/>
+            <TextBlock x:Name="Empty" Text="{loc:LocalizedText Key=Favorites_GroupEmpty}" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="{ThemeResource FilesMate.Text.SecondaryOpacity}" IsHitTestVisible="False"/>
             <Canvas IsHitTestVisible="False">
                 <Border x:Name="SelectionRectangle" Visibility="Collapsed" BorderThickness="1" BorderBrush="{ThemeResource SystemControlHighlightAccentBrush}" Background="{ThemeResource SystemControlHighlightListAccentLowBrush}"/>
             </Canvas>
@@ -108,6 +108,6 @@
             <Button Grid.Column="1" Content="{loc:LocalizedText Key=Confirm}" Click="SaveName_Click"/>
             <Button Grid.Column="2" Content="{loc:LocalizedText Key=Cancel}" Click="CancelName_Click"/>
         </Grid>
-        <TextBlock x:Name="Status" Grid.Row="4" Grid.Column="1" Text="{loc:LocalizedText Key=Favorites_SelectionHint}" TextWrapping="Wrap" FontSize="12" Opacity="0.65"/>
+        <TextBlock x:Name="Status" Grid.Row="4" Grid.Column="1" Text="{loc:LocalizedText Key=Favorites_SelectionHint}" TextWrapping="Wrap" FontSize="12" Opacity="{ThemeResource FilesMate.Text.SecondaryOpacity}"/>
     </Grid>
 </UserControl>

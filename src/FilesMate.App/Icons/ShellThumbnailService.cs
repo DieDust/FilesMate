@@ -34,25 +34,32 @@ internal sealed class ShellThumbnailService
     }
 
     internal long CacheBytes => _cache.CacheBytes;
+    internal int ActiveLoadCount => _cache.ActiveLoads;
+    internal int OutstandingLoadCount => _cache.OutstandingRequests;
+    internal long Generation => _cache.Generation;
+    internal IconBitmap? TryGetCachedKey(string key) => _cache.TryGetCached(key);
 
     public void ClearCache() => _cache.Clear();
 
-    public Task<IconBitmap?> GetAsync(string? path, int pixelSize, CancellationToken cancellationToken, bool preferOriginal = false)
+    public Task<IconBitmap?> GetAsync(string? path, int pixelSize, CancellationToken cancellationToken, bool preferOriginal = false, long? generation = null)
     {
-        var generation = _cache.Generation;
-        return Task.Run(() => GetCoreAsync(path, pixelSize, preferOriginal, generation, cancellationToken), cancellationToken);
+        var requestGeneration = generation ?? _cache.Generation;
+        return GetCoreAsync(path, pixelSize, preferOriginal, requestGeneration, cancellationToken);
     }
 
-    private Task<IconBitmap?> GetCoreAsync(string? path, int pixelSize, bool preferOriginal, long generation, CancellationToken cancellationToken)
+    private async Task<IconBitmap?> GetCoreAsync(string? path, int pixelSize, bool preferOriginal, long generation, CancellationToken cancellationToken)
     {
-        if (!TryCreateKey(path, pixelSize, out var key, preferOriginal))
-        {
-            return Task.FromResult<IconBitmap?>(null);
-        }
+        var key = await Services.ThumbnailMetadataScheduler.RunAsync(
+            () => TryCreateKey(path, pixelSize, out var verified, preferOriginal) ? verified : null,
+            cancellationToken).ConfigureAwait(ConfigureAwaitOptions.ForceYielding);
+        // Even an unusually fast metadata task must resume this native-start
+        // stage on the pool rather than inline on a caller's UI thread.
+        cancellationToken.ThrowIfCancellationRequested();
+        if (key is null) return null;
 
-        return _cache.GetAsync(key,
+        return await _cache.GetAsync(key,
             token => LoadAsync(FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(path, out _) ? path! : Path.GetFullPath(path!), pixelSize, preferOriginal, token),
-            cancellationToken, generation);
+            cancellationToken, generation).ConfigureAwait(false);
     }
 
     private async Task<IconBitmap?> LoadAsync(

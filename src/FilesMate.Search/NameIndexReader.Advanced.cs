@@ -22,11 +22,24 @@ public static partial class NameIndexReader
         var metadata = tables.Contains("file_metadata");
         if (!metadata && (query.RequiresMetadata || request.Sort is SearchResultSort.SizeDescending or SearchResultSort.ModifiedDescending))
             return new([], false, "SearchPage_MetadataRequired");
-        connection.CreateFunction<string, string, long, long?, long?, bool>("fm_advanced", (name, path, dir, size, modified) =>
+        if (query.RequiresMetadata)
         {
-            token.ThrowIfCancellationRequested();
-            return query.Matches(new(name, path, dir != 0, size, modified)) && (include?.Invoke(path, dir != 0) ?? true);
-        });
+            connection.CreateFunction<string, string, long, long?, long?, bool>("fm_advanced", (name, path, dir, size, modified) =>
+            {
+                token.ThrowIfCancellationRequested();
+                return query.Matches(new(name, path, dir != 0, size, modified)) && (include?.Invoke(path, dir != 0) ?? true);
+            });
+        }
+        else
+        {
+            // Only the parsed predicate determines which arguments it needs.
+            // Metadata still participates in projection, sorting and result counts.
+            connection.CreateFunction<string, string, long, bool>("fm_advanced", (name, path, dir) =>
+            {
+                token.ThrowIfCancellationRequested();
+                return query.Matches(new(name, path, dir != 0)) && (include?.Invoke(path, dir != 0) ?? true);
+            });
+        }
         connection.CreateFunction<string, long, int>("fm_priority", (path, dir) => rank?.Invoke(path, dir != 0) ?? 0);
         var match = string.Join(" AND ", query.IndexTerms.SelectMany(QueryGrams).Distinct().Select(g => '"' + g + '"'));
         var useGrams = tables.Contains("file_name_gram") && match.Length > 0;
@@ -41,10 +54,14 @@ public static partial class NameIndexReader
             _ => "fm_priority(f.path, CAST(f.is_dir AS INTEGER)), length(f.name), f.name COLLATE NOCASE",
         };
         var columns = metadata ? "m.size, m.modified" : "NULL, NULL";
-        command.CommandText = "SELECT f.name, f.path, CAST(f.is_dir AS INTEGER), " + columns + (includeTotal ? ", COUNT(*) OVER()" : "") + " FROM file_name f "
+        var predicateMetadata = query.RequiresMetadata ? ", " + columns : "";
+        // MATCH runs once, before the rowid lookups. File-first plans restart
+        // the virtual FTS query for every indexed file.
+        var source = useGrams ? "file_name_gram g CROSS JOIN file_name f ON f.rowid=g.rowid " : "file_name f ";
+        command.CommandText = "SELECT f.name, f.path, CAST(f.is_dir AS INTEGER), " + columns + (includeTotal ? ", COUNT(*) OVER()" : "") + " FROM " + source
             + (metadata ? "LEFT JOIN file_metadata m ON m.rowid=f.rowid " : "")
-            + (useGrams ? "JOIN file_name_gram g ON g.rowid=f.rowid WHERE file_name_gram MATCH $match AND " : "WHERE ")
-            + $"fm_advanced(f.name, f.path, CAST(f.is_dir AS INTEGER), {columns}) ORDER BY {order.Replace("NOCASE", "fm_nocase")}, f.path COLLATE fm_ordinal LIMIT $limit OFFSET $offset;";
+            + (useGrams ? "WHERE file_name_gram MATCH $match AND " : "WHERE ")
+            + $"fm_advanced(f.name, f.path, CAST(f.is_dir AS INTEGER){predicateMetadata}) ORDER BY {order.Replace("NOCASE", "fm_nocase")}, f.path COLLATE fm_ordinal LIMIT $limit OFFSET $offset;";
         if (useGrams) command.Parameters.AddWithValue("$match", match);
         command.Parameters.AddWithValue("$limit", Math.Clamp(limit, 1, 20000) + 1);
         command.Parameters.AddWithValue("$offset", Math.Max(0, offset));

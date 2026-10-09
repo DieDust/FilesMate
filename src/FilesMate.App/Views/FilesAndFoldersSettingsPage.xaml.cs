@@ -64,6 +64,18 @@ public sealed partial class FilesAndFoldersSettingsPage : UserControl
         };
     }
 
+
+    private async void RecursiveDepth_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_syncing || RecursiveDepthBox.SelectedIndex < 0) return;
+        await UpdateAsync(App.ExplorerPreferences with { RecursiveAutoExpandDepth = RecursiveDepthBox.SelectedIndex == 6 ? int.MaxValue : RecursiveDepthBox.SelectedIndex });
+    }
+
+    private async void RecursiveAltDepth_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_syncing || RecursiveAltDepthBox.SelectedIndex < 0) return;
+        await UpdateAsync(App.ExplorerPreferences with { RecursiveAltExpandDepth = RecursiveAltDepthBox.SelectedIndex == 5 ? int.MaxValue : RecursiveAltDepthBox.SelectedIndex + 1 });
+    }
     private async void OpeningMode_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_syncing || FileOpeningModeBox.SelectedIndex < 0 || FolderOpeningModeBox.SelectedIndex < 0) return;
@@ -218,6 +230,9 @@ public sealed partial class FilesAndFoldersSettingsPage : UserControl
         await UpdateAsync(App.ExplorerPreferences with { DateFormat = format });
     }
 
+    private async void BackupEnabledToggle_Toggled(object sender, RoutedEventArgs e) =>
+        await UpdateAsync(App.ExplorerPreferences with { EnableUndoBackups = BackupEnabledToggle.IsOn });
+
     private async Task UpdateAsync(Models.ExplorerPreferences next)
     {
         if (_syncing)
@@ -249,9 +264,25 @@ public sealed partial class FilesAndFoldersSettingsPage : UserControl
     private void Sync()
     {
         _syncing = true;
+        if (RecursiveDepthBox.Items.Count == 0)
+        {
+            RecursiveDepthBox.Items.Add(new ComboBoxItem { Content = StringTable.Get("Recursive_DepthNone") });
+            for (var depth = 1; depth <= 5; depth++) RecursiveDepthBox.Items.Add(new ComboBoxItem { Content = StringTable.Format("Recursive_DepthLevels", depth) });
+            RecursiveDepthBox.Items.Add(new ComboBoxItem { Content = StringTable.Get("Recursive_AltDepthAll") });
+        }
+        RecursiveDepthBox.SelectedIndex = App.ExplorerPreferences.RecursiveAutoExpandDepth == int.MaxValue
+            ? 6 : Math.Clamp(App.ExplorerPreferences.RecursiveAutoExpandDepth ?? 0, 0, 5);
+        if (RecursiveAltDepthBox.Items.Count == 0)
+        {
+            for (var depth = 1; depth <= 5; depth++) RecursiveAltDepthBox.Items.Add(new ComboBoxItem { Content = StringTable.Format("Recursive_DepthLevels", depth) });
+            RecursiveAltDepthBox.Items.Add(new ComboBoxItem { Content = StringTable.Get("Recursive_AltDepthAll") });
+        }
+        RecursiveAltDepthBox.SelectedIndex = App.ExplorerPreferences.RecursiveAltExpandDepth == int.MaxValue
+            ? 5 : Math.Clamp(App.ExplorerPreferences.RecursiveAltExpandDepth, 1, 5) - 1;
         FileOpeningModeBox.SelectedIndex = (int)App.ExplorerPreferences.FileOpeningMode;
         FolderOpeningModeBox.SelectedIndex = (int)App.ExplorerPreferences.FolderOpeningMode;
         HiddenFilesToggle.IsOn = App.ExplorerPreferences.ShowHiddenFiles;
+        BackupEnabledToggle.IsOn = App.ExplorerPreferences.EnableUndoBackups;
         ConfirmDeleteToggle.IsOn = App.ExplorerPreferences.ConfirmPermanentDelete;
         ExtensionsToggle.IsOn = App.ExplorerPreferences.ShowFileExtensions;
         FolderSizesToggle.IsOn = App.ExplorerPreferences.ShowFolderSizes;

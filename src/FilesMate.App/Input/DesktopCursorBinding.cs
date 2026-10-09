@@ -33,6 +33,12 @@ internal sealed class DesktopCursorBinding
         _source.PointerEntered += PointerChanged;
         _source.PointerMoved += PointerChanged;
         _source.PointerPressed += PointerChanged;
+        if (FilesMate.Core.Configuration.RuntimeProfile.IsIsolated
+            && File.Exists(Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "presentation-audit.enabled")))
+        {
+            _source.PointerPressed += PointerAudit;
+            _source.PointerReleased += PointerAudit;
+        }
         _source.PointerReleased += PointerChanged;
         island.Closed += () =>
         {
@@ -42,6 +48,8 @@ internal sealed class DesktopCursorBinding
             _source.PointerMoved -= PointerChanged;
             _source.PointerPressed -= PointerChanged;
             _source.PointerReleased -= PointerChanged;
+            _source.PointerPressed -= PointerAudit;
+            _source.PointerReleased -= PointerAudit;
             Bindings.Remove(island);
         };
     }
@@ -64,6 +72,7 @@ internal sealed class DesktopCursorBinding
 
     private nint WindowMessage(nint window, uint message, nuint wparam, nint lparam, nuint id, nuint data)
     {
+        RecordAcceptanceBoundary("IslandMessage", window, message, wparam, lparam);
         if (message == 0x0082) _windows.Remove(window); // WM_NCDESTROY
         try
         {
@@ -87,6 +96,35 @@ internal sealed class DesktopCursorBinding
         }
         catch (Exception error) { App.LogFailure("NativeCursor", error); }
         return result;
+    }
+
+    private static int _boundaryAuditCount;
+    internal static void RecordAcceptanceBoundary(string stage, nint window, uint message = 0,
+        nuint wparam = 0, nint lparam = 0, bool? left = null, double? x = null, double? y = null)
+    {
+        if (!FilesMate.Core.Configuration.RuntimeProfile.IsIsolated || _boundaryAuditCount >= 128) return;
+        if (message != 0 && message is not (0x0201 or 0x0202 or 0x0203 or 0x00A1 or 0x00A2 or 0x0246 or 0x0247 or 0x0112)
+            && !(message is 0x0100 or 0x0101 or 0x0104 or 0x0105 && wparam is 18 or 164 or 165)) return;
+        if (!File.Exists(Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "presentation-audit.enabled"))) return;
+        ++_boundaryAuditCount;
+        try
+        {
+            var packed = lparam.ToInt64();
+            var data = new { Utc = DateTimeOffset.UtcNow, Stage = stage, HWND = window.ToInt64(),
+                Message = message, WParam = wparam.ToString(), PackedPoint = new { X = unchecked((short)packed), Y = unchecked((short)(packed >> 16)) },
+                Alt = (InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Menu)
+                    & Windows.UI.Core.CoreVirtualKeyStates.Down) != 0, Left = left, X = x, Y = y };
+            File.AppendAllText(Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "native-input-boundary.jsonl"),
+                System.Text.Json.JsonSerializer.Serialize(data) + Environment.NewLine);
+        }
+        catch (Exception error) { App.AppendCrashRecord("NativeInputBoundaryAudit", error); }
+    }
+
+    private void PointerAudit(InputPointerSource sender, PointerEventArgs args)
+    {
+        var point = args.CurrentPoint;
+        RecordAcceptanceBoundary("RawPointer:" + point.Properties.PointerUpdateKind, _windows.FirstOrDefault(),
+            left: point.Properties.IsLeftButtonPressed, x: point.Position.X, y: point.Position.Y);
     }
 
     private void PointerChanged(InputPointerSource sender, PointerEventArgs args)

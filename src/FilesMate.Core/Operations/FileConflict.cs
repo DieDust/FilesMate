@@ -16,6 +16,7 @@ public sealed record FileConflict(string Source, string Destination, bool CanMer
     public FileConflictDetails? Incoming { get; init; }
     public FileConflictDetails? Existing { get; init; }
     public bool BackupUnavailable { get; init; }
+    public bool BackupDisabled { get; init; }
     public long BackupBytes { get; init; }
     public long BackupUsedBytes { get; init; }
 }

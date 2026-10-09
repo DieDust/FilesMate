@@ -35,14 +35,12 @@
             </Style>
             <Style TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
-                <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
             </Style>
             <Style x:Key="FilesMate.SecondaryTextStyle" TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
                 <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.SecondaryBrush}" />
             </Style>
             <Style TargetType="FontIcon">
-                <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
             </Style>
         </ResourceDictionary>
     </Application.Resources>

@@ -38,27 +38,39 @@ public partial class PaletteWindow : Window
     private bool _pending;
     private SearchFilter _filter;
     private readonly System.Collections.ObjectModel.ObservableCollection<SearchRow> _rows = new();
-    private readonly System.Collections.Generic.HashSet<string> _paths = new(StringComparer.OrdinalIgnoreCase);
+    private readonly System.Collections.Generic.HashSet<SearchHitIdentity> _resultIdentities = new();
     private int _offset;
     private bool _hasMore;
     private bool _loadingMore;
     private bool _syncingSettings;
     private readonly DispatcherTimer _settingsTimer = new() { Interval = TimeSpan.FromMilliseconds(450) };
     private Native.Rect _workArea;
+    private bool _centeringPalette;
+    private DispatcherOperation? _queuedCenter;
+    private bool _centerAfterGeneration;
 
     internal PaletteWindow(SearchHost host, IGlobalSearchProvider provider)
     {
         _host = host;
         _provider = provider;
         InitializeComponent();
+        InitializeAppearanceTracking();
         RankingItems.ItemsSource = _rankItems;
         _rankWatcher = new SearchRankingPreferencesWatcher(Path.Combine(host.Profile, "search-index.json"),
             () => Dispatcher.BeginInvoke(new Action(RefreshSharedRanking), DispatcherPriority.Background));
         Activated += (_, _) => RefreshSharedRanking();
-        Closed += (_, _) => _rankWatcher.Dispose();
+        Closed += (_, _) =>
+        {
+            CancelPaletteClose();
+            CancelQueuedCenter();
+            Results.ItemContainerGenerator.StatusChanged -= ResultsGenerator_StatusChanged;
+            _rankWatcher.Dispose();
+        };
+        Unloaded += (_, _) => CancelQueuedCenter();
+        Results.ItemContainerGenerator.StatusChanged += ResultsGenerator_StatusChanged;
         Results.ItemsSource = _rows;
         foreach (var panel in new FrameworkElement[] { SettingsPanel, RankingPanel, CategoriesPanel, HiddenResultsPanel })
-            panel.IsVisibleChanged += (_, _) => AnimateSection(panel);
+            panel.IsVisibleChanged += (_, _) => { AnimateSection(panel); RefreshSearchPresentation(); if (panel.IsVisible) QueueCenter(); };
         LoadCategories();
         _previewSize = SearchPreviewSize.Load(host.Profile);
         _previewFocusTimer.Tick += (_, _) => CheckPreviewFocus();
@@ -67,13 +79,19 @@ public partial class PaletteWindow : Window
         PreviewPopup.Closed += (_, _) => _previewFocusTimer.Stop();
         _settingsTimer.Tick += (_, _) => SaveSettings();
         _visibleIconsTimer.Tick += (_, _) => RefreshVisibleIcons();
-        TextCompositionManager.AddPreviewTextInputStartHandler(QueryBox, (_, _) => { _composing = true; CancelSearch(); _pending = true; });
-        TextCompositionManager.AddPreviewTextInputHandler(QueryBox, (_, _) => { _composing = false; Dispatcher.BeginInvoke(() => Search()); });
+        TextCompositionManager.AddPreviewTextInputStartHandler(QueryBox, Query_CompositionStarted);
+        TextCompositionManager.AddPreviewTextInputHandler(QueryBox, Query_CompositionCompleted);
         SourceInitialized += (_, _) =>
         {
             ApplyNativeFrame();
         };
-        SizeChanged += (_, e) => { if (IsVisible && e.WidthChanged) Center(); QueueRoundRegion(); };
+        SizeChanged += (_, e) => { if (IsVisible && (e.WidthChanged || e.HeightChanged)) QueueCenter(); QueueRoundRegion(); };
+        DpiChanged += (_, e) =>
+        {
+            // Image DPI notifications also bubble here during container measure.
+            // Only a DPI change of this window owns its viewport and placement.
+            if (IsVisible && ReferenceEquals(e.OriginalSource, this)) QueueCenter();
+        };
         Closing += (_, e) =>
         {
             CancelSearch();
@@ -86,7 +104,7 @@ public partial class PaletteWindow : Window
     internal void Prepare()
     {
         if (IsVisible) return;
-        _appearance = PaletteAppearance.Load(_host.Profile);
+        _appearance = EffectiveAppearance();
         PaletteAppearance.Apply(Resources, _appearance);
         new WindowInteropHelper(this).EnsureHandle();
         PanelBody.Measure(new Size(634, 590));
@@ -101,7 +119,8 @@ public partial class PaletteWindow : Window
     internal void Open(bool settings, string notice)
     {
         LoadOpeningPreferences();
-        _appearance = PaletteAppearance.Load(_host.Profile);
+        _appearance = EffectiveAppearance();
+        RefreshPaletteAppearance();
         if (_icons.UseBundledIcons != _appearance.UseBundledFileIcons)
         {
             CancelVisibleIcons();
@@ -109,6 +128,7 @@ public partial class PaletteWindow : Window
             foreach (var row in _rows) { row.Icon = _icons.Fallback(row.Hit); row.IconLoaded = false; }
         }
         _openVersion++;
+        CancelPaletteClose();
         _closing = false;
         ResetPaletteMotion();
         if (IsVisible)
@@ -125,7 +145,7 @@ public partial class PaletteWindow : Window
         _dismissed = false;
         _opening = true;
         _workArea = Native.ActiveWorkArea();
-        _appearance = PaletteAppearance.Load(_host.Profile);
+        _appearance = EffectiveAppearance();
         PaletteAppearance.Apply(Resources, _appearance);
         ApplyNativeFrame();
         ShowSettings(settings, notice);
@@ -141,25 +161,6 @@ public partial class PaletteWindow : Window
         AnimatePaletteOpen();
     }
 
-    private void ApplyNativeFrame()
-    {
-        var hwnd = new WindowInteropHelper(this).Handle;
-        if (hwnd == IntPtr.Zero) return;
-        var rounded = 2; // Let DWM clip the acrylic and the window to the same rounded outline.
-        Native.DwmSetWindowAttribute(hwnd, 33, ref rounded, sizeof(int));
-        var dark = PaletteAppearance.IsDark(_appearance) ? 1 : 0;
-        Native.DwmSetWindowAttribute(hwnd, 20, ref dark, sizeof(int));
-        var border = -2; // DWMWA_COLOR_NONE: the XAML border is the only outline.
-        Native.DwmSetWindowAttribute(hwnd, 34, ref border, sizeof(int));
-        var glass = PaletteAppearance.UseGlass(_appearance);
-        var backdrop = glass ? 3 : 1; // DWMSBT_TRANSIENTWINDOW supplies actual desktop acrylic.
-        var applied = Native.DwmSetWindowAttribute(hwnd, 38, ref backdrop, sizeof(int)) >= 0;
-        var margins = new Native.Margins { Left = glass && applied ? -1 : 0 };
-        Native.DwmExtendFrameIntoClientArea(hwnd, ref margins);
-        if (HwndSource.FromHwnd(hwnd)?.CompositionTarget is { } target) target.BackgroundColor = Colors.Transparent;
-        if (!glass || !applied) Resources["GlassSurface"] = Resources["PaletteCanvas"];
-    }
-
     private bool _roundRegionQueued;
     private void QueueRoundRegion()
     {
@@ -172,37 +173,102 @@ public partial class PaletteWindow : Window
         }));
     }
 
-    private void ApplyRoundRegion()
+    private void QueueCenter()
     {
-        var hwnd = new WindowInteropHelper(this).Handle;
-        if (hwnd == IntPtr.Zero || !Native.GetWindowRect(hwnd, out var rect)) return;
-        // A custom HRGN and DWM backdrop can have different corner silhouettes.
-        // Native rounding clips both, and avoids allocating a region on each resize.
-        Native.SetWindowRgn(hwnd, IntPtr.Zero, true);
-        Shell.CornerRadius = new CornerRadius(8);
+        if (!IsVisible || _dismissed || Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished
+            || _queuedCenter is { Status: DispatcherOperationStatus.Pending }) return;
+        // Loaded runs after the current render/layout pass. Multiple size/DPI
+        // notifications share one operation instead of re-entering Measure.
+        _queuedCenter = Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+        {
+            _queuedCenter = null;
+            if (IsVisible && !_dismissed && !Dispatcher.HasShutdownStarted && !Dispatcher.HasShutdownFinished) Center();
+        }));
+    }
+
+    private void CancelQueuedCenter()
+    {
+        _queuedCenter?.Abort();
+        _queuedCenter = null;
+        _centerAfterGeneration = false;
+    }
+
+    private void ResultsGenerator_StatusChanged(object? sender, EventArgs e)
+    {
+        if (!_centerAfterGeneration || Results.ItemContainerGenerator.Status == GeneratorStatus.GeneratingContainers) return;
+        _centerAfterGeneration = false;
+        QueueCenter();
     }
 
     private void Center()
     {
+        if (Results.ItemContainerGenerator.Status == GeneratorStatus.GeneratingContainers)
+        {
+            // A direct caller may also run from a nested layout event. Wait for
+            // its generator to finish without repeatedly queueing more work.
+            _centerAfterGeneration = true;
+            return;
+        }
         var handle = new WindowInteropHelper(this).Handle;
-        if (handle == IntPtr.Zero) return;
-        var scale = VisualTreeHelper.GetDpi(this);
-        Width = Math.Min(620, (_workArea.Right - _workArea.Left - 40) / scale.DpiScaleX);
-        MaxHeight = Math.Min(500, (_workArea.Bottom - _workArea.Top - 40) / scale.DpiScaleY);
-        Results.MaxHeight = Math.Max(48, Math.Min(336, MaxHeight - 110));
-        SearchSettingsScroll.MaxHeight = Math.Max(140, MaxHeight - 110);
-        Native.GetWindowRect(handle, out var bounds);
-        var x = _workArea.Left + (_workArea.Right - _workArea.Left - (bounds.Right - bounds.Left)) / 2;
-        // Keep the input anchored while result counts change; reserve space for
-        // the expanded palette so it never grows beyond the monitor work area.
-        var y = _workArea.Top + (int)((_workArea.Bottom - _workArea.Top - MaxHeight * scale.DpiScaleY) / 2);
-        Native.SetWindowPos(handle, IntPtr.Zero, x, y, 0, 0, 0x0015);
+        if (_centeringPalette || handle == IntPtr.Zero || _workArea.Right <= _workArea.Left || _workArea.Bottom <= _workArea.Top) return;
+        _centeringPalette = true;
+        try
+        {
+            var scale = VisualTreeHelper.GetDpi(this);
+            Width = Math.Max(1, Math.Min(620, (_workArea.Right - _workArea.Left - 40) / scale.DpiScaleX));
+            MaxHeight = Math.Max(1, Math.Min(500, (_workArea.Bottom - _workArea.Top - 40) / scale.DpiScaleY));
+            var shellHeight = Shell.Padding.Top + Shell.Padding.Bottom + Shell.BorderThickness.Top + Shell.BorderThickness.Bottom;
+            var contentWidth = Math.Max(1, Width - Shell.Padding.Left - Shell.Padding.Right - Shell.BorderThickness.Left - Shell.BorderThickness.Right);
+            SearchHeader.Measure(new Size(contentWidth, double.PositiveInfinity));
+            var pageHeight = Math.Max(1, MaxHeight - shellHeight - SearchHeader.DesiredSize.Height);
+            SetPageViewport(CategoriesPanel, CategoriesPageScroll, CategoryEditorsScroll, 280, pageHeight, contentWidth);
+            SetPageViewport(HiddenResultsPanel, HiddenResultsPageScroll, HiddenResultsList, 360, pageHeight, contentWidth);
+            SetPageViewport(RankingPanel, RankingPageScroll, RankingScroll, 330, pageHeight, contentWidth);
+            // One viewport stretches the cards and keeps the page scrollbar at its outer edge.
+            SettingsPageScroll.MaxHeight = pageHeight;
+            Results.MaxHeight = 336;
+            if (SearchPanel.Visibility == Visibility.Visible)
+            {
+                SearchPanel.Measure(new Size(contentWidth, double.PositiveInfinity));
+                var chrome = Math.Max(0, SearchPanel.DesiredSize.Height - Results.DesiredSize.Height);
+                Results.MaxHeight = Math.Max(1, Math.Min(336, pageHeight - chrome));
+            }
+            if (!Native.GetWindowRect(handle, out var bounds)) return;
+            var x = _workArea.Left + (_workArea.Right - _workArea.Left - (bounds.Right - bounds.Left)) / 2;
+            // Keep the input anchored while result counts change; reserve space for
+            // the expanded palette so it never grows beyond the monitor work area.
+            var y = _workArea.Top + (int)((_workArea.Bottom - _workArea.Top - MaxHeight * scale.DpiScaleY) / 2);
+            Native.SetWindowPos(handle, IntPtr.Zero, x, y, 0, 0, 0x0015);
+        }
+        finally { _centeringPalette = false; }
+    }
+
+    private static void SetPageViewport(FrameworkElement panel, ScrollViewer page, FrameworkElement viewport,
+        double normalHeight, double availableHeight, double contentWidth)
+    {
+        page.MaxHeight = availableHeight;
+        viewport.MaxHeight = normalHeight;
+        if (panel.Visibility != Visibility.Visible) return;
+        panel.Measure(new Size(contentWidth, double.PositiveInfinity));
+        var chrome = Math.Max(0, panel.DesiredSize.Height - viewport.DesiredSize.Height);
+        // Reserve a small inner viewport; the outer page scroll keeps its title,
+        // add form and status reachable when their chrome exceeds the work area.
+        viewport.MaxHeight = Math.Min(normalHeight, Math.Max(48, availableHeight - chrome));
     }
 
     public void CancelSearch(bool preservePreview = false)
     {
+        ++_searchGeneration;
+        _presentationCompleted = false;
+        ResetSearchAnimations();
+        _initialSourcesPending = false;
+        _deferredSearchSnapshot = null;
+        CancelSearchRenderObservation();
         CancelVisibleIcons();
         _pressedApplication = null;
+        _pressedRow = null;
+        _collapseSelectionOnUp = false;
+        _openingClicks.CancelPendingClick();
         StopSearchActivity();
         if (preservePreview) CancelPreviewRead(); else ClearPreview();
         // Detach before cancelling: cancellation callbacks may re-enter this window while they run.
@@ -216,20 +282,26 @@ public partial class PaletteWindow : Window
     {
         if (_dismissed) return;
         _dismissed = true;
+        CancelPaletteClose();
+        CancelQueuedCenter();
         Hide();
+        ResetPaletteMotion();
         ResetSearchMotion();
         CancelSearch();
         ReleaseTextPreview();
         FlushSettings();
         _ready = false;
         QueryBox.Clear();
+        ActiveQuery = string.Empty;
         _categoryId = _categories.First(c => c.Visible).Id;
         RenderCategoryButtons();
         _offset = 0;
         _hasMore = false;
         _pending = false;
+        _presentationFailed = false;
+        _presentationCompleted = false;
         _ready = true;
-        _rows.Clear(); _paths.Clear();
+        _rows.Clear(); _resultIdentities.Clear();
         _visibleIconRows.Clear();
         _icons.ClearDynamicCache();
         CountLabel.Text = "";
@@ -243,20 +315,50 @@ public partial class PaletteWindow : Window
     private void Window_Deactivated(object? sender, EventArgs e)
         => Dispatcher.BeginInvoke(new Action(CheckPreviewFocus), DispatcherPriority.Background);
     private void Dismiss_Click(object sender, RoutedEventArgs e) => DismissAnimated();
+    private void Query_CompositionStarted(object sender, TextCompositionEventArgs e)
+    {
+        _composing = true;
+        CancelSearch();
+        _pending = true;
+        _presentationFailed = false;
+        _hasMore = false;
+        CountLabel.Text = Loc.Get("Search_Looking");
+        StatusText.Text = "";
+        StatusText.Visibility = IndexHelpButton.Visibility = Visibility.Collapsed;
+        // Composition owns the input immediately, before its first TextChanged.
+        // Stored rows are hidden and all commands reject their old generation.
+        RefreshSearchPresentation();
+    }
+
+    private void Query_CompositionCompleted(object sender, TextCompositionEventArgs e)
+    {
+        if (!_composing) return;
+        _composing = false;
+        var generation = _searchGeneration;
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            // TextChanged may already have started the committed query, or a
+            // newer composition may now own the input. Never search twice.
+            if (generation == _searchGeneration && !_composing) Search();
+        }), DispatcherPriority.Input);
+    }
+
     private void Query_Changed(object sender, TextChangedEventArgs e)
     {
         if (!_ready) return;
+        ActiveQuery = QueryBox.Text.Trim();
         _offset = 0;
         _hasMore = false;
         Placeholder.Visibility = QueryBox.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
         ClearButton.Visibility = QueryBox.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
-        if (!_composing) Search();
+        if (!_composing) Search(); else RefreshSearchPresentation();
     }
 
     private async void Search(bool append = false)
     {
         if (!_ready || !IsVisible || _composing || SettingsPanel.IsVisible || RankingPanel.IsVisible || CategoriesPanel.IsVisible || HiddenResultsPanel.IsVisible) return;
-        if (append && (_pending || _loadingMore || !_hasMore)) return;
+        if (append && (_pending || _initialSourcesPending || _deferredSearchSnapshot is not null || _loadingMore || !_hasMore)) return;
+        var started = Stopwatch.GetTimestamp();
         if (!append)
         {
             CancelSearch();
@@ -266,59 +368,72 @@ public partial class PaletteWindow : Window
         }
         var request = new CancellationTokenSource(TimeSpan.FromSeconds(4));
         _query = request;
+        var generation = _searchGeneration;
         var query = QueryBox.Text.Trim();
+        _presentationFailed = false;
+        _presentationCompleted = false;
         var filter = _filter;
         var category = _categories.FirstOrDefault(c => c.Id == _categoryId);
         var provider = _provider is ConfiguredSearchProvider configured ? configured.ForCategory(_categoryId)
             : category is { Builtin: null } ? new IndexedFilesSearchProvider(_host.Profile, true, category.Extensions) : _provider;
         _loadingMore = append;
         _pending = !append;
-        // Keep the previous frame visually stable while the next query runs.
-        // Action handlers use _pending to reject stale opens/copies/drags, without
-        // disabling the controls (which also dims their embedded buttons).
+        _initialSourcesPending = !append;
+        TraceSearchStage(generation, started, append ? "page-requested" : "input-accepted");
+        // Only the current query owns visible results. Stored old rows are hidden
+        // until a current batch arrives; action guards also reject stale commands.
         IndexHelpButton.Visibility = Visibility.Collapsed;
         CountLabel.Text = append ? Loc.Format("Search_LoadingCount", _rows.Count) : Loc.Get("Search_Looking");
-        SearchPanel.Visibility = query.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
-        FilterBar.Visibility = query.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
         StatusText.Text = query.Length == 0 ? "" : Loc.Get("Search_Looking");
         StatusText.Visibility = !append && _rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        RefreshSearchPresentation();
         if (!append) AnimateSearchLayout();
         if (query.Length > 0) _ = ShowSearchActivityAsync(request);
         try
         {
-            if (query.Length == 0) { _rows.Clear(); _paths.Clear(); return; }
+            if (query.Length == 0) { _rows.Clear(); _resultIdentities.Clear(); return; }
             if (!append) await Task.Delay(90, request.Token);
+            TraceSearchStage(generation, started, "gate-waiting");
             await _queryGate.WaitAsync(request.Token);
-            GlobalSearchResponse response;
+            TraceSearchStage(generation, started, "gate-entered");
             var offset = _offset;
-            try { response = await Task.Run(() => provider.SearchAsync(query, request.Token, filter, 40, offset), request.Token); }
-            finally { _queryGate.Release(); }
-            if (_query != request || !IsVisible) return;
-            if (!append) { _rows.Clear(); _paths.Clear(); }
-            var rows = response.Hits.Where(hit => _paths.Add(hit.Path)).Select(hit => new SearchRow(hit, _icons.Fallback(hit))).ToArray();
-            var scroll = append ? FindChild<ScrollViewer>(Results) : null;
-            var scrollOffset = scroll?.VerticalOffset ?? 0;
-            foreach (var row in rows) _rows.Add(row);
-            if (scroll is not null) scroll.ScrollToVerticalOffset(scrollOffset);
-            _offset += response.Hits.Count;
-            _hasMore = response.HasMore && response.Hits.Count > 0;
-            if (!append)
+            try
             {
-                Results.SelectedIndex = _rows.Count == 0 ? -1 : 0;
-                if (Results.SelectedItem is not null) Results.ScrollIntoView(Results.SelectedItem);
+                if (!append && provider is IProgressiveGlobalSearchProvider progressive)
+                {
+                    var receivedFinal = false;
+                    await Task.Run(async () =>
+                    {
+                        await foreach (var update in progressive.SearchUpdatesAsync(query, request.Token, filter, 40, 0).ConfigureAwait(false))
+                        {
+                            request.Token.ThrowIfCancellationRequested();
+                            await Dispatcher.InvokeAsync(() =>
+                            {
+                                if (_query != request || generation != _searchGeneration || !IsVisible) return;
+                                request.Token.ThrowIfCancellationRequested();
+                                TraceSearchSources(generation, started, update);
+                                receivedFinal |= update.IsFinal;
+                                QueueSearchSnapshot(new(update.Response, update.IsFinal, update.IsIncomplete, filter, generation, started, false));
+                            }, DispatcherPriority.Normal, request.Token).Task.ConfigureAwait(false);
+                        }
+                    }, request.Token);
+                    if (!receivedFinal && _query == request && generation == _searchGeneration && IsVisible)
+                        SearchFailed(false, Loc.Get("Search_PartialUnavailable"));
+                }
+                else
+                {
+                    var response = await Task.Run(() => provider.SearchAsync(query, request.Token, filter, 40, offset), request.Token);
+                    if (_query != request || generation != _searchGeneration || !IsVisible) return;
+                    QueueSearchSnapshot(new(response, true, false, filter, generation, started, append));
+                }
             }
-            CountLabel.Text = _rows.Count > 0 ? Loc.Format(_hasMore ? "Search_MoreCount" : "Search_ResultCount", _rows.Count) : "";
-            StatusText.Text = (response.Notice is { } notice ? (notice.StartsWith("SearchPage_", StringComparison.Ordinal) ? Loc.Get(notice) : notice) : null) ?? (_rows.Count == 0 ? filter == SearchFilter.All
-                ? Loc.Get("Search_NoResultsHint") : Loc.Get("Search_NoCategoryResults") : "");
-            StatusText.Visibility = StatusText.Text.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
-            IndexHelpButton.Visibility = response.Notice is not null || _rows.Count == 0 && filter == SearchFilter.All ? Visibility.Visible : Visibility.Collapsed;
-            if (!append) { AnimateSearchLayout(); AnimateResultsChanged(); }
-            QueueVisibleIcons();
+            finally { _queryGate.Release(); }
             if (append) await Dispatcher.Yield(DispatcherPriority.Background);
         }
         catch (OperationCanceledException)
         {
-            if (_query == request && IsVisible) SearchFailed(append, Loc.Get("Search_SlowHint"));
+            if (_query == request && IsVisible) SearchFailed(append, Loc.Get(!append && _acceptedSearchGeneration == generation && _rows.Count > 0
+                ? "Search_PartialTimedOut" : "Search_SlowHint"));
         }
         catch (ArgumentException e)
         {
@@ -330,15 +445,34 @@ public partial class PaletteWindow : Window
         }
         finally
         {
-            if (_query == request) { _query = null; _pending = _loadingMore = false; StopSearchActivity(); }
+            if (_query == request)
+            {
+                _query = null;
+                _pending = _acceptedSearchGeneration != generation && _deferredSearchSnapshot is not null;
+                _loadingMore = false;
+                if (_deferredSearchSnapshot is null) _initialSourcesPending = false;
+                StopSearchActivity();
+                RefreshSearchPresentation();
+            }
             request.Dispose();
         }
     }
 
     private void SearchFailed(bool append, string message)
     {
-        if (!append) ShowSearchError(message);
-        else { CountLabel.Text = Loc.Format("Search_MoreCount", _rows.Count); StatusText.Text = message; StatusText.Visibility = Visibility.Visible; }
+        _presentationFailed = true;
+        _presentationCompleted = false;
+        _deferredSearchSnapshot = null;
+        _initialSourcesPending = false;
+        if (!append) _hasMore = false;
+        if (!append && _pending) ShowSearchError(message);
+        else
+        {
+            CountLabel.Text = _rows.Count == 0 ? "" : Loc.Format(!append ? "SearchPage_Loaded" : _hasMore ? "Search_MoreCount" : "Search_ResultCount", _rows.Count);
+            StatusText.Text = message;
+            StatusText.Visibility = Visibility.Visible;
+        }
+        RefreshSearchPresentation();
         AnimateSearchLayout();
     }
     private void Results_ScrollChanged(object sender, ScrollChangedEventArgs e)
@@ -354,10 +488,12 @@ public partial class PaletteWindow : Window
 
     private void ShowSearchError(string message)
     {
-        _rows.Clear(); _paths.Clear();
+        _rows.Clear(); _resultIdentities.Clear();
         CountLabel.Text = "";
         StatusText.Text = message;
         StatusText.Visibility = IndexHelpButton.Visibility = Visibility.Visible;
+        _presentationFailed = true;
+        RefreshSearchPresentation();
     }
     private void Filter_Changed(object sender, RoutedEventArgs e)
     {
@@ -414,6 +550,7 @@ public partial class PaletteWindow : Window
         // always page the results. With focus in the list, the ListBox moves the selection itself.
         var caretKey = key is Key.Home or Key.End && QueryBox.IsKeyboardFocusWithin && Keyboard.Modifiers == ModifierKeys.None;
         var navigationKey = key is Key.Down or Key.Up or Key.PageDown or Key.PageUp || key is Key.Home or Key.End && !caretKey;
+        if (navigationKey && _pending) { e.Handled = true; return; }
         if (navigationKey && Results.IsKeyboardFocusWithin)
         {
             Dispatcher.BeginInvoke(() => QueuePreview(Results.SelectedItem as SearchRow), DispatcherPriority.Input);
@@ -513,8 +650,7 @@ public partial class PaletteWindow : Window
         try
         {
             _host.OpenSearchPage(new SearchPageRequest(QueryBox.Text, CategoryId: _categoryId, Sort: SearchSortConfiguration.Load(_host.Profile)));
-            await AnimatePaletteCloseAsync(_openVersion);
-            _host.WindowDismissed();
+            if (await AnimatePaletteCloseAsync(_openVersion)) _host.WindowDismissed();
         }
         catch (Exception error) { ActionError(error.Message); }
     }
@@ -537,7 +673,8 @@ public partial class PaletteWindow : Window
         TraySearchOption.IsChecked = !TrayFilesOption.IsChecked;
         _syncingSettings = false;
         SettingsStatus.Text = notice;
-        if (!show && notice.Length > 0) { StatusText.Text = notice; SearchPanel.Visibility = Visibility.Visible; }
+        if (!show && notice.Length > 0) { StatusText.Text = notice; StatusText.Visibility = Visibility.Visible; SearchPanel.Visibility = Visibility.Visible; }
+        RefreshSearchPresentation();
     }
     private void Ranking_Click(object sender, RoutedEventArgs e)
     {

@@ -10,6 +10,23 @@ public sealed partial class FileRow
     private CancellationTokenSource? _propertyRead;
     private string? _propertySignature;
     private long _propertyVersion;
+    private DetailsColumn[]? _propertyColumnsSource;
+    private DetailsColumn[] _visiblePropertyColumns = [];
+    private string _visiblePropertySignature = string.Empty;
+
+    private void UpdatePropertyColumns()
+    {
+        if (ReferenceEquals(_propertyColumnsSource, _columns)) return;
+        _propertyColumnsSource = _columns;
+        List<DetailsColumn>? visible = null;
+        if (_columns is not null)
+            foreach (var column in _columns)
+                if (column.Visible && column.Id == DetailsColumnId.ShellProperty)
+                    (visible ??= []).Add(column);
+        _visiblePropertyColumns = visible?.ToArray() ?? [];
+        _visiblePropertySignature = visible is null ? string.Empty
+            : string.Join('|', _visiblePropertyColumns.Select(c => c.PropertyName));
+    }
 
     private void CancelPropertyRead()
     {
@@ -22,9 +39,12 @@ public sealed partial class FileRow
 
     private async void RefreshProperties()
     {
+        if (_thumbnailLoadMode != Icons.ThumbnailLoadMode.Active) { CancelPropertyRead(); return; }
+        if (_recursiveRow && !_recursiveIdentityVerified) { CancelPropertyRead(); return; }
         if (EntryId < 0 || _entryPath is not { Length: > 0 } path) return;
-        var columns = _columns?.Where(c => c.Visible && c.Id == DetailsColumnId.ShellProperty).ToArray() ?? [];
-        var signature = string.Join('|', columns.Select(c => c.PropertyName));
+        UpdatePropertyColumns();
+        var columns = _visiblePropertyColumns;
+        var signature = _visiblePropertySignature;
         if (_propertySignature == signature) return;
         CancelPropertyRead();
         _propertySignature = signature;

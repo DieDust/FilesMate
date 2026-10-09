@@ -1,3 +1,4 @@
+using FilesMate.App.Animations;
 using FilesMate.App.Controls.FileSurface;
 using FilesMate.App.Localization;
 using FilesMate.App.Models;
@@ -16,6 +17,7 @@ public sealed partial class AdaptiveCommandToolbar
     private int _listZoom = 100;
     private readonly MenuFlyoutItem _overflowSortPanel = new();
     private Action? _syncSortPanel, _syncGroupingPanel;
+    private FlyoutChevronMotion? _groupingChevronMotion, _viewChevronMotion;
     public event EventHandler<EntrySort>? SortSpecificationRequested;
     public event EventHandler<GridSizePreset>? GridSizeRequested;
     public event EventHandler<int>? ListZoomRequested;
@@ -38,28 +40,18 @@ public sealed partial class AdaptiveCommandToolbar
         _overflowSortPanel.Click += (_, _) => DispatcherQueue.TryEnqueue(() => SortButton.Flyout.ShowAt(MoreButton));
         ((MenuFlyout)MoreButton.Flyout).Items.Insert(0, _overflowSortPanel);
         GroupingMenuButton.Flyout = CreateGroupingPanel();
+        _groupingChevronMotion = new FlyoutChevronMotion(GroupingChevron, GroupingMenuButton.Flyout);
         Caption(GroupingMenuButton, "Grouping_Options");
         Caption(ViewMenuButton, "View_Options");
         var views = new MenuFlyout { Placement = FlyoutPlacementMode.BottomEdgeAlignedRight };
         var viewPresenter = new Style(typeof(MenuFlyoutPresenter))
         { BasedOn = (Style)Application.Current.Resources["FilesMate.ColumnMenuPresenterStyle"] };
-        viewPresenter.Setters.Add(new Setter(FrameworkElement.MinWidthProperty, 180d));
-        viewPresenter.Setters.Add(new Setter(FrameworkElement.MaxWidthProperty, 260d));
+        // Let translated labels and the submenu chevrons determine the width.
+        viewPresenter.Setters.Add(new Setter(FrameworkElement.MinWidthProperty, 0d));
+        viewPresenter.Setters.Add(new Setter(FrameworkElement.MaxWidthProperty, double.PositiveInfinity));
         views.MenuFlyoutPresenterStyle = viewPresenter;
         var choices = new List<(ToggleMenuFlyoutItem Item, FileLayoutKind Kind, int Slot)>();
-        static void Compact(MenuFlyoutItemBase item)
-        {
-            if (item is ToggleMenuFlyoutItem)
-                item.Style = (Style)Application.Current.Resources["FilesMate.ColumnMenuToggleStyle"];
-            else if (item is MenuFlyoutSubItem)
-                item.Style = (Style)Application.Current.Resources["FilesMate.CompactMenuSubItemStyle"];
-            item.Padding = new Thickness(8, 0, 8, 0);
-            item.Margin = new Thickness(2, 0, 2, 0);
-            item.BorderThickness = new Thickness(0);
-            item.MinHeight = 32;
-            item.FontSize = 13;
-            item.Resources["FilesMate.Menu.LeadingSlotWidth"] = new GridLength(20);
-        }
+        void Compact(MenuFlyoutItemBase item) => ApplyCompactViewItem(item);
         ToggleMenuFlyoutItem Add(string key, FileLayoutKind kind, GridSizePreset? preset = null)
         {
             var item = new ToggleMenuFlyoutItem { Text = StringTable.Get(key) };
@@ -75,6 +67,7 @@ public sealed partial class AdaptiveCommandToolbar
         views.Items.Add(Add("Layout_Details", FileLayoutKind.Details));
         views.Items.Add(Add("Layout_List", FileLayoutKind.List));
         views.Items.Add(Add("Layout_LargeIcons", FileLayoutKind.Grid, GridSizePreset.Large));
+        AddRecursiveViewItem(views);
         views.Items.Add(new MenuFlyoutSeparator());
         var iconSizes = new MenuFlyoutSubItem { Text = StringTable.Get("View_IconSize") };
         Compact(iconSizes);
@@ -93,12 +86,29 @@ public sealed partial class AdaptiveCommandToolbar
         views.Items.Add(listZoom);
         views.Opening += (_, _) =>
         {
-            foreach (var choice in choices) choice.Item.IsChecked = choice.Kind == _viewKind && (choice.Kind != FileLayoutKind.Grid || choice.Slot == _viewSize.Slot);
+            foreach (var choice in choices) choice.Item.IsChecked = !_recursiveViewEnabled && choice.Kind == _viewKind && (choice.Kind != FileLayoutKind.Grid || choice.Slot == _viewSize.Slot);
             foreach (var zoom in zooms) zoom.IsChecked = (int)zoom.Tag == _listZoom;
         };
+
         FlyoutTheme.FollowHost(views);
         ViewMenuButton.Flyout = views;
+        _viewChevronMotion = new FlyoutChevronMotion(ViewChevron, views);
         SyncGroupingIcon();
+    }
+
+    private static void ApplyCompactViewItem(MenuFlyoutItemBase item)
+    {
+        // Every sibling, including the recursive toggle, uses the same check/icon/text slots.
+        if (item is ToggleMenuFlyoutItem)
+            item.Style = (Style)Application.Current.Resources["FilesMate.ColumnMenuToggleStyle"];
+        else if (item is MenuFlyoutSubItem)
+            item.Style = (Style)Application.Current.Resources["FilesMate.CompactMenuSubItemStyle"];
+        item.Padding = new Thickness(8, 0, 8, 0);
+        item.Margin = new Thickness(2, 0, 2, 0);
+        item.BorderThickness = new Thickness(0);
+        item.MinHeight = 32;
+        item.FontSize = 13;
+        item.Resources["FilesMate.Menu.LeadingSlotWidth"] = new GridLength(20);
     }
 
     private Flyout CreateSortPanel()
@@ -149,8 +159,7 @@ public sealed partial class AdaptiveCommandToolbar
     private Flyout CreateGroupingPanel()
     {
         var body = PanelBody(double.NaN);
-        body.MinWidth = 196;
-        body.MaxWidth = 300;
+        body.Padding = new Thickness(12);
         body.Children.Add(PanelCaption("Grouping_Options"));
         var modes = new[] { EntryGrouping.FoldersFirst, EntryGrouping.Mixed, EntryGrouping.FilesFirst };
         var radios = new List<RadioButton>(); var checks = new List<CheckBox>();
@@ -201,6 +210,7 @@ public sealed partial class AdaptiveCommandToolbar
     private void GroupingButton_Click(object sender, RoutedEventArgs e) => ChangeGrouping(App.ExplorerPreferences.NextGrouping(_sort.EffectiveGrouping));
     private void ChangeGrouping(EntryGrouping grouping)
     {
+        if (_recursiveViewEnabled) return;
         _sort = _sort with { Grouping = grouping, DirectoriesFirst = grouping == EntryGrouping.FoldersFirst };
         GroupingRequested?.Invoke(this, grouping); SyncGroupingIcon();
     }

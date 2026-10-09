@@ -3,6 +3,11 @@
     x:Class="FilesMate.App.Controls.InfoStates.InfoStateView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <DataTemplate x:Key="ActionTextTemplate">
+            <TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center" />
+        </DataTemplate>
+    </UserControl.Resources>
     <StackPanel
         x:Name="ContentStack"
         MaxWidth="420"
@@ -37,11 +42,13 @@
             <Button
                 x:Name="PrimaryAction"
                 Click="PrimaryAction_Click"
+                ContentTemplate="{StaticResource ActionTextTemplate}"
                 Style="{StaticResource PillButtonStyle}"
                 Visibility="Collapsed" />
             <Button
                 x:Name="SecondaryAction"
                 Click="SecondaryAction_Click"
+                ContentTemplate="{StaticResource ActionTextTemplate}"
                 Style="{StaticResource GlassButtonStyle}"
                 Visibility="Collapsed" />
         </StackPanel>

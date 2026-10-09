@@ -17,9 +17,7 @@ public sealed class HomeLayoutSettingsService
 
     public string FilePath { get; }
 
-    public static string DefaultFilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "FilesMate",
+    public static string DefaultFilePath => Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath,
         "home-layout.json");
 
     public HomeLayoutSettings Load()

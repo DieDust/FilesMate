@@ -42,12 +42,25 @@ public sealed partial class InfoStateView : UserControl
         GlyphIcon.Visibility = _compactWhenSmall && ActualHeight is > 0 and < 80 ? Visibility.Collapsed : Visibility.Visible;
         BodyBlock.Visibility = _compactWhenSmall && ActualHeight is > 0 and < 120 || string.IsNullOrEmpty(BodyBlock.Text)
             ? Visibility.Collapsed : Visibility.Visible;
+        var available = Math.Max(0, Math.Min(ActualWidth, ContentStack.MaxWidth)
+            - ContentStack.Padding.Left - ContentStack.Padding.Right);
+        if (available <= 0) return;
+        PrimaryAction.MaxWidth = SecondaryAction.MaxWidth = double.PositiveInfinity;
+        var naturalSize = new Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity);
+        PrimaryAction.Measure(naturalSize);
+        SecondaryAction.Measure(naturalSize);
+        var primaryWidth = PrimaryAction.Visibility == Visibility.Visible ? PrimaryAction.DesiredSize.Width : 0;
+        var secondaryWidth = SecondaryAction.Visibility == Visibility.Visible ? SecondaryAction.DesiredSize.Width : 0;
+        var gap = primaryWidth > 0 && secondaryWidth > 0 ? Actions.Spacing : 0;
+        Actions.Orientation = primaryWidth + secondaryWidth + gap > available ? Orientation.Vertical : Orientation.Horizontal;
+        PrimaryAction.MaxWidth = SecondaryAction.MaxWidth = available;
     }
 
     private static string? LocalizeAction(string? action) => action switch
     {
         "Retry" => StringTable.Get("Retry"),
         "Go up" => StringTable.Get("GoUp"),
+        "ClearInlineFilter" => StringTable.Get("Inline_ClearSearchAndFilters"),
         _ => action,
     };
 

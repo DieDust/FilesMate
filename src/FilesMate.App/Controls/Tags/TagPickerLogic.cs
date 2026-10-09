@@ -47,6 +47,12 @@ public static class TagPickerLogic
         return shared ?? [];
     }
 
+    public static HashSet<long> PresentIds(IEnumerable<IReadOnlyList<TagDefinition>> perFile)
+    {
+        ArgumentNullException.ThrowIfNull(perFile);
+        return perFile.SelectMany(tags => tags).Select(tag => tag.Id).ToHashSet();
+    }
+
     public static HashSet<long> With(IReadOnlyCollection<long> current, long id, bool apply)
     {
         ArgumentNullException.ThrowIfNull(current);

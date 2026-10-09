@@ -1,6 +1,7 @@
 using Loc = FilesMate.App.Localization.StringTable;
 using FilesMate.App.Input;
 using FilesMate.App.Models;
+using FilesMate.Core.Diagnostics;
 using FilesMate.Core.Entries;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -21,6 +22,7 @@ public sealed partial class FileDetailsSurface
     private readonly Dictionary<string, (Button Button, Border Resize)> _columnHeaders = [];
     private readonly Dictionary<string, FontIcon> _extraSortGlyphs = [];
     private EntrySort _headerSort = EntrySort.Name;
+    private long _columnResizeOperation;
     private bool _suppressHeaderClick;
     private bool _columnMenuOpen;
     private MenuFlyout? _columnMenu;
@@ -70,7 +72,7 @@ public sealed partial class FileDetailsSurface
             DetailsHeader.Children.Add(button);
             DetailsHeader.Children.Add(resize);
             AttachColumnEditing(button, column.Key);
-            AutomationProperties.SetName(button, column.Title);
+            AutomationProperties.SetName(button, ColumnTitle(column));
         }
         // Buttons consume some routed right-click events; listen on the full header,
         // including already handled events and the empty area after the last column.
@@ -96,13 +98,16 @@ public sealed partial class FileDetailsSurface
         ApplyDetailsColumns(false);
     }
 
+    private string ColumnTitle(DetailsColumn column) => _recursiveMode && column.Id == DetailsColumnId.Location
+        ? Loc.Get("Column_RelativePath") : column.Title;
+
     private (Button, Border) CreateColumnHeader(DetailsColumn column)
     {
         var glyph = new FontIcon { Glyph = "\uE70E", FontSize = 10, Visibility = Visibility.Collapsed,
             RenderTransform = new RotateTransform(), RenderTransformOrigin = new Point(.5, .5) };
         if (column.CanSort) _extraSortGlyphs[column.Key] = glyph;
         var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
-        content.Children.Add(new TextBlock { Text = column.Title });
+        content.Children.Add(new TextBlock { Text = ColumnTitle(column) });
         content.Children.Add(glyph);
         var button = new Button { Content = content, Style = NameHeader.Style };
         if (column.CanSort) button.Click += (_, _) => RequestColumnSort(column);
@@ -124,9 +129,16 @@ public sealed partial class FileDetailsSurface
     private void ApplyDetailsColumns(bool persist)
     {
         HideColumnDropIndicator();
-        foreach (var controls in _columnHeaders.Values)
-            controls.Button.Visibility = controls.Resize.Visibility = Visibility.Collapsed;
+        // Preserve pointer capture while a visible column changes width.
+        // Only columns that are actually hidden should collapse their handles.
+        var visibleKeys = _detailColumns.Where(c => c.Visible).Select(c => c.Key).ToHashSet(StringComparer.Ordinal);
+        foreach (var (key, controls) in _columnHeaders)
+        {
+            var visibility = visibleKeys.Contains(key) ? Visibility.Visible : Visibility.Collapsed;
+            controls.Button.Visibility = controls.Resize.Visibility = visibility;
+        }
         var contentWidth = FileColumnLayout.RowWidth(VisibleColumnWidth, 0, 0, 0);
+        _stackLayout.Configure(RowHeight, contentWidth);
         Repeater.MinWidth = _layout == FileLayoutKind.Details ? contentWidth : 0;
         DetailsHeader.Width = Math.Max(contentWidth, Scroller.ActualWidth);
         DetailsHeader.ColumnDefinitions.Clear();
@@ -141,8 +153,11 @@ public sealed partial class FileDetailsSurface
                 DetailsHeader.Children.Add(controls.Button);
                 DetailsHeader.Children.Add(controls.Resize);
                 AttachColumnEditing(controls.Button, column.Key);
-                AutomationProperties.SetName(controls.Button, column.Title);
+                AutomationProperties.SetName(controls.Button, ColumnTitle(column));
             }
+            if (controls.Button.Content is StackPanel content && content.Children.FirstOrDefault() is TextBlock caption)
+                caption.Text = ColumnTitle(column);
+            AutomationProperties.SetName(controls.Button, ColumnTitle(column));
             var position = DetailsHeader.ColumnDefinitions.Count;
             Grid.SetColumn(controls.Button, position);
             Grid.SetColumnSpan(controls.Button, 1);
@@ -151,7 +166,8 @@ public sealed partial class FileDetailsSurface
                 DetailsHeader.ColumnDefinitions.Add(new() { Width = new GridLength(FileColumnLayout.GlyphWidth) });
                 Grid.SetColumn(controls.Button, position == 1 ? 0 : position);
                 Grid.SetColumnSpan(controls.Button, position == 1 ? 3 : 2);
-                controls.Button.Padding = new Thickness((position == 1 ? FileColumnLayout.NameHeaderPad : 28) - controls.Button.Margin.Left, 0, 8, 0);
+                controls.Button.Padding = new Thickness((position == 1 ? FileColumnLayout.NameHeaderPad : 28)
+                    + (_recursiveMode ? FileColumnLayout.RecursiveArrowWidth : 0) - controls.Button.Margin.Left, 0, 8, 0);
                 position++;
             }
             DetailsHeader.ColumnDefinitions.Add(new() { Width = new GridLength(column.Visible ? column.Width : 0) });
@@ -190,7 +206,7 @@ public sealed partial class FileDetailsSurface
         menu.Items.Add(new MenuFlyoutSeparator { Style = separatorStyle });
         foreach (var column in _detailColumns.Where(c => c.Id != DetailsColumnId.ShellProperty || c.Visible))
         {
-            var item = new ToggleMenuFlyoutItem { Text = column.Title, Style = toggleStyle, IsChecked = column.Visible, IsEnabled = column.Id != DetailsColumnId.Name };
+            var item = new ToggleMenuFlyoutItem { Text = ColumnTitle(column), Style = toggleStyle, IsChecked = column.Visible, IsEnabled = column.Id != DetailsColumnId.Name };
             item.Click += (_, _) =>
             {
                 _detailColumns = _detailColumns.Select(c => c.Key == column.Key ? c with { Visible = item.IsChecked } : c).ToArray();
@@ -200,7 +216,6 @@ public sealed partial class FileDetailsSurface
         }
         menu.Items.Add(new MenuFlyoutSeparator { Style = separatorStyle });
         var chooseIcon = new SymbolIcon(Symbol.List);
-        Theming.ThemeResources.Bind(chooseIcon, IconElement.ForegroundProperty, "FilesMate.Selection.AccentBrush");
         var choose = new MenuFlyoutItem { Text = Loc.Get("Columns_Choose"), Style = itemStyle, Icon = chooseIcon };
         choose.Click += async (_, _) => await ChooseColumnsAsync();
         menu.Items.Add(choose);
@@ -217,7 +232,6 @@ public sealed partial class FileDetailsSurface
     private static FontIcon MenuGlyph(string glyph)
     {
         var icon = new FontIcon { FontFamily = new FontFamily("Segoe Fluent Icons"), Glyph = glyph, FontSize = 16 };
-        Theming.ThemeResources.Bind(icon, IconElement.ForegroundProperty, "FilesMate.Selection.AccentBrush");
         return icon;
     }
 
@@ -226,7 +240,6 @@ public sealed partial class FileDetailsSurface
         // Horizontal arrows between column boundaries describe sizing, rather than switching items.
         var icon = (PathIcon)Microsoft.UI.Xaml.Markup.XamlReader.Load(
             "<PathIcon xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' Data='M0,1 L1,1 L1,15 L0,15 Z M15,1 L16,1 L16,15 L15,15 Z M2,8 L5,5 L5.7,5.7 L3.9,7.5 L12.1,7.5 L10.3,5.7 L11,5 L14,8 L11,11 L10.3,10.3 L12.1,8.5 L3.9,8.5 L5.7,10.3 L5,11 Z' />");
-        Theming.ThemeResources.Bind(icon, IconElement.ForegroundProperty, "FilesMate.Selection.AccentBrush");
         return icon;
     }
 
@@ -338,16 +351,27 @@ public sealed partial class FileDetailsSurface
         if (_resizeColumn is not null || !e.GetCurrentPoint(DetailsHeader).Properties.IsLeftButtonPressed || !((UIElement)sender).CapturePointer(e.Pointer)) return;
         _resizeColumn = (string)((FrameworkElement)sender).Tag;
         _resizePointerId = e.Pointer.PointerId;
-        _resizeOriginX = e.GetCurrentPoint(DetailsHeader).Position.X;
+        // The viewport stays fixed when shrinking content clamps its horizontal offset.
+        _resizeOriginX = e.GetCurrentPoint(HeaderScroller).Position.X;
         _resizeOriginWidth = _detailColumns.Single(c => c.Key == _resizeColumn).Width;
         if (_resizeColumn == "Name") CancelAutoNameMeasurement();
+        _columnResizeOperation = PerformanceTrace.NextOperation();
+        RecordColumnResize(PerformanceStage.ColumnResizeStarted, _resizeOriginWidth, _resizeOriginX);
         e.Handled = true;
     }
     private void ColumnResize_PointerMoved(object sender, PointerRoutedEventArgs e)
     {
         if (_resizeColumn is null || _resizePointerId != e.Pointer.PointerId) return;
-        var width = Math.Clamp(_resizeOriginWidth + e.GetCurrentPoint(DetailsHeader).Position.X - _resizeOriginX, _resizeColumn == "Name" ? 96 : 64, 1200);
+        var pointerX = e.GetCurrentPoint(HeaderScroller).Position.X;
+        var minimum = _resizeColumn == "Name" ? 96d : 64d;
+        if (_resizeColumn == "Name" && _recursiveMode && _items.Binding?.Recursive is { } projection)
+            minimum = Math.Max(minimum, projection.MaximumVisibleDepth * FileColumnLayout.RecursiveIndentWidth
+                + FileColumnLayout.RecursiveArrowWidth + FileColumnLayout.MinNameWidth);
+        // The same prefix space required by the projection must survive a
+        // manual resize; otherwise deep arrows/names fall into adjacent cells.
+        var width = Math.Clamp(_resizeOriginWidth + pointerX - _resizeOriginX, minimum, Math.Max(1200, minimum));
         _detailColumns = _detailColumns.Select(c => c.Key == _resizeColumn ? c with { Width = width } : c).ToArray();
+        RecordColumnResize(PerformanceStage.ColumnResizeUpdated, width, pointerX);
         ApplyDetailsColumns(false);
         e.Handled = true;
     }
@@ -355,6 +379,8 @@ public sealed partial class FileDetailsSurface
     {
         if (_resizeColumn is null || _resizePointerId != e.Pointer.PointerId) return;
         var resizedName = _resizeColumn == "Name";
+        RecordColumnResize(PerformanceStage.ColumnResizeCompleted, _detailColumns.Single(c => c.Key == _resizeColumn).Width, e.Pointer.PointerId);
+        _columnResizeOperation = 0;
         _resizeColumn = null;
         _resizePointerId = null;
         ((UIElement)sender).ReleasePointerCapture(e.Pointer);
@@ -368,11 +394,21 @@ public sealed partial class FileDetailsSurface
     {
         if (_resizeColumn is null || _resizePointerId != e.Pointer.PointerId) return;
         var resizedName = _resizeColumn == "Name";
+        RecordColumnResize(PerformanceStage.ColumnResizeCaptureLost, _detailColumns.Single(c => c.Key == _resizeColumn).Width, e.Pointer.PointerId);
+        _columnResizeOperation = 0;
         _resizeColumn = null;
         _resizePointerId = null;
         ProtectedCursor = null;
         if (resizedName) RememberManualNameWidth();
         ApplyDetailsColumns(true);
         ScheduleAutoNameMeasurement();
+    }
+
+    private void RecordColumnResize(PerformanceStage stage, double width, double point)
+    {
+        if (_columnResizeOperation == 0) return;
+        // Opt-in numeric observations; no formatting or I/O on the pointer callback.
+        PerformanceTrace.Record(stage, generation: _generation, operation: _columnResizeOperation,
+            count: (long)Math.Round(width * 1000), auxiliary: (long)Math.Round(point * 1000));
     }
 }

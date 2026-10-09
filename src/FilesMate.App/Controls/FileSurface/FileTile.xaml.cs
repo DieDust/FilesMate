@@ -31,15 +31,29 @@ public sealed partial class FileTile : UserControl
     private bool _iconShowFullThumbnails;
     private int _iconCacheGeneration;
     private TagDefinition[] _tags = [];
-    private ItemOpeningMode OpeningMode => App.ExplorerPreferences.OpeningMode(Entry.Kind == EntryKind.Directory);
+    private readonly FileNameHighlighting _nameHighlights;
+    internal Func<bool, ItemOpeningMode>? MemoryOpeningMode { get; set; }
+    private ItemOpeningMode OpeningMode => MemoryOpeningMode?.Invoke(Entry.Kind == EntryKind.Directory) ?? App.ExplorerPreferences.OpeningMode(Entry.Kind == EntryKind.Directory);
 
     public FileTile()
     {
         InitializeComponent();
+        _nameHighlights = new FileNameHighlighting(NameText, NameMatchBackplates);
         ItemActivation.BindName(NameText, () => OpeningMode, cursor => ProtectedCursor = cursor);
         Unloaded += (_, _) => { FolderPreviewBinder.Clear(FolderPreviewHost, FolderPreviewCover); CancelTileFolderSize(); };
         Loaded += (_, _) => { BindPreview(); UpdateSizeText(); };
         ResetVisual();
+        Visibility = Visibility.Collapsed;
+        IsHitTestVisible = false;
+    }
+
+    // A presenter can remain attached while WinUI processes a collection reset.
+    // Only its owner may reveal it after validating the current binding.
+    internal void PresentBoundEntry()
+    {
+        if (EntryId < 0 || ViewIndex < 0) return;
+        Visibility = Visibility.Visible;
+        IsHitTestVisible = true;
     }
 
     public int EntryId { get; private set; } = -1;
@@ -47,9 +61,13 @@ public sealed partial class FileTile : UserControl
 
     public int ViewIndex { get; private set; } = -1;
 
+    internal void SetNameHighlightQuery(string query) => _nameHighlights.SetQuery(query);
+
+    internal string? EntryPath => _path;
+
     public FileEntryCore Entry { get; private set; }
 
-    public void ApplyMetrics(GridSizePreset preset, double itemWidth)
+    public void ApplyMetrics(GridSizePreset preset, double itemWidth, bool rebindImages = true)
     {
         _preset = preset;
         if (Width != itemWidth)
@@ -105,13 +123,13 @@ public sealed partial class FileTile : UserControl
 
         var scale = XamlRoot?.RasterizationScale ?? 1;
         var dipSize = (int)Math.Round(preset.IconSize);
-        if (ViewIndex >= 0 && (_iconDipSize != dipSize || _iconRasterScale != scale)) BindIcon();
+        if (rebindImages && ViewIndex >= 0 && (_iconDipSize != dipSize || _iconRasterScale != scale)) BindIcon();
         var pixels = ThumbnailQualityPolicy.PixelSize(
             Math.Clamp((int)Math.Ceiling(preset.IconSize * scale), 32, 256), App.ExplorerPreferences.ThumbnailQuality);
         if (_previewPixels != pixels)
         {
             _previewPixels = pixels;
-            if (_previewPath is not null)
+            if (rebindImages && _previewPath is not null)
                 BindPreview();
         }
     }
@@ -123,7 +141,8 @@ public sealed partial class FileTile : UserControl
         var keepIcon = sameEntry && IconImage.Source is not null && _iconQuality == prefs.ThumbnailQuality
             && _iconShowFullThumbnails == prefs.ShowFullThumbnails && _iconCacheGeneration == ShellIconBinder.CacheGeneration
             && _iconDipSize == (int)Math.Round(_preset.IconSize) && _iconRasterScale == (XamlRoot?.RasterizationScale ?? 1);
-        if (!sameEntry) CancelTileFolderSize();
+        // A new navigation scope must own its own shared-service subscriber.
+        if (!sameEntry || _tileSizeOwner != cancellationToken) CancelTileFolderSize();
         _tileSizeOwner = cancellationToken;
         _tileRetainKnownSize = retainKnownSize;
         ApplyTypography(App.AppearanceViewModel?.Current ?? AppearanceSettings.Default);
@@ -132,6 +151,7 @@ public sealed partial class FileTile : UserControl
         Entry = entry;
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(SelectionBox, Localization.StringTable.Get("Opening_SelectItem") + ": " + entry.Name);
         NameText.Text = FileRowFormatter.DisplayName(entry, prefs.ShowFileExtensions);
+        _nameHighlights.Refresh();
         ToolTipService.SetToolTip(Root, entry.Name);
         Glyph.Glyph = FileRowFormatter.Glyph(entry);
         _path = path;
@@ -164,7 +184,7 @@ public sealed partial class FileTile : UserControl
         _iconQuality = App.ExplorerPreferences.ThumbnailQuality;
         _iconShowFullThumbnails = App.ExplorerPreferences.ShowFullThumbnails;
         _iconCacheGeneration = ShellIconBinder.CacheGeneration;
-        ShellIconBinder.Bind(IconImage, Glyph, Entry, _path, _iconDipSize);
+        ShellIconBinder.Bind(IconImage, Glyph, Entry, _path, _iconDipSize, _thumbnailLoadMode);
     }
 
     private void UpdateSizeText()
@@ -235,20 +255,32 @@ public sealed partial class FileTile : UserControl
         UpdateState(animate: false);
     }
 
-    public void Clear()
+    public void Clear() => ClearCore(recycling: false);
+
+    internal void ClearForRecycle() => ClearCore(recycling: true);
+
+    private void ClearCore(bool recycling)
     {
+        // Content cleanup is not a visual retirement: suppress the whole old
+        // hit area before reset/recycling can expose its empty default glyph.
+        Visibility = Visibility.Collapsed;
+        IsHitTestVisible = false;
         CancelTileFolderSize();
         ViewIndex = -1;
         EntryId = -1;
         Entry = default;
-        NameText.Text = string.Empty;
-        SizeText.Text = string.Empty;
-        SizeText.Visibility = Visibility.Collapsed;
-        ToolTipService.SetToolTip(Root, null);
-        Glyph.Glyph = "\uE8B7";
+        if (!recycling) NameText.Text = string.Empty;
+        _nameHighlights.SetQuery("");
+        if (!recycling)
+        {
+            SizeText.Text = string.Empty;
+            SizeText.Visibility = Visibility.Collapsed;
+            ToolTipService.SetToolTip(Root, null);
+            Glyph.Glyph = "\uE8B7";
+        }
         _tags = [];
         RenderTags();
-        IconImage.Stretch = Stretch.Uniform;
+        if (!recycling) IconImage.Stretch = Stretch.Uniform;
         ShellIconBinder.Clear(IconImage, Glyph);
         _previewPath = null;
         _path = null;
@@ -257,7 +289,7 @@ public sealed partial class FileTile : UserControl
     }
 
     private void BindPreview() =>
-        FolderPreviewBinder.Bind(FolderPreviewHost, FolderPreviewCover, _previewPath, _previewPixels);
+        FolderPreviewBinder.Bind(FolderPreviewHost, FolderPreviewCover, _previewPath, _previewPixels, _thumbnailLoadMode);
 
     private void OnPointerEntered(object sender, PointerRoutedEventArgs e)
     {
@@ -305,10 +337,11 @@ public sealed partial class FileTile : UserControl
             _dropTarget);
         var useTransitions = animate && App.Motion.Resolve(MotionDurations.Hover) > TimeSpan.Zero;
         VisualStateManager.GoToState(this, state, useTransitions);
-        if (state != FileRowVisualStates.Dragging)
-        {
-            Opacity = _hidden ? HiddenOpacity() : 1;
-        }
+        VisualStateManager.GoToState(this,
+            FileRowVisualStates.ResolveFocus(_focused, _selected, _pressed, _dragging, _dropTarget), false);
+        // Preserve the chrome and text even for hidden selected/focused files.
+        Opacity = 1;
+        IconHost.Opacity = _hidden && !Theming.GlassEnvironment.HighContrast ? HiddenOpacity() : 1;
     }
 
     private void OnSelectionBoxClick(object sender, RoutedEventArgs e)

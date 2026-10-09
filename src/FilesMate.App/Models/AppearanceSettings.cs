@@ -43,7 +43,8 @@ public sealed record AppearanceSettings(
     bool UseBundledFileIcons = true,
     string? FileFontFamily = null,
     double FileNameFontSize = 13,
-    double FileDetailsFontSize = 12)
+    double FileDetailsFontSize = 12,
+    SkinPackage? Skin = null)
 {
     public double FileRowHeight => Math.Max(28, Math.Ceiling(Math.Max(FileNameFontSize, FileDetailsFontSize) * 1.6) + 6);
     public double FileRowHeightForScale(double scale) => double.IsFinite(scale) && scale > 0
@@ -52,12 +53,13 @@ public sealed record AppearanceSettings(
         || font.Any(char.IsControl) || font.IndexOfAny(['/', '\\', '#', ':']) >= 0 ? null : font.Trim();
     public static double SanitizeFontSize(double size, double fallback, double maximum) =>
         double.IsFinite(size) ? Math.Clamp(Math.Round(size), 10, maximum) : fallback;
-    public int EffectiveTransparencyPercent => Math.Clamp(TransparencyPercent ?? (GlassEffect switch
+    public int EffectiveTransparencyPercent => Math.Clamp(TransparencyPercent ?? PresetTransparencyPercent(GlassEffect), 0, 100);
+    public static int PresetTransparencyPercent(GlassEffectMode effect) => effect switch
     {
         GlassEffectMode.Off => 0,
         GlassEffectMode.Immersive => 32,
         _ => 18,
-    }), 0, 100);
+    };
 
     public static AppearanceSettings Default { get; } = new(
         AppThemeKind.System,
@@ -67,7 +69,8 @@ public sealed record AppearanceSettings(
         ReduceMotionKind.System,
         GlassEffectMode.Balanced,
         AccentKind.Default,
-        CustomAccent: null);
+        CustomAccent: null,
+        TransparencyPercent: 0);
 
     public static AppearanceSettings Sanitize(
         string? theme,
@@ -82,7 +85,8 @@ public sealed record AppearanceSettings(
         bool? useBundledFileIcons = null,
         string? fileFontFamily = null,
         double? fileNameFontSize = null,
-        double? fileDetailsFontSize = null) =>
+        double? fileDetailsFontSize = null,
+        SkinPackage? skin = null) =>
         new(
             Parse(theme, AppThemeKind.System),
             Parse(backdrop, BackdropKind.Acrylic),
@@ -92,11 +96,26 @@ public sealed record AppearanceSettings(
             Parse(glassEffect, GlassEffectMode.Balanced),
             Parse(accent, AccentKind.Default),
             AccentPalette.TryParse(customAccent, out var parsed) ? AccentPalette.ToHex(parsed) : null,
-            transparencyPercent is { } percent ? Math.Clamp(percent, 0, 100) : null,
+            SanitizeTransparency(backdrop, glassEffect, transparencyPercent),
             useBundledFileIcons ?? true,
             SanitizeFont(fileFontFamily),
             SanitizeFontSize(fileNameFontSize ?? 13, 13, 24),
-            SanitizeFontSize(fileDetailsFontSize ?? 12, 12, 20));
+            SanitizeFontSize(fileDetailsFontSize ?? 12, 12, 20),
+            skin);
+
+    private static int? SanitizeTransparency(string? backdrop, string? glassEffect, int? transparencyPercent)
+    {
+        if (transparencyPercent is { } percent) return Math.Clamp(percent, 0, 100);
+        // Explicit pre-slider presets/materials are existing choices. Keep their
+        // historical percentage; only profiles with no glass choice start opaque.
+        if (!string.IsNullOrWhiteSpace(glassEffect) && !int.TryParse(glassEffect.Trim(), out _)
+            && Enum.TryParse<GlassEffectMode>(glassEffect.Trim(), ignoreCase: true, out var effect)
+            && Enum.IsDefined(effect)) return null;
+        if (!string.IsNullOrWhiteSpace(backdrop) && !int.TryParse(backdrop.Trim(), out _)
+            && Enum.TryParse<BackdropKind>(backdrop.Trim(), ignoreCase: true, out var material)
+            && Enum.IsDefined(material) && material != BackdropKind.Solid) return null;
+        return Default.TransparencyPercent;
+    }
 
     private static TEnum Parse<TEnum>(string? value, TEnum fallback)
         where TEnum : struct, Enum

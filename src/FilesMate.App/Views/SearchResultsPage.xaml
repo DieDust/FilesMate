@@ -5,7 +5,7 @@
     xmlns:files="using:FilesMate.App.Controls.FileSurface"
     xmlns:toolbar="using:FilesMate.App.Controls.Toolbar"
     xmlns:glass="using:FilesMate.App.Controls.Glass"
-    Background="{ThemeResource FilesMate.App.SolidBackgroundBrush}" SizeChanged="Page_SizeChanged">
+    Background="Transparent" SizeChanged="Page_SizeChanged">
     <Page.Resources>
         <CornerRadius x:Key="ControlCornerRadius">8</CornerRadius>
         <CornerRadius x:Key="OverlayCornerRadius">12</CornerRadius>
@@ -22,14 +22,14 @@
                     <Border CornerRadius="{TemplateBinding CornerRadius}" Background="{ThemeResource FilesMate.SettingsCard.BackgroundBrush}" BorderBrush="{ThemeResource FilesMate.Card.BorderBrush}" BorderThickness="1"/>
                     <Border x:Name="CheckedFill" CornerRadius="{TemplateBinding CornerRadius}" Background="{ThemeResource FilesMate.Item.SelectedBrush}" BorderBrush="{ThemeResource FilesMate.Selection.AccentBrush}" BorderThickness="1" Opacity="0"/>
                     <Border x:Name="HoverFill" CornerRadius="{TemplateBinding CornerRadius}" Background="{ThemeResource FilesMate.Item.HoverBrush}" Opacity="0"/>
-                    <ContentPresenter Content="{TemplateBinding Content}" Padding="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}"/>
+                    <ContentPresenter x:Name="ChipContent" Content="{TemplateBinding Content}" Padding="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}"/>
                     <VisualStateManager.VisualStateGroups>
                         <VisualStateGroup x:Name="CommonStates">
                             <VisualState x:Name="Normal"/>
                             <VisualState x:Name="PointerOver"><VisualState.Setters><Setter Target="HoverFill.Opacity" Value="1"/></VisualState.Setters></VisualState>
                             <VisualState x:Name="Pressed"><VisualState.Setters><Setter Target="HoverFill.Opacity" Value="1"/></VisualState.Setters></VisualState>
                         </VisualStateGroup>
-                        <VisualStateGroup x:Name="CheckStates"><VisualState x:Name="Unchecked"/><VisualState x:Name="Checked"><VisualState.Setters><Setter Target="CheckedFill.Opacity" Value="1"/></VisualState.Setters></VisualState></VisualStateGroup>
+                        <VisualStateGroup x:Name="CheckStates"><VisualState x:Name="Unchecked"/><VisualState x:Name="Checked"><VisualState.Setters><Setter Target="CheckedFill.Opacity" Value="1"/><Setter Target="ChipContent.Foreground" Value="{ThemeResource FilesMate.Item.SelectedForegroundBrush}"/><Setter Target="HoverFill.Background" Value="{ThemeResource FilesMate.Item.SelectedHoverBrush}"/></VisualState.Setters></VisualState></VisualStateGroup>
                     </VisualStateManager.VisualStateGroups>
                 </Grid>
             </ControlTemplate></Setter.Value></Setter>
@@ -46,7 +46,7 @@
         </Style>
         <Style x:Key="ActiveSearchFilterStyle" TargetType="Button" BasedOn="{StaticResource SearchFilterButtonStyle}">
             <Setter Property="Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}"/>
-            <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}"/>
+            <Setter Property="Foreground" Value="{ThemeResource FilesMate.Item.SelectedForegroundBrush}"/>
         </Style>
         <Style x:Key="SearchFilterComboStyle" TargetType="ComboBox" BasedOn="{StaticResource DefaultComboBoxStyle}">
             <Setter Property="Height" Value="28"/><Setter Property="MinHeight" Value="28"/>

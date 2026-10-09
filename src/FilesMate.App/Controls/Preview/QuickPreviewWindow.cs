@@ -16,11 +16,14 @@ public sealed class QuickPreviewWindow : Window
 {
     private readonly PreviewPane _pane = new();
     private readonly TextBlock _title = new() { TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center, FontSize = 14, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold };
-    private readonly PreviewService _service = new([new DevicePreviewProvider(), new ImagePreviewProvider(), new TextPreviewProvider(), new PdfPreviewProvider(), new OfficePreviewProvider(), new MediaPreviewProvider(), new PropertiesPreviewProvider()]);
+    private readonly PreviewService? _service;
+    private readonly bool _memoryOnly;
+    private readonly LocalSkinScope? _localSkin;
     private long _generation;
     private bool _closed;
     private bool _closing;
     private readonly Grid _root;
+    private readonly Glass.FrostedBackdrop _backdrop = new() { CornerRadius = new CornerRadius(12) };
     private readonly nint _handle;
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _motion;
     private byte _opacity;
@@ -33,17 +36,29 @@ public sealed class QuickPreviewWindow : Window
     public bool RestoreOwnerFocus { get; private set; } = true;
     public event EventHandler<int>? NavigateFile;
 
-    public QuickPreviewWindow(MainWindow owner)
+    public QuickPreviewWindow(MainWindow owner) : this(owner, null) { }
+
+    internal static QuickPreviewWindow ForMemory(MainWindow owner, Models.AppearanceSettings appearance) => new(owner, appearance);
+
+    private QuickPreviewWindow(MainWindow owner, Models.AppearanceSettings? memoryAppearance)
     {
-        var root = _root = (Grid)Microsoft.UI.Xaml.Markup.XamlReader.Load("""
-            <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                Background="{ThemeResource FilesMate.SearchPanel.BackgroundBrush}"
-                />
-            """);
+        _memoryOnly = memoryAppearance is not null;
+        if (!_memoryOnly) _service = new([new DevicePreviewProvider(), new ImagePreviewProvider(), new TextPreviewProvider(), new PdfPreviewProvider(), new OfficePreviewProvider(), new MediaPreviewProvider(), new PropertiesPreviewProvider()]);
+        var root = _root = new Grid { Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent) };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(root, _memoryOnly ? "TourPopupPreviewCard" : "QuickPreviewCard");
+        if (memoryAppearance is not null) { _localSkin = new(root); _localSkin.Apply(memoryAppearance); }
+        root.Children.Add(_backdrop);
         var ownerRoot = owner.Content as FrameworkElement;
-        root.RequestedTheme = ownerRoot?.ActualTheme ?? ElementTheme.Default;
-        void OwnerThemeChanged(FrameworkElement sender, object args) => root.RequestedTheme = sender.ActualTheme;
+        void RefreshTheme()
+        {
+            if (!_closed && !_memoryOnly) root.RequestedTheme = ContentDialogTheme.Resolve(ownerRoot ?? root);
+        }
+        void OwnerThemeChanged(FrameworkElement sender, object args) => RefreshTheme();
+        void AppearanceChanged(object? sender, Models.AppearanceSettings settings) => RefreshTheme();
+        RefreshTheme();
         if (ownerRoot is not null) ownerRoot.ActualThemeChanged += OwnerThemeChanged;
+        App.AppearanceChanged += AppearanceChanged;
+        ThemeResources.Bind(_title, TextBlock.ForegroundProperty, "FilesMate.Text.PrimaryBrush");
         _ownerHandle = owner.NativeHandle;
         var layout = new Grid { Padding = new Thickness(12, 8, 12, 12), RowSpacing = 4 };
         root.Children.Add(layout);
@@ -68,7 +83,10 @@ public sealed class QuickPreviewWindow : Window
         Button("\uE8BB", Loc.Get("ClosePreview"), 3, Close);
         layout.Children.Add(header); Grid.SetRow(_pane, 1); layout.Children.Add(_pane);
         AddResizeHandles(root);
-        _pane.UseAsQuickPreview(); _pane.Attach(_service); _pane.SetVisible(true); _pane.CloseRequested += (_, _) => Close();
+        _pane.UseAsQuickPreview();
+        if (_service is not null) _pane.Attach(_service);
+        if (_memoryOnly) Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(_pane, "TourFilePreviewPane");
+        _pane.SetVisible(true); _pane.CloseRequested += (_, _) => Close();
         Content = root;
         AppTypography.Track(root);
         ExtendsContentIntoTitleBar = true; SetTitleBar(header);
@@ -104,15 +122,24 @@ public sealed class QuickPreviewWindow : Window
         _foregroundCheck.Start();
         Activated += (_, args) => { if (args.WindowActivationState != WindowActivationState.Deactivated) _wasForeground = true; };
         root.Loaded += (_, _) => { if (!_closing) AnimateWindowOpacity(255, (int)FilesMate.App.Animations.MotionDurations.Standard.TotalMilliseconds, null); };
-        root.AddHandler(UIElement.KeyDownEvent, new KeyEventHandler((_, e) =>
+        // Handle dismissal before a focused header/tab Button consumes Space.
+        // The file selection must not move as a side effect of closing preview.
+        root.AddHandler(UIElement.PreviewKeyDownEvent, new KeyEventHandler((_, e) =>
         {
             if(e.Key is VirtualKey.Escape or VirtualKey.Space) { e.Handled=true; Close(); }
-            else if(e.Key is VirtualKey.Left or VirtualKey.Right) { e.Handled=true; NavigateFile?.Invoke(this,e.Key==VirtualKey.Left?-1:1); }
+        }), true);
+        root.AddHandler(UIElement.KeyDownEvent, new KeyEventHandler((_, e) =>
+        {
+            if(e.Key is VirtualKey.Left or VirtualKey.Right) { e.Handled=true; NavigateFile?.Invoke(this,e.Key==VirtualKey.Left?-1:1); }
         }), false);
         Closed += async (_, _) =>
         {
             if (ownerRoot is not null) ownerRoot.ActualThemeChanged -= OwnerThemeChanged;
-            _closed=true; _motion?.Stop(); _foregroundCheck.Stop(); _pane.SetVisible(false); await _service.DisposeAsync();
+            App.AppearanceChanged -= AppearanceChanged;
+            _closed=true; _motion?.Stop(); _foregroundCheck.Stop(); _pane.SetVisible(false);
+            _backdrop.Visibility = Visibility.Collapsed;
+            root.Children.Remove(_backdrop);
+            if (_service is not null) await _service.DisposeAsync();
         };
     }
 
@@ -205,9 +232,19 @@ public sealed class QuickPreviewWindow : Window
 
     public async Task LoadAsync(string path)
     {
+        if (_memoryOnly) throw new InvalidOperationException("Memory preview cannot load a file path.");
         if(_closed || _closing || string.Equals(_path,path,StringComparison.OrdinalIgnoreCase))return;
         _path=path; Title=_title.Text=FilesMate.App.Navigation.LocationCaption.Title(path); ToolTipService.SetToolTip(_title,Title);
         await _pane.LoadAsync(path,++_generation);
+    }
+
+    internal void BindMemoryText(FilesMate.Core.Entries.FileEntryCore entry, string content)
+    {
+        if (!_memoryOnly) throw new InvalidOperationException("Memory content requires the isolated memory preview route.");
+        if (_closed || _closing) return;
+        Title = _title.Text = entry.Name;
+        ToolTipService.SetToolTip(_title, Title);
+        _pane.BindMemoryText(entry, content);
     }
 
     private void UpdateWindowRegion()
@@ -241,7 +278,11 @@ public sealed class QuickPreviewWindow : Window
             Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(grip, $"PreviewResize_{horizontal}_{vertical}");
             ToolTipService.SetToolTip(grip, Loc.Get("ResizePreview"));
             if (horizontal == 1 && vertical == 1)
-                grip.Children.Add(new TextBlock { Text = "◢", FontSize = 12, Opacity = .4, Margin = new Thickness(0, 0, 5, 3), HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, IsHitTestVisible = false });
+            {
+                var hint = new TextBlock { Text = "◢", FontSize = 12, Margin = new Thickness(0, 0, 5, 3), HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom, IsHitTestVisible = false };
+                ThemeResources.Bind(hint, TextBlock.ForegroundProperty, "FilesMate.Text.SecondaryBrush");
+                grip.Children.Add(hint);
+            }
             uint? pointer = null;
             Windows.Foundation.Point start = default;
             Windows.Graphics.RectInt32 original = default;

@@ -13,7 +13,7 @@ public sealed record SearchFileAction(string Command, string[] Paths)
     private static string RequestPath(string id, string? profile)
     {
         if (!Guid.TryParseExact(id, "N", out _)) throw new ArgumentException("无效的文件操作请求。");
-        return Path.Combine(profile ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FilesMate"), "search-actions", id + ".json");
+        return Path.Combine(profile ?? FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "search-actions", id + ".json");
     }
 
     public string Write(string? profile = null)

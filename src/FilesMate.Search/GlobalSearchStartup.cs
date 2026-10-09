@@ -24,7 +24,7 @@ public static class GlobalSearchStartup
 
     public static string HostForManager(string manager) => Path.Combine(Path.GetDirectoryName(Path.GetFullPath(manager))!, "SearchHost", "FilesMate.SearchHost.exe");
     [System.Runtime.Versioning.SupportedOSPlatformGuard("windows")]
-    private static bool Applicable(string? profile, string registryPath) => OperatingSystem.IsWindows() &&
+    private static bool Applicable(string? profile, string registryPath) => !FilesMate.Core.Configuration.RuntimeProfile.HasPrivateProfile && OperatingSystem.IsWindows() &&
         (registryPath != RunKey || string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(profile ?? GlobalSearchConfiguration.DefaultDirectory)),
             Path.TrimEndingDirectorySeparator(Path.GetFullPath(GlobalSearchConfiguration.DefaultDirectory)), StringComparison.OrdinalIgnoreCase));
 

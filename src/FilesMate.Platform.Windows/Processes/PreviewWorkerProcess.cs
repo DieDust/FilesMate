@@ -17,6 +17,7 @@ public sealed class PreviewWorkerProcess : IDisposable
     public static PreviewWorkerProcess Start(string executable, IReadOnlyList<string> arguments)
     {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
+        arguments = FilesMate.Core.Configuration.RuntimeProfile.ForExecutable(executable, arguments);
         var job = CreateJobObjectW(0, null);
         if (job.IsInvalid) { job.Dispose(); throw new Win32Exception(Marshal.GetLastWin32Error()); }
         var information = new JOBOBJECT_EXTENDED_LIMIT_INFORMATION

@@ -1,0 +1,91 @@
+using System.Globalization;
+
+namespace FilesMate.App.Localization;
+
+public static partial class StringTable
+{
+    private static readonly Dictionary<string, (string English, string Chinese, string Japanese)> TourText = new(StringComparer.Ordinal)
+    {
+        ["Tour_HighlightsTitle"] = ("What's new in FilesMate", "FilesMate 新版亮点", "FilesMate の新機能"),
+        ["Tour_HighlightsVersion"] = ("Version {0}", "版本 {0}", "バージョン {0}"),
+        ["Tour_StartUsing"] = ("Start using", "开始使用", "使い始める"),
+        ["Tour_HighlightsRecursiveTitle"] = ("Browse a whole folder tree", "递归浏览，保持目录层级", "フォルダー階層をまとめて表示"),
+        ["Tour_HighlightsRecursiveBody"] = ("Choose Recursive in View. Use the arrow beside a folder to expand or collapse it; the context menu also controls its whole subtree.", "在「查看」中选择递归视图。用文件夹左侧箭头展开或收起，右键可操作整个子树。", "「表示」で再帰表示を選びます。左の矢印で開閉し、右クリックで配下全体を操作できます。"),
+        ["Tour_HighlightsFiltersTitle"] = ("See and refine active filters", "筛选条件，一目了然", "絞り込み条件をすぐ確認"),
+        ["Tour_HighlightsFiltersBody"] = ("Open filters on the right of the toolbar to narrow by type, date or size. Active conditions appear below the toolbar and can be cleared anytime.", "从工具栏右侧按类型、日期或大小筛选。已选条件显示在工具栏下方，随时可清除。", "ツールバー右側で種類・日付・サイズを絞り込みます。条件は下に表示され、いつでも解除できます。"),
+        ["Tour_HighlightsPreviewTitle"] = ("Preview a file with Space", "空格预览，快速查看", "Space でファイルをプレビュー"),
+        ["Tour_HighlightsPreviewBody"] = ("Select a file and press Space for an independent preview; Esc returns to browsing. A manually opened sidebar stays open.", "选中文件后按 Space 打开独立预览，按 Esc 返回；手动打开的侧栏会保留。", "選択したファイルを Space で別ウィンドウにプレビューし、Esc で戻ります。手動で開いたサイドバーは保持されます。"),
+        ["Tour_Title"] = ("Make FilesMate yours", "按你的习惯使用 FilesMate", "FilesMate を使いやすく"),
+        ["Tour_NewTitle"] = ("What's new", "看看新增功能", "新機能"),
+        ["Tour_Next"] = ("Next", "下一步", "次へ"),
+        ["Tour_Previous"] = ("Previous", "上一步", "戻る"),
+        ["Tour_Finish"] = ("Finish", "完成", "完了"),
+        ["Tour_Skip"] = ("Skip for now", "暂时跳过", "今はスキップ"),
+        ["Tour_Progress"] = ("{0} of {1}", "第 {0} / {1} 页", "{0} / {1} ページ"),
+        ["Tour_Replay"] = ("Replay", "重播演示", "もう一度再生"),
+        ["Tour_Pause"] = ("Pause", "暂停", "一時停止"),
+        ["Tour_Resume"] = ("Resume", "继续演示", "再開"),
+        ["Tour_Static"] = ("Before and after", "操作前后", "操作前と操作後"),
+        ["Tour_Before"] = ("Before", "操作前", "操作前"),
+        ["Tour_After"] = ("After", "操作后", "操作後"),
+        ["Tour_Settings"] = ("Adjust in Settings", "到设置中调整", "設定で調整"),
+        ["Tour_Help"] = ("Quick setup", "常用设置", "かんたん設定"),
+        ["Tour_HelpHint"] = ("Revisit common settings and release highlights at any time.", "随时调整常用设置或查看本次新增内容。", "よく使う設定と新機能はいつでも確認できます。"),
+        ["Tour_OpeningTitle"] = ("Open items the way you like", "用熟悉的方式打开文件", "使い慣れた方法で開く"),
+        ["Tour_OpeningLead"] = ("Choose how files and folders respond to a click.", "选择文件和文件夹响应单击、双击的方式。", "ファイルとフォルダーのクリック操作を選びます。"),
+        ["Tour_RecursiveTitle"] = ("Browse subfolders in one place", "在一处浏览整个子目录", "サブフォルダーを一か所で確認"),
+        ["Tour_RecursiveLead"] = ("Open a folder or its whole subtree while keeping the directory structure visible.", "展开一个文件夹或整棵子树，目录层级始终清楚。", "フォルダーやその配下を展開しても階層を確認できます。"),
+        ["Tour_SearchTitle"] = ("Find files with a shortcut", "用快捷键找到文件", "ショートカットでファイルを探す"),
+        ["Tour_SearchLead"] = ("Bring up global search without opening a file manager window first.", "直接呼出全局搜索，无需先打开文件管理窗口。", "ファイル管理画面を開かずに全体検索を呼び出せます。"),
+        ["Tour_BrowsingTitle"] = ("Keep your browsing comfortable", "让浏览方式更顺手", "見やすい表示にする"),
+        ["Tour_BrowsingLead"] = ("Pick a default view and choose whether to reopen your previous tabs.", "选择默认视图，并决定是否恢复上次的标签页。", "既定の表示と前回のタブを復元するかを選びます。"),
+        ["Tour_AppearanceTitle"] = ("Choose your look", "选择喜欢的外观", "好みの外観を選ぶ"),
+        ["Tour_AppearanceLead"] = ("Preview a theme and accent. Choices are applied when you finish.", "预览主题和强调色，完成后再应用你的选择。", "テーマと強調色を確認し、完了時に適用します。"),
+        ["Tour_FiltersTitle"] = ("Narrow down what you see", "快速缩小查找范围", "表示する項目を絞り込む"),
+        ["Tour_FiltersLead"] = ("Use type, date or size filters. Active conditions appear below the toolbar.", "按类型、日期或大小筛选，已选条件显示在工具栏下方。", "種類、日付、サイズで絞り込み、条件はツールバーの下に表示されます。"),
+        ["Tour_Optional"] = ("More preferences", "更多偏好", "その他の設定"),
+        ["Tour_NoticeTitle"] = ("What's new", "本次更新", "新機能"),
+        ["Tour_NoticeBody"] = ("Updated recursive browsing, compact filters and popup previews.", "递归展开、紧凑筛选和弹出预览已更新。", "再帰表示・絞り込み・ポップアッププレビューを更新しました。"),
+        ["Tour_NoticeAction"] = ("Details", "了解详情", "詳細を見る"),
+        ["Tour_DemoSelect"] = ("Click to select", "单击选中", "クリックして選択"),
+        ["Tour_DemoOpen"] = ("Open the selected item", "打开选中的文件", "選択した項目を開く"),
+        ["Tour_DemoCollapsed"] = ("Folders start collapsed", "文件夹默认折叠", "最初は折りたたまれています"),
+        ["Tour_DemoExpand"] = ("Direct files, then child folders", "直属文件在前，子文件夹在后", "直下のファイル、次に子フォルダー"),
+        ["Tour_DemoSubtree"] = ("Expand a subtree", "展开整棵子树", "配下をすべて展開"),
+        ["Tour_DemoFilter"] = ("Filter and keep folder context", "筛选时保留目录上下文", "絞り込んでも階層を保持"),
+        ["Tour_DemoSearch"] = ("Shortcut → type a name → results", "快捷键 → 输入名称 → 查看结果", "ショートカット → 名前を入力 → 検索結果"),
+        ["Tour_DemoView"] = ("Switch views and return to your tabs", "切换视图，回到上次的标签页", "表示を切り替え、前回のタブに戻る"),
+        ["Tour_Reset"] = ("Try again", "重做练习", "やり直す"),
+        ["Tour_PracticeTry"] = ("Try it here", "在这里试一试", "ここで試す"),
+        ["Tour_PracticeDone"] = ("Done, you can continue", "已完成，可以继续", "完了しました。次へ進めます"),
+        ["Tour_Task_opening"] = ("Expand Project, open notes.txt and try its preview.", "展开 Project，打开 notes.txt，再试试文件预览。", "Project を展開し、notes.txt を開いてプレビューを試します。"),
+        ["Tour_StepFolder"] = ("Expand folder", "展开文件夹", "フォルダーを展開"),
+        ["Tour_StepFile"] = ("Open file", "打开文件", "ファイルを開く"),
+        ["Tour_StepPreview"] = ("Preview file", "文件预览", "ファイルをプレビュー"),
+        ["Tour_ClosePreview"] = ("Close preview", "关闭预览", "プレビューを閉じる"),
+        ["Tour_SampleNotes"] = ("Project notes\nThis sample preview stays inside the guide.", "项目笔记\n这是引导中的示例预览。", "プロジェクトのメモ\nガイド内のサンプルプレビューです。"),
+        ["Tour_AppearanceChoose"] = ("Choose a theme and accent, or continue with the defaults.", "选择主题和强调色，也可以直接继续。", "テーマとアクセントを選ぶか、既定のまま次へ進めます。"),
+        ["Tour_TryExpand"] = ("Expand the Project folder.", "展开 Project 文件夹。", "Project フォルダーを展開します。"),
+        ["Tour_TrySelect"] = ("Select notes.txt.", "选中 notes.txt。", "notes.txt を選択します。"),
+        ["Tour_TryPreview"] = ("Press {0} to preview; Esc closes it.", "按 {0} 预览，Esc 关闭。", "{0} でプレビュー、Esc で閉じます。"),
+        ["Tour_PreviewDone"] = ("Preview opened. Esc closes it; you can continue.", "预览已打开；Esc 关闭，可以继续。", "プレビューを開きました。Esc で閉じ、次へ進めます。"),
+        ["Tour_PreviewButton"] = ("Preview ({0})", "预览（{0}）", "プレビュー（{0}）"),
+        ["Tour_Task_recursive"] = ("Expand Project and Images, then select cover.jpg.", "展开 Project 和 Images，再选中 cover.jpg。", "Project と Images を展開し、cover.jpg を選択します。"),
+        ["Tour_Task_filters"] = ("Choose a filter, then clear it.", "选择一个筛选条件，再清除它。", "条件を選び、絞り込みを解除します。"),
+        ["Tour_Task_search"] = ("Type cover, then select cover.jpg.", "输入 cover，再选中 cover.jpg。", "cover と入力し、cover.jpg を選択します。"),
+        ["Tour_Task_browsing"] = ("Switch the sample view, then switch to Images.", "切换示例视图，再切到 Images 标签。", "表示を変え、Images タブに切り替えます。"),
+        ["Tour_Task_appearance"] = ("Try a theme and green accent in the sample only.", "在示例中试选主题和绿色强调色。", "サンプルだけでテーマと緑を試します。"),
+        ["Tour_SearchPlaceholder"] = ("Search sample files", "搜索示例文件", "サンプルを検索"),
+        ["Tour_ClearFilters"] = ("Clear filters", "清除筛选", "絞り込みを解除"),
+        ["Tour_ExpandSample"] = ("Expand", "展开", "展開"),
+        ["Tour_CollapseSample"] = ("Collapse", "收起", "折りたたむ"),
+        ["Tour_SelectedSample"] = ("selected", "已选中", "選択済み"),
+    };
+
+    internal static bool TryTourText(string key, CultureInfo culture, out string value)
+    {
+        if (!TourText.TryGetValue(key, out var entry)) { value = ""; return false; }
+        value = culture.TwoLetterISOLanguageName switch { "zh" => entry.Chinese, "ja" => entry.Japanese, _ => entry.English };
+        return true;
+    }
+}

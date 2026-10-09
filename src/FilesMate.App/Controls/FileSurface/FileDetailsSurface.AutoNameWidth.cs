@@ -86,6 +86,9 @@ public sealed partial class FileDetailsSurface
 
     private void SetMeasuredNameWidth(double width)
     {
+        if (_recursiveMode && _items.Binding?.Recursive is { } projection)
+            width = Math.Max(width, projection.MaximumVisibleDepth * FileColumnLayout.RecursiveIndentWidth
+                + FileColumnLayout.RecursiveArrowWidth + FileColumnLayout.MinNameWidth);
         if (_detailColumns.First(c => c.Id == DetailsColumnId.Name).Width == width) return;
         _detailColumns = _detailColumns.Select(c => c.Id == DetailsColumnId.Name ? c with { Width = width } : c).ToArray();
         // Automatic measurements are transient; folder/session settings keep the manual width.

@@ -39,6 +39,9 @@ public sealed partial class HomeDashboard : UserControl
             [HomeSectionKind.Tags] = TagsSection,
             [HomeSectionKind.System] = SystemSection,
         };
+        GlobalSearchLabel.Text = StringTable.Get("Search_GlobalEntry");
+        AutomationProperties.SetName(GlobalSearchButton, GlobalSearchLabel.Text);
+        ToolTipService.SetToolTip(GlobalSearchButton, GlobalSearchLabel.Text);
         TitleText.Text = StringTable.Get("Home");
         FoldersHeader.Text = StringTable.Get("Home_UserDirectories");
         DrivesHeader.Text = StringTable.Get("Home_Drives");
@@ -62,6 +65,9 @@ public sealed partial class HomeDashboard : UserControl
         Loaded += (_, _) => { App.DevicesChanged += DevicesChanged; Reload(); };
         Unloaded += (_, _) => { App.DevicesChanged -= DevicesChanged; _placesGeneration++; _reloadGeneration++; };
     }
+
+    public event EventHandler? GlobalSearchRequested;
+    private void GlobalSearch_Click(object sender, RoutedEventArgs e) => GlobalSearchRequested?.Invoke(this, EventArgs.Empty);
 
     public event EventHandler<string>? PlaceChosen;
 

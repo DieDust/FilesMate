@@ -16,10 +16,11 @@
                    Margin="4,0,4,10" FontSize="12.5" TextWrapping="Wrap" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
         <glass:LiquidGlassSurface Padding="14" Margin="0,0,0,18" Style="{StaticResource FilesMate.GlassCardStyle}">
             <StackPanel Spacing="10">
-                <StackPanel Orientation="Horizontal" Spacing="8">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                     <FontIcon x:Name="GlobalSearchStateIcon" FontFamily="Segoe Fluent Icons" FontSize="12" Glyph="&#xEA3A;" VerticalAlignment="Center" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
-                    <TextBlock x:Name="GlobalSearchStatus" Text="{loc:LocalizedText Key=Search_Detecting}" TextWrapping="Wrap" FontSize="12.5" VerticalAlignment="Center" />
-                </StackPanel>
+                    <TextBlock x:Name="GlobalSearchStatus" Grid.Column="1" Text="{loc:LocalizedText Key=Search_Detecting}" TextWrapping="Wrap" FontSize="12.5" VerticalAlignment="Center" />
+                </Grid>
                 <ToggleSwitch x:Name="GlobalSearchResident" Toggled="GlobalSearchToggle_Changed" Header="{loc:LocalizedText Key=Search_Residency}" IsOn="True" />
                 <TextBlock Text="{loc:LocalizedText Key=Search_ResidencyHint}"
                            TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
@@ -27,10 +28,12 @@
                 <TextBlock x:Name="GlobalSearchStartupHint" Text="{loc:LocalizedText Key=Search_StartupHint}" TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
                 <ToggleSwitch x:Name="GlobalSearchPreview" Toggled="GlobalSearchToggle_Changed" Header="{loc:LocalizedText Key=Search_PreviewFiles}" IsOn="True" />
                 <TextBlock Text="{loc:LocalizedText Key=Search_PreviewHint}" TextWrapping="Wrap" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBox x:Name="GlobalSearchHotkey" TextChanged="GlobalSearchHotkey_Changed" Header="{loc:LocalizedText Key=SearchShortcut}" Text="Alt+Space" PlaceholderText="{loc:LocalizedText Key=Shortcut_ExampleF}" Width="220" />
-                    <Button x:Name="GlobalSearchCapture" Content="{loc:LocalizedText Key=Shortcut_Record}" VerticalAlignment="Bottom" Click="GlobalSearchCapture_Click" KeyDown="GlobalSearchCapture_KeyDown" LostFocus="GlobalSearchCapture_LostFocus" />
-                </StackPanel>
+                <Grid x:Name="HotkeyFields" ColumnSpacing="8" SizeChanged="HotkeyFields_SizeChanged">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                    <TextBox x:Name="GlobalSearchHotkey" TextChanged="GlobalSearchHotkey_Changed" Header="{loc:LocalizedText Key=SearchShortcut}" Text="Alt+Space" PlaceholderText="{loc:LocalizedText Key=Shortcut_ExampleF}" MinWidth="140" MaxWidth="220" HorizontalAlignment="Stretch" />
+                    <Button x:Name="GlobalSearchCapture" Grid.Column="1" Content="{loc:LocalizedText Key=Shortcut_Record}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Click="GlobalSearchCapture_Click" KeyDown="GlobalSearchCapture_KeyDown" LostFocus="GlobalSearchCapture_LostFocus" />
+                </Grid>
                 <ComboBox x:Name="GlobalSearchTrayAction" SelectionChanged="GlobalSearchTray_Changed" Header="{loc:LocalizedText Key=Search_TrayAction}" SelectedIndex="0" MinWidth="200">
                     <ComboBoxItem Content="{loc:LocalizedText Key=Search_Palette}"/><ComboBoxItem Content="{loc:LocalizedText Key=FileManager}"/>
                 </ComboBox>
@@ -42,50 +45,53 @@
         </glass:LiquidGlassSurface>
         <TextBlock x:Name="IndexHeader" Style="{StaticResource FilesMate.SectionHeaderStyle}" Text="Index" Margin="4,0,0,4" />
         <TextBlock x:Name="Lead" Style="{StaticResource FilesMate.SettingsLeadStyle}" Margin="4,0,4,12" FontSize="12.5" />
-        <Grid x:Name="StatsGrid" Margin="0,0,0,16" ColumnSpacing="10" RowSpacing="10">
+        <Grid x:Name="StatsGrid" Margin="0,0,0,16" ColumnSpacing="10" RowSpacing="10" SizeChanged="StatsGrid_SizeChanged">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <glass:LiquidGlassSurface x:Name="StatFilesCard" Grid.Row="0" Grid.Column="0" Padding="14" Style="{StaticResource FilesMate.GlassCardStyle}">
                 <StackPanel Spacing="4">
-                    <TextBlock x:Name="StatFilesLabel" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
-                    <TextBlock x:Name="StatFilesValue" FontSize="22" FontWeight="SemiBold" Text="0" />
+                    <TextBlock x:Name="StatFilesLabel" FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+                    <TextBlock x:Name="StatFilesValue" FontSize="22" FontWeight="SemiBold" Text="0" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{Binding Text, ElementName=StatFilesValue}" />
                 </StackPanel>
             </glass:LiquidGlassSurface>
             <glass:LiquidGlassSurface x:Name="StatFoldersCard" Grid.Row="0" Grid.Column="1" Padding="14" Style="{StaticResource FilesMate.GlassCardStyle}">
                 <StackPanel Spacing="4">
-                    <TextBlock x:Name="StatFoldersLabel" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
-                    <TextBlock x:Name="StatFoldersValue" FontSize="22" FontWeight="SemiBold" Text="0" />
+                    <TextBlock x:Name="StatFoldersLabel" FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+                    <TextBlock x:Name="StatFoldersValue" FontSize="22" FontWeight="SemiBold" Text="0" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{Binding Text, ElementName=StatFoldersValue}" />
                 </StackPanel>
             </glass:LiquidGlassSurface>
             <glass:LiquidGlassSurface x:Name="StatErrorsCard" Grid.Row="1" Grid.Column="0" Padding="14" Style="{StaticResource FilesMate.GlassCardStyle}">
                 <StackPanel Spacing="4">
-                    <TextBlock x:Name="StatErrorsLabel" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
-                    <TextBlock x:Name="StatErrorsValue" FontSize="22" FontWeight="SemiBold" Text="0" />
+                    <TextBlock x:Name="StatErrorsLabel" FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+                    <TextBlock x:Name="StatErrorsValue" FontSize="22" FontWeight="SemiBold" Text="0" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{Binding Text, ElementName=StatErrorsValue}" />
                 </StackPanel>
             </glass:LiquidGlassSurface>
             <glass:LiquidGlassSurface x:Name="StatIndexedCard" Grid.Row="1" Grid.Column="1" Padding="14" Style="{StaticResource FilesMate.GlassCardStyle}">
                 <StackPanel Spacing="4">
-                    <TextBlock x:Name="StatIndexedLabel" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
-                    <TextBlock x:Name="StatIndexedValue" FontSize="22" FontWeight="SemiBold" Text="0" />
+                    <TextBlock x:Name="StatIndexedLabel" FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+                    <TextBlock x:Name="StatIndexedValue" FontSize="22" FontWeight="SemiBold" Text="0" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{Binding Text, ElementName=StatIndexedValue}" />
                 </StackPanel>
             </glass:LiquidGlassSurface>
-            <glass:LiquidGlassSurface Grid.Row="2" Padding="14" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <glass:LiquidGlassSurface x:Name="StatDiskCard" Grid.Row="2" Padding="14" Style="{StaticResource FilesMate.GlassCardStyle}">
                 <StackPanel Spacing="4">
-                    <TextBlock Text="{loc:LocalizedText Key=SearchDiskUsage}" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
-                    <TextBlock x:Name="StatSizeValue" FontSize="22" FontWeight="SemiBold" Text="…" />
+                    <TextBlock Text="{loc:LocalizedText Key=SearchDiskUsage}" FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+                    <TextBlock x:Name="StatSizeValue" FontSize="22" FontWeight="SemiBold" Text="…" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{Binding Text, ElementName=StatSizeValue}" />
                     <TextBlock Text="{loc:LocalizedText Key=SearchDiskUsageHint}" FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
                 </StackPanel>
             </glass:LiquidGlassSurface>
-            <glass:LiquidGlassSurface Grid.Row="2" Grid.Column="1" Padding="14" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <glass:LiquidGlassSurface x:Name="StatCompletedCard" Grid.Row="2" Grid.Column="1" Padding="14" Style="{StaticResource FilesMate.GlassCardStyle}">
                 <StackPanel Spacing="4">
-                    <TextBlock Text="{loc:LocalizedText Key=SearchLastCompleted}" FontSize="12" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+                    <TextBlock Text="{loc:LocalizedText Key=SearchLastCompleted}" FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
                     <TextBlock x:Name="StatCompletedValue" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
                 </StackPanel>
             </glass:LiquidGlassSurface>
@@ -170,7 +176,7 @@
                                         ContentMargin="{TemplateBinding Padding}"
                                         CornerRadius="{TemplateBinding CornerRadius}"
                                         DragBackground="{ThemeResource FilesMate.Item.SelectedBrush}"
-                                        DragForeground="{ThemeResource ListViewItemForeground}"
+                                        DragForeground="{ThemeResource FilesMate.Item.SelectedForegroundBrush}"
                                         DragOpacity="{ThemeResource ListViewItemDragThemeOpacity}"
                                         ReorderHintOffset="{ThemeResource ListViewItemReorderHintThemeOffset}"
                                         FocusBorderBrush="{ThemeResource ListViewItemFocusBorderBrush}"
@@ -180,6 +186,7 @@
                                         PointerOverBackground="{ThemeResource FilesMate.Item.HoverBrush}"
                                         PressedBackground="{ThemeResource FilesMate.Item.HoverBrush}"
                                         SelectedBackground="{ThemeResource FilesMate.Item.SelectedBrush}"
+                                        SelectedForeground="{ThemeResource FilesMate.Item.SelectedForegroundBrush}"
                                         SelectedPointerOverBackground="{ThemeResource FilesMate.Item.SelectedHoverBrush}"
                                         SelectedPressedBackground="{ThemeResource FilesMate.Item.SelectedHoverBrush}"
                                         SelectionCheckMarkVisualEnabled="False"
@@ -201,7 +208,6 @@
                                 VerticalAlignment="Center"
                                 FontFamily="Segoe Fluent Icons"
                                 FontSize="12"
-                                Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}"
                                 Glyph="&#xE76F;"
                                 IsHitTestVisible="False" />
                             <TextBlock

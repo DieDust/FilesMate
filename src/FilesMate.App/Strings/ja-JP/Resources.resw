@@ -43,6 +43,9 @@
   <data name="Accent_CoolBlue" xml:space="preserve">
     <value>クールブルー</value>
   </data>
+  <data name="Accent_Custom" xml:space="preserve">
+    <value>カスタム</value>
+  </data>
   <data name="Accent_Default" xml:space="preserve">
     <value>既定</value>
   </data>
@@ -179,7 +182,7 @@
     <value>表示に必要な最小項目数</value>
   </data>
   <data name="AlphabetNavigationDescription" xml:space="preserve">
-    <value>名前順で表示しているときに、アルファベット一覧、文字の吹き出し、範囲の目印を表示します。</value>
+    <value>詳細表示で名前順に並べているときのみ、アルファベット一覧、文字の吹き出し、範囲の目印を表示します。</value>
   </data>
   <data name="AlphabetNavigationSection" xml:space="preserve">
     <value>アルファベットナビゲーション</value>
@@ -216,6 +219,12 @@
   </data>
   <data name="AppearanceTitle" xml:space="preserve">
     <value>外観</value>
+  </data>
+  <data name="Appearance_MaterialMotion" xml:space="preserve">
+    <value>素材と動き</value>
+  </data>
+  <data name="Appearance_ThemeColors" xml:space="preserve">
+    <value>テーマと配色</value>
   </data>
   <data name="Application" xml:space="preserve">
     <value>アプリ</value>
@@ -1000,8 +1009,26 @@
   <data name="Cover_DirectChild" xml:space="preserve">
     <value>このフォルダー直下の画像または動画を選択してください。</value>
   </data>
+  <data name="Cover_FolderUnavailable" xml:space="preserve">
+    <value>フォルダーを利用できません。カバーは変更されていません。</value>
+  </data>
+  <data name="Cover_MediaFilter" xml:space="preserve">
+    <value>画像と動画</value>
+  </data>
+  <data name="Cover_PickerTitle" xml:space="preserve">
+    <value>任意の場所からフォルダーのカバーを選択</value>
+  </data>
+  <data name="Cover_ReferenceHint" xml:space="preserve">
+    <value>元のファイルを参照します。利用できなくなると自動選択に戻ります。</value>
+  </data>
   <data name="Cover_Reset" xml:space="preserve">
     <value>カバー画像を自動選択に戻す</value>
+  </data>
+  <data name="Cover_StartUnavailable" xml:space="preserve">
+    <value>対象のフォルダーを開けないため、別の場所から選択を開始します。</value>
+  </data>
+  <data name="Cover_Unavailable" xml:space="preserve">
+    <value>このファイルをカバーにできません。読み取り可能でサムネイルに対応した画像または動画を選択してください。</value>
   </data>
   <data name="DataFolderDescription" xml:space="preserve">
     <value>キーボードショートカット、外観、ファイル操作の設定を保存するフォルダーです。</value>
@@ -2332,6 +2359,60 @@
   <data name="ProgramFile" xml:space="preserve">
     <value>プログラムファイル</value>
   </data>
+  <data name="Recursive_Cancelled" xml:space="preserve">
+    <value>再帰 · 停止：{0} 件一致 / {1} 件走査 · {2}</value>
+  </data>
+  <data name="Recursive_Checking" xml:space="preserve">
+    <value>走査元を確認中…</value>
+  </data>
+  <data name="Recursive_Collapse" xml:space="preserve">
+    <value>フォルダーを折りたたむ</value>
+  </data>
+  <data name="Recursive_Completed" xml:space="preserve">
+    <value>再帰 · {0} 件一致 / {1} 件走査 · {2}</value>
+  </data>
+  <data name="Recursive_DeleteChildren" xml:space="preserve">
+    <value>選択したフォルダーの全内容（絞り込みや折りたたみで非表示の項目を含む）が対象です。続行しますか？</value>
+  </data>
+  <data name="Recursive_Expand" xml:space="preserve">
+    <value>フォルダーを展開</value>
+  </data>
+  <data name="Recursive_Hint" xml:space="preserve">
+    <value>このペインのサブフォルダーを走査。Escで停止し、別の場所への移動で解除します。</value>
+  </data>
+  <data name="Recursive_Limit" xml:space="preserve">
+    <value>再帰 · 上限到達：{0} 件一致 / {1} 件走査。範囲を狭めてください · {2}</value>
+  </data>
+  <data name="Recursive_Loading" xml:space="preserve">
+    <value>再帰 · {0} 件一致 / {1} 件走査 · {2} · Escで停止</value>
+  </data>
+  <data name="Recursive_NotTraversed" xml:space="preserve">
+    <value>このフォルダーは走査していません。個別に開いて確認してください。</value>
+  </data>
+  <data name="Recursive_OperationUnavailable" xml:space="preserve">
+    <value>大文字小文字を区別する未検証のパス、または確認未完了のフォルダーが含まれています。ファイル操作は利用できませんが、正確なパスで開く・パスのコピーは可能です。</value>
+  </data>
+  <data name="Recursive_Partial" xml:space="preserve">
+    <value>再帰 · 部分結果：{0} 件一致 / {1} 件走査 · {2} 件スキップ · {3}</value>
+  </data>
+  <data name="Recursive_ShelfUnavailable" xml:space="preserve">
+    <value>再帰表示からファイルシェルフへの追加は利用できません。通常表示でフォルダーを開いて追加してください。</value>
+  </data>
+  <data name="Recursive_SortUnavailable" xml:space="preserve">
+    <value>再帰表示ではシェル拡張プロパティで並べ替えできません。標準列を選ぶか再帰表示を解除してください。</value>
+  </data>
+  <data name="Recursive_Stale" xml:space="preserve">
+    <value>内容が変更されました。再走査するには更新してください。表示中の行は古い可能性があります。</value>
+  </data>
+  <data name="Recursive_Toggle" xml:space="preserve">
+    <value>サブフォルダーをツリー表示</value>
+  </data>
+  <data name="Recursive_TransferHint" xml:space="preserve">
+    <value>選択項目は移動先へ直接コピーまたは移動されます。フォルダーの内容を保持し、同名の競合は既存の確認で処理します。</value>
+  </data>
+  <data name="Recursive_Unsupported" xml:space="preserve">
+    <value>ローカル固定ドライブとリムーバブルドライブの通常フォルダーに対応しています。ネットワークと再解析ポイントのルートは走査しません。</value>
+  </data>
   <data name="Recycle_ConfirmPrefix" xml:space="preserve">
     <value>次の項目をごみ箱に移動しますか？
 
@@ -2971,8 +3052,14 @@ size:&gt;100mb · dm:7days
   <data name="Search_Clear" xml:space="preserve">
     <value>検索をクリア</value>
   </data>
+  <data name="Search_ClearFilters" xml:space="preserve">
+    <value>絞り込みを解除</value>
+  </data>
   <data name="Search_ClearQuery" xml:space="preserve">
     <value>検索語をクリア</value>
+  </data>
+  <data name="Search_Completed" xml:space="preserve">
+    <value>検索完了</value>
   </data>
   <data name="Search_ComponentMissing" xml:space="preserve">
     <value>グローバル検索のコンポーネントがありません。アプリ全体を再インストールしてください。</value>
@@ -2980,14 +3067,32 @@ size:&gt;100mb · dm:7days
   <data name="Search_ContinueWithout" xml:space="preserve">
     <value> 検索を無効にして続行できます。</value>
   </data>
+  <data name="Search_Continuing" xml:space="preserve">
+    <value>他の場所を検索中…</value>
+  </data>
   <data name="Search_CopyAppHint" xml:space="preserve">
     <value>アプリ項目は直接起動できます。ファイルをコピーするには先に保存場所を開いてください。</value>
   </data>
   <data name="Search_Count" xml:space="preserve">
     <value>{0} 件が見つかりました</value>
   </data>
+  <data name="Search_DefaultHint" xml:space="preserve">
+    <value>入力してインデックス済みの場所を検索</value>
+  </data>
+  <data name="Search_DefaultKeyboardHint" xml:space="preserve">
+    <value>Esc 非表示</value>
+  </data>
   <data name="Search_Detecting" xml:space="preserve">
     <value>バックグラウンド検索を確認中…</value>
+  </data>
+  <data name="Search_EditQuery" xml:space="preserve">
+    <value>キーワードを変更</value>
+  </data>
+  <data name="Search_EmptyHint" xml:space="preserve">
+    <value>短いキーワードを試すか、すべての種類を表示してください</value>
+  </data>
+  <data name="Search_EmptyKeyboardHints" xml:space="preserve">
+    <value>Tab 操作を切り替え    Enter 確定    Esc 非表示</value>
   </data>
   <data name="Search_EnableFailed" xml:space="preserve">
     <value>グローバル検索を有効にできませんでした</value>
@@ -2997,6 +3102,9 @@ size:&gt;100mb · dm:7days
   </data>
   <data name="Search_ExitWhenHidden" xml:space="preserve">
     <value>常駐検索はオフです。検索ウィンドウを閉じると終了します。</value>
+  </data>
+  <data name="Search_FoundCount" xml:space="preserve">
+    <value>{0} 件を検出</value>
   </data>
   <data name="Search_GlobalShortcut" xml:space="preserve">
     <value>グローバル検索のショートカット</value>
@@ -3027,6 +3135,9 @@ size:&gt;100mb · dm:7days
   </data>
   <data name="Search_IndexUnavailable" xml:space="preserve">
     <value>インデックスを利用できません。設定を確認してください。</value>
+  </data>
+  <data name="Search_KeyboardHints" xml:space="preserve">
+    <value>↑ ↓ 選択    Enter 開く    Esc 非表示</value>
   </data>
   <data name="Search_LeadShortcut" xml:space="preserve">
     <value>ファイルマネージャーを開かずに、ショートカットでファイルやアプリを検索できます。</value>
@@ -3082,8 +3193,20 @@ size:&gt;100mb · dm:7days
   <data name="Search_Palette" xml:space="preserve">
     <value>検索ウィンドウ</value>
   </data>
+  <data name="Search_PaletteQueryHint" xml:space="preserve">
+    <value>ファイル、フォルダー、アプリを検索…</value>
+  </data>
   <data name="Search_Partial" xml:space="preserve">
     <value>{0} 件を表示中（一部）。検索条件を絞ってください。</value>
+  </data>
+  <data name="Search_PartialReady" xml:space="preserve">
+    <value>見つかった結果を開けます</value>
+  </data>
+  <data name="Search_PartialTimedOut" xml:space="preserve">
+    <value>一部の検索元がタイムアウトしました。取得済みの結果を表示しています。更新するには再検索してください。</value>
+  </data>
+  <data name="Search_PartialUnavailable" xml:space="preserve">
+    <value>一部の検索元を利用できません。取得済みの結果を表示しています。更新するには再検索してください。</value>
   </data>
   <data name="Search_PreviewCompactHint" xml:space="preserve">
     <value>選択したファイルを右側に表示します。マウスを重ねるだけでは読み込みません</value>
@@ -3156,6 +3279,12 @@ size:&gt;100mb · dm:7days
   </data>
   <data name="Search_StartupHint" xml:space="preserve">
     <value>Windows へのサインイン後にショートカットを使用できます。常駐をオフにすると自動起動も停止します。</value>
+  </data>
+  <data name="Search_StateEmpty" xml:space="preserve">
+    <value>一致する項目がありません</value>
+  </data>
+  <data name="Search_StateError" xml:space="preserve">
+    <value>検索を利用できません</value>
   </data>
   <data name="Search_Timeout" xml:space="preserve">
     <value>検索がタイムアウトしました。ファイル名を詳しく入力するか、検索範囲を絞ってください。</value>
@@ -3519,6 +3648,144 @@ Ctrl+T で新しいタブ。Ctrl+W でタブを閉じる。Ctrl+L でアドレ�
   </data>
   <data name="Sidebar_RemoveCloud" xml:space="preserve">
     <value>クラウドの項目を削除</value>
+  </data>
+  <data name="Skin_Accent" xml:space="preserve">
+    <value>アクセント</value>
+  </data>
+  <data name="Skin_AccentLead" xml:space="preserve">
+    <value>色を選ぶと表示中のテーマに保存し、未適用の詳細編集を破棄します。</value>
+  </data>
+  <data name="Skin_Advanced" xml:space="preserve">
+    <value>スキンの詳細設定</value>
+  </data>
+  <data name="Skin_Apply" xml:space="preserve">
+    <value>適用</value>
+  </data>
+  <data name="Skin_ApplySkin" xml:space="preserve">
+    <value>編集を適用</value>
+  </data>
+  <data name="Skin_Background" xml:space="preserve">
+    <value>背景</value>
+  </data>
+  <data name="Skin_Cancel" xml:space="preserve">
+    <value>プレビュー取消</value>
+  </data>
+  <data name="Skin_Colors" xml:space="preserve">
+    <value>カラーピッカー</value>
+  </data>
+  <data name="Skin_ContrastWarning" xml:space="preserve">
+    <value>一部の文字のコントラストが低いです（{0}）。Windowsのハイコントラストが優先されます。</value>
+  </data>
+  <data name="Skin_Current" xml:space="preserve">
+    <value>現在の配色：{0}</value>
+  </data>
+  <data name="Skin_Dark" xml:space="preserve">
+    <value>ダークの色を編集</value>
+  </data>
+  <data name="Skin_DerivedHint" xml:space="preserve">
+    <value>関連する表面、ホバー、境界線の色も調整されます。透明度は別に設定します。</value>
+  </data>
+  <data name="Skin_EffectPreview" xml:space="preserve">
+    <value>{0}のプレビュー</value>
+  </data>
+  <data name="Skin_Export" xml:space="preserve">
+    <value>JSONを書出</value>
+  </data>
+  <data name="Skin_Exported" xml:space="preserve">
+    <value>スキンを書き出しました。個人のパスや他の設定は含みません。</value>
+  </data>
+  <data name="Skin_FileFailed" xml:space="preserve">
+    <value>ファイルを読み書きできません。アクセス権を確認してください。</value>
+  </data>
+  <data name="Skin_Hex" xml:space="preserve">
+    <value>HEX（#RRGGBB）</value>
+  </data>
+  <data name="Skin_Import" xml:space="preserve">
+    <value>JSONを読込</value>
+  </data>
+  <data name="Skin_Imported" xml:space="preserve">
+    <value>プレビュー用に読み込みました。両方の配色を確認してから適用してください。</value>
+  </data>
+  <data name="Skin_InvalidColor" xml:space="preserve">
+    <value>#3B6B59のような6桁のRGB色を入力してください。</value>
+  </data>
+  <data name="Skin_InvalidName" xml:space="preserve">
+    <value>制御文字を含まない1〜80文字の名前を入力してください。</value>
+  </data>
+  <data name="Skin_InvalidPackage" xml:space="preserve">
+    <value>読み込めません。64 KiB以下で対応バージョンの有効なRGBスキンを使用してください。</value>
+  </data>
+  <data name="Skin_Lead" xml:space="preserve">
+    <value>配色を選ぶとすぐに適用・保存します。詳細編集は適用するまでプレビューです。</value>
+  </data>
+  <data name="Skin_Light" xml:space="preserve">
+    <value>ライトの色を編集</value>
+  </data>
+  <data name="Skin_Name" xml:space="preserve">
+    <value>スキン名</value>
+  </data>
+  <data name="Skin_Package" xml:space="preserve">
+    <value>FilesMateスキン</value>
+  </data>
+  <data name="Skin_PreviewCancelledUnsaved" xml:space="preserve">
+    <value>ウィンドウが非アクティブになったため、未保存のプレビューを取り消し、保存済みのスキンに戻しました。</value>
+  </data>
+  <data name="Skin_PreviewFailed" xml:space="preserve">
+    <value>スキンプレビューを表示できません。以前の色に戻しました。</value>
+  </data>
+  <data name="Skin_PreviewHover" xml:space="preserve">
+    <value>ホバー項目</value>
+  </data>
+  <data name="Skin_PreviewItem" xml:space="preserve">
+    <value>選択した項目</value>
+  </data>
+  <data name="Skin_PreviewLocked" xml:space="preserve">
+    <value>別の設定ウィンドウでプレビュー中です。そのウィンドウで適用または取消を行ってください。</value>
+  </data>
+  <data name="Skin_PreviewMaterial" xml:space="preserve">
+    <value>表面・境界線・メニュー</value>
+  </data>
+  <data name="Skin_PreviewTitle" xml:space="preserve">
+    <value>ファイル</value>
+  </data>
+  <data name="Skin_Previewing" xml:space="preserve">
+    <value>プレビュー中です。適用で保存し、取消で現在のスキンに戻します。</value>
+  </data>
+  <data name="Skin_Reset" xml:space="preserve">
+    <value>リセット</value>
+  </data>
+  <data name="Skin_Revert" xml:space="preserve">
+    <value>元に戻す</value>
+  </data>
+  <data name="Skin_SaveFailed" xml:space="preserve">
+    <value>スキンを保存できませんでした。保存済みの色に戻しました。</value>
+  </data>
+  <data name="Skin_Saved" xml:space="preserve">
+    <value>スキンを保存しました</value>
+  </data>
+  <data name="Skin_Saving" xml:space="preserve">
+    <value>スキンを保存中…</value>
+  </data>
+  <data name="Skin_Section" xml:space="preserve">
+    <value>スキン</value>
+  </data>
+  <data name="Skin_Selection" xml:space="preserve">
+    <value>選択</value>
+  </data>
+  <data name="Skin_Text" xml:space="preserve">
+    <value>文字</value>
+  </data>
+  <data name="Skin_forest" xml:space="preserve">
+    <value>フォレスト</value>
+  </data>
+  <data name="Skin_graphite" xml:space="preserve">
+    <value>グラファイト</value>
+  </data>
+  <data name="Skin_mistBlue" xml:space="preserve">
+    <value>ミストブルー</value>
+  </data>
+  <data name="Skin_warmWhite" xml:space="preserve">
+    <value>ウォームホワイト</value>
   </data>
   <data name="Sort" xml:space="preserve">
     <value>並べ替え</value>
@@ -4121,4 +4388,34 @@ Ctrl+T で新しいタブ。Ctrl+W でタブを閉じる。Ctrl+L でアドレ�
   <data name="WindowsSection" xml:space="preserve">
     <value>ウィンドウとタブ</value>
   </data>
+  <data name="Column_RelativePath" xml:space="preserve"><value>相対パス</value></data>
+  <data name="Inline_Filter" xml:space="preserve"><value>絞り込み</value></data>
+  <data name="Inline_ClearFilters" xml:space="preserve"><value>条件をクリア</value></data>
+  <data name="Inline_ClearSearchAndFilters" xml:space="preserve"><value>検索と条件をクリア</value></data>
+  <data name="Inline_CurrentScope" xml:space="preserve"><value>現在のフォルダー</value></data>
+  <data name="Inline_RecursiveScope" xml:space="preserve"><value>現在のフォルダーとサブフォルダー</value></data>
+  <data name="Inline_ChooseTypes" xml:space="preserve"><value>種類・拡張子を選択</value></data>
+  <data name="Inline_Folders" xml:space="preserve"><value>フォルダー</value></data>
+  <data name="Inline_Documents" xml:space="preserve"><value>文書</value></data>
+  <data name="Inline_Images" xml:space="preserve"><value>画像</value></data>
+  <data name="Inline_Audio" xml:space="preserve"><value>音声</value></data>
+  <data name="Inline_Video" xml:space="preserve"><value>動画</value></data>
+  <data name="Inline_Archives" xml:space="preserve"><value>アーカイブ</value></data>
+  <data name="Inline_Applications" xml:space="preserve"><value>アプリとスクリプト</value></data>
+  <data name="Inline_NoExtension" xml:space="preserve"><value>拡張子なし</value></data>
+  <data name="Inline_Extensions" xml:space="preserve"><value>拡張子を指定</value></data>
+  <data name="Inline_Done" xml:space="preserve"><value>完了</value></data>
+  <data name="Inline_CustomSize" xml:space="preserve"><value>サイズを指定</value></data>
+  <data name="Inline_BytesNote" xml:space="preserve"><value>KB/MB/GB は1024単位。境界を含め、ファイルのバイト数のみ比較。</value></data>
+  <data name="Inline_ClearCondition" xml:space="preserve"><value>この条件をクリア</value></data>
+  <data name="Inline_PreviousRetained" xml:space="preserve"><value>前の有効な条件を維持します。</value></data>
+  <data name="Inline_InvalidExtensions" xml:space="preserve"><value>拡張子は jpg、.jpg、*.jpg 形式。パスや他のワイルドカードは使用できません。</value></data>
+  <data name="Inline_IncompleteDates" xml:space="preserve"><value>開始日と終了日を指定してください。</value></data>
+  <data name="Inline_InvalidSize" xml:space="preserve"><value>有効な非負のサイズ範囲を昇順で入力してください。</value></data>
+  <data name="Inline_All" xml:space="preserve"><value>すべて</value></data>
+  <data name="Inline_MultiSelect" xml:space="preserve"><value>複数選択できます。選択した種類または拡張子に一致します。</value></data>
+  <data name="Inline_ExtensionChoices" xml:space="preserve"><value>拡張子</value></data>
+  <data name="Inline_Add" xml:space="preserve"><value>追加</value></data>
+  <data name="Inline_TypeHint" xml:space="preserve"><value>jpg、.jpg、*.jpg をセミコロンで区切ります。</value></data>
+  <data name="Inline_DateHint" xml:space="preserve"><value>現地時間で開始日と終了日を含みます。</value></data>
 </root>

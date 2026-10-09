@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using FilesMate.App.Models;
 using FilesMate.Core.Metadata;
 
@@ -7,12 +8,15 @@ namespace FilesMate.App.Services;
 
 public sealed class SqliteFileMetadataStore : IFileMetadataStore
 {
-    public static string DefaultFilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "FilesMate",
+    public static string DefaultFilePath => Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath,
         "metadata.db");
 
     private const int CurrentSchemaVersion = 1;
+    // SQLite sharing and recovery ownership apply to the database, not to one
+    // store instance. Wait before opening a connection so a competing initializer
+    // cannot keep the corrupt object alive while another tries to preserve it.
+    private static readonly Dictionary<string, SchemaInitializationEntry> SchemaInitializations = new(
+        OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
     private readonly string _filePath;
     private readonly string _connectionString;
     private readonly SemaphoreSlim _schemaGate = new(1, 1);
@@ -212,8 +216,10 @@ public sealed class SqliteFileMetadataStore : IFileMetadataStore
             return null;
         }
 
-        var volume = reader.IsDBNull(2) ? (ulong?)null : checked((ulong)reader.GetInt64(2));
-        var fileId = reader.IsDBNull(3) ? (ulong?)null : checked((ulong)reader.GetInt64(3));
+        // SQLite INTEGER is signed; preserve the unsigned identity's complete bit
+        // pattern. Existing positive values and stable-key strings stay unchanged.
+        var volume = reader.IsDBNull(2) ? (ulong?)null : unchecked((ulong)reader.GetInt64(2));
+        var fileId = reader.IsDBNull(3) ? (ulong?)null : unchecked((ulong)reader.GetInt64(3));
         return volume.HasValue && fileId.HasValue
             ? FileIdentity.FromStable(volume.Value, fileId.Value, reader.GetString(1))
             : FileIdentity.FromNormalizedPath(reader.GetString(1));
@@ -362,13 +368,30 @@ public sealed class SqliteFileMetadataStore : IFileMetadataStore
                 return;
             }
 
+            using var initialization = await AcquireSchemaInitializationAsync(_filePath, cancellationToken).ConfigureAwait(false);
+            // An interrupted recovery must never turn orphaned journals into a new,
+            // empty metadata database. Keep the complete set for manual recovery.
+            var hadRecoverySidecars = HasRecoverySidecars(_filePath);
+            if (hadRecoverySidecars && (!EntryExists(_filePath) || !HasSqliteHeader(_filePath)))
+                throw new IOException("The metadata database is missing or unreadable while its journal files remain; the original files were retained.");
+            if (hadRecoverySidecars)
+            {
+                ValidateWalHeader(_filePath);
+                await ValidateRecoveryInputAsync(cancellationToken).ConfigureAwait(false);
+            }
             try
             {
                 await CreateSchemaAsync(cancellationToken).ConfigureAwait(false);
             }
-            catch (SqliteException)
+            catch (SqliteException error) when (IsCorruption(error))
             {
-                PreserveCorruptDatabase();
+                cancellationToken.ThrowIfCancellationRequested();
+                // Busy, read-only, full-disk and schema errors are not corruption.
+                // If ownership of a corrupt file is uncertain, preserve the original
+                // exception and every original path rather than silently resetting tags.
+                // Opening a malformed file can make SQLite remove an invalid WAL.
+                // That must not turn uncertain multi-file input into a reset candidate.
+                if (hadRecoverySidecars || !TryPreserveCorruptDatabase(_filePath)) throw;
                 await CreateSchemaAsync(cancellationToken).ConfigureAwait(false);
             }
 
@@ -379,6 +402,106 @@ public sealed class SqliteFileMetadataStore : IFileMetadataStore
             _schemaGate.Release();
         }
     }
+
+    private static async Task<SchemaInitializationLease> AcquireSchemaInitializationAsync(
+        string path, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        SchemaInitializationEntry entry;
+        lock (SchemaInitializations)
+        {
+            if (!SchemaInitializations.TryGetValue(path, out entry!))
+                SchemaInitializations.Add(path, entry = new SchemaInitializationEntry());
+            entry.Users++;
+        }
+
+        var lease = new SchemaInitializationLease(path, entry);
+        try
+        {
+            await entry.Gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            lease.Acquired = true;
+            return lease;
+        }
+        catch
+        {
+            lease.Dispose();
+            throw;
+        }
+    }
+
+    private sealed class SchemaInitializationEntry
+    {
+        public readonly SemaphoreSlim Gate = new(1, 1);
+        public int Users;
+    }
+
+    private sealed class SchemaInitializationLease(string path, SchemaInitializationEntry entry) : IDisposable
+    {
+        private SchemaInitializationEntry? _entry = entry;
+        public bool Acquired { get; set; }
+
+        public void Dispose()
+        {
+            var current = Interlocked.Exchange(ref _entry, null);
+            if (current is null) return;
+            if (Acquired) current.Gate.Release();
+            lock (SchemaInitializations)
+            {
+                // Register before waiting, and remove only after the last holder
+                // or waiter releases its lease. No idle database paths accumulate.
+                if (--current.Users == 0)
+                {
+                    SchemaInitializations.Remove(path);
+                    current.Gate.Dispose();
+                }
+            }
+        }
+    }
+
+    private static void ValidateWalHeader(string path)
+    {
+        try
+        {
+            using var wal = new FileStream(path + "-wal", FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            if (wal.Length == 0) return; // A legitimate empty/new WAL carries no frames.
+            Span<byte> header = stackalloc byte[32];
+            if (wal.ReadAtLeast(header, header.Length, throwOnEndOfStream: false) != header.Length)
+                throw new IOException("The metadata WAL header is incomplete; original files were retained. Retry after the writer finishes.");
+            var magic = BinaryPrimitives.ReadUInt32BigEndian(header);
+            var version = BinaryPrimitives.ReadUInt32BigEndian(header[4..]);
+            var pageSize = BinaryPrimitives.ReadUInt32BigEndian(header[8..]);
+            // SQLite can silently ignore an invalid WAL and quick_check may still
+            // report a healthy main file. Reject clear header damage before open.
+            // This is not a WAL frame/checksum parser or a recovery implementation.
+            if (magic is not (0x377f0682 or 0x377f0683) || version != 3007000
+                || pageSize is < 512 or > 65536 || (pageSize & (pageSize - 1)) != 0)
+                throw new IOException("The metadata WAL header is invalid or unsupported; original files were retained for recovery.");
+        }
+        catch (FileNotFoundException) { }
+        catch (DirectoryNotFoundException) { }
+    }
+
+    private Task ValidateRecoveryInputAsync(CancellationToken cancellationToken) => Task.Run(async () =>
+    {
+        // Validate through SQLite's read-only WAL-aware view before writable open
+        // can discard an invalid journal. SHM is SQLite's derived coordination
+        // state and may be maintained; main/WAL/rollback recovery bytes stay read-only.
+        // Run the integrity scan off the caller's UI thread.
+        var settings = new SqliteConnectionStringBuilder(_connectionString)
+        { Mode = SqliteOpenMode.ReadOnly, Cache = SqliteCacheMode.Private };
+        await using var connection = new SqliteConnection(settings.ToString());
+        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+        using var interrupt = cancellationToken.Register(() => SQLitePCL.raw.sqlite3_interrupt(connection.Handle));
+        await using var check = connection.CreateCommand();
+        check.CommandText = "PRAGMA quick_check(1);";
+        object? result;
+        try { result = await check.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false); }
+        catch (SqliteException) when (cancellationToken.IsCancellationRequested)
+        { throw new OperationCanceledException(cancellationToken); }
+        cancellationToken.ThrowIfCancellationRequested();
+        if (result is not "ok")
+            throw new InvalidDataException("The metadata database needs recovery; original files were retained. " + result);
+    }, cancellationToken);
 
     private async Task CreateSchemaAsync(CancellationToken cancellationToken)
     {
@@ -433,30 +556,67 @@ public sealed class SqliteFileMetadataStore : IFileMetadataStore
         }
     }
 
-    private void PreserveCorruptDatabase()
-    {
-        if (!File.Exists(_filePath))
-        {
-            return;
-        }
+    internal static bool IsCorruption(SqliteException error) => error.SqliteErrorCode is 11 or 26;
 
-        var preserved = _filePath + ".corrupt-" + DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmssfff");
-        File.Move(_filePath, preserved, overwrite: false);
-        foreach (var sidecar in new[] { _filePath + "-wal", _filePath + "-shm" })
+    internal static bool TryPreserveCorruptDatabase(string path)
+    {
+        try
         {
-            if (File.Exists(sidecar))
-            {
-                File.Move(sidecar, preserved + Path.GetExtension(sidecar), overwrite: true);
-            }
+            // SQLite's hot journals are part of the database. Their presence can
+            // also mean another connection owns it. A multi-file rename is not
+            // atomic: leave the whole set, with its exact suffixes, in place.
+            if (HasRecoverySidecars(path)) return false;
+            var attributes = File.GetAttributes(path);
+            if ((attributes & (FileAttributes.Directory | FileAttributes.ReparsePoint)) != 0) return false;
+            // On Windows, deny other read/write owners while permitting our one
+            // atomic rename. An active SQLite connection makes this guard fail.
+            using var guard = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Delete);
+            // Recheck the object we now own. Another initializer may have replaced
+            // the earlier corrupt file with a healthy database before this guard.
+            // An empty replacement is valid SQLite initialization input, not corruption.
+            // Recognized SQLite files also deserve deeper/manual recovery, not reset.
+            if (guard.Length == 0 || HasSqliteHeader(guard) || HasRecoverySidecars(path)) return false;
+            var preserved = path + ".corrupt-" + DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmssfff")
+                + "-" + Guid.NewGuid().ToString("N");
+            File.Move(path, preserved, overwrite: false);
+            return true;
         }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            System.Diagnostics.Trace.TraceWarning("Metadata recovery left the original file in place: {0}", error);
+            return false;
+        }
+    }
+
+    private static bool HasSqliteHeader(string path)
+    {
+        using var file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+        return HasSqliteHeader(file);
+    }
+
+    private static bool HasSqliteHeader(Stream file)
+    {
+        Span<byte> header = stackalloc byte[16];
+        return file.ReadAtLeast(header, header.Length, throwOnEndOfStream: false) == header.Length
+            && header.SequenceEqual("SQLite format 3\0"u8);
+    }
+
+    private static bool HasRecoverySidecars(string path) =>
+        EntryExists(path + "-wal") || EntryExists(path + "-shm") || EntryExists(path + "-journal");
+
+    private static bool EntryExists(string path)
+    {
+        try { File.GetAttributes(path); return true; }
+        catch (FileNotFoundException) { return false; }
+        catch (DirectoryNotFoundException) { return false; }
     }
 
     private static void AddIdentityParameters(SqliteCommand command, FileIdentity identity)
     {
         command.Parameters.AddWithValue("$key", identity.StableKey);
         command.Parameters.AddWithValue("$path", identity.NormalizedPath);
-        command.Parameters.AddWithValue("$volume", identity.VolumeSerial.HasValue ? checked((long)identity.VolumeSerial.Value) : DBNull.Value);
-        command.Parameters.AddWithValue("$fileId", identity.FileId.HasValue ? checked((long)identity.FileId.Value) : DBNull.Value);
+        command.Parameters.AddWithValue("$volume", identity.VolumeSerial.HasValue ? unchecked((long)identity.VolumeSerial.Value) : DBNull.Value);
+        command.Parameters.AddWithValue("$fileId", identity.FileId.HasValue ? unchecked((long)identity.FileId.Value) : DBNull.Value);
         command.Parameters.AddWithValue("$updated", DateTimeOffset.UtcNow.ToString("O"));
     }
 

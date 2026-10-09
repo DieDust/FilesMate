@@ -34,6 +34,7 @@ public static class CommandCatalog
         AppCommandId.Refresh,
         AppCommandId.Sort,
         AppCommandId.ChangeLayout,
+        AppCommandId.ShowFolderFilters,
     ];
 
     public static readonly AppCommandId[] Implemented =
@@ -182,6 +183,7 @@ public static class CommandCatalog
         AppCommandId.AddToFavorites => context.SelectionCount > 0,
         AppCommandId.AddToShelf => context.SelectionCount > 0,
         AppCommandId.ShowShelf => true,
+        AppCommandId.ShowFolderFilters => HasFolderPath(context),
         AppCommandId.ChooseFolderCover or AppCommandId.ResetFolderCover =>
             (context.IsBackground && HasFolderPath(context))
             || (context.SelectionCount == 1 && context.PrimaryIsDirectory),
@@ -252,6 +254,7 @@ public static class CommandCatalog
             AppCommandId.Recycle or
             AppCommandId.Sort or
             AppCommandId.ChangeLayout => true,
+            AppCommandId.ShowFolderFilters => HasFolderPath(context),
             AppCommandId.Share => context.ShareAvailable && context.SelectionCount > 0,
             AppCommandId.CopyPath => context.SelectionCount > 0,
             AppCommandId.AddTags or AppCommandId.ManageTags => false,
@@ -263,6 +266,7 @@ public static class CommandCatalog
         CommandSurface.Menu when context.IsBackground => id switch
         {
             AppCommandId.ShowShelf => true,
+            AppCommandId.ShowFolderFilters => HasFolderPath(context),
             AppCommandId.NewFolderWithSelection => HasFolderPath(context) && context.SelectionCount > 0,
             AppCommandId.InvertSelection or AppCommandId.SearchCommands => true,
             AppCommandId.ChooseFolderCover or AppCommandId.ResetFolderCover
@@ -371,6 +375,7 @@ public static class CommandCatalog
             AppCommandId.CopyToOtherPane => (StringTable.Get("CopyToOtherPane"), "\uE8C8", null, CommandGroup.Clipboard),
             AppCommandId.MoveToOtherPane => (StringTable.Get("MoveToOtherPane"), "\uE8DE", null, CommandGroup.Clipboard),
             AppCommandId.SearchCommands => (StringTable.Get("CommandPalette"), "\uE721", "Ctrl+Shift+P", CommandGroup.View),
+            AppCommandId.ShowFolderFilters => (StringTable.Get("Inline_Filter"), "\uE71C", "", CommandGroup.View),
             AppCommandId.CopyPathQuoted => (StringTable.Get("Command_CopyPathQuoted"), "\uE8C8", null, CommandGroup.Folder),
             AppCommandId.CreateShortcut => (StringTable.Get("Command_CreateShortcut"), "\uE71B", null, CommandGroup.Folder),
             AppCommandId.Compress => (StringTable.Get("Command_Compress"), "\uE8DE", null, CommandGroup.Archive),

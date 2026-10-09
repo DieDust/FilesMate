@@ -6,6 +6,8 @@ public static class SearchFilters
 {
     public static bool Matches(SearchFilter filter, string path, bool directory)
     {
+        if (filter == SearchFilter.All) return true;
+        if (filter == SearchFilter.Folders) return directory;
         var kind = FilesMate.App.Services.SearchHitRanking.Classify(path, directory);
         return filter switch
         {
@@ -34,7 +36,7 @@ public sealed class IndexedFilesSearchProvider(string? profileDirectory = null, 
     {
         if (string.IsNullOrWhiteSpace(query)) return new([], false);
         var database = GlobalSearchConfiguration.ResolveDatabase(profileDirectory);
-        if (!File.Exists(database)) return new([], false, "尚未建立索引。请在文件管理器的“设置 → 搜索”中选择磁盘并建立索引。");
+        if (!File.Exists(database)) return new([], false, "SearchPage_IndexMissing");
         limit = Math.Clamp(limit, 1, launcherFiles ? 10000 : 200);
         var hidden = HiddenSearchResults.Load(profileDirectory).Values
             .Select(item => item.Key.StartsWith("file:", StringComparison.OrdinalIgnoreCase) ? item.Key : Path.IsPathFullyQualified(item.Location) ? HiddenSearchResults.FileKey(item.Location) : item.Key)

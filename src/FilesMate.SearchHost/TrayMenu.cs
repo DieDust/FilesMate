@@ -14,10 +14,13 @@ internal sealed class TrayMenu : Forms.ContextMenuStrip
 {
     private readonly string _profile;
     private readonly MenuRenderer _renderer = new();
+    private readonly Func<FilesMate.App.Models.AppearanceSettings>? _appearance;
 
-    internal TrayMenu(string profile, Action search, Action settings, Action files, Action exit)
+    internal TrayMenu(string profile, Action search, Action settings, Action files, Action exit,
+        Func<FilesMate.App.Models.AppearanceSettings>? appearance = null)
     {
         _profile = profile;
+        _appearance = appearance;
         Renderer = _renderer;
         ShowImageMargin = false;
         ShowCheckMargin = false;
@@ -41,10 +44,12 @@ internal sealed class TrayMenu : Forms.ContextMenuStrip
         Items.Add(item);
     }
 
+    internal void RefreshAppearance() => RefreshTheme();
+
     private void RefreshTheme()
     {
         var resources = new ResourceDictionary();
-        var appearance = PaletteAppearance.Load(_profile);
+        var appearance = _appearance?.Invoke() ?? PaletteAppearance.Load(_profile);
         PaletteAppearance.Apply(resources, appearance);
         var family = appearance.FileFontFamily ?? SystemFonts.MessageBoxFont!.FontFamily.Name;
         if (Font.FontFamily.Name != family)
@@ -58,11 +63,16 @@ internal sealed class TrayMenu : Forms.ContextMenuStrip
             var c = ((SolidColorBrush)resources[key]).Color;
             return Color.FromArgb(c.A, c.R, c.G, c.B);
         }
-        _renderer.Surface = Read("Surface");
+        // WinForms ToolStrip does not support a translucent BackColor/native
+        // backdrop. Keep this platform surface explicitly opaque and readable.
+        var surface = System.Windows.SystemParameters.HighContrast ? System.Windows.SystemColors.WindowColor
+            : (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(
+                FilesMate.App.Models.AccentPalette.ToHex(FilesMate.App.Models.SkinPalette.For(PaletteAppearance.IsDark(appearance), appearance).Floating));
+        _renderer.Surface = Color.FromArgb(255, surface.R, surface.G, surface.B);
         _renderer.Ink = Read("Ink");
-        _renderer.SelectedInk = Read("SelectedInk");
+        _renderer.SelectedInk = Read("MenuActiveInk");
         _renderer.Line = Read("Line");
-        _renderer.Hover = Read("Selected");
+        _renderer.Hover = Read("MenuHover");
         BackColor = _renderer.Surface;
         ForeColor = _renderer.Ink;
         var scale = DeviceDpi / 96f;

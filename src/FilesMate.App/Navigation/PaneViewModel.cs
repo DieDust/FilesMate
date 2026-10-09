@@ -6,6 +6,8 @@ using System.Runtime.CompilerServices;
 using FilesMate.App.Localization;
 using FilesMate.App.Services;
 using FilesMate.Core.Directories;
+using FilesMate.Core.Recursive;
+using FilesMate.Core.Diagnostics;
 using FilesMate.Core.Entries;
 using FilesMate.Core.Navigation;
 using FilesMate.Platform.Windows.Directories;
@@ -18,11 +20,12 @@ namespace FilesMate.App.Navigation;
 /// Thread-safety: public members except construction run on the UI dispatcher in the app.
 /// Cancellation: a newer navigation disposes the previous <see cref="DirectorySession"/>.
 /// </summary>
-public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
+public sealed partial class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
 {
     public const int PlaceholderCap = 128;
 
     private readonly IUiDispatcher _dispatcher;
+    private readonly TimeProvider _timeProvider;
     private readonly IPathService _paths;
     private readonly IDirectoryEnumerator _enumerator;
     private readonly IDirectoryWatcher? _watcher;
@@ -30,6 +33,20 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
     private readonly NavigationController _navigation;
     private readonly object _sessionGate = new();
     private readonly object _indexBuildGate = new();
+    // One owner performs snapshot/key/sort work; only the newest waiting request is retained.
+    private IndexBuildRequest? _activeIndexRequest;
+    private IndexBuildRequest? _pendingIndexRequest;
+    private readonly object _publicationGate = new();
+    private IndexPublication? _pendingPublication;
+    private IndexPublication? _appliedPublication;
+    private bool _publicationQueued;
+
+    private sealed record IndexBuildRequest(DirectorySession Session, DirectorySessionChange? Change,
+        EntrySort Sort, EntryFilter Filter, IReadOnlySet<int>? MatchingTagIds,
+        long BuildVersion, long SemanticVersion, CancellationTokenSource Cancellation);
+
+    private sealed record IndexPublication(DirectorySession Session, EntryViewIndex Index,
+        DirectorySessionChange Change, long BuildVersion, long SemanticVersion);
     private readonly DirectoryWatchBuffer _watchQueue = new(WatchQueueLimit);
     private long _watchScheduledGeneration;
     private bool _watchBatchActive;
@@ -42,8 +59,13 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
     private CancellationTokenSource? _indexBuildCts;
     private CancellationTokenSource? _watchRefreshCts;
     private long _indexBuildVersion;
+    private long _indexSemanticVersion;
+    private long _appliedIndexBuildVersion;
     private Task _releasedFolder = Task.CompletedTask;
     private EntryViewIndex? _viewIndex;
+    private EntryViewBinding? _viewBinding;
+    private long _nextNavigationDiagnosticOperation;
+    internal void TraceNextNavigation(long operation) => _nextNavigationDiagnosticOperation = operation;
     private EntrySort _sort = EntrySort.Name;
     private EntryFilter _filter = EntryFilter.None;
     private TagFilterState? _tagFilter;
@@ -61,7 +83,21 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         IComparer<string> names,
         IDirectoryWatcher? watcher = null,
         PaneId? paneId = null)
+        : this(dispatcher, paths, enumerator, names, watcher, paneId, TimeProvider.System)
     {
+    }
+
+    internal PaneViewModel(
+        IUiDispatcher dispatcher,
+        IPathService paths,
+        IDirectoryEnumerator enumerator,
+        IComparer<string> names,
+        IDirectoryWatcher? watcher,
+        PaneId? paneId,
+        TimeProvider timeProvider)
+    {
+        ArgumentNullException.ThrowIfNull(timeProvider);
+        _timeProvider = timeProvider;
         _dispatcher = dispatcher;
         _paths = paths;
         _enumerator = enumerator;
@@ -132,16 +168,19 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
     public const int WatchQueueLimit = 4_096;
 
     private const int BackgroundIndexThreshold = 2_048;
+    private static readonly TimeSpan EnumerationIndexInterval = TimeSpan.FromMilliseconds(100);
 
     public IReadOnlyList<string> PlaceholderNames { get; private set; }
 
-    public EntryStore? Store => _session?.Store;
+    public EntryStore? Store => _recursiveProjection?.Store ?? _session?.Store;
 
     public EntryViewIndex? ViewIndex => _viewIndex;
 
+    public EntryViewBinding? ViewBinding => _viewBinding;
+
     public Task WhenCurrentSessionCompletes { get; private set; }
 
-    public Task WhenFolderReleased => _releasedFolder;
+    public Task WhenFolderReleased => _recursiveReleased.IsCompleted ? _releasedFolder : Task.WhenAll(_releasedFolder, _recursiveReleased);
 
     public NavigationController Navigation => _navigation;
     public void RestoreNavigationHistory(NavigationHistoryState state)
@@ -151,13 +190,25 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         RaiseToolbar();
     }
 
-    public void Navigate(string path)
+    public void Navigate(string path) => NavigateCore(path, allowFileActivation: true);
+
+    /// <summary>Navigates without ever treating the destination as a file to execute.</summary>
+    public void NavigateDirectory(string path) => NavigateCore(path, allowFileActivation: false);
+
+    private void NavigateCore(string path, bool allowFileActivation)
     {
         AssertUi();
+        var beforeRecursiveExit = _navigation.CurrentGeneration;
+        EndRecursiveMode();
+        if (_disposed || beforeRecursiveExit != _navigation.CurrentGeneration) return;
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var previousGeneration = _navigation.CurrentGeneration;
         AddressText = path;
+        if (_disposed || previousGeneration != _navigation.CurrentGeneration) return;
         ErrorText = null;
+        if (_disposed || previousGeneration != _navigation.CurrentGeneration) return;
         RaiseToolbar();
+        if (_disposed || previousGeneration != _navigation.CurrentGeneration) return;
 
         string normalized;
         try
@@ -166,30 +217,45 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         }
         catch (ArgumentException ex)
         {
+            var generation = _navigation.ParkCurrentForRecovery();
             CancelIndexBuild();
-            _ = _navigation.ParkCurrentForRecovery();
-            ErrorText = ex.Message;
-            IsLoading = false;
-            StatusText = ex.Message;
+            if (_disposed || !_navigation.Allows(generation)) return;
             WhenCurrentSessionCompletes = Task.CompletedTask;
             _viewIndex = null;
-            ItemCount = 0;
+            _viewBinding = null;
             PlaceholderNames = [];
-            OnPropertyChanged(nameof(PlaceholderNames));
-            OnPropertyChanged(nameof(ViewIndex));
-            OnPropertyChanged(nameof(Store));
             _releasedFolder = DisposeCapturedAsync();
+            if (!OwnsNavigation(generation)) return;
+            ErrorText = ex.Message;
+            if (!OwnsNavigation(generation)) return;
+            IsLoading = false;
+            if (!OwnsNavigation(generation)) return;
+            StatusText = ex.Message;
+            if (!OwnsNavigation(generation)) return;
+            ItemCount = 0;
+            if (!OwnsNavigation(generation)) return;
+            OnPropertyChanged(nameof(PlaceholderNames));
+            if (!OwnsNavigation(generation)) return;
+            OnPropertyChanged(nameof(ViewIndex));
+            if (!OwnsNavigation(generation)) return;
+            OnPropertyChanged(nameof(ViewBinding));
+            if (!OwnsNavigation(generation)) return;
+            OnPropertyChanged(nameof(Store));
+            if (!OwnsNavigation(generation)) return;
             RaiseToolbar();
             return;
         }
 
-        if (TryOpenAsFile(normalized, out var parent))
+        if (TryOpenAsFile(normalized, allowFileActivation, out var parent))
         {
             normalized = parent;
         }
+        if (_disposed || previousGeneration != _navigation.CurrentGeneration) return;
 
         AddressText = normalized;
+        if (_disposed || previousGeneration != _navigation.CurrentGeneration) return;
         ResetFilters();
+        if (_disposed || previousGeneration != _navigation.CurrentGeneration) return;
         var intent = _navigation.Open(normalized, recordHistory: true);
         StartSession(intent);
     }
@@ -197,51 +263,76 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
     public void Back()
     {
         AssertUi();
+        if (!CanGoBack) return;
+        var beforeRecursiveExit = _navigation.CurrentGeneration;
+        EndRecursiveMode();
+        if (_disposed || beforeRecursiveExit != _navigation.CurrentGeneration) return;
         var intent = _navigation.Back();
         if (intent is null)
         {
             return;
         }
 
+        if (!OwnsNavigation(intent.Value.Generation)) return;
         AddressText = intent.Value.Path;
+        if (!OwnsNavigation(intent.Value.Generation)) return;
         ErrorText = null;
+        if (!OwnsNavigation(intent.Value.Generation)) return;
         ResetFilters();
+        if (!OwnsNavigation(intent.Value.Generation)) return;
         StartSession(intent.Value);
     }
 
     public void Forward()
     {
         AssertUi();
+        if (!CanGoForward) return;
+        var beforeRecursiveExit = _navigation.CurrentGeneration;
+        EndRecursiveMode();
+        if (_disposed || beforeRecursiveExit != _navigation.CurrentGeneration) return;
         var intent = _navigation.Forward();
         if (intent is null)
         {
             return;
         }
 
+        if (!OwnsNavigation(intent.Value.Generation)) return;
         AddressText = intent.Value.Path;
+        if (!OwnsNavigation(intent.Value.Generation)) return;
         ErrorText = null;
+        if (!OwnsNavigation(intent.Value.Generation)) return;
         ResetFilters();
+        if (!OwnsNavigation(intent.Value.Generation)) return;
         StartSession(intent.Value);
     }
 
     public void Up()
     {
         AssertUi();
+        if (!CanGoUp) return;
+        var beforeRecursiveExit = _navigation.CurrentGeneration;
+        EndRecursiveMode();
+        if (_disposed || beforeRecursiveExit != _navigation.CurrentGeneration) return;
         var intent = _navigation.Up();
         if (intent is null)
         {
             return;
         }
 
+        if (!OwnsNavigation(intent.Value.Generation)) return;
         AddressText = intent.Value.Path;
+        if (!OwnsNavigation(intent.Value.Generation)) return;
         ErrorText = null;
+        if (!OwnsNavigation(intent.Value.Generation)) return;
         ResetFilters();
+        if (!OwnsNavigation(intent.Value.Generation)) return;
         StartSession(intent.Value);
     }
 
     public void Refresh()
     {
         AssertUi();
+        if (IsRecursive) { _ = RestartRecursiveAsync(); return; }
         if (!string.IsNullOrEmpty(AddressText) && !HomeLocation.IsHome(AddressText) && !TagLocation.IsTag(AddressText))
             ExplorerPreferenceBridge.InvalidateFolderSizes(AddressText);
         RefreshSession(preserveSurface: false);
@@ -250,6 +341,7 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
     public void RefreshAfterFileOperation()
     {
         AssertUi();
+        if (IsRecursive) { MarkRecursiveStale(); return; }
         if (_disposed || string.IsNullOrEmpty(AddressText) || HomeLocation.IsHome(AddressText)) return;
         if (IsPortableDevice || TagLocation.IsTag(AddressText))
         {
@@ -314,6 +406,7 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         _tagFilter = null;
         OnPropertyChanged(nameof(FilterQuery));
         OnPropertyChanged(nameof(TagFilterLabel));
+        OnPropertyChanged(nameof(MetadataFilter));
     }
 
     public void Open(in FileEntryCore entry)
@@ -336,6 +429,8 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
 
     public string FullPath(in FileEntryCore entry)
     {
+        if (_recursiveProjection is { } recursive && recursive.IsVisible(entry.Id))
+            return recursive.ResolvePath(entry.Id);
         if (IsPortableDevice && _enumerator is PortableDeviceDirectoryEnumerator device)
             return device.Resolve(AddressText, _navigation.CurrentGeneration, entry.Id) ?? string.Empty;
         if (Path.IsPathRooted(entry.Name))
@@ -347,29 +442,14 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         return string.IsNullOrEmpty(root) ? entry.Name : _paths.Combine(root, entry.Name);
     }
 
-    private bool TryOpenAsFile(string path, out string parent)
-    {
-        parent = path;
-        if (HomeLocation.IsHome(path) || TagLocation.IsTag(path)
-            || !File.Exists(path) || Directory.Exists(path))
-        {
-            return false;
-        }
-
-        OpenFileRequested?.Invoke(this, path);
-        var folder = _paths.GetParent(path);
-        if (string.IsNullOrEmpty(folder))
-        {
-            return false;
-        }
-
-        parent = folder;
-        return true;
-    }
+    private bool TryOpenAsFile(string path, bool allowFileActivation, out string parent) =>
+        NavigationFileActivation.TryOpen(path, allowFileActivation, File.Exists, Directory.Exists,
+            _paths.GetParent, file => OpenFileRequested?.Invoke(this, file), out parent);
 
     public void SetSortColumn(EntrySortColumn column, bool defaultAscending = true)
     {
         AssertUi();
+        if (IsRecursive && column == EntrySortColumn.ShellProperty) { ReportUserError(StringTable.Get("Recursive_SortUnavailable")); return; }
         _sort = _sort.SelectColumn(column, defaultAscending);
         OnPropertyChanged(nameof(Sort));
         RebuildIndex();
@@ -378,6 +458,8 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
     public void RestoreSort(EntrySort sort)
     {
         AssertUi();
+        if (IsRecursive && sort.Column == EntrySortColumn.ShellProperty) { ReportUserError(StringTable.Get("Recursive_SortUnavailable")); return; }
+        if (IsRecursive) sort = RecursiveSnapshot.NormalizeTreeSort(sort);
         if (_sort == sort) return;
         _sort = sort;
         OnPropertyChanged(nameof(Sort));
@@ -387,11 +469,17 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
     public void SetFilterQuery(string query)
     {
         AssertUi();
+        if (_filter.Query == (query ?? string.Empty)) return;
         var previous = _filter.Query;
         _filter = _filter with { Query = query ?? string.Empty };
+        // A cancellation callback may synchronously submit a newer query/navigation.
+        var revision = CancelIndexBuild();
+        if (_disposed || revision != Volatile.Read(ref _indexBuildVersion)) return;
         OnPropertyChanged(nameof(FilterQuery));
-        var count = Store?.Count ?? 0;
-        if (EntryViewIndex.ShouldDebounce(count, previous, _filter.Query))
+        if (IsRecursive) { QueueRecursiveProjection(semanticChange: true); return; }
+        // Clearing is immediate and does not need to wait for a store count held by an old sort.
+        if (!string.IsNullOrEmpty(_filter.Query)
+            && EntryViewIndex.ShouldDebounce(Store?.Count ?? 0, previous, _filter.Query))
         {
             _ = RebuildIndexDebouncedAsync();
             return;
@@ -439,7 +527,7 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         // Invalidate the generation before draining the old read/watch task. Late
         // notifications must not refill the view with entries from an unplugged disk.
         _ = _navigation.ParkCurrentForRecovery();
-        ShowHome();
+        if (!ShowHome()) return true;
         ItemCount = 0;
         ErrorText = StringTable.Get("Device_Unavailable");
         StatusText = ErrorText;
@@ -454,56 +542,66 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         }
 
         _disposed = true;
+        EndRecursiveMode(restoreOrdinary: false);
+        DeferRecursiveProgress = null;
         if (_enumerator is PortableDeviceDirectoryEnumerator device) device.Clear();
         // Release the large folder index even while cancellation is still draining.
         _viewIndex = null;
+        _viewBinding = null;
         _tagFilter = null;
         PlaceholderNames = [];
         ExplorerPreferenceBridge.FolderSizesChanged -= OnFolderSizesChanged;
         CancelWatchRefresh();
         ClearWatchQueue();
-        var filter = Interlocked.Exchange(ref _filterCts, null);
-        if (filter is not null)
-        {
-            await filter.CancelAsync().ConfigureAwait(false);
-            filter.Dispose();
-        }
-
         CancelIndexBuild();
 
         await DisposeCapturedAsync().ConfigureAwait(false);
+        await _recursiveReleased.ConfigureAwait(false);
     }
 
     private void RefreshSession(bool preserveSurface)
     {
-        if (string.IsNullOrEmpty(AddressText))
+        if (_disposed || string.IsNullOrEmpty(AddressText))
         {
             return;
         }
 
+        var generation = _navigation.CurrentGeneration;
         try
         {
             var normalized = _paths.Normalize(AddressText);
             AddressText = normalized;
+            if (!OwnsNavigation(generation)) return;
             ErrorText = null;
+            if (!OwnsNavigation(generation)) return;
             var intent = _navigation.CurrentPath is not null
                 ? _navigation.Refresh()
                 : _navigation.Open(normalized, recordHistory: true);
             if (intent is not null)
             {
+                generation = intent.Value.Generation;
                 StartSession(intent.Value, preserveSurface);
             }
         }
         catch (ArgumentException ex)
         {
+            if (!OwnsNavigation(generation)) return;
             ErrorText = ex.Message;
+            if (!OwnsNavigation(generation)) return;
             StatusText = ex.Message;
+            if (!OwnsNavigation(generation)) return;
             IsLoading = false;
         }
     }
 
     private void StartSession(NavigationIntent intent, bool preserveSurface = false)
     {
+        if (!OwnsNavigation(intent.Generation)) return;
+        PerformanceTrace.Record(PerformanceStage.NavigationReceived, intent.PaneId.Value, intent.Generation,
+            operation: _nextNavigationDiagnosticOperation);
+        _nextNavigationDiagnosticOperation = 0;
+        EndRecursiveMode(restoreOrdinary: false);
+        if (!OwnsNavigation(intent.Generation)) return;
         _entryRefreshRequested = false;
         if (HomeLocation.IsHome(intent.Path))
         {
@@ -511,22 +609,37 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
             return;
         }
 
+        if (!preserveSurface)
+        {
+            _viewIndex = null;
+            _viewBinding = null;
+            PlaceholderNames = [];
+        }
         IsLoading = true;
+        if (!OwnsNavigation(intent.Generation)) return;
         if (!preserveSurface)
         {
             ItemCount = 0;
-            _viewIndex = null;
-            PlaceholderNames = [];
+            if (!OwnsNavigation(intent.Generation)) return;
             OnPropertyChanged(nameof(PlaceholderNames));
+            if (!OwnsNavigation(intent.Generation)) return;
             OnPropertyChanged(nameof(ViewIndex));
+            if (!OwnsNavigation(intent.Generation)) return;
+            OnPropertyChanged(nameof(ViewBinding));
+            if (!OwnsNavigation(intent.Generation)) return;
             OnPropertyChanged(nameof(Store));
+            if (!OwnsNavigation(intent.Generation)) return;
             StatusText = "Loading…";
+            if (!OwnsNavigation(intent.Generation)) return;
         }
 
         RaiseToolbar();
+        if (!OwnsNavigation(intent.Generation)) return;
         CancelWatchRefresh();
+        if (!OwnsNavigation(intent.Generation)) return;
         ClearWatchQueue();
         CancelIndexBuild();
+        if (_disposed || !_navigation.Allows(intent.Generation)) return;
 
         DirectorySession? previous;
         CancellationTokenSource? previousListen;
@@ -539,6 +652,7 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         }
 
         _releasedFolder = DisposeCapturedAsync(previous, previousListen);
+        if (!OwnsNavigation(intent.Generation)) return;
 
         var request = new DirectoryRequest(
             intent.PaneId,
@@ -551,6 +665,11 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
             });
         var session = DirectorySession.Start(request, _enumerator);
         var listen = new CancellationTokenSource();
+        if (!OwnsNavigation(intent.Generation))
+        {
+            _ = DisposeCapturedAsync(session, listen);
+            return;
+        }
         lock (_sessionGate)
         {
             _session = session;
@@ -562,24 +681,43 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         _ = ListenForChangesAsync(request, listen.Token);
     }
 
-    private void ShowHome()
+    private bool ShowHome()
     {
+        var generation = _navigation.CurrentGeneration;
+        EndRecursiveMode(restoreOrdinary: false);
+        if (!OwnsNavigation(generation)) return false;
         CancelWatchRefresh();
+        if (!OwnsNavigation(generation)) return false;
         ClearWatchQueue();
         CancelIndexBuild();
-        IsLoading = false;
-        ErrorText = null;
-        ItemCount = 1; // Home is a dashboard; never probe disks to update its status.
+        if (_disposed || !_navigation.Allows(generation)) return false;
         _viewIndex = null;
+        _viewBinding = null;
         PlaceholderNames = [];
-        StatusText = StringTable.Get("Home");
         WhenCurrentSessionCompletes = Task.CompletedTask;
         _releasedFolder = DisposeCapturedAsync();
+        if (!OwnsNavigation(generation)) return false;
+        IsLoading = false;
+        if (!OwnsNavigation(generation)) return false;
+        ErrorText = null;
+        if (!OwnsNavigation(generation)) return false;
+        ItemCount = 1; // Home is a dashboard; never probe disks to update its status.
+        if (!OwnsNavigation(generation)) return false;
+        StatusText = StringTable.Get("Home");
+        if (!OwnsNavigation(generation)) return false;
         OnPropertyChanged(nameof(PlaceholderNames));
+        if (!OwnsNavigation(generation)) return false;
         OnPropertyChanged(nameof(ViewIndex));
+        if (!OwnsNavigation(generation)) return false;
+        OnPropertyChanged(nameof(ViewBinding));
+        if (!OwnsNavigation(generation)) return false;
         OnPropertyChanged(nameof(Store));
+        if (!OwnsNavigation(generation)) return false;
         RaiseToolbar();
+        return OwnsNavigation(generation);
     }
+
+    private bool OwnsNavigation(long generation) => !_disposed && _navigation.Allows(generation);
 
     private Task DisposeCapturedAsync()
     {
@@ -846,6 +984,8 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
     {
         try
         {
+            DirectorySessionChange? lastChange = null;
+            long? lastRequestAt = null;
             await foreach (var change in session.ReadChangesAsync(cancellationToken).ConfigureAwait(false))
             {
                 if (!_navigation.Allows(session.Generation))
@@ -853,14 +993,41 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
                     return;
                 }
 
-                BuildAndPublishIndex(session, change, cancellationToken);
+                // First content is immediate. Later appends use a non-resetting cadence:
+                // the bounded session channel coalesces notifications while we wait.
+                // Completion wakes the delay, so the exact terminal build is not paced.
+                if (lastRequestAt is { } previous && IsProgress(change)
+                    && !session.WhenCompleted.IsCompleted)
+                {
+                    var remaining = EnumerationIndexInterval - _timeProvider.GetElapsedTime(previous);
+                    if (remaining > TimeSpan.Zero)
+                    {
+                        using var pacing = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                        var delay = Task.Delay(remaining, _timeProvider, pacing.Token);
+                        await Task.WhenAny(delay, session.WhenCompleted).ConfigureAwait(false);
+                        pacing.Cancel();
+                        cancellationToken.ThrowIfCancellationRequested();
+                    }
+                }
+
+                var latestChange = session.WhenCompleted.IsCompleted
+                    ? new DirectorySessionChange(session.Store.Count, session.State, session.Error)
+                    : change;
+                if (lastChange != latestChange)
+                {
+                    BuildAndPublishIndex(session, latestChange, cancellationToken);
+                    lastRequestAt = _timeProvider.GetTimestamp();
+                    lastChange = latestChange;
+                }
             }
 
             if (_navigation.Allows(session.Generation))
             {
-                BuildAndPublishIndex(
-                    session,
-                    new DirectorySessionChange(session.Store.Count, session.State, session.Error));
+                var finalChange = new DirectorySessionChange(session.Store.Count, session.State, session.Error);
+                // The coalesced channel normally ends with this exact final notification.
+                // Keep the fallback for exceptions/cancellation that end without publishing it.
+                if (lastChange != finalChange)
+                    BuildAndPublishIndex(session, finalChange);
             }
         }
         catch (OperationCanceledException)
@@ -868,16 +1035,21 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         }
     }
 
+    private static bool IsProgress(DirectorySessionChange change) =>
+        change.State is DirectorySessionState.Loading or DirectorySessionState.Partial;
+
     public void RebuildViewIndex() => RebuildIndex();
 
-    private ulong SizeOf(FileEntryCore entry)
+    private ulong SizeOf(FileEntryCore entry, DirectorySession session)
     {
         if (entry.Kind != EntryKind.Directory || !ExplorerPreferenceBridge.ShowFolderSizes())
         {
             return entry.Size;
         }
 
-        var path = FullPath(entry);
+        var path = PortableDeviceLocation.TryParse(session.Path, out _) && _enumerator is PortableDeviceDirectoryEnumerator device
+            ? device.Resolve(session.Path, session.Generation, entry.Id) ?? string.Empty
+            : Path.IsPathRooted(entry.Name) ? entry.Name : _paths.Combine(session.Path, entry.Name);
         return ExplorerPreferenceBridge.TryFolderSize(path, out var size)
             || ExplorerPreferenceBridge.TryLastKnownFolderSize(path, out size) ? size : 0;
     }
@@ -898,6 +1070,7 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
 
     private void RebuildIndex()
     {
+        if (IsRecursive) { QueueRecursiveProjection(semanticChange: true); return; }
         DirectorySession? session;
         lock (_sessionGate)
         {
@@ -909,108 +1082,165 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
             return;
         }
 
-        BuildAndPublishIndex(
-            session,
-            new DirectorySessionChange(session.Store.Count, session.State, session.Error));
+        BuildAndPublishIndex(session, change: null);
     }
 
     private void BuildAndPublishIndex(
         DirectorySession session,
-        DirectorySessionChange change,
+        DirectorySessionChange? change,
         CancellationToken sessionCancellation = default)
     {
-        // Enumeration, filter edits and decoder completion can race with cancellation.
+        IndexBuildRequest? start;
         lock (_indexBuildGate)
-        {
-            if (_disposed || !_navigation.Allows(session.Generation))
-                return;
-            BuildAndPublishIndexCore(session, change, sessionCancellation);
-        }
+            start = RequestIndexBuildCore(session, change, sessionCancellation);
+        if (start is not null) StartIndexBuild(start);
     }
 
-    private void BuildAndPublishIndexCore(
-        DirectorySession session,
-        DirectorySessionChange change,
-        CancellationToken sessionCancellation)
+    // Only request bookkeeping runs under this gate. Never read the store or invoke a
+    // comparer/dispatcher here: newer UI requests must be able to revoke obsolete work.
+    private IndexBuildRequest? RequestIndexBuildCore(DirectorySession session,
+        DirectorySessionChange? change, CancellationToken sessionCancellation = default)
     {
-        CancelIndexBuild();
-
+        if (_disposed || !_navigation.Allows(session.Generation)) return null;
+        long revision;
+        if (change is null)
+        {
+            revision = CancelIndexBuildCore();
+        }
+        else
+        {
+            // Enumeration only extends the same query. Keep the active sort and any
+            // queued content eligible; only the newest never-started request is needed.
+            // A semantic debounce owns its query until expiry builds the current data
+            // and current session state, including a terminal notification seen here.
+            if (_filterCts is not null) return null;
+            revision = _indexBuildVersion;
+            var pending = _pendingIndexRequest;
+            _pendingIndexRequest = null;
+            if (ReferenceEquals(_indexBuildCts, pending?.Cancellation)) _indexBuildCts = null;
+            CancelIndexToken(pending?.Cancellation);
+            pending?.Cancellation.Dispose();
+        }
+        if (_disposed || revision != _indexBuildVersion || !_navigation.Allows(session.Generation)) return null;
         var buildCts = CancellationTokenSource.CreateLinkedTokenSource(sessionCancellation);
         _indexBuildCts = buildCts;
-        var buildVersion = Interlocked.Increment(ref _indexBuildVersion);
-        var sort = _sort;
-        var filter = _filter;
-        var matchingTagIds = _tagFilter?.MatchingEntryIds;
-        var token = buildCts.Token;
-
-        if (session.Store.Count < BackgroundIndexThreshold && sort.Column != EntrySortColumn.ShellProperty)
+        var request = new IndexBuildRequest(session, change, _sort, _filter, _tagFilter?.MatchingEntryIds,
+            Interlocked.Increment(ref _indexBuildVersion), _indexSemanticVersion, buildCts);
+        if (PerformanceTrace.Enabled) PerformanceTrace.Record(PerformanceStage.BuildRequested,
+            session.PaneId.Value, session.Generation, request.BuildVersion, change?.EntryCount ?? 0);
+        if (_activeIndexRequest is not null)
         {
-            try
-            {
-                var index = BuildIndex(session, sort, filter, matchingTagIds, token);
-                Publish(session, index, change, buildVersion);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            finally
-            {
-                CompleteIndexBuild(buildCts);
-            }
-
-            return;
+            _pendingIndexRequest = request;
+            return null;
         }
-
-        _ = BuildIndexInBackgroundAsync(
-            session,
-            change,
-            sort,
-            filter,
-            matchingTagIds,
-            buildVersion,
-            buildCts);
+        _activeIndexRequest = request;
+        return request;
     }
 
-    private async Task BuildIndexInBackgroundAsync(
-        DirectorySession session,
-        DirectorySessionChange change,
-        EntrySort sort,
-        EntryFilter filter,
-        IReadOnlySet<int>? matchingTagIds,
-        long buildVersion,
-        CancellationTokenSource buildCts)
+    private void StartIndexBuild(IndexBuildRequest request)
     {
+        EntrySnapshot? snapshot = null;
+        var background = false;
         try
         {
-            IReadOnlyDictionary<int, EntryPropertyValue>? properties = null;
-            if (sort.Column == EntrySortColumn.ShellProperty && Models.DetailsColumn.IsPropertyName(sort.PropertyName))
+            var token = request.Cancellation.Token;
+            token.ThrowIfCancellationRequested();
+            // An unfinished enumeration can grow between Count and CaptureSnapshot.
+            // Keep that entire path off the requester, while idle, completed small views
+            // still update immediately without a task hop or an intermediate empty view.
+            background = !(request.Session.WhenCompleted.IsCompleted
+                    || request.Session.State == DirectorySessionState.Completed)
+                || request.Sort.Column == EntrySortColumn.ShellProperty
+                || request.Session.Store.Count >= BackgroundIndexThreshold;
+            if (!background)
             {
-                var values = new System.Collections.Concurrent.ConcurrentDictionary<int, EntryPropertyValue>();
-                var entries = session.Store.Observe(items => items.ToArray());
-                await Parallel.ForEachAsync(entries, new ParallelOptions { MaxDegreeOfParallelism = 3, CancellationToken = buildCts.Token }, async (entry, token) =>
-                {
-                    var path = Path.IsPathRooted(entry.Name) ? entry.Name : Path.Combine(session.Path, entry.Name);
-                    var result = await FilePropertyCache.GetAsync(path, entry, [sort.PropertyName!], token).ConfigureAwait(false);
-                    if (result.TryGetValue(sort.PropertyName!, out var value)) values[entry.Id] = value;
-                }).ConfigureAwait(false);
-                properties = values;
+                snapshot = request.Session.Store.CaptureSnapshot(token, request.Session.PaneId.Value,
+                    request.Session.Generation, request.BuildVersion);
+                background = snapshot.Count >= BackgroundIndexThreshold;
+                if (!background) BuildAndPublishSnapshot(request, snapshot);
             }
-            var index = await Task.Run(
-                () => BuildIndex(session, sort, filter, matchingTagIds, buildCts.Token, properties),
-                buildCts.Token).ConfigureAwait(false);
-            Publish(session, index, change, buildVersion);
         }
-        catch (OperationCanceledException)
-        {
-        }
-        catch (Exception error)
-        {
-            Trace.TraceError("Directory index build failed: {0}", error);
-        }
+        catch (Exception error) { RecordIndexBuildFailure(request, error); }
         finally
         {
-            CompleteIndexBuild(buildCts);
+            if (!background)
+            {
+                var next = CompleteIndexBuild(request);
+                if (next is not null) StartIndexWorker(next);
+            }
         }
+        if (background) StartIndexWorker(request, snapshot);
+    }
+
+    private void StartIndexWorker(IndexBuildRequest request, EntrySnapshot? snapshot = null)
+    {
+        // One task drains the latest-request slot. A burst of notifications does not
+        // create one Task.Run/semaphore waiter (or one copied snapshot) per notification.
+        _ = Task.Run(async () =>
+        {
+            IndexBuildRequest? current = request;
+            while (current is not null)
+            {
+                try
+                {
+                    var token = current.Cancellation.Token;
+                    token.ThrowIfCancellationRequested();
+                    var entries = snapshot ?? current.Session.Store.CaptureSnapshot(token,
+                        current.Session.PaneId.Value, current.Session.Generation, current.BuildVersion);
+                    IReadOnlyDictionary<int, EntryPropertyValue>? properties = null;
+                    if (current.Sort.Column == EntrySortColumn.ShellProperty && Models.DetailsColumn.IsPropertyName(current.Sort.PropertyName))
+                    {
+                        var values = new System.Collections.Concurrent.ConcurrentDictionary<int, EntryPropertyValue>();
+                        await Parallel.ForEachAsync(entries, new ParallelOptions { MaxDegreeOfParallelism = 3, CancellationToken = token }, async (entry, propertyToken) =>
+                        {
+                            var path = Path.IsPathRooted(entry.Name) ? entry.Name : Path.Combine(current.Session.Path, entry.Name);
+                            var result = await FilePropertyCache.GetAsync(path, entry, [current.Sort.PropertyName!], propertyToken).ConfigureAwait(false);
+                            if (result.TryGetValue(current.Sort.PropertyName!, out var value)) values[entry.Id] = value;
+                        }).ConfigureAwait(false);
+                        properties = values;
+                    }
+                    BuildAndPublishSnapshot(current, entries, properties);
+                }
+                catch (Exception error) { RecordIndexBuildFailure(current, error); }
+                finally
+                {
+                    snapshot = null;
+                    current = CompleteIndexBuild(current);
+                }
+            }
+        });
+    }
+
+    private void BuildAndPublishSnapshot(IndexBuildRequest request, EntrySnapshot snapshot,
+        IReadOnlyDictionary<int, EntryPropertyValue>? properties = null)
+    {
+        var change = request.Change ?? new DirectorySessionChange(snapshot.Count, request.Session.State, request.Session.Error);
+        var index = ReuseTerminalIndex(request, snapshot, change)
+            ?? BuildIndex(request.Session, request.Sort, request.Filter, request.MatchingTagIds,
+            request.Cancellation.Token, properties, request.BuildVersion, snapshot, IsProgress(change));
+        Publish(request.Session, index, change, request.BuildVersion, request.SemanticVersion);
+    }
+
+    private EntryViewIndex? ReuseTerminalIndex(IndexBuildRequest request, EntrySnapshot snapshot,
+        DirectorySessionChange change)
+    {
+        if (IsProgress(change)) return null;
+        IndexPublication? previous;
+        lock (_publicationGate) previous = _pendingPublication ?? Volatile.Read(ref _appliedPublication);
+        // Completion may change only status. Reuse the sorted immutable rows only
+        // for this exact snapshot and semantic request, then restore strict eligibility.
+        return previous is not null && previous.SemanticVersion == request.SemanticVersion
+            && ReferenceEquals(previous.Index.Snapshot, snapshot)
+            ? previous.Index.AsFinal() : null;
+    }
+
+    private static void RecordIndexBuildFailure(IndexBuildRequest request, Exception error)
+    {
+        var cancelled = error is OperationCanceledException;
+        if (!cancelled) Trace.TraceError("Directory index build failed: {0}", error);
+        PerformanceTrace.Record(cancelled ? PerformanceStage.BuildCancelled : PerformanceStage.BuildAborted,
+            request.Session.PaneId.Value, request.Session.Generation, request.BuildVersion,
+            outcome: cancelled ? PerformanceOutcome.Cancelled : PerformanceOutcome.Failed);
     }
 
     private EntryViewIndex BuildIndex(
@@ -1019,56 +1249,151 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         EntryFilter filter,
         IReadOnlySet<int>? matchingTagIds,
         CancellationToken cancellationToken,
-        IReadOnlyDictionary<int, EntryPropertyValue>? propertyValues = null)
+        IReadOnlyDictionary<int, EntryPropertyValue>? propertyValues = null, long diagnosticBuild = 0,
+        EntrySnapshot? snapshot = null, bool allowAppendProgress = false)
     {
+        var started = PerformanceTrace.Enabled ? Stopwatch.GetTimestamp() : 0;
+        var operation = diagnosticBuild;
+        PerformanceTrace.Record(PerformanceStage.BuildStart, session.PaneId.Value, session.Generation, operation);
+        var outcome = PerformanceOutcome.Completed;
+        try
+        {
         Func<FileEntryCore, bool>? tagMatch = matchingTagIds is null
             ? null
             : entry => matchingTagIds.Contains(entry.Id);
+        snapshot ??= session.Store.CaptureSnapshot(cancellationToken, session.PaneId.Value, session.Generation, operation);
         return EntryViewIndex.Build(
-            session.Store,
+            snapshot,
             sort,
             filter,
             _names,
             session.Generation,
             tagMatch,
             cancellationToken,
-            SizeOf,
-            propertyValues);
-    }
-
-    private void CancelIndexBuild()
-    {
-        lock (_indexBuildGate)
+            entry => SizeOf(entry, session),
+            propertyValues,
+            allowAppendProgress);
+        }
+        catch (OperationCanceledException) { outcome = PerformanceOutcome.Cancelled; throw; }
+        catch { outcome = PerformanceOutcome.Failed; throw; }
+        finally
         {
-            var previous = _indexBuildCts;
-            _indexBuildCts = null;
-            Interlocked.Increment(ref _indexBuildVersion);
-            previous?.Cancel();
+            if (PerformanceTrace.Enabled) PerformanceTrace.Record(PerformanceStage.BuildEnd,
+                session.PaneId.Value, session.Generation, operation, outcome: outcome,
+                durationTicks: Stopwatch.GetTimestamp() - started);
         }
     }
 
-    private void CompleteIndexBuild(CancellationTokenSource buildCts)
+    private long CancelIndexBuild()
+    {
+        lock (_indexBuildGate) return CancelIndexBuildCore();
+    }
+
+    private long CancelIndexBuildCore()
+    {
+        // Detach every old owner and revoke publication before invoking any callback.
+        // Reentrant requests receive a later revision and must not be overwritten by
+        // this older stack frame after cancellation returns.
+        var previousFilter = _filterCts;
+        _filterCts = null;
+        var previous = _indexBuildCts;
+        _indexBuildCts = null;
+        var active = _activeIndexRequest?.Cancellation;
+        var pendingRequest = _pendingIndexRequest;
+        _pendingIndexRequest = null;
+        var revision = Interlocked.Increment(ref _indexBuildVersion);
+        Interlocked.Increment(ref _indexSemanticVersion);
+        IndexPublication? pending;
+        lock (_publicationGate)
+        {
+            pending = _pendingPublication;
+            _pendingPublication = null;
+            Volatile.Write(ref _appliedPublication, null);
+        }
+        if (pending is not null) PerformanceTrace.Record(PerformanceStage.PublishDropped,
+            pending.Session.PaneId.Value, pending.Session.Generation, pending.BuildVersion,
+            outcome: PerformanceOutcome.Dropped);
+        CancelIndexToken(previousFilter);
+        // Append requests no longer pre-cancel the active owner. A semantic change
+        // must therefore revoke both it and the latest pending request explicitly.
+        CancelIndexToken(active);
+        if (!ReferenceEquals(previous, active)) CancelIndexToken(previous);
+        // A waiting request has never borrowed its token or snapshot. The active owner
+        // alone disposes its CTS after all work (including publication) has unwound.
+        pendingRequest?.Cancellation.Dispose();
+        return revision;
+    }
+
+    private IndexBuildRequest? CompleteIndexBuild(IndexBuildRequest request)
     {
         lock (_indexBuildGate)
         {
-            if (ReferenceEquals(_indexBuildCts, buildCts))
-                _indexBuildCts = null;
-            buildCts.Dispose();
+            if (ReferenceEquals(_indexBuildCts, request.Cancellation)) _indexBuildCts = null;
+            request.Cancellation.Dispose();
+            var next = _pendingIndexRequest;
+            _pendingIndexRequest = null;
+            _activeIndexRequest = next;
+            return next;
         }
+    }
+
+    private static void CancelIndexToken(CancellationTokenSource? source)
+    {
+        try { source?.Cancel(); }
+        catch (AggregateException error)
+        {
+            // Cancellation is already signalled even when a callback throws. Do not
+            // abandon the latest request or strand its active/pending ownership.
+            Trace.TraceError("Directory index cancellation callback failed: {0}", error);
+        }
+    }
+
+    // Called only under _indexBuildGate. The waiting task owns disposal after it drains.
+    private void CancelPendingIndexDebounceCore()
+    {
+        var pending = _filterCts;
+        _filterCts = null;
+        CancelIndexToken(pending);
     }
 
     private async Task RebuildIndexDebouncedAsync()
     {
-        _filterCts?.Cancel();
-        var cts = new CancellationTokenSource();
-        _filterCts = cts;
+        CancellationTokenSource cts;
+        CancellationToken token;
+        lock (_indexBuildGate)
+        {
+            if (_disposed) return;
+            var revision = _indexBuildVersion;
+            CancelPendingIndexDebounceCore();
+            if (_disposed || revision != _indexBuildVersion || _filterCts is not null) return;
+            _filterCts = cts = new CancellationTokenSource();
+            token = cts.Token;
+        }
         try
         {
-            await Task.Delay(EntryViewIndex.DebounceDelay, cts.Token).ConfigureAwait(false);
-            RebuildIndex();
+            await Task.Delay(EntryViewIndex.DebounceDelay, _timeProvider, token).ConfigureAwait(false);
+            DirectorySession? session;
+            lock (_sessionGate) session = _session;
+            IndexBuildRequest? start;
+            lock (_indexBuildGate)
+            {
+                if (_disposed || token.IsCancellationRequested || !ReferenceEquals(_filterCts, cts)) return;
+                // Claim and register atomically, but execute outside the request gate.
+                _filterCts = null;
+                start = session is null ? null : RequestIndexBuildCore(session, change: null);
+            }
+            if (start is not null) StartIndexBuild(start);
         }
         catch (OperationCanceledException)
         {
+        }
+        finally
+        {
+            lock (_indexBuildGate)
+            {
+                if (ReferenceEquals(_filterCts, cts)) _filterCts = null;
+                cts.Dispose();
+            }
         }
     }
 
@@ -1076,47 +1401,159 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         DirectorySession session,
         EntryViewIndex index,
         DirectorySessionChange change,
-        long buildVersion)
+        long buildVersion,
+        long semanticVersion)
     {
-        if (_disposed)
+        IndexPublication? replaced;
+        bool queue;
+        lock (_publicationGate)
         {
+            if (_disposed || semanticVersion != Volatile.Read(ref _indexSemanticVersion)
+                || buildVersion <= Volatile.Read(ref _appliedIndexBuildVersion))
+            {
+                PerformanceTrace.Record(PerformanceStage.PublishDropped, session.PaneId.Value,
+                    session.Generation, buildVersion, outcome: PerformanceOutcome.Dropped);
+                return;
+            }
+            replaced = _pendingPublication;
+            _pendingPublication = new(session, index, change, buildVersion, semanticVersion);
+            queue = !_publicationQueued;
+            _publicationQueued = true;
+        }
+        if (replaced is not null) PerformanceTrace.Record(PerformanceStage.PublishDropped,
+            replaced.Session.PaneId.Value, replaced.Session.Generation, replaced.BuildVersion,
+            outcome: PerformanceOutcome.Dropped);
+        PerformanceTrace.Record(PerformanceStage.PublishQueued, session.PaneId.Value,
+            session.Generation, buildVersion);
+        if (queue)
+        {
+            try { _dispatcher.Post(DrainPublication); }
+            catch
+            {
+                lock (_publicationGate) { _pendingPublication = null; _publicationQueued = false; }
+                throw;
+            }
+        }
+    }
+
+    private void DrainPublication()
+    {
+        IndexPublication? publication;
+        lock (_publicationGate)
+        {
+            publication = _pendingPublication;
+            _pendingPublication = null;
+            _publicationQueued = false;
+        }
+        // The queued callback retains only the pane. Replaced snapshots can be collected
+        // even while the dispatcher is busy, and UI callbacks never run under this gate.
+        if (publication is not null) ApplyPublication(publication);
+    }
+
+    private void ApplyPublication(IndexPublication publication)
+    {
+        var (session, index, change, buildVersion, semanticVersion) = publication;
+        if (_disposed
+            || !_navigation.Allows(session.Generation)
+            || !ReferenceEquals(_session, session)
+            || semanticVersion != Volatile.Read(ref _indexSemanticVersion)
+            || buildVersion <= Volatile.Read(ref _appliedIndexBuildVersion)
+            || _viewIndex is { } current && current.Snapshot.BelongsTo(session.Store)
+                && index.DataVersion < current.DataVersion)
+        {
+            PerformanceTrace.Record(PerformanceStage.PublishDropped, session.PaneId.Value,
+                session.Generation, buildVersion, outcome: PerformanceOutcome.Dropped);
             return;
         }
 
-        _dispatcher.Post(() =>
+        if (!index.CanPublish(session.Store))
         {
-            if (_disposed
-                || !_navigation.Allows(session.Generation)
-                || buildVersion != Volatile.Read(ref _indexBuildVersion))
-            {
-                return;
-            }
+            PerformanceTrace.Record(PerformanceStage.PublishDropped, session.PaneId.Value,
+                session.Generation, buildVersion, outcome: PerformanceOutcome.Dropped);
+            // If no newer semantic request took over, rebuild the latest store version.
+            // The existing published snapshot remains coherent while that build runs.
+            BuildAndPublishIndex(session, change: null);
+            return;
+        }
 
-            _viewIndex = index;
-            ItemCount = index.Count;
-            PlaceholderNames = CaptureNames(session.Store, index);
-            OnPropertyChanged(nameof(PlaceholderNames));
-            OnPropertyChanged(nameof(ViewIndex));
-            OnPropertyChanged(nameof(Store));
+        // Publish the complete immutable tuple before even ItemCount can notify a
+        // recycled presenter. Capture only path helpers/identity data, not a session.
+        var binding = CreateViewBinding(session, index, buildVersion);
+        var names = CaptureNames(session.Store, index);
+        Volatile.Write(ref _appliedIndexBuildVersion, buildVersion);
+        _viewIndex = index;
+        _viewBinding = binding;
+        Volatile.Write(ref _appliedPublication, publication);
+        PlaceholderNames = names;
+        ItemCount = index.Count;
+        if (!OwnsPublication(publication, binding)) return;
+        OnPropertyChanged(nameof(PlaceholderNames));
+        if (!OwnsPublication(publication, binding)) return;
+        OnPropertyChanged(nameof(ViewIndex));
+        if (!OwnsPublication(publication, binding)) return;
+        OnPropertyChanged(nameof(ViewBinding));
+        if (!OwnsPublication(publication, binding)) return;
+        OnPropertyChanged(nameof(Store));
+        if (!OwnsPublication(publication, binding)) return;
 
-            if (change.Error is not null)
-            {
-                ErrorText = change.Error.Message;
-            }
+        if (change.Error is not null)
+        {
+            ErrorText = change.Error.Message;
+            if (!OwnsPublication(publication, binding)) return;
+        }
 
-            var loading = change.State is DirectorySessionState.Loading or DirectorySessionState.Partial;
-            IsLoading = loading && change.Error is null;
-            StatusText = FormatStatus(change, index.Count);
-            RaiseToolbar();
-            if (!IsLoading && _entryRefreshRequested)
+        var loading = change.State is DirectorySessionState.Loading or DirectorySessionState.Partial;
+        IsLoading = loading && change.Error is null;
+        if (!OwnsPublication(publication, binding)) return;
+        StatusText = FormatStatus(change, index.Count);
+        if (!OwnsPublication(publication, binding)) return;
+        RaiseToolbar();
+        if (!OwnsPublication(publication, binding)) return;
+        if (PerformanceTrace.Enabled) PerformanceTrace.Record(
+            IsLoading ? PerformanceStage.ContentApplied : PerformanceStage.FinalApplied,
+            session.PaneId.Value, session.Generation, buildVersion, index.Count,
+            change.State switch
             {
-                RefreshAfterFileOperation();
-            }
-            else if (!IsLoading && !_watchQueue.IsEmpty)
-            {
-                ApplyWatchBatch();
-            }
-        });
+                DirectorySessionState.Completed => PerformanceOutcome.Completed,
+                DirectorySessionState.Cancelled => PerformanceOutcome.Cancelled,
+                DirectorySessionState.Failed => PerformanceOutcome.Failed,
+                _ => PerformanceOutcome.Partial
+            });
+        if (!IsLoading && _entryRefreshRequested)
+        {
+            RefreshAfterFileOperation();
+        }
+        else if (!IsLoading && !_watchQueue.IsEmpty)
+        {
+            ApplyWatchBatch();
+        }
+    }
+
+    private bool OwnsPublication(IndexPublication publication, EntryViewBinding binding) =>
+        !_disposed && _navigation.Allows(binding.Generation)
+        && ReferenceEquals(_session, publication.Session)
+        && ReferenceEquals(_viewBinding, binding)
+        && ReferenceEquals(Volatile.Read(ref _appliedPublication), publication)
+        && publication.SemanticVersion == Volatile.Read(ref _indexSemanticVersion);
+
+    private EntryViewBinding CreateViewBinding(DirectorySession session, EntryViewIndex index, long operation)
+    {
+        var folderPath = session.Path;
+        var paths = _paths;
+        Func<FileEntryCore, string> resolvePath;
+        if (PortableDeviceLocation.TryParse(folderPath, out _)
+            && _enumerator is PortableDeviceDirectoryEnumerator device)
+        {
+            var locations = device.CaptureLocations(folderPath, session.Generation);
+            resolvePath = entry => locations is not null && locations.TryGetValue(entry.Id, out var location)
+                ? location : throw new InvalidOperationException("Entry has no identity in its published device folder.");
+        }
+        else
+        {
+            resolvePath = entry => Path.IsPathRooted(entry.Name)
+                ? entry.Name : paths.Combine(folderPath, entry.Name);
+        }
+        return new EntryViewBinding(session.Store, index, session.Generation, folderPath, resolvePath, diagnosticOperation: operation);
     }
 
     private static IReadOnlyList<string> CaptureNames(EntryStore store, EntryViewIndex index)
@@ -1130,7 +1567,7 @@ public sealed class PaneViewModel : INotifyPropertyChanged, IAsyncDisposable
         var names = new string[take];
         for (var i = 0; i < take; i++)
         {
-            names[i] = store[index[i]].Name;
+            names[i] = index.GetEntry(store, i).Name;
         }
 
         return names;

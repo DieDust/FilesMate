@@ -56,6 +56,16 @@
         </glass:LiquidGlassSurface>
         <glass:LiquidGlassSurface Margin="0,12,0,0" Style="{StaticResource FilesMate.GlassCardStyle}">
             <StackPanel Spacing="8">
+                <TextBlock Text="{loc:LocalizedText Key=Tour_Help}" FontSize="16" FontWeight="SemiBold"/>
+                <TextBlock Text="{loc:LocalizedText Key=Tour_HelpHint}" TextWrapping="Wrap"/>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="FeatureGuideButton" Content="{loc:LocalizedText Key=Tour_Help}" Click="FeatureGuide_Click"/>
+                    <Button x:Name="ReleaseGuideButton" Content="{loc:LocalizedText Key=Tour_NewTitle}" Click="ReleaseGuide_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </glass:LiquidGlassSurface>
+        <glass:LiquidGlassSurface Margin="0,12,0,0" Style="{StaticResource FilesMate.GlassCardStyle}">
+            <StackPanel Spacing="8">
                 <TextBlock Text="GitHub" FontSize="16" FontWeight="SemiBold" />
                 <TextBlock Text="{loc:LocalizedText Key=About_GitHubDescription}" TextWrapping="Wrap"
                            Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />

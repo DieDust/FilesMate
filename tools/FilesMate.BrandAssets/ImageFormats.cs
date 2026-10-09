@@ -36,8 +36,13 @@ internal static class ImageFormats
         return stream.ToArray();
     }
 
-    internal static byte[] WriteIco(IReadOnlyList<(int Size, byte[] Png)> frames)
+    internal static byte[] WriteIco(IReadOnlyList<(int Size, byte[] Rgba)> frames)
     {
+        // Small window/shell icons also pass through legacy GDI image-and-mask
+        // drawing. Give them an explicit AND mask; retain PNG for the large frame.
+        var images = frames.Select(frame => frame.Size < 256
+            ? WriteIconBitmap(frame.Size, frame.Rgba)
+            : WritePng(frame.Size, frame.Size, frame.Rgba)).ToArray();
         using var stream = new MemoryStream();
         using var writer = new BinaryWriter(stream);
         writer.Write((ushort)0);
@@ -45,24 +50,74 @@ internal static class ImageFormats
         writer.Write((ushort)frames.Count);
 
         var offset = 6 + (16 * frames.Count);
-        foreach (var frame in frames)
+        for (var i = 0; i < frames.Count; i++)
         {
+            var frame = frames[i];
             writer.Write(frame.Size >= 256 ? (byte)0 : (byte)frame.Size);
             writer.Write(frame.Size >= 256 ? (byte)0 : (byte)frame.Size);
             writer.Write((byte)0);
             writer.Write((byte)0);
             writer.Write((ushort)1);
             writer.Write((ushort)32);
-            writer.Write(frame.Png.Length);
+            writer.Write(images[i].Length);
             writer.Write(offset);
-            offset += frame.Png.Length;
+            offset += images[i].Length;
         }
 
-        foreach (var frame in frames)
+        foreach (var image in images)
         {
-            writer.Write(frame.Png);
+            writer.Write(image);
         }
 
+        return stream.ToArray();
+    }
+
+    private static byte[] WriteIconBitmap(int size, byte[] rgba)
+    {
+        var maskStride = ((size + 31) / 32) * 4;
+        var mask = new byte[maskStride * size];
+        using var stream = new MemoryStream();
+        using var writer = new BinaryWriter(stream);
+
+        writer.Write(40); // BITMAPINFOHEADER
+        writer.Write(size);
+        writer.Write(size * 2); // Color bitmap followed by the monochrome AND mask.
+        writer.Write((ushort)1);
+        writer.Write((ushort)32);
+        writer.Write(0); // BI_RGB
+        writer.Write(0); // Uncompressed bitmap size may be zero.
+        writer.Write(0); // Horizontal resolution.
+        writer.Write(0); // Vertical resolution.
+        writer.Write(0); // No color table.
+        writer.Write(0); // All colors are important.
+
+        // Both bitmaps are bottom-up. BGRA is straight alpha, like the PNG input.
+        for (var row = 0; row < size; row++)
+        {
+            var y = size - 1 - row;
+            for (var x = 0; x < size; x++)
+            {
+                var source = ((y * size) + x) * 4;
+                var alpha = rgba[source + 3];
+                if (alpha == 0)
+                {
+                    // Legacy drawing uses (destination AND mask) XOR color.
+                    // Transparent pixels must have a white mask AND black RGB,
+                    // otherwise invisible yellow RGB in the source tints the background.
+                    writer.Write(0);
+                    mask[(row * maskStride) + (x / 8)] |= (byte)(0x80 >> (x % 8));
+                }
+                else
+                {
+                    writer.Write(rgba[source + 2]);
+                    writer.Write(rgba[source + 1]);
+                    writer.Write(rgba[source]);
+                    writer.Write(alpha);
+                }
+            }
+        }
+
+        writer.Write(mask);
         return stream.ToArray();
     }
 

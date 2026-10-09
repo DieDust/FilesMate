@@ -22,9 +22,39 @@ public sealed partial class SearchSettingsPage : UserControl
     private int _globalRevision;
     private CancellationTokenSource? _globalDelay;
     private bool _capturingHotkey;
+    private readonly Windows.UI.ViewManagement.UISettings _layoutSettings = new();
     private void GlobalSearchToggle_Changed(object sender, RoutedEventArgs e) => QueueGlobalSave(false);
     private void GlobalSearchTray_Changed(object sender, SelectionChangedEventArgs e) => QueueGlobalSave(false);
     private void GlobalSearchHotkey_Changed(object sender, TextChangedEventArgs e) => QueueGlobalSave(true);
+
+    private void HotkeyFields_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (GlobalSearchHotkey is null || GlobalSearchCapture is null) return;
+        var firstWidth = Math.Max(GlobalSearchHotkey.MinWidth, GlobalSearchHotkey.DesiredSize.Width);
+        var secondWidth = Math.Max(GlobalSearchCapture.MinWidth, GlobalSearchCapture.DesiredSize.Width);
+        var stacked = SettingsRowLayout.NeedsAnotherRow(e.NewSize.Width, firstWidth, secondWidth, HotkeyFields.ColumnSpacing);
+        Grid.SetColumnSpan(GlobalSearchHotkey, stacked ? 2 : 1);
+        Grid.SetColumn(GlobalSearchCapture, stacked ? 0 : 1);
+        Grid.SetColumnSpan(GlobalSearchCapture, stacked ? 2 : 1);
+        Grid.SetRow(GlobalSearchCapture, stacked ? 1 : 0);
+        GlobalSearchCapture.Margin = new Thickness(0, stacked ? 8 : 0, 0, 0);
+    }
+
+    private void StatsGrid_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (StatFilesCard is null || StatCompletedCard is null) return;
+        var minimum = 180 * Math.Clamp(_layoutSettings.TextScaleFactor, 1, 3);
+        var stacked = SettingsRowLayout.NeedsAnotherRow(e.NewSize.Width, minimum, minimum, StatsGrid.ColumnSpacing);
+        var columns = stacked ? 1 : 2;
+        StatsGrid.ColumnDefinitions[1].Width = stacked ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
+        FrameworkElement[] cards = [StatFilesCard, StatFoldersCard, StatErrorsCard, StatIndexedCard, StatDiskCard, StatCompletedCard];
+        for (var index = 0; index < cards.Length; index++)
+        {
+            Grid.SetColumn(cards[index], index % columns);
+            Grid.SetRow(cards[index], index / columns);
+        }
+    }
+
     private async void QueueGlobalSave(bool debounce)
     {
         if (_syncingGlobal) return;
@@ -42,7 +72,7 @@ public sealed partial class SearchSettingsPage : UserControl
             var reply = await GlobalSearchService.ApplyAsync(settings);
             if (revision != _globalRevision) return;
             GlobalSearchSaveStatus.Text = reply.Ok && string.IsNullOrEmpty(reply.Message) ? Loc.Get("SavedAutomatically") : reply.Message;
-            var saved = FilesMate.Search.GlobalSearchConfiguration.Load();
+            var saved = GlobalSearchService.LoadSettings();
             _syncingGlobal = true;
             GlobalSearchResident.IsOn = saved.Enabled;
             GlobalSearchStartup.IsOn = saved.StartAtLogin;
@@ -66,7 +96,7 @@ public sealed partial class SearchSettingsPage : UserControl
         {
             var reply = await GlobalSearchService.EnsureStartedAsync(show: true);
             GlobalSearchSaveStatus.Text = reply.Ok ? "" : reply.Message;
-            ShowHostState(reply.Ok ? reply : null, FilesMate.Search.GlobalSearchConfiguration.Load(), hostKnownDown: false);
+            ShowHostState(reply.Ok ? reply : null, GlobalSearchService.LoadSettings(), hostKnownDown: false);
             if (!reply.Ok) _ = RefreshHostStateAsync(_globalRevision);
         }
         finally { GlobalSearchOpen.IsEnabled = true; }
@@ -75,7 +105,7 @@ public sealed partial class SearchSettingsPage : UserControl
     /// <summary>Asks the resident host how it is doing and paints the answer; cheap when no host is running.</summary>
     private async Task RefreshHostStateAsync(int revision)
     {
-        var saved = FilesMate.Search.GlobalSearchConfiguration.Load();
+        var saved = GlobalSearchService.LoadSettings();
         var reply = saved.Enabled ? await GlobalSearchService.StatusAsync() : null;
         if (!IsLoaded || revision != _globalRevision) return;
         ShowHostState(reply, saved, hostKnownDown: reply is null);
@@ -104,7 +134,7 @@ public sealed partial class SearchSettingsPage : UserControl
         GlobalSearchStateIcon.Glyph = glyph;
         Theming.ThemeResources.Bind(GlobalSearchStateIcon, IconElement.ForegroundProperty,
             !muted && host is { HotkeyRegistered: true } ? "FilesMate.Selection.AccentBrush" : "FilesMate.Text.SecondaryBrush");
-        GlobalSearchStartupHint.Text = saved.StartAtLogin && saved.Enabled && FilesMate.Search.GlobalSearchStartup.IsDisabledByWindows()
+        GlobalSearchStartupHint.Text = FilesMate.Core.Configuration.RuntimeProfile.IsPortable ? Loc.Get("Portable_NoIntegration") : saved.StartAtLogin && saved.Enabled && FilesMate.Search.GlobalSearchStartup.IsDisabledByWindows()
             ? Loc.Get("Search_StartupDisabledByWindows")
             : Loc.Get("Search_StartupHint");
     }
@@ -158,9 +188,10 @@ public sealed partial class SearchSettingsPage : UserControl
     public SearchSettingsPage()
     {
         InitializeComponent();
-        var global = FilesMate.Search.GlobalSearchConfiguration.Load();
+        var global = GlobalSearchService.LoadSettings();
         GlobalSearchResident.IsOn = global.Enabled;
         GlobalSearchStartup.IsOn = global.StartAtLogin;
+        GlobalSearchStartup.IsEnabled = !FilesMate.Core.Configuration.RuntimeProfile.IsPortable;
         GlobalSearchPreview.IsOn = global.PreviewEnabled;
         GlobalSearchHotkey.Text = global.Hotkey;
         GlobalSearchTrayAction.SelectedIndex = global.TrayLeftAction == "Files" ? 1 : 0;

@@ -12,7 +12,21 @@ foreach (var dark in new[] { false, true })
         .ToDictionary(e => (string)e.Attribute(x + "Key")!, StringComparer.Ordinal);
     foreach (var (key, color) in SkinPalette.For(dark).ResourceColors())
     {
-        if (!resources.TryGetValue(key, out var element)) throw new InvalidDataException($"Missing skin resource: {name}/{key}");
+        if (!resources.TryGetValue(key, out var element))
+        {
+            if (!key.StartsWith("FilesMate.", StringComparison.Ordinal))
+                throw new InvalidDataException($"Missing skin resource: {name}/{key}");
+            element = new XElement(theme.Name.Namespace + "SolidColorBrush", new XAttribute(x + "Key", key));
+            theme.Add(element);
+            resources.Add(key, element);
+        }
+        if (element.Name.LocalName == "StaticResource")
+        {
+            // A state role may need paired ink independent of the primary text alias.
+            var owned = new XElement(theme.Name.Namespace + "SolidColorBrush", new XAttribute(x + "Key", key));
+            element.ReplaceWith(owned);
+            resources[key] = element = owned;
+        }
         if (element.Name.LocalName == "Color") element.Value = AccentPalette.ToHex(color);
         else if (element.Name.LocalName == "AcrylicBrush")
         { element.SetAttributeValue("TintColor", AccentPalette.ToHex(color)); element.SetAttributeValue("FallbackColor", AccentPalette.ToHex(color)); }
@@ -27,6 +41,15 @@ foreach (var dark in new[] { false, true })
         var alpha = original.Length == 9 ? Convert.ToByte(original.Substring(1, 2), 16) : (byte)255;
         stop.SetAttributeValue("Color", AccentPalette.ToHex(SkinPalette.Alpha(dark ? SkinPalette.DarkSkin.Text : SkinPalette.Light.Card, alpha)));
     }
+}
+var highContrast = document.Descendants().Single(e => e.Name.LocalName == "ResourceDictionary" && (string?)e.Attribute(x + "Key") == "HighContrast");
+foreach (var key in SkinPalette.Light.ResourceColors().Keys.Where(key =>
+    key.StartsWith("FilesMate.Choice.", StringComparison.Ordinal) || key.StartsWith("FilesMate.NameMatch.", StringComparison.Ordinal)
+    || key.StartsWith("FilesMate.Menu.ItemSelected", StringComparison.Ordinal) || key == "FilesMate.FileItem.HoverForegroundBrush"))
+{
+    if (highContrast.Elements().Any(e => (string?)e.Attribute(x + "Key") == key)) continue;
+    highContrast.Add(new XElement(highContrast.Name.Namespace + "StaticResource", new XAttribute(x + "Key", key),
+        new XAttribute("ResourceKey", key.Contains("Foreground", StringComparison.Ordinal) ? "SystemColorHighlightTextColorBrush" : "SystemColorHighlightColorBrush")));
 }
 document.Save(path, SaveOptions.DisableFormatting);
 Console.WriteLine($"Synchronized skin resources: {path}");

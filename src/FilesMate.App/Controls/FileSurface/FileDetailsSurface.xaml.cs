@@ -11,6 +11,7 @@ using FilesMate.App.Navigation;
 using FilesMate.App.Services;
 using FilesMate.App.Views;
 using FilesMate.Core.Directories;
+using FilesMate.Core.Diagnostics;
 using FilesMate.Core.Entries;
 using FilesMate.Core.Icons;
 using FilesMate.Core.Operations;
@@ -46,13 +47,12 @@ public sealed partial class FileDetailsSurface : UserControl
     private readonly Stopwatch _inputClock = Stopwatch.StartNew();
     private readonly HashSet<FileRow> _realized = [];
     private readonly HashSet<FileTile> _tiles = [];
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<UIElement, PreparationStamp> _preparations = new();
+    private sealed class PreparationStamp { internal long Version; }
+    private FileItemElementFactory _itemFactory = new(tiles: true);
     private readonly Stopwatch _prepareWatch = new();
     private readonly List<int> _marqueeHits = [];
-    private readonly StackLayout _stackLayout = new()
-    {
-        Orientation = Orientation.Vertical,
-        Spacing = FileColumnLayout.RowGap,
-    };
+    private readonly FixedDetailsLayout _stackLayout = new();
 
     private bool _pointerDown;
     private bool _dragging;
@@ -71,11 +71,14 @@ public sealed partial class FileDetailsSurface : UserControl
     private bool _retainKnownFolderSizes;
     private long _pressGeneration;
     private bool _pressHasModifier;
+    private bool _pressRecursiveAltOpen;
     private ItemOpeningMode _pressOpeningMode;
     private bool _pressOnName;
     private uint? _pressPointerId;
+    private bool _keyboardFocusVisible;
     private int _dropTargetViewIndex = -1;
     private long _generation;
+    private long _bindingVersion;
     private CancellationTokenSource _folderSizeCts = new();
     private IReadOnlyList<string> _dragSourcePaths = [];
     private IReadOnlyList<IStorageItem> _dragStorageItems = [];
@@ -94,11 +97,19 @@ public sealed partial class FileDetailsSurface : UserControl
     private bool _restoreScrollOnLoad;
     private bool _resourcesReleased;
     private double _detachedScrollOffset;
+    private bool _preserveExactScrollOffset;
     private double? _pendingScrollRestore;
 
     public FileDetailsSurface()
     {
+        InitializeUserInteractionTracking();
         InitializeComponent();
+        Repeater.ItemTemplate = _itemFactory;
+        InitializeScrollbarTracking();
+        Unloaded += (_, _) => CancelRecursiveFrameObservation();
+        // Precision touchpad gestures can be consumed without a routed wheel
+        // event. Direct manipulation identifies input; ViewChanged does not.
+        Scroller.DirectManipulationStarted += (_, _) => NotifyUserInteraction();
         InitializeListScrolling();
 #if FILESMATE_UI_TEST
         if (Environment.GetEnvironmentVariable("FILESMATE_DRAG_PREVIEW_TEST") == "1")
@@ -113,6 +124,7 @@ public sealed partial class FileDetailsSurface : UserControl
         InitializeAlphabet();
         Scroller.SizeChanged += (_, _) =>
         {
+            ResetThumbnailViewport();
             UpdateListMetrics();
             UpdateAlphabetTailSpace();
             ApplyDetailsColumns(persist: false);
@@ -120,34 +132,49 @@ public sealed partial class FileDetailsSurface : UserControl
             SchedulePendingReveal();
         };
         Repeater.SizeChanged += Repeater_SizeChanged;
-        GotFocus += (_, _) => RefreshRealizedSelection();
-        LostFocus += (_, _) => RefreshRealizedSelection();
+        GotFocus += (_, _) =>
+        {
+            _keyboardFocusVisible = FocusState == FocusState.Keyboard;
+            RefreshRealizedSelection();
+        };
+        LostFocus += (_, _) =>
+        {
+            CancelNameClickRename();
+            _keyboardFocusVisible = false;
+            RefreshRealizedSelection();
+        };
         Loaded += (_, _) =>
         {
             if (_resourcesReleased) return;
             StartTypography();
             App.ExplorerPreferencesChanged -= OpeningPreferencesChanged;
             App.ExplorerPreferencesChanged += OpeningPreferencesChanged;
+            App.AppearanceChanged -= SurfaceAppearanceChanged;
+            App.AppearanceChanged += SurfaceAppearanceChanged;
             ApplyOpeningPreferences();
             if (_visualsDetached)
             {
                 _visualsDetached = false;
-                Repeater.ItemTemplate = (DataTemplate)Resources[_layout == FileLayoutKind.Grid ? "TileTemplate" : "RowTemplate"];
+                Repeater.ItemTemplate = _itemFactory;
                 Repeater.ItemsSource = _items;
             }
+            ScheduleVisibleRange();
             if (!_restoreScrollOnLoad) return;
             _restoreScrollOnLoad = false;
-            RestoreScrollOffset(_detachedScrollOffset);
+            RestoreScrollOffset(_detachedScrollOffset, _preserveExactScrollOffset);
         };
         Unloaded += (_, _) =>
         {
+            ResetThumbnailViewport();
             StopListWheel();
             CancelListNameMeasurement();
             CancelAutoNameMeasurement();
             StopTypography();
             App.ExplorerPreferencesChanged -= OpeningPreferencesChanged;
+            App.AppearanceChanged -= SurfaceAppearanceChanged;
             if (!_restoreScrollOnLoad && !_visualsDetached)
                 _detachedScrollOffset = _pendingScrollRestore ?? ActiveScrollOffset;
+                if (_pendingScrollRestore is null) _preserveExactScrollOffset = true;
             CancelScrollRestore();
             _restoreScrollOnLoad = true;
             CancelMarquee();
@@ -161,9 +188,21 @@ public sealed partial class FileDetailsSurface : UserControl
         _layoutReady = true;
     }
 
-    public Func<FileEntryCore, string>? ResolvePath { get; set; }
+    private Func<FileEntryCore, string>? _resolvePath;
+    private Func<string?>? _resolveFolder;
+    public Func<FileEntryCore, string>? ResolvePath
+    {
+        get => IsMemoryPresentation ? null : _items.Binding?.ResolvePath ?? _resolvePath;
+        set => _resolvePath = value;
+    }
 
-    public Func<string?>? ResolveFolder { get; set; }
+    public Func<string?>? ResolveFolder
+    {
+        get => IsMemoryPresentation ? null : _items.Binding?.ResolveFolder ?? _resolveFolder;
+        set => _resolveFolder = value;
+    }
+
+    internal EntryViewBinding? ViewBinding => _items.Binding;
 
     public Func<string?, bool>? IsPinnedPath { get; set; }
 
@@ -178,39 +217,57 @@ public sealed partial class FileDetailsSurface : UserControl
     internal void ReleaseInactiveVisuals()
     {
         if (IsLoaded || _resourcesReleased || _visualsDetached) return;
-        if (!_restoreScrollOnLoad) _detachedScrollOffset = ActiveScrollOffset;
+        if (!_restoreScrollOnLoad)
+        {
+            _detachedScrollOffset = ActiveScrollOffset;
+            _preserveExactScrollOffset = true;
+        }
         _restoreScrollOnLoad = true;
         _visualsDetached = true;
         RetireRepeater();
     }
 
-    private void Repeater_SizeChanged(object sender, SizeChangedEventArgs args) => SchedulePendingReveal();
+    private void Repeater_SizeChanged(object sender, SizeChangedEventArgs args)
+    {
+        ScheduleVisibleRange();
+        SchedulePendingReveal();
+    }
 
     private void RetireRepeater()
     {
-        // The old repeater also owns recycled visual children. Retire the host
-        // and its templates together; swapping ItemTemplate leaves those children.
+        // Break the old native child/layout graph before replacing its host.
+        // The explicit factory does not attach native origin-template pools.
+        ResetThumbnailViewport();
         var previous = Repeater;
         previous.ItemsSource = null;
+        _itemFactory.Retire();
         previous.ItemTemplate = new DataTemplate();
+        previous.Layout = null;
         previous.ElementPrepared -= Repeater_ElementPrepared;
         previous.ElementClearing -= Repeater_ElementClearing;
         previous.SizeChanged -= Repeater_SizeChanged;
         previous.RemoveHandler(PointerWheelChangedEvent, new PointerEventHandler(ListContent_PointerWheelChanged));
         Scroller.Content = null;
-        foreach (var row in _realized.ToArray()) row.Clear();
-        foreach (var tile in _tiles.ToArray()) tile.Clear();
+        foreach (var row in _realized.ToArray())
+        {
+            row.SelectionToggleRequested -= OnSelectionToggleRequested;
+            row.Clear();
+        }
+        foreach (var tile in _tiles.ToArray())
+        {
+            tile.SelectionToggleRequested -= OnSelectionToggleRequested;
+            tile.Clear();
+        }
         _realized.Clear();
         _tiles.Clear();
-        var templates = new FileItemTemplates();
-        Resources["RowTemplate"] = templates["RowTemplate"];
-        Resources["TileTemplate"] = templates["TileTemplate"];
+        FileItemElementFactory.ClearChildren(previous);
+        _itemFactory = new FileItemElementFactory(tiles: _layout == FileLayoutKind.Grid);
         Repeater = new ItemsRepeater
         {
-            HorizontalCacheLength = 0, VerticalCacheLength = 1,
+            HorizontalCacheLength = 0, VerticalCacheLength = .25,
             MinWidth = previous.MinWidth,
             Layout = CurrentItemLayout,
-            ItemTemplate = (DataTemplate)Resources[_layout == FileLayoutKind.Grid ? "TileTemplate" : "RowTemplate"],
+            ItemTemplate = _itemFactory,
         };
         Repeater.ElementPrepared += Repeater_ElementPrepared;
         Repeater.ElementClearing += Repeater_ElementClearing;
@@ -221,9 +278,10 @@ public sealed partial class FileDetailsSurface : UserControl
 
     public double ScrollOffset => _visualsDetached || _restoreScrollOnLoad ? _detachedScrollOffset : _pendingScrollRestore ?? ActiveScrollOffset;
     internal bool IsBoundTo(EntryStore? store, EntryViewIndex index) => ReferenceEquals(_items.Store, store) && ReferenceEquals(_items.Index, index);
-    public void RestoreScrollOffset(double offset)
+    public void RestoreScrollOffset(double offset, bool preserveExactOffset = false)
     {
         if (!double.IsFinite(offset)) return;
+        _preserveExactScrollOffset = preserveExactOffset;
         if (_visualsDetached || !IsLoaded)
         {
             _detachedScrollOffset = offset;
@@ -248,7 +306,12 @@ public sealed partial class FileDetailsSurface : UserControl
             ? Repeater.ActualWidth <= 0 || Scroller.ExtentWidth + 1 < Repeater.ActualWidth
             : Repeater.ActualHeight <= 0 || Scroller.ExtentHeight + 1 < Repeater.ActualHeight)) return;
         CancelScrollRestore();
-        ChangeScrollOffset(Math.Clamp(offset, 0, ActiveScrollableExtent));
+        // Navigation/session history records actual pixels, including a clamped
+        // last page. Ordinary list position requests still use whole columns.
+        var target = Math.Clamp(offset, 0, ActiveScrollableExtent);
+        if (_layout == FileLayoutKind.List && !_preserveExactScrollOffset) ChangeScrollOffset(target);
+        else if (_layout == FileLayoutKind.List) Scroller.ChangeView(target, 0, null, true);
+        else Scroller.ChangeView(null, target, null, true);
     }
 
     private void CancelScrollRestore()
@@ -269,10 +332,19 @@ public sealed partial class FileDetailsSurface : UserControl
     public event EventHandler? QuickPreviewRequested;
     public event EventHandler? RevealRequested;
     public Func<string?>? OtherPanePath { get; set; }
-    public void SelectSameType() => ChangeSelection(s => s.SelectSameType(_items.Store!, _items.Index!));
-    public void InvertSelection() => ChangeSelection(s => s.Invert(_items.Store!, _items.Index!));
+    public void SelectSameType()
+    {
+        NotifyUserInteraction();
+        ChangeSelection(s => s.SelectSameType(_items.Store!, _items.Index!));
+    }
+    public void InvertSelection()
+    {
+        NotifyUserInteraction();
+        ChangeSelection(s => s.Invert(_items.Store!, _items.Index!));
+    }
     public void RestoreSelectedNames(IReadOnlyList<string> names)
     {
+        if (_items.Binding?.Recursive is not null) return;
         if (_items.Store is null || _items.Index is null) return;
         var wanted = new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
         var views = Enumerable.Range(0, _items.Count).Where(i => _items.TryGetEntry(i, out var entry) && wanted.Contains(entry.Name)).ToArray();
@@ -314,9 +386,11 @@ public sealed partial class FileDetailsSurface : UserControl
         {
             // Ordinary files do not contain an extraction destination. Their
             // rows belong to the current folder, just like the pane background.
-            path = entry.Kind == EntryKind.Directory ? ResolvePath?.Invoke(entry) : ResolveFolder?.Invoke();
+            path = entry.Kind == EntryKind.Directory
+                && (!_recursiveMode || ValidateRecursiveEntry(entry.Id, report: false))
+                ? ResolvePath?.Invoke(entry) : _recursiveMode ? null : ResolveFolder?.Invoke();
         }
-        else path = ResolveFolder?.Invoke();
+        else path = _recursiveMode ? null : ResolveFolder?.Invoke();
         return !string.IsNullOrWhiteSpace(path) && Directory.Exists(path) ? path : null;
     }
 
@@ -336,10 +410,12 @@ public sealed partial class FileDetailsSurface : UserControl
         || _resizePointerId is not null || IsRenaming;
 
     public IReadOnlyList<string> SelectedPaths() => ResolveSelectionPaths();
+    public IReadOnlyList<string> SelectedOperationPaths() => ResolveSelectionPaths(normalizeRecursive: true);
 
     internal string[] SelectedNames()
     {
         if (_items.Store is null || _items.Index is null) return [];
+        if (_items.Binding?.Recursive is not null) return []; // Ordinary history cannot identify recursive rows by leaf name.
         var names = new List<string>(_selection.Count);
         foreach (var id in _selection.Ids)
         {
@@ -362,7 +438,7 @@ public sealed partial class FileDetailsSurface : UserControl
         // ponytail: one pass over the current view; upgrade if select-all on huge folders shows up in traces
         for (var i = 0; i < index.Count; i++)
         {
-            var entry = store[index[i]];
+            var entry = index.GetEntry(store, i);
             if (!_selection.Contains(entry.Id))
             {
                 continue;
@@ -371,6 +447,7 @@ public sealed partial class FileDetailsSurface : UserControl
             long size;
             if (entry.Kind == EntryKind.Directory)
             {
+                if (_items.Binding?.Recursive is not null) continue;
                 if (!App.ExplorerPreferences.ShowFolderSizes
                     || ResolvePath?.Invoke(entry) is not { Length: > 0 } path
                     || !FolderSizeCache.TryGet(path, out var folderBytes))
@@ -426,6 +503,12 @@ public sealed partial class FileDetailsSurface : UserControl
     {
         if (_resourcesReleased) return;
         _resourcesReleased = true;
+        SortGlyphMotion.Release(NameSortGlyph);
+        SortGlyphMotion.Release(ModifiedSortGlyph);
+        SortGlyphMotion.Release(TypeSortGlyph);
+        SortGlyphMotion.Release(SizeSortGlyph);
+        ResetThumbnailViewport();
+        ++_bindingVersion;
         StopListWheel();
         CancelListNameMeasurement();
         CancelAutoNameMeasurement();
@@ -435,6 +518,7 @@ public sealed partial class FileDetailsSurface : UserControl
         _autoNameMeasure = null;
         _columnMenu?.Hide();
         App.ExplorerPreferencesChanged -= OpeningPreferencesChanged;
+        App.AppearanceChanged -= SurfaceAppearanceChanged;
         CancelScrollRestore();
         CancelMarquee();
         CancelFolderHover();
@@ -454,6 +538,13 @@ public sealed partial class FileDetailsSurface : UserControl
         DropRequested = null;
         OpenRequested = null;
         OpenInNewTabRequested = null;
+        CancelRecursiveFrameObservation();
+        RecursiveToggleRequested = null;
+        RecursiveOpenRequested = null; RecursiveDepthRequested = null; RecursiveAltDepthRequested = null;
+        RecursiveExpansionRequested = null; RecursiveDesiredExpanded = null; RecursiveDesiredSubtreeExpanded = null;
+        CancelRecursiveScanRequested = null;
+        RecursiveLayoutRequested = null;
+        RecursiveOperationBlocked = null;
         UpRequested = BackRequested = ForwardRequested = null;
         CopyPathRequested = QuickPreviewRequested = RefreshRequested = RevealRequested = null;
         SelectionChanged = PresentationChanged = null;
@@ -476,66 +567,152 @@ public sealed partial class FileDetailsSurface : UserControl
         _tiles.Clear();
         _selection.Clear();
         _items.ClearView();
-        // Closing a tab retires its virtualized surface permanently. Clearing the
-        // data alone leaves the repeater's template/recycle pool attached until GC.
+        _prunedRecursiveProjection = null;
+        // Permanently retire the explicit factory and the old native layout.
         Repeater.ItemsSource = null;
-        // ItemsRepeater rejects a null template once a template has been assigned.
+        _itemFactory.Retire();
         Repeater.ItemTemplate = new DataTemplate();
-        // WinUI attaches the recycle pool to the DataTemplate. Replacing the
-        // repeater's template alone leaves that pool owned by Resources.
-        Resources.Remove("RowTemplate");
-        Resources.Remove("TileTemplate");
+        Repeater.Layout = null;
+        FileItemElementFactory.ClearChildren(Repeater);
         RefreshAlphabet();
         Scroller.Content = null;
         Content = null;
     }
 
-    public void RefreshRealizedTags()
+    public void RefreshRealizedTags() => RefreshRealizedTagsCore(null);
+
+    public void RefreshRealizedTags(int entryId) => RefreshRealizedTagsCore(entryId);
+
+    private void RefreshRealizedTagsCore(int? entryId)
     {
+        var revision = _items.Revision;
+        var bindingVersion = _bindingVersion;
         foreach (var row in _realized.ToArray())
         {
-            if (row.EntryId >= 0)
+            if (_resourcesReleased || revision != _items.Revision || bindingVersion != _bindingVersion) return;
+            if ((entryId is null || row.EntryId == entryId) && Repeater.GetElementIndex(row) == row.ViewIndex
+                && TryGetCurrentTagEntry(row.ViewIndex, row.EntryId, row.EntryPath, out var entry))
             {
-                row.SetTags(ResolveTags?.Invoke(row.Entry));
+                var tags = ResolveTags?.Invoke(entry);
+                if (revision != _items.Revision || bindingVersion != _bindingVersion) return;
+                row.SetTags(tags);
             }
         }
-
         foreach (var tile in _tiles.ToArray())
         {
-            if (tile.EntryId >= 0)
+            if (_resourcesReleased || revision != _items.Revision || bindingVersion != _bindingVersion) return;
+            if ((entryId is null || tile.EntryId == entryId) && Repeater.GetElementIndex(tile) == tile.ViewIndex
+                && TryGetCurrentTagEntry(tile.ViewIndex, tile.EntryId, tile.EntryPath, out var entry))
             {
-                tile.SetTags(ResolveTags?.Invoke(tile.Entry));
+                var tags = ResolveTags?.Invoke(entry);
+                if (revision != _items.Revision || bindingVersion != _bindingVersion) return;
+                tile.SetTags(tags);
             }
         }
     }
 
-    public void RefreshRealizedTags(int entryId)
+    private bool TryGetCurrentTagEntry(int view, int entryId, string? path, out FileEntryCore entry)
     {
+        entry = default;
+        if (entryId < 0 || !_items.TryGetEntry(view, out entry) || entry.Id != entryId) return false;
+        return string.Equals(ResolvePath?.Invoke(entry), path, StringComparison.OrdinalIgnoreCase);
+    }
+
+    internal void RefreshRealizedTags(string path, IReadOnlyList<TagDefinition> tags)
+    {
+        var current = _items.Binding;
+        if (_resourcesReleased || current is null) return;
+        var revision = _items.Revision;
+        var bindingVersion = _bindingVersion;
         foreach (var row in _realized.ToArray())
         {
-            if (row.EntryId == entryId)
-            {
-                row.SetTags(ResolveTags?.Invoke(row.Entry));
-            }
+            if (revision != _items.Revision || bindingVersion != _bindingVersion) return;
+            if (Repeater.GetElementIndex(row) == row.ViewIndex
+                && string.Equals(row.EntryPath, path, StringComparison.OrdinalIgnoreCase)
+                && current.MatchesEntry(row.ViewIndex, row.EntryId, path)) row.SetTags(tags);
         }
-
         foreach (var tile in _tiles.ToArray())
         {
-            if (tile.EntryId == entryId)
-            {
-                tile.SetTags(ResolveTags?.Invoke(tile.Entry));
-            }
+            if (revision != _items.Revision || bindingVersion != _bindingVersion) return;
+            if (Repeater.GetElementIndex(tile) == tile.ViewIndex
+                && string.Equals(tile.EntryPath, path, StringComparison.OrdinalIgnoreCase)
+                && current.MatchesEntry(tile.ViewIndex, tile.EntryId, path)) tile.SetTags(tags);
         }
     }
 
-    public void Bind(EntryStore? store, EntryViewIndex? index, long generation, bool append = false)
+    public void Bind(EntryStore? store, EntryViewIndex? index, long generation, bool append = false,
+        EntryViewBinding? binding = null)
     {
-        var navigated = generation != _generation;
-        var sameView = !navigated && store is not null && ReferenceEquals(store, _items.Store)
-            && index is not null && _items.Index is not null && _items.Index.SequenceEqual(index);
+        if (_resourcesReleased || generation < _generation) return;
+        if (binding is not null && (!ReferenceEquals(binding.Store, store)
+            || !ReferenceEquals(binding.Index, index) || binding.Generation != generation)) return;
+        if (store is not null && index is not null && (index.Generation != generation || !index.CanPublish(store)
+            || (ReferenceEquals(store, _items.Store) && generation == _generation
+                && _items.Index is not null && index.DataVersion < _items.Index.DataVersion))) return;
+        CancelRecursiveFrameObservation();
+        var uiStarted = System.Diagnostics.Stopwatch.GetTimestamp();
+        var resetCount = _items.ResetNotificationCount;
+        if (binding?.Recursive is { } measuredTree)
+            PerformanceTrace.Record(PerformanceStage.RecursiveUiApplyStarted, generation: generation,
+                operation: binding.DiagnosticOperation, count: measuredTree.Snapshot.Count, auxiliary: index?.Count ?? 0);
+        else if (binding is not null)
+            PerformanceTrace.Record(PerformanceStage.OrdinaryUiApplyStarted, generation: generation,
+                operation: binding.DiagnosticOperation, count: index?.Count ?? 0);
+        var bindingVersion = ++_bindingVersion;
+        bool OwnsBinding() => !_resourcesReleased && bindingVersion == _bindingVersion;
+        var recoveryRebase = binding?.RecursiveRebase is { } rebase
+            && _items.Binding?.Recursive is { } priorCapture && binding.Recursive is { } nextCapture
+            && rebase.Matches(priorCapture.Snapshot, nextCapture.Snapshot) ? rebase : null;
+        var navigated = generation != _generation && recoveryRebase is null;
+        var prefixComparison = !navigated && store is not null && index is not null
+            ? _items.CompareSourcePrefix(store, index, generation, binding?.SourcePrefixProof) : default;
+        var sameSourcePrefix = prefixComparison.SamePrefix;
+        var sameView = sameSourcePrefix && _items.Index!.Count == index!.Count;
+        var recursiveRangeChange = !navigated && ReferenceEquals(store, _items.Store)
+            && _items.Binding?.Recursive is { IsFiltering: false } previousTree
+            && binding?.Recursive is { IsFiltering: false } currentTree && previousTree.SessionId == currentTree.SessionId
+            && binding.SourcePrefixProof is { } rangeProof && (rangeProof.HasSingleRangeChange || rangeProof.HasRangeReplacement)
+            && rangeProof.Matches(index!, _items.Index);
+        double? recursiveAnchorOffset = null;
+        if (recoveryRebase is not null)
+        {
+            var offset = ScrollOffset;
+            recursiveAnchorOffset = offset;
+            var first = (int)Math.Floor(offset / RowHeight);
+            if (_layout == FileLayoutKind.Details && _items.TryGetEntry(first, out var anchor))
+            {
+                var mapped = recoveryRebase.Map(anchor.Id);
+                var next = mapped > 0 ? index!.IndexOfId(store!, mapped) : -1;
+                if (next >= 0) recursiveAnchorOffset = next * RowHeight + offset % RowHeight;
+            }
+            _selection.Rebase(recoveryRebase.Map);
+            if (IsRenaming) CancelInlineRename();
+        }
+        if (recursiveRangeChange && _layout == FileLayoutKind.Details)
+        {
+            var range = binding!.SourcePrefixProof!;
+            var offset = ScrollOffset;
+            var first = (int)Math.Floor(offset / RowHeight);
+            if (range.RangeStart <= first)
+            {
+                var removedAnchor = first < range.RangeStart + range.RemovedCount;
+                var retainedAnchor = removedAnchor && range.HasRangeReplacement && _items.TryGetEntry(first, out var anchorEntry)
+                    ? index!.IndexOfId(store!, anchorEntry.Id) : -1;
+                var next = removedAnchor ? retainedAnchor >= 0 ? retainedAnchor : Math.Max(0, range.RangeStart - 1)
+                    : first + range.AddedCount - range.RemovedCount;
+                recursiveAnchorOffset = next * RowHeight + (removedAnchor && retainedAnchor < 0 ? 0 : offset % RowHeight);
+            }
+        }
+        if (navigated || !sameSourcePrefix) CancelNameClickRename();
         _retainKnownFolderSizes = !navigated && store is not null && ReferenceEquals(store, _items.Store);
-        if (!sameView)
-            CancelMarquee();
+        if (!sameView) CancelMarquee();
+        if (!OwnsBinding()) return;
+        if (!sameSourcePrefix && !recursiveRangeChange)
+        {
+            if (binding?.Recursive is not null) PerformanceTrace.Record(PerformanceStage.RecursiveThumbnailInvalidated,
+                generation: generation, operation: binding.DiagnosticOperation, count: _realized.Count);
+            ResetThumbnailViewport(invalidateEntries: true);
+        }
         _generation = generation;
         if (navigated)
         {
@@ -545,10 +722,12 @@ public sealed partial class FileDetailsSurface : UserControl
             CancelScrollRestore();
             _detachedScrollOffset = 0;
             if (IsRenaming) CancelInlineRename();
+            if (!OwnsBinding()) return;
             _nameJump.Reset();
             CancelPendingReveal();
             ResetFolderSizeWalks();
         }
+        if (!OwnsBinding()) return;
         var selectionChanged = false;
         if (store is null || index is null)
         {
@@ -556,27 +735,28 @@ public sealed partial class FileDetailsSurface : UserControl
             if (hadPublishedView)
             {
                 _items.ClearView();
+                if (!OwnsBinding()) return;
+                // Do not depend on deferred ElementClearing to revoke async row
+                // metadata/icon owners before dropping the realized-element sets.
+                ClearRealizedEntries();
+                if (!OwnsBinding()) return;
                 CancelListNameMeasurement();
                 CancelAutoNameMeasurement();
                 UpdateListMetrics();
-        RefreshAlphabet();
+                if (!OwnsBinding()) return;
+                RefreshAlphabet();
             }
-
+            if (!OwnsBinding()) return;
             if (navigated || hadPublishedView)
             {
                 _selection.Clear();
                 ClearDropTarget();
-                _realized.Clear();
-                _tiles.Clear();
+                if (!OwnsBinding()) return;
                 ChangeScrollOffset(0);
                 selectionChanged = true;
             }
-
-            if (selectionChanged)
-            {
-                SelectionChanged?.Invoke(this, EventArgs.Empty);
-            }
-
+            if (OwnsBinding() && selectionChanged) SelectionChanged?.Invoke(this, EventArgs.Empty);
+            SchedulePresentationAudit();
             return;
         }
 
@@ -585,36 +765,97 @@ public sealed partial class FileDetailsSurface : UserControl
             ResetPendingZoom();
             _selection.Clear();
             ClearDropTarget();
+            if (!OwnsBinding()) return;
             ChangeScrollOffset(0);
+            if (!OwnsBinding()) return;
             selectionChanged = true;
         }
 
-        if (!_items.TryPublish(store, index, generation, append))
+        if (binding?.Recursive is not null && !sameView && !recursiveRangeChange)
         {
-            if (selectionChanged)
-            {
-                SelectionChanged?.Invoke(this, EventArgs.Empty);
-            }
-
+            // Collection reset can keep focused/pinned native children attached.
+            // Revoke removed identities before publishing the smaller mapping.
+            RetireStaleRecursivePresenters(store, index, bindingVersion);
+            if (!OwnsBinding()) return;
+        }
+        if (!_items.TryPublishCompared(store, index, generation, append, binding, prefixComparison))
+        {
+            if (OwnsBinding() && selectionChanged) SelectionChanged?.Invoke(this, EventArgs.Empty);
             return;
         }
-
-        selectionChanged |= _selection.RemoveMissing(store);
+        // CollectionChanged is synchronous and WinUI may reenter navigation.
+        // The outer frame must not apply A's selection/layout after B took over.
+        if (!OwnsBinding() || !ReferenceEquals(_items.Index, index)
+            || !ReferenceEquals(_items.Binding, binding)) return;
+        EnsureRecursiveNameWidth(binding?.Recursive);
+        if (!OwnsBinding()) return;
+        selectionChanged |= binding?.Recursive is { } recursiveSelection
+            ? _selection.RemoveWhere(id => !recursiveSelection.IsSelectable(id)) : _selection.RemoveOutsideView(index);
         if (IsRenaming && _selection.PrimaryId is null) CancelInlineRename();
-        // Metadata/size completion often changes no positions. Rebind the same
-        // presenters without detaching a rename TextBox or disturbing scroll/focus.
+        if (!OwnsBinding()) return;
         if (sameView) RebindVisibleEntries();
+        else if (binding?.Recursive is not null) RefreshRealizedRecursivePresentation(bindingVersion);
+        // A splice changes the viewport too. Native range notifications can
+        // retain presenters without scheduling a fresh layout; request one for
+        // every changed recursive mapping, independently of pointer movement.
+        if (binding?.Recursive is not null && !sameView) Repeater.InvalidateMeasure();
+        if (!OwnsBinding()) return;
         UpdateListMetrics();
+        if (!OwnsBinding()) return;
         ScheduleListNameMeasurement();
         ScheduleAutoNameMeasurement();
-        // Existing selected files may have changed size/name in a watcher update.
         selectionChanged |= _selection.Count > 0;
         RefreshAlphabet();
+        if (!OwnsBinding()) return;
         RefreshRealizedSelection();
+        if (!OwnsBinding()) return;
         UpdateVisibleRange();
-        if (selectionChanged)
+        if (!OwnsBinding()) return;
+        if (recursiveAnchorOffset is double anchorOffset) RestoreScrollOffset(anchorOffset, preserveExactOffset: true);
+        if (!OwnsBinding()) return;
+        if (FilesMate.Core.Diagnostics.PerformanceTrace.Enabled)
+            FilesMate.Core.Diagnostics.PerformanceTrace.Record(FilesMate.Core.Diagnostics.PerformanceStage.ContentApplied,
+                generation: generation, count: index.Count);
+        if (binding?.Recursive is not null && OwnsBinding())
         {
-            SelectionChanged?.Invoke(this, EventArgs.Empty);
+            PerformanceTrace.Record(PerformanceStage.RecursiveUiApplyCompleted, generation: generation,
+                operation: binding.DiagnosticOperation, count: index.Count,
+                durationTicks: System.Diagnostics.Stopwatch.GetTimestamp() - uiStarted,
+                auxiliary: _items.ResetNotificationCount - resetCount);
+            ObserveRecursiveFrame(binding, bindingVersion);
+        }
+        else if (binding is not null && OwnsBinding())
+        {
+            PerformanceTrace.Record(PerformanceStage.OrdinaryUiApplyCompleted, generation: generation,
+                operation: binding.DiagnosticOperation, count: index.Count,
+                durationTicks: System.Diagnostics.Stopwatch.GetTimestamp() - uiStarted,
+                auxiliary: _items.ResetNotificationCount - resetCount);
+            ObserveOrdinaryFrame(binding, bindingVersion);
+        }
+        if (selectionChanged) SelectionChanged?.Invoke(this, EventArgs.Empty);
+        SchedulePresentationAudit();
+    }
+
+    private void ClearRealizedEntries()
+    {
+        // Retire each presenter before clearing it. If clearing reenters a newer
+        // binding, leave the remaining presenters tracked by that newer owner.
+        var rows = _realized.ToArray();
+        var tiles = _tiles.ToArray();
+        var bindingVersion = _bindingVersion;
+        foreach (var row in rows)
+        {
+            if (bindingVersion != _bindingVersion) return;
+            _realized.Remove(row);
+            row.SelectionToggleRequested -= OnSelectionToggleRequested;
+            row.Clear();
+        }
+        foreach (var tile in tiles)
+        {
+            if (bindingVersion != _bindingVersion) return;
+            _tiles.Remove(tile);
+            tile.SelectionToggleRequested -= OnSelectionToggleRequested;
+            tile.Clear();
         }
     }
 
@@ -627,6 +868,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     public void SetSort(EntrySort sort)
     {
+        if (_headerSort != sort) ResetAlphabetClickCycle();
         _headerSort = sort;
         UpdateExtraSortGlyphs();
         ApplySortGlyph(NameSortGlyph, sort, EntrySortColumn.Name);
@@ -640,6 +882,11 @@ public sealed partial class FileDetailsSurface : UserControl
 
     public void SetLayout(FileLayoutKind kind)
     {
+        if (_recursiveMode && kind != FileLayoutKind.Details)
+        {
+            RecursiveLayoutRequested?.Invoke(this, kind);
+            return;
+        }
         if (_layoutReady && _layout == kind)
         {
             return;
@@ -650,6 +897,7 @@ public sealed partial class FileDetailsSurface : UserControl
         StopListWheel();
         CancelListNameMeasurement();
         CancelAutoNameMeasurement();
+        ResetThumbnailViewport(invalidateEntries: true);
         _layout = kind;
         var grid = kind == FileLayoutKind.Grid;
         HeaderRow.Height = kind == FileLayoutKind.Details ? new GridLength(RowHeight) : new GridLength(0);
@@ -687,7 +935,7 @@ public sealed partial class FileDetailsSurface : UserControl
             else
             {
                 Repeater.Layout = CurrentItemLayout;
-                Repeater.ItemTemplate = (DataTemplate)Resources[grid ? "TileTemplate" : "RowTemplate"];
+                Repeater.ItemTemplate = _itemFactory;
             }
             Repeater.ItemsSource = _visualsDetached ? null : _items;
         }
@@ -723,24 +971,48 @@ public sealed partial class FileDetailsSurface : UserControl
 
     public void RebindVisibleEntries()
     {
+        ObserveThumbnailViewport();
+        var revision = _items.Revision;
+        var bindingVersion = _bindingVersion;
+        var resolvePath = ResolvePath;
         foreach (var row in _realized.ToArray())
         {
-            if (row.ViewIndex >= 0 && _items.TryGetEntry(row.ViewIndex, out var entry))
+            if (_resourcesReleased || (revision != _items.Revision || bindingVersion != _bindingVersion)) return;
+            var view = row.ViewIndex;
+            if (view >= 0 && _items.TryGetEntry(view, out var entry))
             {
+                var path = resolvePath?.Invoke(entry);
+                var tags = ResolveTags?.Invoke(entry);
+                if ((revision != _items.Revision || bindingVersion != _bindingVersion)) return;
                 ApplyRowColumns(row);
-                row.Bind(row.ViewIndex, entry, _selection.Contains(entry.Id), ResolvePath?.Invoke(entry), _folderSizeCts.Token, _retainKnownFolderSizes);
-                row.SetDropTarget(row.ViewIndex == _dropTargetViewIndex);
-                row.SetTags(ResolveTags?.Invoke(entry));
+                if ((revision != _items.Revision || bindingVersion != _bindingVersion) || Repeater.GetElementIndex(row) != view) return;
+                ConfigureRecursiveRow(row, entry);
+                row.BindViewport(_thumbnailRetentionOwner, _thumbnailContentEpoch, ThumbnailModeFor(view), view, entry, _selection.Contains(entry.Id), path, _folderSizeCts.Token, _retainKnownFolderSizes);
+                if ((revision != _items.Revision || bindingVersion != _bindingVersion)) return;
+                row.SetDropTarget(view == _dropTargetViewIndex);
+                row.SetTags(tags);
+                if (revision != _items.Revision || bindingVersion != _bindingVersion
+                    || Repeater.GetElementIndex(row) != view) return;
+                row.PresentBoundEntry();
             }
         }
 
         foreach (var tile in _tiles.ToArray())
         {
-            if (tile.ViewIndex >= 0 && _items.TryGetEntry(tile.ViewIndex, out var entry))
+            if (_resourcesReleased || (revision != _items.Revision || bindingVersion != _bindingVersion)) return;
+            var view = tile.ViewIndex;
+            if (view >= 0 && _items.TryGetEntry(view, out var entry))
             {
-                tile.Bind(tile.ViewIndex, entry, _selection.Contains(entry.Id), ResolvePath?.Invoke(entry), _folderSizeCts.Token, _retainKnownFolderSizes);
-                tile.SetDropTarget(tile.ViewIndex == _dropTargetViewIndex);
-                tile.SetTags(ResolveTags?.Invoke(entry));
+                var path = resolvePath?.Invoke(entry);
+                var tags = ResolveTags?.Invoke(entry);
+                if ((revision != _items.Revision || bindingVersion != _bindingVersion) || Repeater.GetElementIndex(tile) != view) return;
+                tile.BindViewport(_thumbnailRetentionOwner, _thumbnailContentEpoch, ThumbnailModeFor(view), view, entry, _selection.Contains(entry.Id), path, _folderSizeCts.Token, _retainKnownFolderSizes);
+                if ((revision != _items.Revision || bindingVersion != _bindingVersion)) return;
+                tile.SetDropTarget(view == _dropTargetViewIndex);
+                tile.SetTags(tags);
+                if (revision != _items.Revision || bindingVersion != _bindingVersion
+                    || Repeater.GetElementIndex(tile) != view) return;
+                tile.PresentBoundEntry();
             }
         }
     }
@@ -748,6 +1020,7 @@ public sealed partial class FileDetailsSurface : UserControl
     public void SetGridSize(GridSizePreset preset)
     {
         var changed = _gridPreset != preset;
+        if (changed) ResetThumbnailViewport();
         _gridPreset = preset;
         ApplyGridMetrics();
         ScheduleTileMetricsRefresh();
@@ -763,11 +1036,7 @@ public sealed partial class FileDetailsSurface : UserControl
         if (sort.Column != column)
         {
             glyph.Visibility = Visibility.Collapsed;
-            if (glyph.RenderTransform is RotateTransform idle)
-            {
-                idle.Angle = 0;
-            }
-
+            SortGlyphMotion.Apply(glyph, active: false, ascending: true);
             return;
         }
 
@@ -776,31 +1045,8 @@ public sealed partial class FileDetailsSurface : UserControl
         RotateSortGlyph(glyph, sort.Ascending);
     }
 
-    private static void RotateSortGlyph(FontIcon glyph, bool ascending)
-    {
-        var transform = glyph.RenderTransform as RotateTransform ?? new RotateTransform();
-        glyph.RenderTransform = transform;
-        var to = ascending ? 0d : 180d;
-        var duration = App.Motion.Resolve(MotionDurations.Fast);
-        if (duration <= TimeSpan.Zero)
-        {
-            transform.Angle = to;
-            return;
-        }
-
-        var animation = new DoubleAnimation
-        {
-            To = to,
-            Duration = duration,
-            EnableDependentAnimation = true,
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
-        };
-        Storyboard.SetTarget(animation, transform);
-        Storyboard.SetTargetProperty(animation, nameof(RotateTransform.Angle));
-        var board = new Storyboard();
-        board.Children.Add(animation);
-        board.Begin();
-    }
+    private static void RotateSortGlyph(FontIcon glyph, bool ascending) =>
+        SortGlyphMotion.Apply(glyph, active: true, ascending: ascending);
 
     public void ScrollPrimaryIntoView()
     {
@@ -872,16 +1118,19 @@ public sealed partial class FileDetailsSurface : UserControl
             || Scroller.ChangeView(null, desired, null, disableAnimation: true))
         {
             var selected = _revealEntryId;
+            var renameSequence = _renameSequence;
             CancelPendingReveal();
             _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
             {
-                if (IsLoaded && _selection.PrimaryId == selected) FocusPrimary();
+                if (IsLoaded && !IsRenaming && renameSequence == _renameSequence
+                    && _selection.PrimaryId == selected) FocusPrimary();
             });
         }
     }
 
     public bool TrySelectByName(string fileName)
     {
+        if (_items.Binding?.Recursive is not null) return false;
         if (_items.Store is null || _items.Index is null || string.IsNullOrWhiteSpace(fileName))
         {
             return false;
@@ -908,7 +1157,8 @@ public sealed partial class FileDetailsSurface : UserControl
         }
 
         var full = path.Trim().Trim('"');
-        if (_items.TryFindEntry(entry => string.Equals(ResolvePath?.Invoke(entry), full, StringComparison.OrdinalIgnoreCase), out var entry))
+        if (_items.TryFindEntry(entry => string.Equals(ResolvePath?.Invoke(entry), full,
+            _items.Binding?.Recursive is null ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal), out var entry))
         {
             _selection.SelectOnly(entry.Id);
             RefreshRealizedSelection();
@@ -953,69 +1203,110 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void Repeater_ElementPrepared(ItemsRepeater sender, ItemsRepeaterElementPreparedEventArgs args)
     {
+        if (_resourcesReleased || !ReferenceEquals(sender, Repeater)
+            || sender.GetElementIndex(args.Element) != args.Index) return;
+        var stamp = _preparations.GetValue(args.Element, static _ => new());
+        var preparedVersion = ++stamp.Version;
+        // Preparing includes overscan and can precede ViewChanged. Sample the
+        // actual offset before assigning any new identity to a recycled image.
+        ObserveThumbnailViewport();
         _prepareWatch.Restart();
+        var revision = _items.Revision;
+        var bindingVersion = _bindingVersion;
+        var resolvePath = ResolvePath;
         if (!_items.TryGetEntry(args.Index, out var entry))
         {
-            if (args.Element is FileRow emptyRow)
-            {
-                emptyRow.Clear();
-            }
-            else if (args.Element is FileTile emptyTile)
-            {
-                emptyTile.Clear();
-            }
-
+            if (args.Element is FileRow emptyRow) emptyRow.Clear();
+            else if (args.Element is FileTile emptyTile) emptyTile.Clear();
             return;
         }
-
-        var path = ResolvePath?.Invoke(entry);
+        var path = resolvePath?.Invoke(entry);
+        var tags = ResolveTags?.Invoke(entry);
+        bool StillPrepared() => !_resourcesReleased && revision == _items.Revision
+            && bindingVersion == _bindingVersion && ReferenceEquals(sender, Repeater)
+            && stamp.Version == preparedVersion;
+        if (!StillPrepared()) return;
         if (args.Element is FileRow row)
         {
+            row.MemoryOpeningMode = _memoryOpeningMode;
             ApplyRowColumns(row, args.Index);
-            row.Bind(args.Index, entry, _selection.Contains(entry.Id), path, _folderSizeCts.Token, _retainKnownFolderSizes);
+            if (!StillPrepared()) return;
+            ConfigureRecursiveRow(row, entry);
+            row.BindViewport(_thumbnailRetentionOwner, _thumbnailContentEpoch, ThumbnailModeFor(args.Index), args.Index, entry, _selection.Contains(entry.Id), path, _folderSizeCts.Token, _retainKnownFolderSizes);
+            if (!StillPrepared()) return;
+            row.SetNameHighlightQuery(_nameHighlightQuery);
             row.ApplyTypography(RowTypography, XamlRoot?.RasterizationScale ?? 1);
-            row.SetTags(ResolveTags?.Invoke(entry));
+            row.SetTags(tags);
             row.SetDropTarget(args.Index == _dropTargetViewIndex);
+            if (!StillPrepared()) return;
+            row.PresentBoundEntry();
             _realized.Add(row);
             row.SelectionToggleRequested -= OnSelectionToggleRequested;
             row.SelectionToggleRequested += OnSelectionToggleRequested;
         }
         else if (args.Element is FileTile tile)
         {
-            tile.ApplyMetrics(EffectiveGridPreset, GridItemWidth());
-            tile.Bind(args.Index, entry, _selection.Contains(entry.Id), path, _folderSizeCts.Token, _retainKnownFolderSizes);
-            tile.SetTags(ResolveTags?.Invoke(entry));
+            tile.MemoryOpeningMode = _memoryOpeningMode;
+            tile.ApplyMetrics(EffectiveGridPreset, GridItemWidth(), rebindImages: false);
+            if (!StillPrepared()) return;
+            tile.BindViewport(_thumbnailRetentionOwner, _thumbnailContentEpoch, ThumbnailModeFor(args.Index), args.Index, entry, _selection.Contains(entry.Id), path, _folderSizeCts.Token, _retainKnownFolderSizes);
+            if (!StillPrepared()) return;
+            tile.SetNameHighlightQuery(_nameHighlightQuery);
+            tile.SetTags(tags);
             tile.SetDropTarget(args.Index == _dropTargetViewIndex);
+            if (!StillPrepared()) return;
+            tile.PresentBoundEntry();
             _tiles.Add(tile);
             tile.SelectionToggleRequested -= OnSelectionToggleRequested;
             tile.SelectionToggleRequested += OnSelectionToggleRequested;
         }
-
+        if (_items.Binding?.Recursive is not null) PerformanceTrace.Record(PerformanceStage.RecursiveRowPrepared,
+            generation: _generation, operation: _items.Binding.DiagnosticOperation, count: args.Index);
+        else if (_items.Binding is { } ordinary && args.Element is FrameworkElement preparedElement)
+            RecordOrdinaryRowPrepared(preparedElement, ordinary, args.Index);
         _prepareWatch.Stop();
         LastPrepareDuration = _prepareWatch.Elapsed;
+        RecordScrollRowPrepared(args.Index, _prepareWatch.ElapsedTicks);
+        StartThumbnailPrefetch();
+        SchedulePresentationAudit();
     }
 
     private void Repeater_ElementClearing(ItemsRepeater sender, ItemsRepeaterElementClearingEventArgs args)
     {
+        // Reentrant clearing/preparation revokes the outer bind immediately.
+        // A managed stamp avoids repeatedly querying the same native element
+        // index after every presentation update in the hot scroll path.
+        if (_preparations.TryGetValue(args.Element, out var stamp)) ++stamp.Version;
+        if (_items.Binding?.Recursive is not null) PerformanceTrace.Record(PerformanceStage.RecursiveRowCleared,
+            generation: _generation, operation: _items.Binding.DiagnosticOperation);
         if (ReferenceEquals(args.Element, _renameRow)) CancelInlineRename();
+        if (args.Element is FileRow renameRow && _nameRenameClicks.TracksEntry(renameRow.EntryId)
+            || args.Element is FileTile renameTile && _nameRenameClicks.TracksEntry(renameTile.EntryId))
+            CancelNameClickRename();
         if (args.Element is FileRow row)
         {
             row.SelectionToggleRequested -= OnSelectionToggleRequested;
-            row.ResetVisual();
-            row.Clear();
+            row.UpdateThumbnailDemand(ThumbnailLoadMode.Suspended, _thumbnailRetentionOwner,
+                row.ThumbnailContentEpoch == _thumbnailContentEpoch && RetainClearingThumbnail(row.ViewIndex));
+            if (_resourcesReleased) row.Clear();
+            else row.ClearForRecycle();
             _realized.Remove(row);
         }
         else if (args.Element is FileTile tile)
         {
             tile.SelectionToggleRequested -= OnSelectionToggleRequested;
-            tile.ResetVisual();
-            tile.Clear();
+            tile.UpdateThumbnailDemand(ThumbnailLoadMode.Suspended, _thumbnailRetentionOwner,
+                tile.ThumbnailContentEpoch == _thumbnailContentEpoch && RetainClearingThumbnail(tile.ViewIndex));
+            if (_resourcesReleased) tile.Clear();
+            else tile.ClearForRecycle();
             _tiles.Remove(tile);
         }
     }
 
     private void Scroller_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
     {
+        var scrollStarted = PerformanceTrace.Enabled ? System.Diagnostics.Stopwatch.GetTimestamp() : 0;
+        ObserveThumbnailViewport();
         if (_layout == FileLayoutKind.List)
         {
             _listWheel.ObserveOffset(Scroller.HorizontalOffset);
@@ -1023,9 +1314,11 @@ public sealed partial class FileDetailsSurface : UserControl
         }
         UpdateMarquee();
         UpdateAlphabetTailSpace();
-        if (_layout == FileLayoutKind.Details)
+        if (_layout == FileLayoutKind.Details && Math.Abs(HeaderScroller.HorizontalOffset - Scroller.HorizontalOffset) > .01)
         {
             _ = HeaderScroller.ChangeView(Scroller.HorizontalOffset, null, null, disableAnimation: true);
+            PerformanceTrace.Record(PerformanceStage.ScrollHeaderSynchronized, generation: _generation,
+                operation: _scrollbarDragging ? _scrollbarOperation : 0, count: (long)Math.Round(Scroller.HorizontalOffset * 1000));
         }
 
         UpdateAlphabetPosition(AlphabetLetters.Visibility == Visibility.Visible);
@@ -1033,6 +1326,10 @@ public sealed partial class FileDetailsSurface : UserControl
         var viewport = _layout == FileLayoutKind.List ? Scroller.ViewportWidth : Scroller.ViewportHeight;
         if (ActiveScrollOffset > 0 && ActiveScrollableExtent - ActiveScrollOffset < Math.Max(180, viewport * .5))
             NearEndReached?.Invoke(this, EventArgs.Empty);
+        if (PerformanceTrace.Enabled) PerformanceTrace.Record(PerformanceStage.ScrollViewportApplied, generation: _generation,
+            operation: _scrollbarDragging ? _scrollbarOperation : 0, count: (long)Math.Round(ActiveScrollOffset * 1000),
+            durationTicks: scrollStarted == 0 ? 0 : System.Diagnostics.Stopwatch.GetTimestamp() - scrollStarted,
+            auxiliary: _items.ResetNotificationCount);
     }
 
     private void ScheduleVisibleRange()
@@ -1060,6 +1357,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void UpdateVisibleRange()
     {
+        ObserveThumbnailViewport();
         if (_layout == FileLayoutKind.List)
         {
             VisibleRange = ListGeometry.VisibleRange(Scroller.HorizontalOffset, Scroller.ViewportWidth);
@@ -1076,10 +1374,13 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void RefreshRealizedSelection()
     {
+        PruneRecursiveSelection();
+        ValidateNameClickRenameSelection();
         var primary = _items.Store is null || _items.Index is null
             ? -1
-            : _selection.ViewIndexOfPrimary(_items.Store, _items.Index);
-        var focused = FocusState != FocusState.Unfocused;
+            : _items.Binding?.Recursive is { } recursiveSelection && _selection.PrimaryId is int primaryId
+                ? recursiveSelection.ViewIndexOfId(primaryId) : _selection.ViewIndexOfPrimary(_items.Store, _items.Index);
+        var focused = FocusState != FocusState.Unfocused && _keyboardFocusVisible;
         foreach (var row in _realized.ToArray())
         {
             if (row.EntryId >= 0)
@@ -1101,8 +1402,37 @@ public sealed partial class FileDetailsSurface : UserControl
         }
     }
 
+    private void SurfaceAppearanceChanged(object? sender, AppearanceSettings settings)
+    {
+        if (!_resourcesReleased) RefreshRealizedSelection();
+    }
+
     private void OnPointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        // The native scrollbar owns its pointer gesture. Capturing that pointer
+        // here turns a thumb drag into a list selection and prevents scrolling.
+        for (var source = e.OriginalSource as DependencyObject; source is not null;
+             source = VisualTreeHelper.GetParent(source))
+        {
+            if (source is not ScrollBar) continue;
+            RecordNameOpening("NativeScrollBarPressIgnored", e);
+            return;
+        }
+        if (PerformanceTrace.Enabled)
+        {
+            var diagnosticPoint = e.GetCurrentPoint(Scroller);
+            PerformanceTrace.Record(PerformanceStage.FilePointerPressed, generation: _generation,
+                operation: (long)diagnosticPoint.Properties.PointerUpdateKind, count: e.Pointer.PointerId,
+                auxiliary: ItemActivation.HasSelectionModifier ? 1 : 0);
+            PerformanceTrace.Record(PerformanceStage.FilePointerPosition, generation: _generation,
+                operation: (long)Math.Round(diagnosticPoint.Position.X * 1000),
+                count: (long)Math.Round(diagnosticPoint.Position.Y * 1000), auxiliary: 1);
+        }
+        if (_keyboardFocusVisible)
+        {
+            _keyboardFocusVisible = false;
+            RefreshRealizedSelection();
+        }
         if (IsSelectionToggleSource(e.OriginalSource as DependencyObject))
         {
             ItemActivation.CancelPendingClick(this);
@@ -1140,25 +1470,33 @@ public sealed partial class FileDetailsSurface : UserControl
         }
 
         CapturePointer(e.Pointer);
-        PreparePointerSelection(point.Position, e.Pointer.PointerId);
+        PreparePointerSelection(point.Position, e.Pointer.PointerId, e.OriginalSource as DependencyObject, e.KeyModifiers);
+        RecordNameOpening("SurfacePreparedPress", e);
         e.Handled = true;
     }
 
-    private void PreparePointerSelection(Point position, uint pointerId)
+    private void PreparePointerSelection(Point position, uint pointerId, DependencyObject? source = null, VirtualKeyModifiers? modifiers = null)
     {
+        CancelNameClickRename(retainPrevious: true);
+        _renamePressTarget = null;
+        _renamePressWasOnlySelected = false;
         _pointerDown = true;
         _dragging = false;
         _dragCandidate = false;
         _externalDragStarted = false;
         _pressPointerId = pointerId;
         _pressGeneration = _generation;
-        _pressHasModifier = ItemActivation.HasSelectionModifier;
+        var ctrl = modifiers?.HasFlag(VirtualKeyModifiers.Control) ?? IsModifier(VirtualKey.Control);
+        var shift = modifiers?.HasFlag(VirtualKeyModifiers.Shift) ?? IsModifier(VirtualKey.Shift);
+        var alt = modifiers?.HasFlag(VirtualKeyModifiers.Menu) ?? IsModifier(VirtualKey.Menu);
+        _pressHasModifier = ctrl || shift || alt;
+        _pressRecursiveAltOpen = false;
         _dragStart = position;
         // Keep the anchor in content space: scrolling must not move the first selected row.
         _marqueeStart = ToContentPoint(position);
         _marqueePointer = position;
         _pressViewIndex = ViewIndexFromPoint(position.X, position.Y + Scroller.VerticalOffset);
-        _pressOnName = IsNameAt(_pressViewIndex, position);
+        _pressOnName = IsNameAt(_pressViewIndex, position, source);
 
         if (_pressViewIndex < 0 || !_items.TryGetEntry(_pressViewIndex, out var entry))
         {
@@ -1173,10 +1511,24 @@ public sealed partial class FileDetailsSurface : UserControl
             return;
         }
 
-        var ctrl = IsModifier(VirtualKey.Control);
-        var shift = IsModifier(VirtualKey.Shift);
-        _pressOpeningMode = App.ExplorerPreferences.OpeningMode(entry.Kind == EntryKind.Directory);
-        if (_pressHasModifier) ItemActivation.CancelPendingClick(this);
+        _renamePressTarget = RenameTarget(entry);
+        _renamePressWasOnlySelected = _selection.Count == 1 && _selection.PrimaryId == entry.Id && _selection.Contains(entry.Id);
+        _pressOpeningMode = OpeningMode(entry.Kind == EntryKind.Directory);
+        _pressRecursiveAltOpen = !ctrl && !shift && alt && CanOwnRecursiveAltActivation(entry);
+        if (_pressRecursiveAltOpen)
+        {
+            _pressHasModifier = false;
+            _renamePressTarget = null;
+            _renamePressWasOnlySelected = false;
+        }
+        PerformanceTrace.Record(PerformanceStage.FilePressPrepared, generation: _generation,
+            operation: entry.Id, count: _pressViewIndex,
+            auxiliary: (_pressHasModifier ? 1L : 0L) | (_pressOnName ? 2L : 0L) | ((long)(uint)_pressOpeningMode << 8));
+        if (_pressHasModifier)
+        {
+            ItemActivation.CancelPendingClick(this);
+            CancelNameClickRename();
+        }
         if (shift && _items.Store is not null && _items.Index is not null)
         {
             var anchor = _selection.AnchorId is int aid
@@ -1193,7 +1545,7 @@ public sealed partial class FileDetailsSurface : UserControl
             _selection.SelectOnly(entry.Id);
         }
 
-        _dragCandidate = true;
+        _dragCandidate = !IsMemoryPresentation;
 
         RefreshRealizedSelection();
         SelectionChanged?.Invoke(this, EventArgs.Empty);
@@ -1201,7 +1553,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void OnPointerMoved(object sender, PointerRoutedEventArgs e)
     {
-        if (!_pointerDown)
+        if (IsRenaming || !_pointerDown)
         {
             return;
         }
@@ -1212,7 +1564,14 @@ public sealed partial class FileDetailsSurface : UserControl
             _externalDragStarted = true;
             _dragCandidate = false;
             _pointerDown = false;
-            _dragSourcePaths = ResolveSelectionPaths(viewOrder: true);
+            _dragRecursiveSource = _items.Binding?.Recursive is not null;
+            _dragSourcePaths = ResolveSelectionPaths(viewOrder: true, normalizeRecursive: true);
+            if (_dragSourcePaths.Count == 0)
+            {
+                _externalDragStarted = false;
+                ReleasePointerCaptures();
+                return;
+            }
             SetDragState(true);
             _ = BeginExternalDragAsync(e);
             e.Handled = true;
@@ -1227,6 +1586,7 @@ public sealed partial class FileDetailsSurface : UserControl
         _marqueePointer = pos;
         if (!_dragging && !_externalDragStarted && Hypot(pos.X - _dragStart.X, pos.Y - _dragStart.Y) > 4)
         {
+            CancelNameClickRename();
             ItemActivation.CancelPendingClick(this);
             if (_dragCandidate)
             {
@@ -1249,15 +1609,35 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void OnPointerReleased(object sender, PointerRoutedEventArgs e)
     {
+        RecordNameOpening("SurfaceReleased", e);
+        // The independent arrow/checkbox owns its release; never feed it to
+        // the row's double-click recognizer or delayed rename state.
+        if (IsSelectionToggleSource(e.OriginalSource as DependencyObject)) return;
         if (_pressPointerId != e.Pointer.PointerId) return;
+        PerformanceTrace.Record(PerformanceStage.FilePointerReleased, generation: _generation);
         _marqueePointer = e.GetCurrentPoint(Scroller).Position;
         var click = _pointerDown && !_dragging && !_externalDragStarted && !IsRenaming
-            && !_pressHasModifier && !ItemActivation.HasSelectionModifier
+            && !_pressHasModifier && !IsModifier(VirtualKey.Control) && !IsModifier(VirtualKey.Shift)
+            && (!IsModifier(VirtualKey.Menu) || _pressRecursiveAltOpen)
             && _pressGeneration == _generation
             && _marqueePointer.Y >= 0 && _marqueePointer.Y < Scroller.ActualHeight
             && Hypot(_marqueePointer.X - _dragStart.X, _marqueePointer.Y - _dragStart.Y) <= 4
             && _pressViewIndex == ViewIndexFromPoint(_marqueePointer.X, _marqueePointer.Y + Scroller.VerticalOffset);
         var clickedEntry = click && _items.TryGetEntry(_pressViewIndex, out var released) ? released : (FileEntryCore?)null;
+        if (PerformanceTrace.Enabled)
+        {
+            var rejected = (!_pointerDown ? 1L : 0) | (_dragging ? 2L : 0) | (_externalDragStarted ? 4L : 0)
+                | (IsRenaming ? 8L : 0) | (_pressHasModifier ? 16L : 0) | (ItemActivation.HasSelectionModifier ? 32L : 0)
+                | (_pressGeneration != _generation ? 64L : 0)
+                | (_marqueePointer.Y < 0 || _marqueePointer.Y >= Scroller.ActualHeight ? 128L : 0)
+                | (Hypot(_marqueePointer.X - _dragStart.X, _marqueePointer.Y - _dragStart.Y) > 4 ? 256L : 0)
+                | (_pressViewIndex != ViewIndexFromPoint(_marqueePointer.X, _marqueePointer.Y + Scroller.VerticalOffset) ? 512L : 0);
+            PerformanceTrace.Record(PerformanceStage.FileClickEvaluated, generation: _generation,
+                operation: clickedEntry?.Id ?? -1, count: _pressViewIndex, auxiliary: rejected,
+                outcome: click ? PerformanceOutcome.Completed : PerformanceOutcome.Failed);
+            PerformanceTrace.Record(PerformanceStage.FilePointerPosition, generation: _generation,
+                operation: (long)Math.Round(_marqueePointer.X * 1000), count: (long)Math.Round(_marqueePointer.Y * 1000), auxiliary: 2);
+        }
         var position = e.GetCurrentPoint(XamlRoot.Content).Position;
         UpdateMarquee();
         _marqueeScrollTimer?.Stop();
@@ -1283,20 +1663,44 @@ public sealed partial class FileDetailsSurface : UserControl
                 SelectionChanged?.Invoke(this, EventArgs.Empty);
             }
             var identity = ResolvePath?.Invoke(entry) ?? $"{_generation}:{entry.Id}";
-            var mode = App.ExplorerPreferences.OpeningMode(entry.Kind == EntryKind.Directory);
+            var mode = OpeningMode(entry.Kind == EntryKind.Directory);
             if (_pressOpeningMode == mode)
             {
-                if (ItemActivation.ShouldOpen(this, identity, position, mode,
-                    _pressOnName && IsNameAt(_pressViewIndex, _marqueePointer))) OpenRequested?.Invoke(this, entry);
+                var onName = _pressOnName && IsNameAt(_pressViewIndex, _marqueePointer, e.OriginalSource as DependencyObject);
+                var opened = ItemActivation.ShouldOpen(this, identity, position, mode, onName);
+                if (opened)
+                {
+                    CancelNameClickRename();
+                    PerformanceTrace.Record(PerformanceStage.FileOpenRecognized, generation: _generation,
+                        auxiliary: entry.Kind == EntryKind.Directory ? 1 : 0);
+                    ActivateEntry(entry, _pressRecursiveAltOpen);
+                }
+                else if (!_pressRecursiveAltOpen) ScheduleNameClickRename(entry, mode, onName, opened);
+                else CancelNameClickRename();
             }
-            else ItemActivation.CancelPendingClick(this);
+            else
+            {
+                ItemActivation.CancelPendingClick(this);
+                CancelNameClickRename();
+            }
         }
-        else ItemActivation.CancelPendingClick(this);
+        else
+        {
+            ItemActivation.CancelPendingClick(this);
+            CancelNameClickRename();
+        }
     }
 
     private void OnPointerCaptureLost(object sender, PointerRoutedEventArgs e)
     {
-        if (_pressPointerId is not null) ItemActivation.CancelPendingClick(this);
+        RecordNameOpening("SurfaceCaptureLost", e);
+        PerformanceTrace.Record(PerformanceStage.FileCaptureLost, generation: _generation,
+            count: _pressViewIndex, auxiliary: _pressPointerId is not null ? 1 : 0);
+        if (_pressPointerId is not null)
+        {
+            ItemActivation.CancelPendingClick(this);
+            CancelNameClickRename();
+        }
         _pressPointerId = null;
         _marqueeScrollTimer?.Stop();
         var wasDragging = _dragging;
@@ -1313,6 +1717,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private async Task BeginExternalDragAsync(PointerRoutedEventArgs e)
     {
+        if (IsMemoryPresentation) return;
         ReleasePointerCaptures();
         var pointer = e.GetCurrentPoint(this);
         try
@@ -1395,6 +1800,7 @@ public sealed partial class FileDetailsSurface : UserControl
             {
                 e.Data.SetStorageItems(_dragStorageItems);
                 FileDropRequest.SetSourcePaths(e.Data, _dragSourcePaths);
+                if (_dragRecursiveSource) e.Data.SetData(FileDropRequest.RecursiveMarker, "1");
             }
             else if (_dragSourcePaths.Count > 0)
             {
@@ -1428,6 +1834,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void OnDragOver(object sender, DragEventArgs e)
     {
+        if (IsMemoryPresentation) return;
 #if FILESMATE_UI_TEST
         MainWindow.TraceArchiveDrop("DragOver", new { Formats = e.DataView.AvailableFormats.ToArray(), HasFiles = DeviceTransferUI.HasFiles(e.DataView), Point = e.GetPosition(Scroller) });
 #endif
@@ -1448,7 +1855,9 @@ public sealed partial class FileDetailsSurface : UserControl
         var overItem = candidate >= 0 && _items.TryGetEntry(candidate, out _);
         var overFolder = overItem && _items.TryGetEntry(candidate, out var entry) && entry.Kind == EntryKind.Directory;
         _dropTargetViewIndex = overFolder ? candidate : -1;
-        var destination = overFolder ? ResolveDropTargetDirectory() : ResolveFolder?.Invoke();
+        var destination = overFolder ? ResolveDropTargetDirectory() : _recursiveMode ? null : ResolveFolder?.Invoke();
+        if (_recursiveMode && overFolder && _items.TryGetEntry(candidate, out var targetEntry)
+            && !ValidateRecursiveEntry(targetEntry.Id, report: false)) destination = null;
         if (IsPortableDevice || e.DataView.Contains(DeviceTransferUI.ClipboardFormat))
         {
             e.AcceptedOperation = (!overItem || overFolder) && !string.IsNullOrWhiteSpace(destination)
@@ -1492,6 +1901,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void OnDragLeave(object sender, DragEventArgs e)
     {
+        if (IsMemoryPresentation) return;
 #if FILESMATE_UI_TEST
         MainWindow.TraceArchiveDrop("DragLeave", new { Updated = DateTime.UtcNow, Point = e.GetPosition(Scroller), Original = e.OriginalSource?.GetType().Name });
 #endif
@@ -1502,6 +1912,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private async void OnDrop(object sender, DragEventArgs e)
     {
+        if (IsMemoryPresentation) return;
         App.WindowForElement(this)?.ExternalDrag.End();
         CancelFolderHover();
         if (!DeviceTransferUI.HasFiles(e.DataView))
@@ -1515,12 +1926,13 @@ public sealed partial class FileDetailsSurface : UserControl
             OnDragOver(sender, e);
             CancelFolderHover();
             if (e.AcceptedOperation == DataPackageOperation.None) return;
-            var destination = ResolveDropTargetDirectory() ?? ResolveFolder?.Invoke();
+            var destination = ResolveDropTargetDirectory() ?? (_recursiveMode ? null : ResolveFolder?.Invoke());
             if (IsPortableDevice || e.DataView.Contains(DeviceTransferUI.ClipboardFormat))
             {
                 var devicePaths = await DeviceTransferUI.ReadItemsAsync(e.DataView);
                 if (devicePaths.Length > 0 && DropRequested is { } deviceDrop)
-                    await deviceDrop(new FileDropRequest(devicePaths, destination, DataPackageOperation.Copy));
+                    await deviceDrop(new FileDropRequest(devicePaths, destination, DataPackageOperation.Copy,
+                        RecursiveSource: e.DataView.Contains(FileDropRequest.RecursiveMarker)));
                 return;
             }
             var items = await e.DataView.GetStorageItemsAsync();
@@ -1539,11 +1951,13 @@ public sealed partial class FileDetailsSurface : UserControl
                 if (DropRequested is { } performDrop)
                     await performDrop(new FileDropRequest(paths, destination, operation,
                         e.DataView.Properties.ContainsKey(FileDropRequest.ShelfMarker),
-                        e.Modifiers.HasFlag(DragDropModifiers.Control)));
+                        e.Modifiers.HasFlag(DragDropModifiers.Control),
+                        e.DataView.Contains(FileDropRequest.RecursiveMarker)));
             }
         }
         catch (Exception error)
         {
+            e.AcceptedOperation = DataPackageOperation.None;
             System.Diagnostics.Trace.TraceError("Drop data retrieval failed: {0}", error);
         }
         finally
@@ -1572,11 +1986,21 @@ public sealed partial class FileDetailsSurface : UserControl
             : null;
     }
 
-    private IReadOnlyList<string> ResolveSelectionPaths(bool viewOrder = false)
+    private IReadOnlyList<string> ResolveSelectionPaths(bool viewOrder = false, bool normalizeRecursive = false)
     {
+        if (IsMemoryPresentation) return [];
         if (_items.Store is null || _items.Index is null)
         {
             return [];
+        }
+
+        if (_items.Binding?.Recursive is { } recursive)
+        {
+            if (normalizeRecursive) return ValidateRecursiveSelection() ? recursive.ResolveOperationPaths(_selection.Ids) : [];
+            IEnumerable<int> exact = viewOrder
+                ? recursive.Index.Select(position => position + 1).Where(_selection.Contains)
+                : _selection.Ids;
+            return exact.Where(recursive.IsSelectable).Select(recursive.ResolvePath).ToArray();
         }
 
         var paths = new List<string>(_selection.Count);
@@ -1652,6 +2076,7 @@ public sealed partial class FileDetailsSurface : UserControl
     {
         var point = e.GetPosition(Scroller);
         if (point.Y < 0) return;
+        NotifyUserInteraction();
         var view = ViewIndexFromPoint(point.X, point.Y + Scroller.VerticalOffset);
         var background = true;
         if (view >= 0 && _items.TryGetEntry(view, out var entry))
@@ -1683,6 +2108,7 @@ public sealed partial class FileDetailsSurface : UserControl
         if (e.Character == ' ' || IsRenaming) return;
         if (IsModifier(VirtualKey.Control) || IsModifier(VirtualKey.Menu) || _items.Store is null || _items.Index is null)
             return;
+        if (!char.IsControl(e.Character)) NotifyUserInteraction();
         var current = _selection.ViewIndexOfPrimary(_items.Store, _items.Index);
         var found = _nameJump.Find(e.Character, _inputClock.Elapsed, current, _items.Count,
             index => _items.TryGetEntry(index, out var entry) ? entry.Name : string.Empty);
@@ -1695,6 +2121,11 @@ public sealed partial class FileDetailsSurface : UserControl
         StopListWheel();
         CancelScrollRestore();
         if (e.Handled || IsRenaming || FocusManager.GetFocusedElement(XamlRoot) is TextBox) return;
+        if (!_keyboardFocusVisible)
+        {
+            _keyboardFocusVisible = true;
+            RefreshRealizedSelection();
+        }
         // Alt navigation belongs to the page accelerators, not grid selection.
         if (IsModifier(VirtualKey.Menu))
         {
@@ -1708,6 +2139,12 @@ public sealed partial class FileDetailsSurface : UserControl
         if (e.Key is VirtualKey.Left or VirtualKey.Right or VirtualKey.Up or VirtualKey.Down
             or VirtualKey.Home or VirtualKey.End or VirtualKey.Back or VirtualKey.Escape)
             _nameJump.Reset();
+        if (e.Key == VirtualKey.Escape && _recursiveMode && !IsModifier(VirtualKey.Control) && !IsModifier(VirtualKey.Shift)
+            && CancelRecursiveScanRequested?.Invoke() == true)
+        {
+            e.Handled = true;
+            return;
+        }
         if (_items.Store is null || _items.Index is null || _items.Count == 0)
         {
             if (e.Key == VirtualKey.Back && !IsModifier(VirtualKey.Control) && !IsModifier(VirtualKey.Shift))
@@ -1722,6 +2159,11 @@ public sealed partial class FileDetailsSurface : UserControl
         var ctrl = IsModifier(VirtualKey.Control);
         var shift = IsModifier(VirtualKey.Shift);
         var current = _selection.ViewIndexOfPrimary(_items.Store, _items.Index);
+        if (!ctrl && !shift && HandleRecursiveTreeKey(e.Key, current))
+        {
+            e.Handled = true;
+            return;
+        }
 
         switch (e.Key)
         {
@@ -1757,7 +2199,7 @@ public sealed partial class FileDetailsSurface : UserControl
                 { RevealRequested.Invoke(this, EventArgs.Empty); e.Handled = true; break; }
                 if (_items.TryGetEntry(Math.Max(0, current), out var open))
                 {
-                    OpenRequested?.Invoke(this, open);
+                    ActivateEntry(open);
                 }
 
                 e.Handled = true;
@@ -1799,6 +2241,9 @@ public sealed partial class FileDetailsSurface : UserControl
                 e.Handled = true;
                 break;
         }
+        if (e.Handled && FilesMate.Core.Diagnostics.PerformanceTrace.Enabled)
+            FilesMate.Core.Diagnostics.PerformanceTrace.Record(FilesMate.Core.Diagnostics.PerformanceStage.InputHandled,
+                generation: _items.Index.Generation, count: _selection.Count);
     }
 
     private void MoveTo(int viewIndex, bool extend)
@@ -1808,6 +2253,14 @@ public sealed partial class FileDetailsSurface : UserControl
             return;
         }
 
+        if (_items.Binding?.Recursive is { } recursive)
+        {
+            var current = _selection.ViewIndexOfPrimary(_items.Store, _items.Index);
+            var step = viewIndex == 0 ? 1 : viewIndex == _items.Count - 1 ? -1 : viewIndex >= current ? 1 : -1;
+            while ((uint)viewIndex < (uint)_items.Count
+                && _items.TryGetEntry(viewIndex, out var candidate) && !recursive.IsSelectable(candidate.Id)) viewIndex += step;
+            if ((uint)viewIndex >= (uint)_items.Count) return;
+        }
         if (extend)
         {
             var anchor = _selection.AnchorId is int aid
@@ -1827,6 +2280,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     public bool ClearSelection()
     {
+        NotifyUserInteraction();
         if (_selection.Count == 0) return false;
         ItemActivation.CancelPendingClick(this);
         _nameJump.Reset();
@@ -1838,6 +2292,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     public bool SelectAll()
     {
+        NotifyUserInteraction();
         if (_items.Store is null || _items.Index is null) return false;
         _selection.SelectAll(_items.Store, _items.Index);
         RefreshRealizedSelection();
@@ -1847,6 +2302,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     public void MovePreviewSelection(int step)
     {
+        NotifyUserInteraction();
         if (_items.Store is null || _items.Index is null || _items.Count == 0) return;
         var current = _selection.ViewIndexOfPrimary(_items.Store, _items.Index);
         MoveTo(Math.Clamp(current + Math.Sign(step), 0, _items.Count - 1), false);
@@ -2083,6 +2539,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void ShowContextMenu(bool background, Point position, bool preferShell = false)
     {
+        if (IsMemoryPresentation) return;
         SelectionChanged?.Invoke(this, ContextSelectionChangedEventArgs.Instance);
         if (preferShell && TryShowShellContextMenu(background, position))
         {
@@ -2102,13 +2559,21 @@ public sealed partial class FileDetailsSurface : UserControl
             ClipboardHasFiles,
             primaryPath,
             IsPinnedPath?.Invoke(primaryPath) ?? false,
-            TagsAvailable: true,
-            BatchRenameAvailable: true,
+            TagsAvailable: ValidateRecursiveSelection(FilesMate.Core.Recursive.RecursiveOperationScope.IdentityOnly, report: false),
+            BatchRenameAvailable: ValidateRecursiveSelection(report: false),
             ShareAvailable: App.ShareService is not null,
             FolderPath: IsPortableDevice ? ResolveFolder?.Invoke() : ExistingFolder(ResolveFolder?.Invoke()),
             PrimaryIsArchive: !PrimaryIsDirectory() && FileTypeIconCatalog.IsArchivePath(primaryPath),
             SelectionIsArchive: archives,
             OtherPanePath: OtherPanePath?.Invoke(), IsPortableDevice: IsPortableDevice));
+        if (_recursiveMode)
+        {
+            // Native clipboard verbs cannot carry the recursive compatibility marker.
+            var items = layout.Items.Where(item => !item.IsShowMore)
+                .Select(item => item.Command == AppCommandId.AddToShelf ? item with { Enabled = false } : item).ToList();
+            while (items.Count > 0 && items[^1].IsSeparator) items.RemoveAt(items.Count - 1);
+            layout = layout with { Items = items };
+        }
         if (layout.Primary.Count == 0 && layout.Items.Count == 0)
         {
             return;
@@ -2132,12 +2597,13 @@ public sealed partial class FileDetailsSurface : UserControl
             () => showMore = true,
             column => SortRequested?.Invoke(this, column),
             SetLayout,
-            CreateTagPicker?.Invoke(),
+            ValidateRecursiveSelection(FilesMate.Core.Recursive.RecursiveOperationScope.IdentityOnly, report: false) ? CreateTagPicker?.Invoke() : null,
             () => _headerSort,
             ascending => SortSpecificationRequested?.Invoke(this, _headerSort with { Ascending = ascending }),
             SetGridSize,
-            grouping => SortSpecificationRequested?.Invoke(this, _headerSort with
-                { Grouping = grouping, DirectoriesFirst = grouping == EntryGrouping.FoldersFirst }));
+            IsRecursiveView ? null : grouping => SortSpecificationRequested?.Invoke(this, _headerSort with
+                { Grouping = grouping, DirectoriesFirst = grouping == EntryGrouping.FoldersFirst }),
+            recursiveActions: RecursiveContextActions(background));
         host.Closed += (_, _) =>
         {
             if (!showMore)
@@ -2155,7 +2621,8 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private bool TryShowShellContextMenu(bool background, Point position)
     {
-        if (IsPortableDevice) return false;
+        if (IsMemoryPresentation) return false;
+        if (IsPortableDevice || _recursiveMode) return false;
         if (App.CurrentWindow is null || XamlRoot is null)
         {
             return false;
@@ -2177,6 +2644,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void InvokeCommand(AppCommandId id)
     {
+        NotifyUserInteraction();
         switch (id)
         {
             case AppCommandId.RevealInFolder:
@@ -2206,13 +2674,7 @@ public sealed partial class FileDetailsSurface : UserControl
                 CopyPathRequested?.Invoke(this, EventArgs.Empty);
                 break;
             case AppCommandId.SelectAll:
-                if (_items.Store is not null && _items.Index is not null)
-                {
-                    _selection.SelectAll(_items.Store, _items.Index);
-                    RefreshRealizedSelection();
-                    SelectionChanged?.Invoke(this, EventArgs.Empty);
-                }
-
+                SelectAll();
                 break;
             case AppCommandId.Refresh:
                 RefreshRequested?.Invoke(this, EventArgs.Empty);
@@ -2243,6 +2705,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private string? TryGetPrimaryPath()
     {
+        if (IsMemoryPresentation) return null;
         if (!TryGetPrimary(out var entry))
         {
             return null;
@@ -2253,7 +2716,7 @@ public sealed partial class FileDetailsSurface : UserControl
 
     private void OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
     {
-        CancelScrollRestore();
+        NotifyUserInteraction();
         if (_layout == FileLayoutKind.List && !IsModifier(VirtualKey.Control))
         {
             if (e.Handled) return;

@@ -29,7 +29,7 @@ internal static class ContentDialogTheme
 
     internal static ElementTheme Resolve(FrameworkElement? host)
     {
-        var setting = App.AppearanceViewModel?.Current.Theme;
+        var setting = App.AppearanceViewModel?.Effective.Theme;
         if (setting == AppThemeKind.Light)
         {
             return ElementTheme.Light;

@@ -38,6 +38,8 @@ public sealed partial class MainWindow
                 Require(!App.ExplorerPreferences.DefaultSortAscending, "Default sort direction was lost after restart.");
                 Require(App.ExplorerPreferences.ShowHiddenFiles, "Hidden files preference was lost after restart.");
                 Require(App.ExplorerPreferences.HiddenToolbarTools?.Contains(ToolbarTool.Copy) == true, "Toolbar customization was lost after restart.");
+                var restoredToolbarOrder = ToolbarToolCatalog.NormalizeOrder(App.ExplorerPreferences.ToolbarOrder).ToList();
+                Require(restoredToolbarOrder.IndexOf(ToolbarTool.Paste) < restoredToolbarOrder.IndexOf(ToolbarTool.Cut), "Toolbar order was lost after restart.");
                 report["RestoredAfterProcessRestart"] = true;
             }
             else
@@ -98,6 +100,35 @@ public sealed partial class MainWindow
                 }
                 report["AlphabetAllThreeGroupingsBothDirections"] = true;
 
+                // A saved alphabet preference must not revive the rail, its
+                // choices or scroll commands outside Details view.
+                var scroller = (ScrollViewer)surface.FindName("Scroller");
+                foreach (var layout in new[] { FileLayoutKind.Grid, FileLayoutKind.List })
+                {
+                    surface.SetLayout(FileLayoutKind.Details);
+                    Call(surface, "ShowAlphabet");
+                    Call(surface, "ShowAlphabetChoices", "B", false);
+                    surface.SetLayout(layout);
+                    surface.SetAlphabetNavigationPolicy(true, 0, true, false);
+                    await Task.Delay(160);
+                    var offset = scroller.VerticalOffset;
+                    Call(surface, "ShowAlphabet");
+                    Call(surface, "ShowAlphabetChoices", "B", false);
+                    Call(surface, "JumpLetter", "B", true, false);
+                    Call(surface, "ScrollAlphabetTo", 100d);
+                    foreach (var name in new[] { "AlphabetOverlay", "AlphabetLetters", "AlphabetBubble", "AlphabetChoices", "AlphabetRange" })
+                        Require(((FrameworkElement)surface.FindName(name)).Visibility == Visibility.Collapsed,
+                            layout + " retained " + name);
+                    Require(((Microsoft.UI.Xaml.Controls.ItemsRepeater)scroller.Content).MinHeight == 0 && scroller.VerticalOffset == offset,
+                        layout + " retained alphabet tail space or accepted an alphabet scroll command.");
+                    Require(scroller.VerticalScrollBarVisibility == (layout == FileLayoutKind.List
+                        ? ScrollBarVisibility.Disabled : ScrollBarVisibility.Auto), "Native scrollbar did not return.");
+                }
+                surface.SetLayout(FileLayoutKind.Details);
+                Require(((FrameworkElement)surface.FindName("AlphabetOverlay")).Visibility == Visibility.Visible,
+                    "Returning to Details lost the alphabet preference.");
+                report["AlphabetDetailsOnlyAndViewSwitchCleanup"] = true;
+
                 var toolbar = (AdaptiveCommandToolbar)page.FindName("Commands");
                 var hiddenPath = Path.Combine(fixture, "Z-Hidden.txt");
                 File.WriteAllText(hiddenPath, "Hidden preview"); File.SetAttributes(hiddenPath, FileAttributes.Hidden);
@@ -113,11 +144,16 @@ public sealed partial class MainWindow
                 report["ToolbarShowsAndHidesRealHiddenFile"] = true;
                 var customization = (Flyout)Call(toolbar, "CreateCustomizationMenu")!;
                 customization.ShowAt(toolbar); await Task.Delay(100);
-                var copyTool = PolishDescendants(customization.Content).OfType<CheckBox>().Single(item => (ToolbarTool)item.Tag == ToolbarTool.Copy);
-                await Capture(customization.Content, "toolbar-customization.png");
-                ((IToggleProvider)new CheckBoxAutomationPeer(copyTool).GetPattern(PatternInterface.Toggle)).Toggle();
-                await Wait(() => ((Button)toolbar.FindName("CopyButton")).Visibility == Visibility.Collapsed, "custom toolbar hide copy");
-                customization.Hide();
+                var draftPreferences = JsonSerializer.Serialize(App.ExplorerPreferences);
+                var fileCommands = PolishDescendants(customization.Content).OfType<ListView>()
+                    .Single(item => Microsoft.UI.Xaml.Automation.AutomationProperties.GetAutomationId(item) == "ToolbarOrderFileCommands");
+                fileCommands.SelectedItem = fileCommands.Items.OfType<Grid>().Single(item => item.Tag is ToolbarTool.Copy);
+                InvokeToolbarAction(customization, "ToolbarRemove");
+                await Wait(() => !fileCommands.Items.OfType<Grid>().Any(item => item.Tag is ToolbarTool.Copy), "remove copy in draft");
+                Require(JsonSerializer.Serialize(App.ExplorerPreferences) == draftPreferences, "Toolbar removal persisted before Save.");
+                await Capture(customization.Content, "toolbar-customization-horizontal.png");
+                InvokeToolbarAction(customization, "ToolbarSave");
+                await Wait(() => !customization.IsOpen && ((Button)toolbar.FindName("CopyButton")).Visibility == Visibility.Collapsed, "save custom toolbar hide copy");
                 toolbar.ApplyContext(Commands.CommandContext.SingleFile);
                 Require(((Button)toolbar.FindName("CopyButton")).Visibility == Visibility.Collapsed, "Changing selection restored a hidden tool.");
                 toolbar.Width = 360; await Task.Delay(160);
@@ -126,13 +162,16 @@ public sealed partial class MainWindow
                 Require(((ToggleMenuFlyoutItem)Field(toolbar, "_overflowHiddenFiles")!).Visibility == Visibility.Visible, "Hidden files shortcut is missing from overflow.");
                 toolbar.Width = double.NaN; await Task.Delay(100);
                 await App.SetExplorerPreferencesAsync(App.ExplorerPreferences with { HiddenToolbarTools = Enum.GetValues<ToolbarTool>() });
-                Require(PolishDescendants(toolbar).OfType<Button>().Where(button => button.IsLoaded && button.Name != "GroupingMenuButton").All(button => button.Visibility == Visibility.Collapsed), "Hide-all left a visible toolbar button.");
+                Require(PolishDescendants(toolbar).OfType<Button>().Where(button => button.IsLoaded).All(button => !ToolbarEffectivelyVisible(button)), "Hide-all left a visible toolbar button.");
                 var restoreMenu = (Flyout)Call(toolbar, "CreateCustomizationMenu")!;
                 restoreMenu.ShowAt(toolbar); await Task.Delay(100);
-                ((IInvokeProvider)new ButtonAutomationPeer(PolishDescendants(restoreMenu.Content).OfType<Button>().Last()).GetPattern(PatternInterface.Invoke)).Invoke();
-                await Wait(() => App.ExplorerPreferences.HiddenToolbarTools is null && ((Button)toolbar.FindName("CopyButton")).Visibility == Visibility.Visible, "restore toolbar defaults");
-                restoreMenu.Hide();
-                report["ToolbarCustomizationHideAllAndRestore"] = true;
+                InvokeToolbarAction(restoreMenu, "ToolbarRestore");
+                await Wait(() => PolishDescendants(restoreMenu.Content).OfType<ListView>().Sum(list => list.Items.Count) == ToolbarToolCatalog.All.Count, "restore all draft commands");
+                Require(App.ExplorerPreferences.HiddenToolbarTools?.Count == Enum.GetValues<ToolbarTool>().Length, "Restore persisted before Save.");
+                InvokeToolbarAction(restoreMenu, "ToolbarSave");
+                await Wait(() => !restoreMenu.IsOpen && App.ExplorerPreferences.HiddenToolbarTools is null && App.ExplorerPreferences.ToolbarOrder is null
+                    && ((Button)toolbar.FindName("CopyButton")).Visibility == Visibility.Visible, "save restored toolbar defaults");
+                report["ToolbarCustomizationDraftHideAllAndSaveRestore"] = true;
                 var sortMenu = (Flyout)((Button)toolbar.FindName("GroupingMenuButton")).Flyout;
                 sortMenu.ShowAt((FrameworkElement)toolbar.FindName("GroupingMenuButton")); await Task.Delay(120);
                 var mixed = PolishDescendants(sortMenu.Content).OfType<RadioButton>().Single(r => r.Tag is EntryGrouping.Mixed);
@@ -241,7 +280,21 @@ public sealed partial class MainWindow
                 }
                 report["ContextMenuBounds"] = positions;
                 report["ContextMenuPointerAndEdges"] = true;
-                await App.SetExplorerPreferencesAsync(App.ExplorerPreferences with { HiddenToolbarTools = [ToolbarTool.Copy] });
+                var restartEditor = (Flyout)Call(toolbar, "CreateCustomizationMenu")!;
+                restartEditor.ShowAt(toolbar); await Task.Delay(120);
+                var restartFiles = PolishDescendants(restartEditor.Content).OfType<ListView>()
+                    .Single(item => Microsoft.UI.Xaml.Automation.AutomationProperties.GetAutomationId(item) == "ToolbarOrderFileCommands");
+                restartFiles.SelectedItem = restartFiles.Items.OfType<Grid>().Single(item => item.Tag is ToolbarTool.Copy);
+                InvokeToolbarAction(restartEditor, "ToolbarRemove");
+                await Wait(() => !restartFiles.Items.OfType<Grid>().Any(item => item.Tag is ToolbarTool.Copy), "prepare hidden copy restart draft");
+                restartFiles.SelectedItem = restartFiles.Items.OfType<Grid>().Single(item => item.Tag is ToolbarTool.Paste);
+                InvokeToolbarAction(restartEditor, "ToolbarMoveLeft");
+                await Wait(() => restartFiles.Items.OfType<Grid>().Select(item => (ToolbarTool)item.Tag).Take(3)
+                    .SequenceEqual(new[] { ToolbarTool.New, ToolbarTool.Paste, ToolbarTool.Cut }), "prepare toolbar order restart draft");
+                InvokeToolbarAction(restartEditor, "ToolbarSave");
+                await Wait(() => !restartEditor.IsOpen && App.ExplorerPreferences.HiddenToolbarTools?.Contains(ToolbarTool.Copy) == true,
+                    "save toolbar state for process restart");
+                report["ToolbarRestartStateSavedThroughEditor"] = true;
                 await Capture(Content, "browsing-light-no-stripes.png");
                 IEnumerable<FileRow> Rows() => PolishDescendants(surface).OfType<FileRow>().Where(r => r.EntryId >= 0 && r.IsLoaded);
             }
@@ -254,6 +307,17 @@ public sealed partial class MainWindow
             try { await Capture(Content, "browsing-failure.png"); } catch { }
         }
         File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "browsing-preferences-smoke.json"), JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }));
+        static void InvokeToolbarAction(Flyout editor, string id)
+        {
+            var button = PolishDescendants(editor.Content).OfType<Button>().Single(item => Microsoft.UI.Xaml.Automation.AutomationProperties.GetAutomationId(item) == id);
+            ((IInvokeProvider)new ButtonAutomationPeer(button).GetPattern(PatternInterface.Invoke)).Invoke();
+        }
+        static bool ToolbarEffectivelyVisible(FrameworkElement element)
+        {
+            for (DependencyObject? current = element; current is not null; current = VisualTreeHelper.GetParent(current))
+                if (current is FrameworkElement { Visibility: Visibility.Collapsed }) return false;
+            return true;
+        }
         static object? Field(object target, string name) => target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(target);
         static object? Call(object target, string name, params object?[] args) => target.GetType().GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(target, args);
         static void Require(bool condition, string message) { if (!condition) throw new InvalidOperationException(message); }

@@ -9,12 +9,8 @@
     xmlns:nav="using:FilesMate.App.Controls.Navigation"
     xmlns:input="using:FilesMate.App.Input"
     Title="FilesMate">
-    <Window.SystemBackdrop>
-        <DesktopAcrylicBackdrop />
-    </Window.SystemBackdrop>
-
     <input:ShellRoot
-        Background="Transparent"
+        Background="{ThemeResource FilesMate.App.SolidBackgroundBrush}"
         KeyboardAcceleratorPlacementMode="Hidden">
         <input:ShellRoot.Resources>
             <Style x:Key="SolidShellRootStyle" TargetType="input:ShellRoot">
@@ -118,13 +114,6 @@
                         <StaticResource x:Key="TabViewButtonForeground" ResourceKey="FilesMate.Text.PrimaryBrush" />
                         <StaticResource x:Key="TabViewButtonForegroundPointerOver" ResourceKey="FilesMate.Text.PrimaryBrush" />
                         <StaticResource x:Key="TabViewButtonForegroundPressed" ResourceKey="FilesMate.Text.PrimaryBrush" />
-                        <StaticResource x:Key="TabViewItemHeaderForeground" ResourceKey="FilesMate.Text.PrimaryBrush" />
-                        <StaticResource x:Key="TabViewItemHeaderForegroundPointerOver" ResourceKey="FilesMate.Text.PrimaryBrush" />
-                        <StaticResource x:Key="TabViewItemHeaderForegroundPressed" ResourceKey="FilesMate.Text.PrimaryBrush" />
-                        <StaticResource x:Key="TabViewItemHeaderForegroundSelected" ResourceKey="FilesMate.Text.PrimaryBrush" />
-                        <StaticResource x:Key="TabViewItemIconForeground" ResourceKey="FilesMate.Text.PrimaryBrush" />
-                        <StaticResource x:Key="TabViewItemIconForegroundSelected" ResourceKey="FilesMate.Text.PrimaryBrush" />
-                        <StaticResource x:Key="TabViewItemHeaderCloseButtonForeground" ResourceKey="FilesMate.Text.SecondaryBrush" />
                         <StaticResource x:Key="TabViewButtonBorderBrush" ResourceKey="FilesMate.Glass.BorderBrush" />
                         <StaticResource x:Key="TabViewButtonBorderBrushPointerOver" ResourceKey="FilesMate.Glass.BorderStrongBrush" />
                         <StaticResource x:Key="TabViewButtonBorderBrushPressed" ResourceKey="FilesMate.Glass.BorderStrongBrush" />
@@ -151,7 +140,6 @@
                                 <FontIcon
                                     FontFamily="Segoe Fluent Icons"
                                     FontSize="16"
-                                    Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
                                     Glyph="&#xE710;" />
                             </Button>
                             <Border
@@ -174,7 +162,10 @@
             </Grid>
         </glass:LiquidGlassSurface>
 
-        <Grid Grid.Row="1">
+        <!-- One common foundation covers pane gutters, status and navigation.
+             The title bar already uses the equivalent floating coverage. -->
+        <Grid x:Name="ShellFoundation" Grid.Row="1"
+              Background="{ThemeResource FilesMate.FileArea.BackgroundBrush}">
             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
             <nav:WindowNavigation x:Name="WindowNavigation"/>
         <ContentControl

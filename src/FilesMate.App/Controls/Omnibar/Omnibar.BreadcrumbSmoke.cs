@@ -33,12 +33,18 @@ public sealed partial class Omnibar
                 if (layout.CurrentWidth >= _crumbWidths[^1] && label.IsTextTrimmed)
                     throw new InvalidOperationException("Current directory trimmed despite enough space.");
             }
+            await RunCrumbPopupLifecycleSmokeAsync();
             ShowHiddenAncestors();
             await Task.Delay(100);
             if (!CrumbFolderPopup.IsOpen || CrumbFolderItems.Children.Count == 0)
                 throw new InvalidOperationException("Missing ancestor menu.");
             string? chosen = null;
-            void OnChosen(object? sender, string path) => chosen = path;
+            var closedBeforeNavigation = false;
+            void OnChosen(object? sender, string path)
+            {
+                chosen = path;
+                closedBeforeNavigation = !CrumbFolderPopup.IsOpen && _crumbFolderStoryboard is null;
+            }
             CrumbClicked += OnChosen;
             try
             {
@@ -46,9 +52,10 @@ public sealed partial class Omnibar
                 ((IInvokeProvider)new ButtonAutomationPeer(target).GetPattern(PatternInterface.Invoke)).Invoke();
                 await Task.Delay(100);
                 if (chosen != (string)target.Tag) throw new InvalidOperationException("Ancestor navigation target incorrect.");
+                if (!closedBeforeNavigation) throw new InvalidOperationException("Ancestor popup outlived navigation dispatch.");
             }
             finally { CrumbClicked -= OnChosen; }
-            if (CrumbFolderPopup.IsOpen) FinishCrumbFolderClose();
+            AssertCrumbPopupClosed("ancestor navigation");
             BeginPathEdit();
             if (PathBox.Text != Text || PathBox.SelectionLength != Text.Length)
                 throw new InvalidOperationException("Full path editing lost text.");
@@ -78,5 +85,52 @@ public sealed partial class Omnibar
         }
         finally { Width = originalWidth; }
     }
+
+    private async Task RunCrumbPopupLifecycleSmokeAsync()
+    {
+        var opener = (Button)_crumbViews.Last(view => view.IsLoaded).Children[1];
+        var folders = new[] { new FilesMate.App.Navigation.PathSegment("Smoke child", _session.Path) };
+        for (var i = 0; i < 25; i++)
+        {
+            ShowCrumbFolderItems(folders, opener, "smoke:first");
+            DismissCrumbFolders();
+            DismissCrumbFolders();
+            if (CrumbFolderHost.IsHitTestVisible || CrumbFolderHost.Opacity != 0 || _crumbFolderStoryboard is not null)
+                throw new InvalidOperationException("Pending dismissal left the menu visible, interactive or animated.");
+            ShowCrumbFolderItems(folders, opener, "smoke:replacement");
+            await NextBreadcrumbDispatchAsync();
+            if (!CrumbFolderPopup.IsOpen || _crumbFlyoutPath != "smoke:replacement")
+                throw new InvalidOperationException("An obsolete queued dismissal closed a replacement menu.");
+            AnimateCrumbFolder(open: false);
+            AssertCrumbPopupClosed("interrupted entrance");
+        }
+
+        ShowCrumbFolderItems(folders, opener, "smoke:outside");
+        DismissCrumbFolders();
+        await NextBreadcrumbDispatchAsync();
+        AssertCrumbPopupClosed("outside dismissal dispatch");
+
+        ShowCrumbFolderItems(folders, opener, "smoke:editing");
+        BeginPathEdit();
+        AssertCrumbPopupClosed("path editor entry");
+        CancelMode();
+    }
+
+    private Task NextBreadcrumbDispatchAsync()
+    {
+        var next = new TaskCompletionSource<bool>();
+        if (!DispatcherQueue.TryEnqueue(() => next.SetResult(true)))
+            throw new InvalidOperationException("UI dispatcher unavailable during breadcrumb smoke.");
+        return next.Task;
+    }
+
+    private void AssertCrumbPopupClosed(string operation)
+    {
+        if (CrumbFolderPopup.IsOpen || CrumbFolderHost.IsHitTestVisible || _crumbFolderClosePending
+            || _crumbFolderStoryboard is not null || CrumbFolderPopup.PlacementTarget is not null
+            || CrumbFolderItems.Children.Count != 0 || _crumbChevron is not null || _crumbFlyoutPath is not null)
+            throw new InvalidOperationException($"Breadcrumb popup cleanup incomplete after {operation}.");
+    }
+
 }
 #endif

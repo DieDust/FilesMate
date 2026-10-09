@@ -14,6 +14,15 @@ public sealed partial class NavigatorPage
         try
         {
             SetPaneCount(1, false);
+            await Ready(() => PaneChrome.ActualWidth > 0);
+            WorkspaceSplit.UpdateLayout();
+            var singleCard = (Border)PaneChrome.FindName("PaneCard");
+            var singleBounds = singleCard.TransformToVisual(PaneChrome).TransformBounds(
+                new Windows.Foundation.Rect(0, 0, singleCard.ActualWidth, singleCard.ActualHeight));
+            if (Math.Abs(singleBounds.Left - 4) > 1 || Math.Abs(PaneChrome.ActualWidth - singleBounds.Right - 4) > 1
+                || Math.Abs(singleBounds.Top) > 1 || Math.Abs(PaneChrome.ActualHeight - singleBounds.Bottom) > 1)
+                throw new InvalidOperationException("Single-pane compact edge spacing changed.");
+            report["SinglePaneCompactEdges"] = singleBounds;
             var button = (Button)Commands.FindName("DualPaneButton");
             void Click() => ((IInvokeProvider)new ButtonAutomationPeer(button).GetPattern(PatternInterface.Invoke)).Invoke();
             Click(); await Ready(() => _paneCount == 2 && _rightVm?.IsLoading == false);
@@ -54,6 +63,22 @@ public sealed partial class NavigatorPage
                     var overlap = bounds[i]; overlap.Intersect(bounds[j]);
                     if (!overlap.IsEmpty && overlap.Width > 1 && overlap.Height > 1) throw new InvalidOperationException("Pane arrangement overlapped: " + arrangement);
                 }
+                // Measure the visible cards, not only their touching presenter bounds.
+                var cards = new[] { PaneChrome, _rightChrome!, _thirdChrome! }.Select(p => (Border)p.FindName("PaneCard"))
+                    .Select(card => card.TransformToVisual(WorkspaceSplit).TransformBounds(new Windows.Foundation.Rect(0, 0, card.ActualWidth, card.ActualHeight))).ToArray();
+                var gutters = new List<double>();
+                foreach (var card in cards)
+                {
+                    var rightGaps = cards.Where(other => other.Left >= card.Right && Math.Min(card.Bottom, other.Bottom) - Math.Max(card.Top, other.Top) > 1)
+                        .Select(other => other.Left - card.Right).ToArray();
+                    var belowGaps = cards.Where(other => other.Top >= card.Bottom && Math.Min(card.Right, other.Right) - Math.Max(card.Left, other.Left) > 1)
+                        .Select(other => other.Top - card.Bottom).ToArray();
+                    if (rightGaps.Length > 0) gutters.Add(rightGaps.Min());
+                    if (belowGaps.Length > 0) gutters.Add(belowGaps.Min());
+                }
+                if (gutters.Count < 2 || gutters.Any(gap => Math.Abs(gap - 9) > 1))
+                    throw new InvalidOperationException("Pane card gutters differ across axes: " + arrangement + " " + string.Join(", ", gutters));
+                report["PaneCardGutters-" + arrangement] = gutters;
                 if (!originalPaths.SequenceEqual(new[] { _leftVm.AddressText, _rightVm.AddressText, _thirdVm.AddressText }) || ViewModel != _thirdVm)
                     throw new InvalidOperationException("Arrangement lost pane navigation or active state");
                 var captured = CaptureClosedTab();

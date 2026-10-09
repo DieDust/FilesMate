@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Runtime.CompilerServices;
 using FilesMate.App.Localization;
 using FilesMate.Core.Directories;
@@ -12,7 +13,7 @@ public sealed class PortableDeviceDirectoryEnumerator(
     Func<PortableDeviceLocation, CancellationToken, Task<IReadOnlyList<PortableDeviceEntry>>> read,
     Func<PortableDeviceLocation, CancellationToken, Task<DeviceFolderCapabilities>> capabilities) : IDirectoryEnumerator
 {
-    private sealed record Snapshot(string Path, long Generation, bool Writable, Dictionary<int, string> Locations);
+    private sealed record Snapshot(string Path, long Generation, bool Writable, FrozenDictionary<int, string> Locations);
     private readonly object _gate = new();
     private Snapshot? _snapshot;
     private long _requestVersion;
@@ -23,6 +24,16 @@ public sealed class PortableDeviceDirectoryEnumerator(
         var snapshot = Volatile.Read(ref _snapshot);
         return snapshot?.Path == path && snapshot.Generation == generation
             && snapshot.Locations.TryGetValue(id, out var uri) ? uri : null;
+    }
+
+    /// <summary>
+    /// Captures this exact folder's immutable identities, without retaining the
+    /// enumerator or looking up a future generation when a recycled row binds.
+    /// </summary>
+    public IReadOnlyDictionary<int, string>? CaptureLocations(string path, long generation)
+    {
+        var snapshot = Volatile.Read(ref _snapshot);
+        return snapshot?.Path == path && snapshot.Generation == generation ? snapshot.Locations : null;
     }
 
     public bool CanReceiveFiles(string path, long generation)
@@ -100,7 +111,7 @@ public sealed class PortableDeviceDirectoryEnumerator(
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        if (!Publish(version, new(request.Path, request.Generation, writable, locations))) yield break;
+        if (!Publish(version, new(request.Path, request.Generation, writable, locations.ToFrozenDictionary()))) yield break;
         yield return DirectoryBatch.Create(request.PaneId, request.Generation, request.Path, entries, true, error);
     }
 }

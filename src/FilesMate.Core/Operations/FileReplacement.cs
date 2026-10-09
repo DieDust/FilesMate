@@ -14,6 +14,7 @@ public sealed class FileReplacement(string source, string destination, string ba
     private FileUndoState _backupState = FileUndoState.Capture([backup]);
     private FileUndoState? _sourceState;
     internal FileUndoState DestinationState => _destinationState;
+    internal FileUndoState? BackupState => !move || IsApplied ? _backupState : null;
 
     /// <summary>Retain both versions without restoring an internal staging source on undo.</summary>
     public void ConvertToCreatedOperation()
@@ -104,6 +105,7 @@ public sealed class FileReplacement(string source, string destination, string ba
                 File.Delete(Backup);
             }
             if (Directory.Exists(Path.GetDirectoryName(Backup))) Directory.Delete(Path.GetDirectoryName(Backup)!, recursive: false);
+            ReplacementBackupLayout.RemoveEmptyParents(Path.GetDirectoryName(Backup)!);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {

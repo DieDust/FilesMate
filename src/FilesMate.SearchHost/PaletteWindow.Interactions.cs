@@ -58,9 +58,11 @@ public partial class PaletteWindow
         }
         return null;
     }
-    private SearchRow[] SelectedRows() => Results.SelectedItems.Cast<SearchRow>().ToArray();
+    // Every row command shares this generation gate, including keyboard/menu
+    // callbacks queued before a query or IME composition invalidated its rows.
+    private SearchRow[] SelectedRows() => HasCurrentSearchResults ? Results.SelectedItems.Cast<SearchRow>().ToArray() : [];
     private static bool Exists(SearchRow row) => row.IsApplication || File.Exists(row.Path) || Directory.Exists(row.Path);
-    private void ActionError(string text) { StatusText.Text = text; StatusText.Visibility = Visibility.Visible; }
+    private void ActionError(string text) { StatusText.Text = text; StatusText.Visibility = Visibility.Visible; RefreshSearchPresentation(); }
 
     internal static DataObject FileTransferData(string[] paths, bool cut = false)
     {

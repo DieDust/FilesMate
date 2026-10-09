@@ -12,6 +12,7 @@ public sealed record OperationHistoryEntry(FileUndoRecord Record, bool Undone)
         FileUndoKind.Grouped => StringTable.Format("Files_GroupedCount", Count),
         FileUndoKind.Merged => StringTable.Get("Files_Merged"),
         FileUndoKind.ShellTransfer => StringTable.Get("History_WindowsTransfer"),
+        FileUndoKind.ViewState => Record.ViewChange?.Description ?? StringTable.Get("Recursive_Toggle"),
         _ => StringTable.Format("Files_CreatedCopiedCount", Count)
     };
     public string Detail => Record.RecordedAt.ToLocalTime().ToString("HH:mm") + " · "

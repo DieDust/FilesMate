@@ -29,6 +29,52 @@ public sealed class CompactListGeometry
     public int Count { get; }
     public int ColumnCount => _widths.Length;
     public double ExtentWidth { get; }
+
+    private CompactListGeometry(int rows, int count, double[] widths, double[] lefts, double extentWidth)
+    {
+        Rows = rows;
+        Count = count;
+        _widths = widths;
+        _lefts = lefts;
+        ExtentWidth = extentWidth;
+    }
+
+    // Keep old layout snapshots immutable. A visible-column publication needs
+    // no intermediate full width array, and only the affected prefix suffix
+    // must be recomputed. Incomplete columns retain their published widths.
+    internal CompactListGeometry WithMeasuredWidths(ReadOnlySpan<double> widths,
+        ReadOnlySpan<int> measuredEntries, int first, int last)
+    {
+        if (widths.Length != ColumnCount || measuredEntries.Length != ColumnCount)
+            throw new ArgumentException("One measurement per column is required.");
+        ArgumentOutOfRangeException.ThrowIfNegative(first);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(last, ColumnCount - 1);
+        if (last < first) return this;
+        double[]? updated = null;
+        var changedFirst = -1;
+        for (var c = first; c <= last; c++)
+        {
+            if (measuredEntries[c] != Math.Min(Rows, Count - c * Rows) || _widths[c] == widths[c]) continue;
+            if (!double.IsFinite(widths[c]) || widths[c] <= 0) throw new ArgumentOutOfRangeException(nameof(widths));
+            if (updated is null)
+            {
+                updated = (double[])_widths.Clone();
+                changedFirst = c;
+            }
+            updated[c] = widths[c];
+        }
+        if (updated is null) return this;
+        var lefts = new double[ColumnCount];
+        Array.Copy(_lefts, lefts, changedFirst);
+        var extent = _lefts[changedFirst];
+        for (var c = changedFirst; c < ColumnCount; c++)
+        {
+            lefts[c] = extent;
+            extent += updated[c];
+        }
+        return new(Rows, Count, updated, lefts, extent);
+    }
+
     public double WidthAt(int column) => ColumnCount == 0 ? CompactListMetrics.MinimumColumnWidth : _widths[Math.Clamp(column, 0, ColumnCount - 1)];
     public double LeftAt(int column) => ColumnCount == 0 ? 0 : column >= ColumnCount ? ExtentWidth : _lefts[Math.Max(0, column)];
 
@@ -91,8 +137,18 @@ public sealed class CompactListGeometry
 
     public static CompactListGeometry Uniform(int rows, int count, double width)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(rows, 1);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
         var widths = new double[(int)Math.Ceiling(count / (double)rows)];
+        if (widths.Length > 0 && (!double.IsFinite(width) || width <= 0)) throw new ArgumentOutOfRangeException(nameof(width));
         Array.Fill(widths, width);
-        return new(rows, count, widths);
+        var lefts = new double[widths.Length];
+        var extent = 0d;
+        for (var c = 0; c < widths.Length; c++)
+        {
+            lefts[c] = extent;
+            extent += width;
+        }
+        return new(rows, count, widths, lefts, extent);
     }
 }

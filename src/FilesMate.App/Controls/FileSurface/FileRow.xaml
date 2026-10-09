@@ -39,6 +39,9 @@
                         <Setter Target="Fill.BorderBrush" Value="{ThemeResource FilesMate.FileItem.HoverBorderBrush}" />
                         <Setter Target="Fill.BorderThickness" Value="1" />
                         <Setter Target="Root.Opacity" Value="1" />
+                        <Setter Target="NameText.Foreground" Value="{ThemeResource FilesMate.FileItem.HoverForegroundBrush}" />
+                        <Setter Target="ModifiedText.Foreground" Value="{ThemeResource FilesMate.FileItem.HoverForegroundBrush}" />
+                        <Setter Target="SizeText.Foreground" Value="{ThemeResource FilesMate.FileItem.HoverForegroundBrush}" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState x:Name="Pressed">
@@ -88,8 +91,7 @@
                 <VisualState x:Name="Focused">
                     <VisualState.Setters>
                         <Setter Target="Fill.Background" Value="Transparent" />
-                        <Setter Target="Fill.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
-                        <Setter Target="Fill.BorderThickness" Value="1" />
+                        <Setter Target="Fill.BorderThickness" Value="0" />
                         <Setter Target="Root.Opacity" Value="1" />
                     </VisualState.Setters>
                 </VisualState>
@@ -112,6 +114,23 @@
                         <Setter Target="NameText.Foreground" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
                         <Setter Target="ModifiedText.Foreground" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
                         <Setter Target="SizeText.Foreground" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+            <VisualStateGroup x:Name="FocusStates">
+                <VisualState x:Name="UnfocusedItem">
+                    <VisualState.Setters><Setter Target="FocusVisual.Visibility" Value="Collapsed" /></VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="FocusedItem">
+                    <VisualState.Setters>
+                        <Setter Target="FocusVisual.Visibility" Value="Visible" />
+                        <Setter Target="FocusVisual.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="FocusedSelectedItem">
+                    <VisualState.Setters>
+                        <Setter Target="FocusVisual.Visibility" Value="Visible" />
+                        <Setter Target="FocusVisual.BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
@@ -139,10 +158,34 @@
             CornerRadius="{StaticResource FilesMate.Corner.Small}"
             IsHitTestVisible="False" />
         <Border
+            x:Name="FocusVisual"
+            Grid.ColumnSpan="6"
+            Margin="0"
+            BorderThickness="2"
+            CornerRadius="{StaticResource FilesMate.Corner.Small}"
+            IsHitTestVisible="False"
+            Visibility="Collapsed" />
+        <!-- The complete leading presentation is arranged inside the name columns.
+             It moves with those columns instead of overlaying the entire row. -->
+        <Grid x:Name="NamePresenter" Grid.Column="1" Grid.ColumnSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="RecursiveIndentColumn" Width="0" />
+                <ColumnDefinition x:Name="RecursiveArrowColumn" Width="0" />
+                <ColumnDefinition x:Name="LeadingIconColumn" Width="{StaticResource FilesMate.Column.Glyph}" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button x:Name="RecursiveToggle" Grid.Column="1" Width="16" MinWidth="0" MinHeight="0"
+                    Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+                    HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                    IsTabStop="False" Visibility="Collapsed" Click="RecursiveToggle_Click"
+                    Style="{StaticResource QuietButtonStyle}">
+                <FontIcon x:Name="RecursiveChevron" FontFamily="Segoe Fluent Icons" FontSize="11" Glyph="&#xE76C;" />
+            </Button>
+        <Border
             x:Name="IconFrame"
             PointerEntered="OnIconPointerEntered"
             PointerExited="OnIconPointerExited"
-            Grid.Column="1"
+            Grid.Column="2"
             Width="{StaticResource FilesMate.Icon.Size.Medium}"
             Height="{StaticResource FilesMate.Icon.Size.Medium}"
             HorizontalAlignment="Right"
@@ -169,7 +212,8 @@
                 </Viewbox>
             </Grid>
         </Border>
-        <Grid x:Name="NameCell" Grid.Column="2" Padding="4,0,8,0">
+        <Grid x:Name="NameCell" Grid.Column="3" Padding="4,0,8,0">
+            <Canvas x:Name="NameMatchBackplates" IsHitTestVisible="False" />
             <TextBlock
                 x:Name="NameText"
                 HorizontalAlignment="Left"
@@ -178,6 +222,7 @@
                 Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
                 Style="{StaticResource BodyTextBlockStyle}"
                 TextTrimming="CharacterEllipsis" />
+        </Grid>
         </Grid>
         <Grid x:Name="TagCell" Padding="8,0" Visibility="Collapsed">
             <StackPanel x:Name="TagHost" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center"/>

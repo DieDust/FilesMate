@@ -18,6 +18,7 @@ public sealed partial class FileDetailsSurface
     {
         if (!DispatcherQueue.HasThreadAccess) { DispatcherQueue.TryEnqueue(() => TypographyChanged(sender, settings)); return; }
         _typography = settings;
+        _stackLayout.Configure(RowHeight, FileColumnLayout.RowWidth(VisibleColumnWidth, 0, 0, 0));
         UseLayoutRounding = true;
         _typographyScale = XamlRoot?.RasterizationScale ?? 1;
         foreach (var row in _realized) row.ApplyTypography(RowTypography, _typographyScale);

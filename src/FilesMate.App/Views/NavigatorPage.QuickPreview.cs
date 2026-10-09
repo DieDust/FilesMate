@@ -1,6 +1,7 @@
 using FilesMate.App.Controls.Preview;
 using FilesMate.App.Controls.FileSurface;
 using Microsoft.UI.Xaml;
+using FilesMate.Core.Diagnostics;
 
 namespace FilesMate.App.Views;
 
@@ -15,11 +16,21 @@ public sealed partial class NavigatorPage
         DetachQuickPreviewInput();
         window?.Dismiss();
     }
-    private async void ToggleQuickPreview()
+    internal bool InvokeWindowQuickPreview(long operation)
     {
+        if (ActiveSurface.Selection.Count != 1 || PrimarySelectedPath() is null) return false;
+        ToggleQuickPreview(operation); return true;
+    }
+    private void ToggleQuickPreview() => ToggleQuickPreview(0);
+    private async void ToggleQuickPreview(long operation)
+    {
+        if (operation == 0) operation = PerformanceTrace.NextOperation();
+        PerformanceTrace.Record(PerformanceStage.PreviewRequest, operation: operation, count: ActiveSurface.Selection.Count, auxiliary: 1);
+        try
+        {
         if (_quickPreview is { } current) { current.Close(); return; }
+        if (!ActiveSurface.ValidateRecursiveSelection(FilesMate.Core.Recursive.RecursiveOperationScope.IdentityOnly)) return;
         if (ActiveSurface.Selection.Count != 1 || PrimarySelectedPath() is not { } path || App.WindowForElement(this) is not { } owner) return;
-        SetPreviewVisible(false);
         var window = _quickPreview = new QuickPreviewWindow(owner);
         window.NavigateFile += (_, step) => ActiveSurface.MovePreviewSelection(step);
         _quickPreviewInput = new(XamlRoot.Content, CloseQuickPreview);
@@ -29,7 +40,17 @@ public sealed partial class NavigatorPage
             if (_quickPreview is null && window.RestoreOwnerFocus && IsLoaded) ActiveSurface.Focus(FocusState.Programmatic);
         };
         window.Activate();
+        PerformanceTrace.Record(PerformanceStage.PreviewWindowShown, operation: operation,
+            outcome: PerformanceOutcome.Completed, auxiliary: WinRT.Interop.WindowNative.GetWindowHandle(window).ToInt64());
         await window.LoadAsync(path);
+        PerformanceTrace.Record(PerformanceStage.PreviewContentLoaded, operation: operation, outcome: PerformanceOutcome.Completed);
+        }
+        catch (Exception error)
+        {
+            PerformanceTrace.Record(PerformanceStage.PreviewFailed, operation: operation, outcome: PerformanceOutcome.Failed, auxiliary: error.HResult);
+            App.LogFailure("Quick preview", error);
+            try { CloseQuickPreview(); } catch (Exception closeError) { App.LogFailure("Quick preview close", closeError); }
+        }
     }
 
     private void DetachQuickPreviewInput()
@@ -43,6 +64,8 @@ public sealed partial class NavigatorPage
     private void RefreshQuickPreview()
     {
         if (_quickPreview is not { } window) return;
+        if (!ActiveSurface.ValidateRecursiveSelection(FilesMate.Core.Recursive.RecursiveOperationScope.IdentityOnly, report: false))
+        { CloseQuickPreview(); return; }
         if (ActiveSurface.Selection.Count == 1 && PrimarySelectedPath() is { } path) _ = window.LoadAsync(path);
         else CloseQuickPreview();
     }

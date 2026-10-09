@@ -43,6 +43,10 @@ public sealed partial class FileDetailsSurface
     }
 
     private AlphabetNavigation _alphabet = new([], 0);
+    private readonly AlphabetClickCycle _alphabetClickCycle = new();
+    private long _alphabetItemsRevision = -1;
+    private long _alphabetBindingVersion = -1;
+    private long _alphabetStoreVersion = -1;
     private IReadOnlyList<NameSection> _nameSections = [];
     private readonly Dictionary<string, Button> _alphabetButtons = [];
     private uint? _alphabetPointer;
@@ -52,6 +56,13 @@ public sealed partial class FileDetailsSurface
     private string? _alphabetChoiceLabel;
     private int _alphabetGridColumns;
     private DispatcherQueueTimer? _alphabetHideTimer;
+    private bool IsAlphabetNavigationAvailable => !_resourcesReleased && !_visualsDetached
+        && _layout == FileLayoutKind.Details && _nameSections.Count > 0
+        && _items.Index is { } index && index.Sort.Column == EntrySortColumn.Name && _headerSort == index.Sort
+        && _alphabetItemsRevision == _items.Revision && _alphabetBindingVersion == _bindingVersion
+        && _alphabetStoreVersion == _items.Store?.DataVersion;
+
+    private void ResetAlphabetClickCycle() => _alphabetClickCycle.Reset();
 
     private void InitializeAlphabet()
     {
@@ -64,20 +75,16 @@ public sealed partial class FileDetailsSurface
             AutomationProperties.SetAutomationId(button, "Alphabet_" + label);
             button.PointerEntered += (_, _) =>
             {
-                if (_alphabet.HasBothKinds(label)) ShowAlphabetChoices(label);
-                else HideAlphabetChoices();
+                ShowAlphabetChoices(label);
             };
-            button.Click += (_, _) =>
-            {
-                if (_alphabet.HasBothKinds(label)) ShowAlphabetChoices(label, focusFirst: true);
-                else JumpLetter(label);
-            };
+            button.Click += (_, _) => CycleAlphabetLetter(label);
             _alphabetButtons.Add(label, button);
             AlphabetList.Children.Add(button);
         }
         AlphabetOverlay.GotFocus += (_, _) => ShowAlphabet();
         AlphabetTrack.PointerPressed += (_, e) =>
         {
+            if (!IsAlphabetNavigationAvailable) return;
             if (!e.GetCurrentPoint(AlphabetTrack).Properties.IsLeftButtonPressed || !AlphabetTrack.CapturePointer(e.Pointer)) return;
             _alphabetPointer = e.Pointer.PointerId;
             var y = e.GetCurrentPoint(AlphabetTrack).Position.Y - 8;
@@ -108,7 +115,7 @@ public sealed partial class FileDetailsSurface
         AlphabetOverlay.RightTapped += (_, e) => e.Handled = true;
         AlphabetOverlay.PointerWheelChanged += (_, e) =>
         {
-            if (IsModifier(Windows.System.VirtualKey.Control)) return;
+            if (!IsAlphabetNavigationAvailable || IsModifier(Windows.System.VirtualKey.Control)) return;
             ShowAlphabet();
             var delta = e.GetCurrentPoint(AlphabetOverlay).Properties.MouseWheelDelta;
             ScrollAlphabetTo(Scroller.VerticalOffset - delta / 120d * ItemHeight() * 3);
@@ -116,6 +123,7 @@ public sealed partial class FileDetailsSurface
         };
         AlphabetOverlay.KeyDown += (_, e) =>
         {
+            if (!IsAlphabetNavigationAvailable) return;
             if (e.Key == Windows.System.VirtualKey.Escape) { HideAlphabet(); Focus(FocusState.Programmatic); e.Handled = true; }
             else if (e.Key is Windows.System.VirtualKey.Up or Windows.System.VirtualKey.Down or Windows.System.VirtualKey.Home or Windows.System.VirtualKey.End)
             {
@@ -132,13 +140,14 @@ public sealed partial class FileDetailsSurface
         };
         AlphabetList.SizeChanged += (_, _) => { AlignAlphabetBubble(); AlignAlphabetChoices(); };
         AlphabetTrack.SizeChanged += (_, _) => { LayoutAlphabet(); UpdateAlphabetPosition(false); };
-        Unloaded += (_, _) => { HideAlphabet(); _alphabetHideTimer?.Stop(); };
+        Unloaded += (_, _) => { ResetAlphabetClickCycle(); HideAlphabet(); _alphabetHideTimer?.Stop(); };
     }
 
     private void RefreshAlphabet()
     {
+        ResetAlphabetClickCycle();
         HideAlphabet();
-        var show = _layout != FileLayoutKind.List && AlphabetNavigationPolicy.ShouldShow(
+        var show = _layout == FileLayoutKind.Details && AlphabetNavigationPolicy.ShouldShow(
             _alphabetEnabled,
             _items.Count,
             _alphabetMinimumItemCount,
@@ -146,6 +155,9 @@ public sealed partial class FileDetailsSurface
             _alphabetAllowedInDualPane);
         _nameSections = show && _items.Index?.Sort.Column == EntrySortColumn.Name ? _items.Index.NameSections : [];
         _alphabet = new AlphabetNavigation(_nameSections, _items.Count);
+        _alphabetItemsRevision = _items.Revision;
+        _alphabetBindingVersion = _bindingVersion;
+        _alphabetStoreVersion = _items.Store?.DataVersion ?? -1;
         _activeNameSection = -1;
         AlphabetOverlay.Visibility = _nameSections.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         Scroller.VerticalScrollBarVisibility = _layout == FileLayoutKind.List ? ScrollBarVisibility.Disabled
@@ -153,7 +165,8 @@ public sealed partial class FileDetailsSurface
         foreach (var (label, button) in _alphabetButtons)
         {
             button.IsEnabled = _alphabet.Contains(label);
-            var hint = _alphabet.HasBothKinds(label) ? string.Format(Loc.Get("Alphabet_MultipleHint"), label) : label;
+            var hint = _items.Index is { } index && _alphabetClickCycle.HasBothKinds(index, label)
+                ? string.Format(Loc.Get("Alphabet_MultipleHint"), label) : label;
             button.Content = label;
             AutomationProperties.SetName(button, hint);
             ToolTipService.SetToolTip(button, null);
@@ -203,7 +216,7 @@ public sealed partial class FileDetailsSurface
 
     private void ShowAlphabet()
     {
-        if (_nameSections.Count == 0) return;
+        if (!IsAlphabetNavigationAvailable) return;
         _alphabetHideTimer?.Stop();
         if (AlphabetLetters.Visibility != Visibility.Visible)
         {
@@ -246,13 +259,33 @@ public sealed partial class FileDetailsSurface
 
     private void ScrollAlphabetTo(double offset)
     {
+        if (!IsAlphabetNavigationAvailable) return;
+        var alphabet = _alphabet;
+        var cycleRevision = _alphabetClickCycle.Revision;
+        bool OwnsJump() => IsAlphabetNavigationAvailable && ReferenceEquals(_alphabet, alphabet)
+            && cycleRevision == _alphabetClickCycle.Revision;
+        NotifyUserInteraction();
+        if (!OwnsJump()) return;
         offset = Math.Clamp(offset, 0, Math.Max(0, Scroller.ScrollableHeight));
         _ = Scroller.ChangeView(null, offset, null, disableAnimation: true);
+        if (!OwnsJump()) return;
         UpdateAlphabetAt(offset, true);
+    }
+
+    private void CycleAlphabetLetter(string label)
+    {
+        if (!IsAlphabetNavigationAvailable)
+        {
+            ResetAlphabetClickCycle();
+            return;
+        }
+        JumpAlphabetItem(_alphabetClickCycle.Next(_items.Index!, label));
     }
 
     private void JumpLetter(string label, bool boundary = false, bool last = false)
     {
+        ResetAlphabetClickCycle();
+        if (!IsAlphabetNavigationAvailable) return;
         var row = _alphabet.FirstVisibleIndex(Scroller.VerticalOffset, ItemHeight(), Columns());
         var section = boundary ? _alphabet.BoundaryDestination(label, last) : _alphabet.Destination(label, row);
         JumpAlphabetSection(section);
@@ -260,17 +293,31 @@ public sealed partial class FileDetailsSurface
 
     private void JumpAlphabetSection(int section)
     {
-        if (section < 0) return;
+        if (!IsAlphabetNavigationAvailable || section < 0 || section >= _nameSections.Count) return;
+        JumpAlphabetItem(_alphabet.Sections[section].FirstIndex);
+    }
+
+    private void JumpAlphabetItem(int firstIndex)
+    {
+        if (!IsAlphabetNavigationAvailable || firstIndex < 0 || firstIndex >= _items.Count) return;
+        var alphabet = _alphabet;
+        var cycleRevision = _alphabetClickCycle.Revision;
+        bool OwnsJump() => IsAlphabetNavigationAvailable && ReferenceEquals(_alphabet, alphabet)
+            && cycleRevision == _alphabetClickCycle.Revision;
+        NotifyUserInteraction();
+        if (!OwnsJump()) return;
         HideAlphabetChoices();
         UpdateAlphabetTailSpace();
+        if (!OwnsJump()) return;
         Scroller.UpdateLayout();
-        var offset = _alphabet.OffsetForItem(_nameSections[section].FirstIndex, ItemHeight(), Columns());
+        if (!OwnsJump()) return;
+        var offset = alphabet.OffsetForItem(firstIndex, ItemHeight(), Columns());
         ScrollAlphabetTo(offset);
     }
 
     private void ShowAlphabetChoices(string label, bool focusFirst = false)
     {
-        if (!_alphabet.HasBothKinds(label))
+        if (!IsAlphabetNavigationAvailable || !_alphabetClickCycle.HasBothKinds(_items.Index!, label))
         {
             HideAlphabetChoices();
             return;
@@ -278,6 +325,8 @@ public sealed partial class FileDetailsSurface
         ShowAlphabet();
         if (_alphabetChoiceLabel != label || AlphabetChoices.Visibility != Visibility.Visible)
         {
+            var alphabet = _alphabet;
+            var index = _items.Index!;
             _alphabetChoiceLabel = label;
             AlphabetChoiceList.Children.Clear();
             foreach (var isDirectory in new[] { true, false })
@@ -293,8 +342,9 @@ public sealed partial class FileDetailsSurface
                 AutomationProperties.SetName(choice, label + " " + group);
                 choice.Click += (_, _) =>
                 {
-                    var row = _alphabet.FirstVisibleIndex(Scroller.VerticalOffset, ItemHeight(), Columns());
-                    JumpAlphabetSection(_alphabet.Destination(label, row, isDirectory));
+                    if (!IsAlphabetNavigationAvailable || !ReferenceEquals(_alphabet, alphabet)
+                        || !ReferenceEquals(_items.Index, index)) return;
+                    JumpAlphabetItem(_alphabetClickCycle.Select(index, label, isDirectory));
                 };
                 AlphabetChoiceList.Children.Add(choice);
             }
@@ -327,6 +377,7 @@ public sealed partial class FileDetailsSurface
 
     private void UpdateAlphabetAt(double offset, bool showBubble)
     {
+        if (!IsAlphabetNavigationAvailable) return;
         AlphabetRange.Visibility = _alphabetHovered || _alphabetPointer is not null
             ? Visibility.Visible : Visibility.Collapsed;
         var track = Math.Max(1, AlphabetTrack.ActualHeight - 16);
@@ -374,7 +425,7 @@ public sealed partial class FileDetailsSurface
         var button = _alphabetButtons[label];
         Theming.ThemeResources.Clear(button, Control.BackgroundProperty);
         Theming.ThemeResources.Clear(button, Control.ForegroundProperty);
-        if (!_alphabet.HasBothKinds(label)) return;
+        if (_items.Index is not { } index || !_alphabetClickCycle.HasBothKinds(index, label)) return;
 
         // A small, separated fill signals that both folders and files are available.
         Theming.ThemeResources.Bind(button, Control.BackgroundProperty, "FilesMate.Item.HoverBrush");

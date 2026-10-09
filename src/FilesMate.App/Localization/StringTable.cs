@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 
 namespace FilesMate.App.Localization;
 
@@ -55,7 +55,7 @@ public static partial class StringTable
         ["SettingsAdvanced"] = "Advanced",
         ["SettingsAbout"] = "About",
         ["FilesFoldersTitle"] = "Files & folders",
-        ["FilesFoldersLead"] = "Choose how names, dates, and everyday file actions appear while you browse.",
+        ["FilesFoldersLead"] = "Set file display and opening options.",
         ["FoldersSection"] = "Folders",
         ["SidebarPinsTitle"] = "Sidebar pinned items",
         ["SidebarPinsDescription"] = "Remove any pinned location from its context menu, or restore the familiar defaults here.",
@@ -76,11 +76,11 @@ public static partial class StringTable
         ["FileListSection"] = "File list",
         ["AlphabetNavigationSection"] = "Alphabet navigation",
         ["AlphabetNavigationTitle"] = "Enable alphabet navigation",
-        ["AlphabetNavigationDescription"] = "Show the alphabet rail, letter bubble, and range indicator while sorting by name.",
+        ["AlphabetNavigationDescription"] = "Show the alphabet rail, letter bubble, and range indicator in Details view while sorting by name.",
         ["AlphabetMinimumItemsTitle"] = "Minimum item count",
-        ["AlphabetMinimumItemsDescription"] = "Use the normal scroll bar when the folder is already small enough to scan at a glance. Set 0 to remove this limit.",
+        ["AlphabetMinimumItemsDescription"] = "Show alphabet navigation only when the folder reaches this item count. Set 0 to show it regardless of count.",
         ["AlphabetDualPaneTitle"] = "Show in dual-pane mode",
-        ["AlphabetDualPaneDescription"] = "Allow the alphabet rail in both panes even though each pane has less reading space.",
+        ["AlphabetDualPaneDescription"] = "Show alphabet navigation in both panes.",
         ["SafetySection"] = "Safety",
         ["SystemSection"] = "System",
         ["GlassSection"] = "Glass",
@@ -589,7 +589,7 @@ public static partial class StringTable
         ["SettingsAdvanced"] = "高级",
         ["SettingsAbout"] = "关于",
         ["FilesFoldersTitle"] = "文件与文件夹",
-        ["FilesFoldersLead"] = "管理名称、日期和浏览时的日常文件操作。",
+        ["FilesFoldersLead"] = "设置文件显示和打开方式。",
         ["FoldersSection"] = "文件夹",
         ["SidebarPinsTitle"] = "侧栏固定项目",
         ["SidebarPinsDescription"] = "可以在侧栏中右键取消任意固定位置，也可以在这里恢复常用的默认位置。",
@@ -610,7 +610,7 @@ public static partial class StringTable
         ["FileListSection"] = "文件列表",
         ["AlphabetNavigationSection"] = "字母快速定位",
         ["AlphabetNavigationTitle"] = "启用字母快速定位",
-        ["AlphabetNavigationDescription"] = "按名称排序时显示字母栏、字母气泡和范围提示。关闭后使用普通滚动条。",
+        ["AlphabetNavigationDescription"] = "仅在详细信息视图按名称排序时显示字母栏、字母气泡和范围提示。其他视图使用普通滚动条。",
         ["AlphabetMinimumItemsTitle"] = "最少项目数",
         ["AlphabetMinimumItemsDescription"] = "项目较少、一眼就能找到时使用普通滚动条，不额外占用列表空间。设置为 0 表示不限制数量。",
         ["AlphabetDualPaneTitle"] = "在双栏模式中显示",
@@ -1085,6 +1085,8 @@ public static partial class StringTable
 
     public static string GetForCulture(string key, CultureInfo culture)
     {
+        if (TryPortableText(key, culture, out var portableText)) return portableText;
+        if (TryTourText(key, culture, out var tourText)) return tourText;
         var translated = culture.TwoLetterISOLanguageName switch
         {
             "zh" => Chinese,

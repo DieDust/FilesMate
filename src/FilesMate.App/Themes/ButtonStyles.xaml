@@ -2,8 +2,29 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Menu foreground and background states are paired in contrast themes. -->
+    <ControlTemplate x:Key="FilesMate.MenuButtonTemplate" TargetType="Button">
+        <Grid x:Name="MenuButtonRoot" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+            <ContentPresenter x:Name="MenuButtonContent" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" Foreground="{TemplateBinding Foreground}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+            <VisualStateManager.VisualStateGroups><VisualStateGroup x:Name="CommonStates">
+                <VisualState x:Name="Normal" />
+                <VisualState x:Name="PointerOver"><VisualState.Setters>
+                    <Setter Target="MenuButtonRoot.Background" Value="{ThemeResource FilesMate.Menu.ItemHoverBrush}" />
+                    <Setter Target="MenuButtonContent.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                </VisualState.Setters></VisualState>
+                <VisualState x:Name="Pressed"><VisualState.Setters>
+                    <Setter Target="MenuButtonRoot.Background" Value="{ThemeResource FilesMate.Menu.ItemPressedBrush}" />
+                    <Setter Target="MenuButtonContent.Foreground" Value="{ThemeResource FilesMate.Menu.ItemActiveForegroundBrush}" />
+                </VisualState.Setters></VisualState>
+                <VisualState x:Name="Disabled"><VisualState.Setters>
+                    <Setter Target="MenuButtonContent.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
+                </VisualState.Setters></VisualState>
+            </VisualStateGroup></VisualStateManager.VisualStateGroups>
+        </Grid>
+    </ControlTemplate>
     <Style x:Key="QuietButtonStyle" TargetType="Button">
         <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="BorderThickness" Value="0" />
@@ -21,6 +42,7 @@
                         CornerRadius="{TemplateBinding CornerRadius}"
                         Padding="{TemplateBinding Padding}">
                         <ContentPresenter
+                            x:Name="ButtonContent"
                             HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                             VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                             Content="{TemplateBinding Content}"
@@ -37,17 +59,17 @@
                                 <VisualState x:Name="Normal" />
                                 <VisualState x:Name="PointerOver">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Item.HoverBrush}" />
-                                    </VisualState.Setters>
+                                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Button.HoverBrush}" />
+                                    <Setter Target="ButtonContent.Foreground" Value="{ThemeResource FilesMate.Button.ActiveForegroundBrush}" /></VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}" />
-                                    </VisualState.Setters>
+                                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Button.PressedBrush}" />
+                                    <Setter Target="ButtonContent.Foreground" Value="{ThemeResource FilesMate.Button.ActiveForegroundBrush}" /></VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Disabled">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Opacity" Value="0.4" />
+                                        <Setter Target="ButtonContent.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" /><Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>
@@ -56,6 +78,114 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+
+    <ControlTemplate x:Key="FilesMate.FilterChoiceTemplate" TargetType="Button">
+        <Border x:Name="ChoiceRoot" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+            <ContentPresenter x:Name="ChoiceContent" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" FontWeight="{TemplateBinding FontWeight}" Foreground="{TemplateBinding Foreground}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+            <VisualStateManager.VisualStateGroups><VisualStateGroup x:Name="CommonStates">
+                <VisualState x:Name="Normal" />
+                <VisualState x:Name="PointerOver"><VisualState.Setters><Setter Target="ChoiceRoot.Background" Value="{ThemeResource FilesMate.Button.HoverBrush}" /><Setter Target="ChoiceContent.Foreground" Value="{ThemeResource FilesMate.Button.ActiveForegroundBrush}" /></VisualState.Setters></VisualState>
+                <VisualState x:Name="Pressed"><VisualState.Setters><Setter Target="ChoiceRoot.Background" Value="{ThemeResource FilesMate.Button.PressedBrush}" /><Setter Target="ChoiceContent.Foreground" Value="{ThemeResource FilesMate.Button.ActiveForegroundBrush}" /></VisualState.Setters></VisualState>
+                <VisualState x:Name="Disabled"><VisualState.Setters><Setter Target="ChoiceContent.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" /><Setter Target="ChoiceRoot.Opacity" Value="0.5" /></VisualState.Setters></VisualState>
+            </VisualStateGroup></VisualStateManager.VisualStateGroups>
+        </Border>
+    </ControlTemplate>
+
+    <ControlTemplate x:Key="FilesMate.ActiveFilterChoiceTemplate" TargetType="Button">
+        <Border x:Name="ChoiceRoot" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+            <ContentPresenter x:Name="ChoiceContent" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" FontWeight="{TemplateBinding FontWeight}" Foreground="{TemplateBinding Foreground}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+            <VisualStateManager.VisualStateGroups><VisualStateGroup x:Name="CommonStates">
+                <VisualState x:Name="Normal" />
+                <VisualState x:Name="PointerOver"><VisualState.Setters><Setter Target="ChoiceRoot.Background" Value="{ThemeResource FilesMate.Choice.SelectedHoverBrush}" /><Setter Target="ChoiceContent.Foreground" Value="{ThemeResource FilesMate.Choice.SelectedForegroundBrush}" /></VisualState.Setters></VisualState>
+                <VisualState x:Name="Pressed"><VisualState.Setters><Setter Target="ChoiceRoot.Background" Value="{ThemeResource FilesMate.Choice.SelectedPressedBrush}" /><Setter Target="ChoiceContent.Foreground" Value="{ThemeResource FilesMate.Choice.SelectedForegroundBrush}" /></VisualState.Setters></VisualState>
+                <VisualState x:Name="Disabled"><VisualState.Setters><Setter Target="ChoiceContent.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" /><Setter Target="ChoiceRoot.Opacity" Value="0.5" /></VisualState.Setters></VisualState>
+            </VisualStateGroup></VisualStateManager.VisualStateGroups>
+        </Border>
+    </ControlTemplate>
+
+    <ControlTemplate x:Key="FilesMate.FilterChoiceCheckBoxTemplate" TargetType="CheckBox">
+        <Border x:Name="ChoiceRoot" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+            <ContentPresenter x:Name="ChoiceContent" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" FontWeight="{TemplateBinding FontWeight}" Foreground="{TemplateBinding Foreground}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup x:Name="CommonStates"><VisualState x:Name="Normal" />
+                    <VisualState x:Name="PointerOver"><VisualState.Setters><Setter Target="ChoiceRoot.Background" Value="{ThemeResource FilesMate.Button.HoverBrush}" /><Setter Target="ChoiceContent.Foreground" Value="{ThemeResource FilesMate.Button.ActiveForegroundBrush}" /></VisualState.Setters></VisualState>
+                    <VisualState x:Name="Pressed"><VisualState.Setters><Setter Target="ChoiceRoot.Background" Value="{ThemeResource FilesMate.Button.PressedBrush}" /><Setter Target="ChoiceContent.Foreground" Value="{ThemeResource FilesMate.Button.ActiveForegroundBrush}" /></VisualState.Setters></VisualState>
+                    <VisualState x:Name="Disabled"><VisualState.Setters><Setter Target="ChoiceContent.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" /><Setter Target="ChoiceRoot.Opacity" Value="0.5" /></VisualState.Setters></VisualState>
+                </VisualStateGroup>
+                <VisualStateGroup x:Name="CheckStates"><VisualState x:Name="Unchecked" /><VisualState x:Name="Checked" /><VisualState x:Name="Indeterminate" /></VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+        </Border>
+    </ControlTemplate>
+    <ControlTemplate x:Key="FilesMate.ActiveFilterChoiceCheckBoxTemplate" TargetType="CheckBox">
+        <Border x:Name="ChoiceRoot" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="{TemplateBinding CornerRadius}">
+            <ContentPresenter x:Name="ChoiceContent" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" FontWeight="{TemplateBinding FontWeight}" Foreground="{TemplateBinding Foreground}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup x:Name="CommonStates"><VisualState x:Name="Normal" />
+                    <VisualState x:Name="PointerOver"><VisualState.Setters><Setter Target="ChoiceRoot.Background" Value="{ThemeResource FilesMate.Choice.SelectedHoverBrush}" /></VisualState.Setters></VisualState>
+                    <VisualState x:Name="Pressed"><VisualState.Setters><Setter Target="ChoiceRoot.Background" Value="{ThemeResource FilesMate.Choice.SelectedPressedBrush}" /></VisualState.Setters></VisualState>
+                    <VisualState x:Name="Disabled"><VisualState.Setters><Setter Target="ChoiceContent.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" /><Setter Target="ChoiceRoot.Opacity" Value="0.5" /></VisualState.Setters></VisualState>
+                </VisualStateGroup>
+                <VisualStateGroup x:Name="CheckStates"><VisualState x:Name="Unchecked" /><VisualState x:Name="Checked" /><VisualState x:Name="Indeterminate" /></VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+        </Border>
+    </ControlTemplate>
+    <Style x:Key="FilesMate.FilterChoiceButtonStyle" TargetType="Button" BasedOn="{StaticResource QuietButtonStyle}">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Glass.SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.Glass.BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Template" Value="{StaticResource FilesMate.FilterChoiceTemplate}" /></Style>
+    <Style x:Key="FilesMate.ActiveFilterChoiceButtonStyle" TargetType="Button" BasedOn="{StaticResource FilesMate.FilterChoiceButtonStyle}">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Choice.SelectedBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Choice.SelectedForegroundBrush}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Template" Value="{StaticResource FilesMate.ActiveFilterChoiceTemplate}" /></Style>
+    <Style x:Key="FilesMate.FilterChipButtonStyle" TargetType="Button" BasedOn="{StaticResource FilesMate.ActiveFilterChoiceButtonStyle}">
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style x:Key="FilesMate.FilterChoiceCheckBoxStyle" TargetType="CheckBox" BasedOn="{StaticResource DefaultCheckBoxStyle}">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+        <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Glass.SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.Glass.BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Template" Value="{StaticResource FilesMate.FilterChoiceCheckBoxTemplate}" />
+        <Setter Property="MinWidth" Value="0" /><Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="8,4" /><Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="FilesMate.ActiveFilterChoiceCheckBoxStyle" TargetType="CheckBox" BasedOn="{StaticResource FilesMate.FilterChoiceCheckBoxStyle}">
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.Choice.SelectedForegroundBrush}" />
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Choice.SelectedBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Template" Value="{StaticResource FilesMate.ActiveFilterChoiceCheckBoxTemplate}" />
+    </Style>
+    <Style x:Key="FilesMate.FilterChoiceCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Glass.SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.Glass.BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="MinHeight" Value="32" />
+    </Style>
+    <Style x:Key="FilesMate.ActiveFilterChoiceCardStyle" TargetType="Border" BasedOn="{StaticResource FilesMate.FilterChoiceCardStyle}">
+        <Setter Property="Background" Value="{ThemeResource FilesMate.Choice.SelectedBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource FilesMate.FileItem.SelectionBorderBrush}" />
     </Style>
 
     <Style
@@ -87,6 +217,7 @@
     <Style x:Key="SelectedCommandBarButtonStyle" TargetType="Button" BasedOn="{StaticResource CommandBarButtonStyle}">
         <Setter Property="FontFamily" Value="{ThemeResource FilesMate.UiFontFamily}" />
         <Setter Property="Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}" />
+        <Setter Property="Foreground" Value="{ThemeResource FilesMate.FileItem.SelectedForegroundBrush}" />
     </Style>
 
     <Style
@@ -98,6 +229,7 @@
         <Setter Property="Height" Value="32" />
         <Setter Property="MinWidth" Value="32" />
         <Setter Property="Foreground" Value="{ThemeResource FilesMate.Selection.AccentBrush}" />
+        <Setter Property="Template" Value="{StaticResource FilesMate.MenuButtonTemplate}" />
     </Style>
 
     <Style
@@ -121,12 +253,14 @@
                 <ControlTemplate TargetType="Button">
                     <Grid
                         x:Name="Root"
+                        VisualStateManager.CustomVisualStateManager="{StaticResource FilesMate.Motion.VisualStateManager}"
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="{TemplateBinding CornerRadius}"
                         Padding="{TemplateBinding Padding}">
                         <ContentPresenter
+                            x:Name="ButtonContent"
                             HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                             VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                             Content="{TemplateBinding Content}"
@@ -143,18 +277,18 @@
                                 <VisualState x:Name="Normal" />
                                 <VisualState x:Name="PointerOver">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Glass.SurfaceHoverBrush}" />
+                                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Button.HoverBrush}" />
                                         <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Glass.BorderStrongBrush}" />
-                                    </VisualState.Setters>
+                                    <Setter Target="ButtonContent.Foreground" Value="{ThemeResource FilesMate.Button.ActiveForegroundBrush}" /></VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Glass.SurfacePressedBrush}" />
-                                    </VisualState.Setters>
+                                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Button.PressedBrush}" />
+                                    <Setter Target="ButtonContent.Foreground" Value="{ThemeResource FilesMate.Button.ActiveForegroundBrush}" /></VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Disabled">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Opacity" Value="0.45" />
+                                        <Setter Target="ButtonContent.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" /><Setter Target="Root.Background" Value="{ThemeResource ButtonBackgroundDisabled}" /><Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>
@@ -181,12 +315,14 @@
                 <ControlTemplate TargetType="Button">
                     <Grid
                         x:Name="Root"
+                        VisualStateManager.CustomVisualStateManager="{StaticResource FilesMate.Motion.VisualStateManager}"
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="{TemplateBinding CornerRadius}"
                         Padding="{TemplateBinding Padding}">
                         <ContentPresenter
+                            x:Name="ButtonContent"
                             HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                             VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                             Content="{TemplateBinding Content}"
@@ -203,19 +339,19 @@
                                 <VisualState x:Name="Normal" />
                                 <VisualState x:Name="PointerOver">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Glass.AccentSoftBrush}" />
+                                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Button.HoverBrush}" />
                                         <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Glass.AccentBrush}" />
-                                    </VisualState.Setters>
+                                    <Setter Target="ButtonContent.Foreground" Value="{ThemeResource FilesMate.Button.ActiveForegroundBrush}" /></VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}" />
+                                        <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Button.PressedBrush}" />
                                         <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Glass.AccentBrush}" />
-                                    </VisualState.Setters>
+                                    <Setter Target="ButtonContent.Foreground" Value="{ThemeResource FilesMate.Button.ActiveForegroundBrush}" /></VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Disabled">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Opacity" Value="0.45" />
+                                        <Setter Target="ButtonContent.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" /><Setter Target="Root.Background" Value="{ThemeResource ButtonBackgroundDisabled}" /><Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>
@@ -241,12 +377,14 @@
                 <ControlTemplate TargetType="Button">
                     <Grid
                         x:Name="Root"
+                        VisualStateManager.CustomVisualStateManager="{StaticResource FilesMate.Motion.VisualStateManager}"
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="{TemplateBinding CornerRadius}"
                         Padding="{TemplateBinding Padding}">
                         <ContentPresenter
+                            x:Name="ButtonContent"
                             HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                             VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                             Content="{TemplateBinding Content}"
@@ -264,16 +402,16 @@
                                 <VisualState x:Name="PointerOver">
                                     <VisualState.Setters>
                                         <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Glass.AccentHoverBrush}" />
-                                    </VisualState.Setters>
+                                    <Setter Target="ButtonContent.Foreground" Value="{ThemeResource FilesMate.Glass.AccentForegroundBrush}" /></VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Opacity" Value="0.82" />
-                                    </VisualState.Setters>
+                                        <Setter Target="Root.Background" Value="{ThemeResource AccentButtonBackgroundPressed}" />
+                                    <Setter Target="ButtonContent.Foreground" Value="{ThemeResource FilesMate.Glass.AccentForegroundBrush}" /></VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Disabled">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Opacity" Value="0.45" />
+                                        <Setter Target="ButtonContent.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" /><Setter Target="Root.Background" Value="{ThemeResource ButtonBackgroundDisabled}" /><Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>
@@ -302,12 +440,14 @@
                 <ControlTemplate TargetType="Button">
                     <Grid
                         x:Name="Root"
+                        VisualStateManager.CustomVisualStateManager="{StaticResource FilesMate.Motion.VisualStateManager}"
                         Background="{TemplateBinding Background}"
                         BorderBrush="{TemplateBinding BorderBrush}"
                         BorderThickness="{TemplateBinding BorderThickness}"
                         CornerRadius="{TemplateBinding CornerRadius}"
                         Padding="{TemplateBinding Padding}">
                         <ContentPresenter
+                            x:Name="ButtonContent"
                             HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                             VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                             Content="{TemplateBinding Content}"
@@ -325,16 +465,16 @@
                                 <VisualState x:Name="PointerOver">
                                     <VisualState.Setters>
                                         <Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Glass.BorderStrongBrush}" />
-                                    </VisualState.Setters>
+                                    <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Button.HoverBrush}" /><Setter Target="ButtonContent.Foreground" Value="{ThemeResource FilesMate.Button.ActiveForegroundBrush}" /></VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Pressed">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Opacity" Value="0.88" />
-                                    </VisualState.Setters>
+                                        
+                                    <Setter Target="Root.Background" Value="{ThemeResource FilesMate.Button.PressedBrush}" /><Setter Target="ButtonContent.Foreground" Value="{ThemeResource FilesMate.Button.ActiveForegroundBrush}" /></VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Disabled">
                                     <VisualState.Setters>
-                                        <Setter Target="Root.Opacity" Value="0.45" />
+                                        <Setter Target="ButtonContent.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" /><Setter Target="Root.Background" Value="{ThemeResource ButtonBackgroundDisabled}" /><Setter Target="Root.BorderBrush" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>

@@ -35,7 +35,7 @@ public sealed partial class AdvancedSettingsPage : UserControl
         ClassicExplorerButton.Content = StringTable.Get("ClassicExplorerOpen");
         _syncing = true;
         var exe = Environment.ProcessPath;
-        if (!string.IsNullOrEmpty(exe) && _association.HasOurCommand(exe) && !_association.IsEnabled(exe))
+        if (!FilesMate.Core.Configuration.RuntimeProfile.HasPrivateProfile && !string.IsNullOrEmpty(exe) && _association.HasOurCommand(exe) && !_association.IsEnabled(exe))
         {
             try
             {
@@ -47,7 +47,9 @@ public sealed partial class AdvancedSettingsPage : UserControl
             }
         }
 
-        DefaultAppToggle.IsOn = !string.IsNullOrEmpty(exe) && _association.IsEnabled(exe);
+        DefaultAppToggle.IsEnabled = !FilesMate.Core.Configuration.RuntimeProfile.IsPortable;
+        if (FilesMate.Core.Configuration.RuntimeProfile.IsPortable) DefaultAppCard.Description = Loc.Get("Portable_NoIntegration");
+        DefaultAppToggle.IsOn = !FilesMate.Core.Configuration.RuntimeProfile.HasPrivateProfile && !string.IsNullOrEmpty(exe) && _association.IsEnabled(exe);
         _syncing = false;
     }
 
@@ -62,9 +64,7 @@ public sealed partial class AdvancedSettingsPage : UserControl
     {
         try
         {
-            var path = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "FilesMate");
+            var path = FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath;
             Directory.CreateDirectory(path);
             _ = await Windows.System.Launcher.LaunchFolderPathAsync(path);
         }

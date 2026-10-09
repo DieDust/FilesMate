@@ -3,6 +3,7 @@
     x:Class="FilesMate.App.Views.NavigatorPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:filters="using:FilesMate.App.Controls.Filters"
     xmlns:glass="using:FilesMate.App.Controls.Glass"
     xmlns:favorites="using:FilesMate.App.Controls.Favorites"
     xmlns:home="using:FilesMate.App.Controls.Home"
@@ -104,9 +105,9 @@
                     Background="{ThemeResource FilesMate.CommandBar.BackgroundBrush}">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="{StaticResource FilesMate.Row.Omnibar}" />
+                            <RowDefinition Height="Auto" MinHeight="{StaticResource FilesMate.Control.Height.Omnibar}" />
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="{StaticResource FilesMate.Row.CommandBar}" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
                         <Grid
@@ -132,7 +133,6 @@
                                 VerticalAlignment="Center"
                                 BackClicked="Toolbar_BackClicked"
                                 CrumbClicked="Address_CrumbClicked"
-                                SearchChosen="Omni_SearchChosen"
                                 MoreSearchRequested="Omni_MoreSearchRequested"
                                 ForwardClicked="Toolbar_ForwardClicked"
                                 ModeCanceled="Omni_ModeCanceled"
@@ -152,7 +152,12 @@
                                 x:Name="CommandBarCard"
                                 SurfaceKind="Command"
                                 Style="{StaticResource FilesMate.CommandBarCardStyle}">
-                                <toolbar:AdaptiveCommandToolbar
+                                                          <Grid>
+                          <Grid.RowDefinitions>
+                              <RowDefinition Height="Auto" />
+                              <RowDefinition Height="Auto" />
+                          </Grid.RowDefinitions>
+                          <toolbar:AdaptiveCommandToolbar
                                     x:Name="Commands"
                                     HorizontalAlignment="Stretch"
                                     CommandInvoked="Commands_CommandInvoked"
@@ -163,6 +168,8 @@
                                     LayoutChanged="Commands_LayoutChanged"
                                     PreviewClicked="Commands_PreviewClicked"
                                     SortRequested="Commands_SortRequested" SortSpecificationRequested="Commands_SortSpecificationRequested" GridSizeRequested="Commands_GridSizeRequested" ListZoomRequested="Commands_ListZoomRequested" SortDirectionRequested="Commands_SortDirectionRequested" GroupingRequested="Commands_GroupingRequested" />
+                                <filters:InlineFolderFilter x:Name="InlineFilters" Grid.Row="1" />
+                          </Grid>
                             </glass:LiquidGlassSurface>
                         </Grid>
                     </Grid>

@@ -150,7 +150,7 @@ public sealed class WindowsDirectoryEnumerator : IDirectoryEnumerator
                         request.PaneId,
                         request.Generation,
                         normalized,
-                        buffer.ToArray(),
+                        buffer,
                         isFinal: false,
                         error: null);
                     buffer.Clear();
@@ -169,7 +169,7 @@ public sealed class WindowsDirectoryEnumerator : IDirectoryEnumerator
                         request.PaneId,
                         request.Generation,
                         normalized,
-                        buffer.ToArray(),
+                        buffer,
                         isFinal: true,
                         Win32ErrorMapper.Map(error, isTerminal: false));
                     yield break;
@@ -185,7 +185,7 @@ public sealed class WindowsDirectoryEnumerator : IDirectoryEnumerator
             request.PaneId,
             request.Generation,
             normalized,
-            buffer.ToArray(),
+            buffer,
             isFinal: true,
             error: null);
     }

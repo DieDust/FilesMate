@@ -7,6 +7,9 @@ public static class PinyinName
 {
     private sealed record Table(int[] Codepoints, ushort[] Readings, string[] Syllables);
     private static readonly Lazy<Table> Data = new(ReadTable);
+    private static readonly string[] LatinInitials =
+        ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+         "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
 
     public static bool StartsWithHan(string name) => name.Length > 0 && Rune.TryGetRuneAt(name, 0, out var rune) && IsHan(rune.Value);
 
@@ -20,11 +23,12 @@ public static class PinyinName
         if (!hasHan) return name;
         var table = Data.Value;
         var text = new StringBuilder(name.Length * 2);
+        Span<char> encoded = stackalloc char[2];
         foreach (var rune in name.EnumerateRunes())
         {
             var index = IsHan(rune.Value) ? Array.BinarySearch(table.Codepoints, rune.Value) : -1;
             if (index >= 0) text.Append(table.Syllables[table.Readings[index]]);
-            else text.Append(rune.ToString());
+            else text.Append(encoded[..rune.EncodeToUtf16(encoded)]);
         }
         return text.ToString();
     }
@@ -33,7 +37,7 @@ public static class PinyinName
     {
         if (key.Length == 0) return "#";
         var first = char.ToUpperInvariant(key[0]);
-        if (first is >= 'A' and <= 'Z') return first.ToString();
+        if (first is >= 'A' and <= 'Z') return LatinInitials[first - 'A'];
         return char.IsLetter(first) || char.IsSurrogate(first) ? "其他" : "#";
     }
 

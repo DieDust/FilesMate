@@ -12,7 +12,19 @@ public sealed class AdvancedSearchQuery
     private readonly List<Func<AdvancedSearchHit, bool>> _constraints = [];
     public bool RequiresMetadata { get; private set; }
     public IReadOnlyList<string> IndexTerms { get; private set; } = [];
-    public bool Matches(AdvancedSearchHit hit) => _constraints.All(p => p(hit)) && _groups.Any(g => g.All(p => p(hit)));
+    public bool Matches(AdvancedSearchHit hit)
+    {
+        foreach (var constraint in _constraints)
+            if (!constraint(hit)) return false;
+        foreach (var group in _groups)
+        {
+            var matches = true;
+            foreach (var predicate in group)
+                if (!predicate(hit)) { matches = false; break; }
+            if (matches) return true;
+        }
+        return false;
+    }
 
     public static AdvancedSearchQuery Parse(SearchPageRequest request, DateTime? today = null)
     {

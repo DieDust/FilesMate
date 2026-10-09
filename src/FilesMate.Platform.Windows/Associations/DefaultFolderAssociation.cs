@@ -93,6 +93,7 @@ public sealed class DefaultFolderAssociation
 
     public void Enable(string executable)
     {
+        FilesMate.Core.Configuration.RuntimeProfile.RequirePersistentIntegration();
         foreach (var handler in Handlers)
         {
             Apply(handler, executable);
@@ -105,6 +106,7 @@ public sealed class DefaultFolderAssociation
 
     public void Disable(string executable)
     {
+        FilesMate.Core.Configuration.RuntimeProfile.RequirePersistentIntegration();
         foreach (var handler in Handlers)
         {
             RestoreHandler(handler, executable);
@@ -118,6 +120,7 @@ public sealed class DefaultFolderAssociation
     /// <summary>Remove only registrations owned by this installed executable.</summary>
     public void UnregisterInstallation(string executable)
     {
+        FilesMate.Core.Configuration.RuntimeProfile.RequirePersistentIntegration();
         ArgumentException.ThrowIfNullOrWhiteSpace(executable);
         var exe = executable.Trim().Trim('"');
         var changed = false;
@@ -155,7 +158,7 @@ public sealed class DefaultFolderAssociation
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(executable);
         ArgumentNullException.ThrowIfNull(action);
-        var resume = HasOurCommand(executable);
+        var resume = !FilesMate.Core.Configuration.RuntimeProfile.HasPrivateProfile && HasOurCommand(executable);
         if (resume)
         {
             Disable(executable);

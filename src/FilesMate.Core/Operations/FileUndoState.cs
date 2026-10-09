@@ -9,7 +9,7 @@ internal sealed class FileUndoState
     private const int MaximumEntries = 4096;
     private readonly Dictionary<string, Version> _entries = new(StringComparer.OrdinalIgnoreCase);
     private readonly string[] _roots;
-    private readonly bool _complete = true;
+    private bool _complete = true;
     private readonly bool _recursive;
 
     private FileUndoState(IEnumerable<string> roots, bool recursive = true)
@@ -41,24 +41,55 @@ internal sealed class FileUndoState
 
     internal FileUndoState SelectRoots(IEnumerable<string> roots) => new(this, roots);
 
-    private FileUndoState(FileUndoState original, FileUndoState replacement)
+    private FileUndoState(FileUndoState original, FileUndoState replacement, FileUndoState? backup,
+        string previousBackup, string currentBackup)
     {
         _roots = original._roots;
         _recursive = original._recursive;
-        _complete = original._complete && replacement._complete;
+        _complete = original._complete && replacement._complete && (backup?._complete ?? true);
         foreach (var entry in original._entries) _entries.Add(entry.Key, entry.Value);
-        foreach (var root in replacement._roots.Where(root => original._roots.Contains(root, StringComparer.OrdinalIgnoreCase)))
+        var changed = replacement._roots.Concat([previousBackup, currentBackup])
+            .Where(path => _roots.Any(root => IsWithin(path, root))).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        foreach (var root in changed)
+            foreach (var key in _entries.Keys.Where(key => IsWithin(key, root)).ToArray()) _entries.Remove(key);
+        foreach (var state in backup is null ? new[] { replacement } : new[] { replacement, backup })
+            foreach (var entry in state._entries)
+                if (_roots.Any(root => IsWithin(entry.Key, root))) _entries[entry.Key] = entry.Value;
+
+        AcceptDirectoryChanges(_entries.Where(entry => (entry.Value.Attributes & FileAttributes.Directory) != 0
+            && changed.Any(child => !string.Equals(child, entry.Key, StringComparison.OrdinalIgnoreCase) && IsWithin(child, entry.Key)))
+            .Select(entry => entry.Key).ToArray());
+    }
+    internal FileUndoState WithReplacement(FileUndoState replacement, FileUndoState? backup,
+        string previousBackup, string currentBackup) => new(this, replacement, backup, previousBackup, currentBackup);
+
+    internal FileUndoState WithDirectoryChanges(IEnumerable<string> paths)
+    {
+        var updated = new FileUndoState(this, _roots);
+        updated.AcceptDirectoryChanges(paths);
+        return updated;
+    }
+
+    private void AcceptDirectoryChanges(IEnumerable<string> paths)
+    {
+        // Renames change parent timestamps, but must not replace directory identities or
+        // adopt any unrelated descendant added or edited while a compound action runs.
+        foreach (var path in paths.Distinct(StringComparer.OrdinalIgnoreCase))
         {
-            foreach (var key in _entries.Keys.Where(key => string.Equals(key, root, StringComparison.OrdinalIgnoreCase)
-                || key.StartsWith(Path.TrimEndingDirectorySeparator(root) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)).ToArray())
-                _entries.Remove(key);
-            foreach (var entry in replacement._entries)
-                if (string.Equals(entry.Key, root, StringComparison.OrdinalIgnoreCase)
-                    || entry.Key.StartsWith(Path.TrimEndingDirectorySeparator(root) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-                    _entries.Add(entry.Key, entry.Value);
+            if (!_entries.TryGetValue(path, out var expected) || (expected.Attributes & FileAttributes.Directory) == 0) continue;
+            var current = CaptureRootsOnly([path]);
+            if (!current._complete || !current._entries.TryGetValue(path, out var actual)
+                || expected with { Written = actual.Written,
+                    // Unix filesystems without birth time derive CreationTime from mutable metadata.
+                    Created = OperatingSystem.IsWindows() ? expected.Created : actual.Created } != actual)
+                _complete = false;
+            else _entries[path] = actual;
         }
     }
-    internal FileUndoState WithReplacement(FileUndoState replacement) => new(this, replacement);
+
+    private static bool IsWithin(string path, string root) =>
+        string.Equals(path, root, StringComparison.OrdinalIgnoreCase)
+        || path.StartsWith(Path.TrimEndingDirectorySeparator(root) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
 
     public void Validate()
     {

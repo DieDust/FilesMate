@@ -4,6 +4,58 @@ namespace FilesMate.Core.Tests.Operations;
 
 public sealed class FileUndoStackTests
 {
+    private sealed class ViewChange(Action<bool> apply) : IViewUndoChange
+    {
+        public string Description => "Recursive expansion";
+        public void Apply(bool redo) => apply(redo);
+    }
+
+    [Fact]
+    public void View_and_file_undo_follow_the_same_actual_action_order()
+    {
+        var stack = new FileUndoStack(); var ops = new MemoryOperations();
+        const string first = @"D:\fixture\first.txt", second = @"D:\fixture\second.txt";
+        ops.Live.Add(first); stack.Push(FileUndoRecord.Created([first]));
+        var expanded = true;
+        stack.Push(FileUndoRecord.View(new ViewChange(redo => expanded = redo)));
+        ops.Live.Add(second); stack.Push(FileUndoRecord.Created([second]));
+        Assert.True(stack.TryUndo(ops)); Assert.True(expanded); Assert.DoesNotContain(second, ops.Live);
+        Assert.True(stack.TryUndo(ops)); Assert.False(expanded); Assert.Contains(first, ops.Live);
+        Assert.True(stack.TryUndo(ops)); Assert.DoesNotContain(first, ops.Live);
+        Assert.True(stack.TryRedo(ops)); Assert.Contains(first, ops.Live); Assert.False(expanded);
+        Assert.True(stack.TryRedo(ops)); Assert.True(expanded); Assert.DoesNotContain(second, ops.Live);
+        Assert.True(stack.TryRedo(ops)); Assert.Contains(second, ops.Live);
+    }
+
+    [Fact]
+    public void Invalid_view_history_remains_a_boundary_before_older_file_undo()
+    {
+        var stack = new FileUndoStack(); var ops = new MemoryOperations();
+        const string old = @"D:\fixture\unrelated.txt";
+        ops.Live.Add(old); var file = FileUndoRecord.Created([old]); stack.Push(file);
+        var stale = FileUndoRecord.View(new ViewChange(_ => throw new InvalidOperationException("View target no longer exists")));
+        stack.Push(stale);
+        for (var i = 0; i < 3; i++)
+        {
+            Assert.Throws<InvalidOperationException>(() => stack.TryUndo(ops));
+            Assert.Same(stale, stack.Latest); Assert.Contains(old, ops.Live); Assert.False(stack.CanRedo);
+        }
+        Assert.Contains(file, stack.UndoRecords);
+    }
+
+    [Fact]
+    public void Repeated_view_actions_have_a_finite_combined_history()
+    {
+        var stack = new FileUndoStack(); var ops = new MemoryOperations();
+        for (var i = 0; i < 256; i++) stack.Push(FileUndoRecord.View(new ViewChange(_ => { })));
+        Assert.Equal(FileUndoStack.CombinedLimit, stack.UndoRecords.Count);
+        for (var i = 0; i < 20; i++) Assert.True(stack.TryUndo(ops));
+        Assert.Equal(FileUndoStack.CombinedLimit, stack.UndoRecords.Count + stack.RedoRecords.Count);
+        stack.Push(FileUndoRecord.View(new ViewChange(_ => { })));
+        Assert.Empty(stack.RedoRecords);
+        Assert.True(stack.UndoRecords.Count <= FileUndoStack.CombinedLimit);
+    }
+
     [Fact]
     public async Task Shell_transfer_boundary_keeps_earlier_history_without_undoing_unrelated_files()
     {

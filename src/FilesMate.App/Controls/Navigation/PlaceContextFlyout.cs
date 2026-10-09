@@ -84,6 +84,7 @@ public static class PlaceContextFlyout
 
         var options = new FlyoutShowOptions { Placement = placement };
         if (position is { } point) options.Position = point;
+        Theming.FlyoutTheme.FollowHost(menu);
         menu.ShowAt(anchor, options);
         if (ejectItem is not null) _ = ResolveEjectAsync(menu, ejectItem, path);
     }

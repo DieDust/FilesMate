@@ -64,6 +64,14 @@ public sealed partial class SettingsPage : Page
     private void CloseButton_Click(object sender, RoutedEventArgs e) =>
         CloseRequested?.Invoke(this, EventArgs.Empty);
 
+    private void SectionScroller_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        // Preserve the usable action width when the settings content pane is
+        // narrow; padding must not consume most of a slider's track.
+        var inset = e.NewSize.Width < 400 ? 12 : 32;
+        SectionHost.Margin = new Thickness(inset, 24, inset, 32);
+    }
+
     private void ShowCategory(string tag)
     {
         _pendingCategory = NormalizeCategory(tag);

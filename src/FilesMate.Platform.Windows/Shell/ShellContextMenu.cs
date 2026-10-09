@@ -388,6 +388,16 @@ public static class ShellContextMenu
 
     private static nint CreateItemMenu(nint hwnd, IReadOnlyList<string> paths)
     {
+        // Relative PIDLs are valid only within their own IShellFolder. Never
+        // pass a recursive/search selection from different parents to the first
+        // parent: that can address an unrelated same-named item.
+        if (paths.Count == 0) return 0;
+        if (paths.Count > 1)
+        {
+            var commonParent = Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(paths[0]));
+            if (string.IsNullOrEmpty(commonParent) || paths.Any(path => !string.Equals(commonParent,
+                Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(path)), StringComparison.Ordinal))) return 0;
+        }
         IShellFolder? parent = null;
         var pidls = new List<nint>(paths.Count);
         try

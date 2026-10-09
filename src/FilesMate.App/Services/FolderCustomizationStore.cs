@@ -48,8 +48,7 @@ public sealed class FolderCustomizationStore
         _loaded = Task.Run(Load);
     }
 
-    public static string DefaultFilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FilesMate", "folder-customizations.json");
+    public static string DefaultFilePath => Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "folder-customizations.json");
 
     public static string? Key(string? path)
     {
@@ -92,10 +91,12 @@ public sealed class FolderCustomizationStore
 
     public Task SetCoverAsync(string path, string? cover)
     {
-        if (cover is not null && (Key(cover) is null
-            || !string.Equals(Key(Path.GetDirectoryName(cover)), Key(path), StringComparison.OrdinalIgnoreCase)))
-            throw new ArgumentException("The cover must be a file directly inside this folder.", nameof(cover));
-        return UpdateAsync(path, current => current with { CoverPath = cover });
+        var normalized = cover is null ? null : Key(cover);
+        if (cover is not null && (normalized is null || !FolderCoverSelection.IsSupported(normalized)))
+            throw new ArgumentException("The cover must be a supported image or video file path.", nameof(cover));
+        // Manual covers are references. They do not need to live inside the folder,
+        // and resetting a cover must never copy, move, or delete the source file.
+        return UpdateAsync(path, current => current with { CoverPath = normalized });
     }
 
     private async Task UpdateAsync(string path, Func<FolderCustomization, FolderCustomization> change)
@@ -169,8 +170,8 @@ public sealed class FolderCustomizationStore
                     view = null;
                 if (view is not null && !GridSizePreset.All.Any(preset => preset.Slot == view.GridSlot))
                     view = view with { GridSlot = GridSizePreset.Default.Slot };
-                var cover = item.CoverPath;
-                if (cover is not null && !string.Equals(Key(Path.GetDirectoryName(cover)), key, StringComparison.OrdinalIgnoreCase))
+                var cover = Key(item.CoverPath);
+                if (cover is not null && !FolderCoverSelection.IsSupported(cover))
                     cover = null;
                 _items[key] = item with { View = view, CoverPath = cover };
             }

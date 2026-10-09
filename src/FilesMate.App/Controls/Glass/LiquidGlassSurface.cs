@@ -1,5 +1,6 @@
 using FilesMate.App.Animations;
 using FilesMate.App.Models;
+using FilesMate.App.Theming;
 
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -77,6 +78,9 @@ public sealed class LiquidGlassSurface : ContentControl
         var connected = SurfaceKind is GlassSurfaceKind.Chrome
             or GlassSurfaceKind.Sidebar
             or GlassSurfaceKind.Command;
+        // Decorative highlights must not cover the system's high-contrast
+        // colors or survive the Windows advanced-effects fallback.
+        var decorationEnabled = GlassEnvironment.TransparencyEnabled;
 
         // Connected chrome uses the brush set on the control. The default card
         // template otherwise paints an opaque solid layer that reads as a
@@ -97,12 +101,12 @@ public sealed class LiquidGlassSurface : ContentControl
 
         if (_innerHighlight is not null)
         {
-            _innerHighlight.Opacity = connected ? 0 : state.HighlightOpacity * 0.72;
+            _innerHighlight.Opacity = connected || !decorationEnabled ? 0 : state.HighlightOpacity * 0.72;
         }
 
         if (_staticSheen is not null)
         {
-            _staticSheen.Opacity = connected ? 0 : state.HighlightOpacity * 0.55;
+            _staticSheen.Opacity = connected || !decorationEnabled ? 0 : state.HighlightOpacity * 0.55;
         }
     }
 
@@ -116,12 +120,19 @@ public sealed class LiquidGlassSurface : ContentControl
 
     private void LiquidGlassSurface_Loaded(object sender, RoutedEventArgs e)
     {
+        App.AppearanceChanged -= AppearanceChanged;
+        App.AppearanceChanged += AppearanceChanged;
         if (_controller is null && GlassSceneController.TryGet(XamlRoot, out var controller))
         {
             controller!.RegisterSurface(this);
         }
     }
 
-    private void LiquidGlassSurface_Unloaded(object sender, RoutedEventArgs e) =>
+    private void AppearanceChanged(object? sender, AppearanceSettings settings) => ApplySceneState(_state);
+
+    private void LiquidGlassSurface_Unloaded(object sender, RoutedEventArgs e)
+    {
+        App.AppearanceChanged -= AppearanceChanged;
         _controller?.UnregisterSurface(this);
+    }
 }

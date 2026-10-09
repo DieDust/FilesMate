@@ -45,6 +45,7 @@ public sealed partial class AdaptiveCommandToolbar
 
     private async void HiddenFilesButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_isCustomizationPreview) return;
         try { await App.SetExplorerPreferencesAsync(App.ExplorerPreferences with { ShowHiddenFiles = !App.ExplorerPreferences.ShowHiddenFiles }); }
         catch (Exception error) { App.LogFailure("HiddenFilesToggle", error); }
         SyncHiddenFiles();

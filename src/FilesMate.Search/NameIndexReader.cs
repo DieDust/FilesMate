@@ -19,13 +19,28 @@ public static partial class NameIndexReader
 {
     public static string[] Terms(string query) => query.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
 
-    public static bool Matches(string name, IReadOnlyList<string> terms) =>
-        terms.Count > 0 && terms.All(term => name.Contains(term, StringComparison.OrdinalIgnoreCase));
+    public static bool Matches(string name, IReadOnlyList<string> terms)
+    {
+        var count = terms.Count;
+        if (count <= 0) return false;
+        // This predicate runs for every indexed or live candidate. Avoid creating
+        // a captured delegate (and enumerator for non-array lists) for each name.
+        for (var i = 0; i < count; i++)
+            if (!name.Contains(terms[i], StringComparison.OrdinalIgnoreCase)) return false;
+        return true;
+    }
 
-    public static int Relevance(string name, string query) =>
-        name.Equals(query.Trim(), StringComparison.OrdinalIgnoreCase) ? 0
-        : Path.GetFileNameWithoutExtension(name).Equals(query.Trim(), StringComparison.OrdinalIgnoreCase) ? 1
-        : name.StartsWith(query.Trim(), StringComparison.OrdinalIgnoreCase) ? 2 : 3;
+    public static int Relevance(string name, string query) => RelevanceTrimmed(name, query.Trim());
+
+    private static int RelevanceTrimmed(string name, string query) =>
+        name.Equals(query, StringComparison.OrdinalIgnoreCase) ? 0
+        : Path.GetFileNameWithoutExtension(name.AsSpan()).Equals(query.AsSpan(), StringComparison.OrdinalIgnoreCase) ? 1
+        : name.StartsWith(query, StringComparison.OrdinalIgnoreCase) ? 2 : 3;
+
+    internal static int RelevanceTrimmed(ReadOnlySpan<char> name, ReadOnlySpan<char> query) =>
+        name.Equals(query, StringComparison.OrdinalIgnoreCase) ? 0
+        : Path.GetFileNameWithoutExtension(name).Equals(query, StringComparison.OrdinalIgnoreCase) ? 1
+        : name.StartsWith(query, StringComparison.OrdinalIgnoreCase) ? 2 : 3;
 
     public static IReadOnlyList<NameHit> Search(string database, string query, string? prefix, int limit, CancellationToken token = default,
         Func<string, bool, int>? rank = null, Func<string, bool, bool>? filter = null, int offset = 0, bool rankByPath = false,
@@ -34,6 +49,7 @@ public static partial class NameIndexReader
         var terms = Terms(query);
         if (terms.Length == 0 || limit <= 0) return [];
         token.ThrowIfCancellationRequested();
+        var rankingQuery = rank is null ? query.Trim() : query;
         using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
         {
             DataSource = database, Mode = SqliteOpenMode.ReadOnly,
@@ -50,7 +66,7 @@ public static partial class NameIndexReader
         // Rank before LIMIT so callers can prioritize launchable results without
         // losing them to a large number of matching documents or directories.
         connection.CreateFunction<string, string, int>("fm_rank",
-            (name, isDirectory) => rank?.Invoke(rankByPath ? name : Path.GetFileName(name), isDirectory == "1") ?? Relevance(Path.GetFileName(name), query), isDeterministic: true);
+            (name, isDirectory) => rank?.Invoke(rankByPath ? name : Path.GetFileName(name), isDirectory == "1") ?? RelevanceTrimmed(Path.GetFileName(name), rankingQuery), isDeterministic: true);
         connection.CreateFunction<string, bool>("fm_scope", path => prefix is null || path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase), isDeterministic: true);
         connection.CreateFunction<string, string, bool>("fm_filter", (name, directory) => filter?.Invoke(name, directory == "1") ?? true, isDeterministic: true);
         using var schema = connection.CreateCommand();
@@ -64,8 +80,8 @@ public static partial class NameIndexReader
         using var command = connection.CreateCommand();
         var useIndex = schemaVersion >= 2 && match.Length > 0;
         var table = schemaVersion == 3 ? "file_name_gram" : "file_name_substring";
-        command.CommandText = "SELECT f.name, f.path, f.is_dir FROM file_name f "
-            + (useIndex ? $" JOIN {table} s ON s.rowid=f.rowid WHERE {table} MATCH $match AND " : " WHERE ")
+        command.CommandText = "SELECT f.name, f.path, f.is_dir FROM "
+            + (useIndex ? $"{table} s CROSS JOIN file_name f ON f.rowid=s.rowid WHERE {table} MATCH $match AND " : "file_name f WHERE ")
             + "fm_scope(f.path) AND fm_match(f.name) AND fm_filter(f.path,f.is_dir) "
             + "ORDER BY fm_rank(f.path, f.is_dir), length(f.name), f.name COLLATE NOCASE, f.path LIMIT $limit OFFSET $offset;";
         if (useIndex) command.Parameters.AddWithValue("$match", match);

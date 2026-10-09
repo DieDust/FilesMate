@@ -41,6 +41,7 @@ namespace FilesMate.App;
 /// </summary>
 public sealed partial class MainWindow : Window
 {
+    private FilesMate.Core.Diagnostics.DispatcherDelayProbe? _pr00DispatcherProbe;
     private bool _windowClosed;
     private const int SwMinimize = 6;
 
@@ -120,7 +121,7 @@ public sealed partial class MainWindow : Window
         Closed += MainWindow_Closed;
         AppWindow.Closing += (_, args) =>
         {
-            if (_shellHost is null && !FileOperationLifetime.IsBusy) return;
+            if (_shellHost is null && !App.HasPendingUserWork) return;
             args.Cancel = true;
             DispatcherQueue.TryEnqueue(RequestCloseAfterFileWork);
         };
@@ -133,7 +134,7 @@ public sealed partial class MainWindow : Window
         AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
         SynchronizeTitleBarTheme();
 
-        AppWindow.SetIcon("Assets/Branding/FilesMate.ico");
+        AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "Branding", "FilesMate.ico"));
         InstallTitleBarMenuHook();
         if (AppWindow.Presenter is OverlappedPresenter presenter)
         {
@@ -151,11 +152,18 @@ public sealed partial class MainWindow : Window
 
         AppWindow.Changed += AppWindow_Changed;
         StartupClock.Mark("WindowConstructed");
+        if (FilesMate.Core.Diagnostics.PerformanceTrace.Enabled)
+            _pr00DispatcherProbe = new FilesMate.Core.Diagnostics.DispatcherDelayProbe(
+                action => DispatcherQueue.TryEnqueue(() => action()));
         Activated += MainWindow_Activated;
         if (!hostTearOut)
         {
             InitializeTabs(launch, restartSession);
 #if FILESMATE_UI_TEST
+            if (Environment.GetEnvironmentVariable("FILESMATE_PORTABLE_PROFILE_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunPortableProfileSmokeAsync());
+            if (Environment.GetEnvironmentVariable("FILESMATE_PERFORMANCE_CONTRACT_SMOKE") == "1")
+                DispatcherQueue.TryEnqueue(async () => await RunPerformanceContractSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_POPUP_INTERACTION_SMOKE") == "1")
                 DispatcherQueue.TryEnqueue(async () => await RunPopupInteractionSmokeAsync());
             if (Environment.GetEnvironmentVariable("FILESMATE_NAVIGATION_VIEWPORT_SMOKE") == "1")
@@ -540,6 +548,24 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct PlacementRectangle { public int Left, Top, Right, Bottom; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct PlacementMonitorInfo
+    {
+        public int Size;
+        public PlacementRectangle Monitor, Work;
+        public uint Flags;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern nint MonitorFromRect(ref PlacementRectangle rectangle, uint flags);
+
+    [DllImport("user32.dll", EntryPoint = "GetMonitorInfoW", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetMonitorInfo(nint monitor, ref PlacementMonitorInfo information);
+
     private void RestorePlacement()
     {
         if (_hostTearOut || _restoringPlacement)
@@ -550,11 +576,30 @@ public sealed partial class MainWindow : Window
         _restoringPlacement = true;
         try
         {
+            var saved = _windowPlacement.Load();
+            // Choose the monitor from the saved desktop coordinates before showing
+            // the new window. Its initial native monitor can still be the primary.
             var work = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Nearest).WorkArea;
+            if (saved.X != WindowPlacement.Unset && saved.Y != WindowPlacement.Unset)
+            {
+                var savedRect = new PlacementRectangle
+                {
+                    Left = saved.X, Top = saved.Y,
+                    Right = saved.X + Math.Max(1, saved.Width),
+                    Bottom = saved.Y + Math.Max(1, saved.Height),
+                };
+                var monitor = MonitorFromRect(ref savedRect, 2); // MONITOR_DEFAULTTONEAREST
+                var information = new PlacementMonitorInfo { Size = Marshal.SizeOf<PlacementMonitorInfo>() };
+                if (!GetMonitorInfo(monitor, ref information))
+                    throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+                var desktopWork = information.Work;
+                work = new RectInt32(desktopWork.Left, desktopWork.Top,
+                    desktopWork.Right - desktopWork.Left, desktopWork.Bottom - desktopWork.Top);
+            }
             var minWidth = _hostTearOut ? 640 : 1024;
             var minHeight = _hostTearOut ? 480 : 640;
             var fitted = WindowPlacementMath.Fit(
-                _windowPlacement.Load(),
+                saved,
                 work.X,
                 work.Y,
                 work.Width,
@@ -846,6 +891,7 @@ public sealed partial class MainWindow : Window
         catch { window.Close(); _handledTabDrop = false; throw; }
         ApplyHostAppearance(window);
         if (positionAtPointer) PositionTornOutWindow(window, tab);
+        else window.AppWindow.Move(AppWindow.Position);
         window.Activate();
         if (Tabs.TabItems.Count == 0)
         {
@@ -855,7 +901,7 @@ public sealed partial class MainWindow : Window
 
     private static void ApplyHostAppearance(MainWindow window)
     {
-        if (App.AppearanceViewModel?.Current is { } settings)
+        if (App.AppearanceViewModel?.Effective is { } settings)
         {
             window.ApplyAppearance(settings);
         }
@@ -873,7 +919,7 @@ public sealed partial class MainWindow : Window
         if (_closeAfterFileWork || _windowClosed) return;
         _closeAfterFileWork = true;
         if (FileOperationLifetime.IsBusy) AppWindow.Title = Loc.Get("Files_ClosingAfterOperation");
-        while (FileOperationLifetime.IsBusy) await FileOperationLifetime.WhenIdleAsync();
+        await App.WhenPendingUserWorkIdleAsync();
         if (!_windowClosed) Close();
     }
 
@@ -1087,8 +1133,7 @@ public sealed partial class MainWindow : Window
             AppTitleBar.RequestedTheme = TitleBarGlass.RequestedTheme;
             Tabs.RequestedTheme = TitleBarGlass.RequestedTheme;
 
-            var solidBackground = settings.Backdrop == BackdropKind.Solid
-                || settings.GlassEffect == GlassEffectMode.Off || settings.EffectiveTransparencyPercent == 0;
+            var solidBackground = Controls.Glass.FrostedBackdrop.EffectiveBackdrop(settings) == BackdropKind.Solid;
             if (_appliedSolidBackground != solidBackground)
             {
                 root.ClearValue(Panel.BackgroundProperty);
@@ -1100,8 +1145,7 @@ public sealed partial class MainWindow : Window
             }
         }
 
-        var effectiveBackdrop = settings.GlassEffect == GlassEffectMode.Off || settings.EffectiveTransparencyPercent == 0
-            ? BackdropKind.Solid : settings.Backdrop;
+        var effectiveBackdrop = Controls.Glass.FrostedBackdrop.EffectiveBackdrop(settings);
         if (_appliedBackdrop != effectiveBackdrop)
         {
             SystemBackdrop = CreateBackdrop(effectiveBackdrop);
@@ -1143,6 +1187,10 @@ public sealed partial class MainWindow : Window
 
     private static void ApplyAccent(AppearanceSettings settings)
     {
+        // A complete skin owns its accent, selection, ink and control states.
+        // ShellStyleResources has already painted those coordinated roles;
+        // the legacy accent-only pass would overwrite them with default colors.
+        if (settings.Skin is not null) return;
         try
         {
             if (new Windows.UI.ViewManagement.AccessibilitySettings().HighContrast)
@@ -1154,21 +1202,28 @@ public sealed partial class MainWindow : Window
         {
         }
 
+        // A complete skin has already painted its independent selection and
+        // semantic color roles before material coverage. The legacy accent
+        // treatment must not replace that selection with an accent tint.
+        if (settings.Skin is not null) return;
         PaintAccentTree(Application.Current.Resources, settings);
     }
 
     private static void PaintAccentTree(ResourceDictionary resources, AppearanceSettings settings)
     {
-        foreach (var key in resources.ThemeDictionaries.Keys)
+        if (Themes.ShellStyleResources.OwnsPalette(resources))
         {
-            if (key is not string name
-                || name.Equals("HighContrast", StringComparison.Ordinal)
-                || resources.ThemeDictionaries[key] is not ResourceDictionary theme)
+            foreach (var key in resources.ThemeDictionaries.Keys)
             {
-                continue;
-            }
+                if (key is not string name
+                    || name.Equals("HighContrast", StringComparison.Ordinal)
+                    || resources.ThemeDictionaries[key] is not ResourceDictionary theme)
+                {
+                    continue;
+                }
 
-            PaintAccentDictionary(theme, settings, dark: !name.Equals("Light", StringComparison.Ordinal));
+                PaintAccentDictionary(theme, settings, dark: !name.Equals("Light", StringComparison.Ordinal), sliderOwner: resources);
+            }
         }
 
         foreach (var merged in resources.MergedDictionaries)
@@ -1177,9 +1232,10 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private static void PaintAccentDictionary(ResourceDictionary dict, AppearanceSettings settings, bool dark)
+    private static void PaintAccentDictionary(ResourceDictionary dict, AppearanceSettings settings, bool dark, ResourceDictionary sliderOwner)
     {
         var argb = AccentPalette.Resolve(settings.Accent, settings.CustomAccent, dark);
+        PaintOwnedSliderPalette(sliderOwner, argb, dark);
         foreach (var (key, argbValue) in (SkinPalette.For(dark) with { Accent = argb }).FileItemColors())
         {
             if (dict.TryGetValue(key, out var brush))
@@ -1202,7 +1258,7 @@ public sealed partial class MainWindow : Window
         // Resolve only the accents we own/use. Enumerating every lazy WinUI
         // resource needlessly instantiates controls and can resolve material
         // aliases outside their active theme after backdrop switches.
-        string[] names = ["FilesMate.Selection.AccentBrush", "FilesMate.Glass.AccentBrush",
+        string[] names = ["FilesMate.Tab.SelectedIndicatorBrush", "FilesMate.Tab.HoverBrush", "FilesMate.Selection.AccentBrush", "FilesMate.Glass.AccentBrush",
             "FilesMate.Item.DropTargetBrush", "AccentFillColorDefaultBrush", "ToggleSwitchFillOn", "ToggleSwitchStrokeOn",
             "FilesMate.Glass.AccentHoverBrush", "AccentFillColorSecondaryBrush", "AccentFillColorTertiaryBrush",
             "ToggleSwitchFillOnPointerOver", "ToggleSwitchFillOnPressed", "ToggleSwitchStrokeOnPointerOver", "ToggleSwitchStrokeOnPressed",
@@ -1227,6 +1283,7 @@ public sealed partial class MainWindow : Window
 
             switch (name)
             {
+                case "FilesMate.Tab.SelectedIndicatorBrush":
                 case "FilesMate.Selection.AccentBrush":
                 case "FilesMate.Glass.AccentBrush":
                 case "AccentFillColorDefaultBrush":
@@ -1260,6 +1317,7 @@ public sealed partial class MainWindow : Window
                 case "ComboBoxItemBackgroundPressed":
                     AssignBrush(value, soft);
                     break;
+                case "FilesMate.Tab.HoverBrush":
                 case "FilesMate.Item.HoverBrush":
                 case "FilesMate.IconFrame.FillBrush":
                 case "FilesMate.Home.IconBackgroundBrush":
@@ -1312,6 +1370,18 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private static void PaintOwnedSliderPalette(ResourceDictionary owner, uint accent, bool dark)
+    {
+        // SDK Slider keys can alias shared, read-only text brushes. Update only
+        // our explicitly loaded dictionary and retain its mutable brush instances.
+        if (!string.Equals(owner.Source?.OriginalString, "ms-appx:///Themes/AppThemeResources.xaml", StringComparison.OrdinalIgnoreCase)
+            || owner.ThemeDictionaries[dark ? "Dark" : "Light"] is not ResourceDictionary theme)
+            return;
+        foreach (var (key, value) in (SkinPalette.For(dark) with { Accent = accent }).ResourceColors())
+            if (key.StartsWith("Slider", StringComparison.Ordinal) && theme.TryGetValue(key, out var brush))
+                AssignBrush(brush, Color.FromArgb((byte)(value >> 24), (byte)(value >> 16), (byte)(value >> 8), (byte)value));
+    }
+
     private static void AssignBrush(object value, Color color)
     {
         if (value is SolidColorBrush brush)
@@ -1341,6 +1411,8 @@ public sealed partial class MainWindow : Window
     {
         if (_windowClosed) return;
         _windowClosed = true;
+        _pr00DispatcherProbe?.Dispose();
+        _pr00DispatcherProbe = null;
 #if FILESMATE_UI_TEST
         _archiveRuntimeTimer?.Stop();
         _archiveRuntimeTimer = null;
@@ -1434,8 +1506,9 @@ public sealed partial class MainWindow : Window
     {
         SynchronizeTitleBarTheme();
         SynchronizeOverlayTheme();
-        if (App.AppearanceViewModel?.Current is { } settings)
+        if (App.AppearanceViewModel?.Effective is { } settings)
         {
+            Themes.ShellStyleResources.Apply(Application.Current.Resources, settings);
             ApplyAccent(settings);
         }
     }
@@ -1459,7 +1532,25 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        var palette = SkinPalette.For(dark);
+        if (new Windows.UI.ViewManagement.AccessibilitySettings().HighContrast)
+        {
+            // Native caption buttons use Windows contrast-theme roles rather
+            // than carrying the previous app skin's explicit color overrides.
+            var caption = AppWindow.TitleBar;
+            caption.PreferredTheme = default;
+            caption.ForegroundColor = null;
+            caption.ButtonForegroundColor = null;
+            caption.ButtonBackgroundColor = null;
+            caption.ButtonHoverForegroundColor = null;
+            caption.ButtonHoverBackgroundColor = null;
+            caption.ButtonPressedForegroundColor = null;
+            caption.ButtonPressedBackgroundColor = null;
+            caption.ButtonInactiveForegroundColor = null;
+            caption.ButtonInactiveBackgroundColor = null;
+            return;
+        }
+
+        var palette = SkinPalette.For(dark, App.AppearanceViewModel?.Effective ?? AppearanceSettings.Default);
         var foreground = Themes.ShellStyleResources.FromArgb(palette.Text);
         var inactiveForeground = Themes.ShellStyleResources.FromArgb(palette.Muted);
         var hoverBackground = Themes.ShellStyleResources.FromArgb(SkinPalette.Alpha(palette.Text, 0x12));
@@ -2015,7 +2106,6 @@ public sealed partial class MainWindow : Window
         }
 
         item.Header = text;
-        item.Foreground = TabInk(item);
         AutomationProperties.SetName(item, text);
         ToolTipService.SetToolTip(item, text);
     }
@@ -2032,18 +2122,10 @@ public sealed partial class MainWindow : Window
                 item.RequestedTheme = theme;
             }
 
-            var ink = TabInk(item);
-            item.Foreground = ink;
-            if (item.Header is TextBlock header)
-            {
-                header.Foreground = ink;
-                header.HighContrastAdjustment = ElementHighContrastAdjustment.None;
-            }
+            // The template owns selected/hover/disabled ink. Do not write a
+            // local foreground here: it would override live state/theme resources.
         }
     }
-
-    private static SolidColorBrush TabInk(FrameworkElement element) =>
-        (SolidColorBrush)ThemeResources.Resolve(element, "FilesMate.Text.PrimaryBrush")!;
 
     private void RasterizeBrandIcon()
     {

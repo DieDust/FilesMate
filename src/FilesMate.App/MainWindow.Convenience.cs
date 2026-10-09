@@ -117,7 +117,8 @@ public sealed partial class MainWindow
         if (content.Navigator is not { IsLoaded: true } page || content.RestoreState is not null
             || content.IsDisposed || _windowClosed || !Tabs.TabItems.Contains(tab)) return DataPackageOperation.None;
         await page.ReceiveTabFileDropAsync(new FileDropRequest(paths, destination, operation,
-            data.Properties.ContainsKey(FileDropRequest.ShelfMarker), control));
+            data.Properties.ContainsKey(FileDropRequest.ShelfMarker), control,
+            data.Contains(FileDropRequest.RecursiveMarker)));
         return operation;
     }
 

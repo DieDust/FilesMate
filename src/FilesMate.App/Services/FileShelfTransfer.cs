@@ -9,6 +9,7 @@ public sealed record ShelfTransferResult(IReadOnlyList<FilePathPair> Completed, 
     public int Skipped { get; init; }
     public FileUndoRecord? Undo { get; init; }
     public int WithoutUndo { get; init; }
+    public bool PreservesOrdinaryUndo { get; init; }
     public IReadOnlyList<string> RemovedSourceDirectories { get; init; } = [];
 }
 
@@ -17,9 +18,11 @@ public static class FileShelfTransfer
     public static async Task<ShelfTransferResult> RunAsync(
         ILocalFileOperations operations, IReadOnlyList<string> sources, string destination, bool move,
         IProgress<int>? progress = null, CancellationToken token = default,
-        bool allowSameDirectoryCopy = false, FileConflictResolver? resolveConflict = null, IProgress<FileCopyProgress>? byteProgress = null)
+        bool allowSameDirectoryCopy = false, FileConflictResolver? resolveConflict = null, IProgress<FileCopyProgress>? byteProgress = null,
+        bool requireRecursiveCompatibility = false)
     {
         using var lifetime = FileOperationLifetime.Begin();
+        if (requireRecursiveCompatibility) await RecursiveTransferCompatibility.VerifyAsync(sources, destination, token);
         var errors = new List<string>();
         var requests = new List<FilePathPair>();
         var unchanged = 0;
@@ -39,6 +42,7 @@ public static class FileShelfTransfer
                 ? FileCopyCollisionPolicy.KeepBothForSamePath : FileCopyCollisionPolicy.Ask).ConfigureAwait(false);
         return new(result.Completed, errors.Concat(result.Errors).ToArray(), result.Cancelled)
         { Skipped = result.Skipped + unchanged, Undo = result.Undo, WithoutUndo = result.WithoutUndo,
+            PreservesOrdinaryUndo = result.PreservesOrdinaryUndo,
             RemovedSourceDirectories = result.RemovedSourceDirectories };
     }
 

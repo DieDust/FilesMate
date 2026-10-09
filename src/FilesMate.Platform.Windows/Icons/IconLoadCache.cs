@@ -10,16 +10,29 @@ internal sealed class IconLoadCache
     private readonly object _sync = new();
     private readonly IconBitmapCache _cache;
     private readonly SemaphoreSlim _gate;
-    private readonly Dictionary<string, PendingLoad> _pending = new(StringComparer.Ordinal);
+    // Shared per cache instance, not per row or pane. This accommodates a wide
+    // visible viewport without allowing an unbounded native-waiter backlog.
+    private readonly int _maxOutstanding;
+    // One shared admission signal, rather than one queued native-load/CTS per
+    // caller. View lifetimes cancel their admission wait without losing another
+    // view's shared request or dropping a still-visible image.
+    private TaskCompletionSource? _capacityChanged;
+    private readonly Dictionary<(string Key, long Generation), PendingLoad> _pending = new();
     private long _generation;
+    private int _activeLoads;
 
-    public IconLoadCache(long maxBytes, int concurrency)
+    public IconLoadCache(long maxBytes, int concurrency, int maxOutstanding = 128)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(concurrency);
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxOutstanding, concurrency);
         _cache = new IconBitmapCache(maxBytes);
         _gate = new SemaphoreSlim(concurrency, concurrency);
+        _maxOutstanding = maxOutstanding;
     }
 
     public long CacheBytes => _cache.CurrentBytes;
+    internal int ActiveLoads => Volatile.Read(ref _activeLoads);
+    internal int OutstandingRequests { get { lock (_sync) return _pending.Count; } }
 
     public long Generation { get { lock (_sync) return _generation; } }
 
@@ -45,16 +58,34 @@ internal sealed class IconLoadCache
     {
         cancellationToken.ThrowIfCancellationRequested();
         PendingLoad pending;
-        lock (_sync)
+        (string Key, long Generation) requestKey;
+        lock (_sync) requestKey = (key, generation ?? _generation);
+        while (true)
         {
-            if (_cache.TryGetValue(key, out var cached)) return cached;
-            if (!_pending.TryGetValue(key, out pending!))
+            Task capacity;
+            lock (_sync)
             {
-                pending = new PendingLoad();
-                _pending.Add(key, pending);
-                pending.Task = LoadAsync(key, load, generation ?? _generation, pending);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (_cache.TryGetValue(key, out var cached)) return cached;
+                if (_pending.TryGetValue(requestKey, out pending!))
+                {
+                    // Coalescing remains available even when admission is full.
+                    pending.Waiters++;
+                    break;
+                }
+                if (_pending.Count < _maxOutstanding)
+                {
+                    pending = new PendingLoad { Waiters = 1 };
+                    _pending.Add(requestKey, pending);
+                    pending.Task = LoadAsync(key, load, requestKey.Generation, pending);
+                    break;
+                }
+                _capacityChanged ??= new(TaskCreationOptions.RunContinuationsAsynchronously);
+                capacity = _capacityChanged.Task;
             }
-            pending.Waiters++;
+            // Keep the captured generation across admission waits: a cache
+            // clear must not turn pre-clear work into a fresh cache publisher.
+            await capacity.WaitAsync(cancellationToken).ConfigureAwait(false);
         }
 
         try
@@ -73,8 +104,13 @@ internal sealed class IconLoadCache
                     // signaled outside the lock and a native load can finish
                     // in between. Such a load must never refill the cache.
                     pending.Abandoned = true;
-                    if (_pending.TryGetValue(key, out var current) && ReferenceEquals(current, pending))
-                        _pending.Remove(key);
+                    if (_pending.TryGetValue(requestKey, out var current) && ReferenceEquals(current, pending))
+                    {
+                        _pending.Remove(requestKey);
+                        var capacity = _capacityChanged;
+                        _capacityChanged = null;
+                        capacity?.TrySetResult();
+                    }
                 }
             }
             if (lastWaiter)
@@ -99,6 +135,7 @@ internal sealed class IconLoadCache
     {
         var cancellationToken = pending.Cancellation.Token;
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        Interlocked.Increment(ref _activeLoads);
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -112,6 +149,7 @@ internal sealed class IconLoadCache
         }
         finally
         {
+            Interlocked.Decrement(ref _activeLoads);
             _gate.Release();
         }
     }

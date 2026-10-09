@@ -3,5 +3,6 @@
   <ItemGroup>
     <Compile Include="../../src/FilesMate.App/Models/SkinPalette.cs" Link="SkinPalette.cs" />
     <Compile Include="../../src/FilesMate.App/Models/AccentPalette.cs" Link="AccentPalette.cs" />
+    <Compile Include="../../src/FilesMate.App/Models/AppearanceSettings.cs;../../src/FilesMate.App/Models/SkinPackage.cs" Link="%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

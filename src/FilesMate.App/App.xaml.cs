@@ -37,13 +37,15 @@ public partial class App : Application
     internal static event EventHandler? FolderCoversChanged;
     internal static void NotifyFolderCoversChanged() => FolderCoversChanged?.Invoke(null, EventArgs.Empty);
     private readonly List<MainWindow> _windows = [];
+    private bool _appearanceUiEnded;
     private PinnedLocationTracker? _pinnedLocationTracker;
     internal static PinnedLocationStore PinnedLocations { get; } = new(Program.SettingsPath(PinnedLocationStore.DefaultFilePath));
     private UISettings? _systemThemeWatcher;
+    private AccessibilitySettings? _accessibilityWatcher;
     private CancellationTokenSource? _autoIndexCts;
     private readonly WindowSessionStore _windowSession = new(Program.SettingsPath(WindowSessionStore.DefaultFilePath));
-    private readonly RecentFolderStore _recentFolders = new(Program.SettingsPath(RecentFolderStore.DefaultFilePath));
-    private LaunchTarget? _queuedExternalLaunch;
+    private readonly RecentFolderHistory _recentFolders = new(
+        new RecentFolderStore(Program.SettingsPath(RecentFolderStore.DefaultFilePath)), RefreshJumpListAsync);
     private LaunchTarget? _lastExternalLaunch;
     private long _lastExternalLaunchTicks;
 
@@ -142,9 +144,7 @@ public partial class App : Application
     {
         try
         {
-            var directory = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "FilesMate");
+            var directory = Path.GetDirectoryName(Program.SettingsPath(Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "crash.log")))!;
             Directory.CreateDirectory(directory);
             using var process = System.Diagnostics.Process.GetCurrentProcess();
             var details = string.Format(
@@ -174,16 +174,19 @@ public partial class App : Application
     {
         var store = new AppearanceSettingsService(Program.SettingsPath(AppearanceSettingsService.DefaultFilePath));
         var settings = store.Load();
-        AppearanceViewModel = new AppearanceSettingsViewModel(store, settings, ApplyAppearance);
+        var appearance = new AppearanceSettingsViewModel(store, settings, ApplyAppearance);
+        AppearanceViewModel = appearance;
+        appearance.PreviewChanged += QueueSearchAppearancePreview;
         StartSystemThemeWatcher();
         MetadataStore = new SqliteFileMetadataStore(Program.SettingsPath(SqliteFileMetadataStore.DefaultFilePath));
         SearchIndexSettingsStore = new SearchIndexSettingsService(Program.SettingsPath(SearchIndexSettingsService.DefaultFilePath));
         SearchIndex = new FileNameIndexService(SearchIndexSettingsStore.Load().ResolveDatabasePath(),
             () => SearchExecutableConfiguration.Load(Path.GetDirectoryName(SearchIndexSettingsStore.FilePath)));
-        ShortcutSettingsStore = new ShortcutSettingsService(ShortcutSettingsService.DefaultFilePath);
+        ShortcutSettingsStore = new ShortcutSettingsService(Program.SettingsPath(ShortcutSettingsService.DefaultFilePath));
         Shortcuts = ShortcutSettingsStore.Load();
         ExplorerPreferencesStore = new ExplorerPreferencesService(Program.SettingsPath(ExplorerPreferencesService.DefaultFilePath));
         ExplorerPreferences = ExplorerPreferencesStore.Load();
+        ReplacementBackupBudget.Shared.Enabled = ExplorerPreferences.EnableUndoBackups;
         ExplorerPreferenceBridge.ShowHiddenFiles = () => ExplorerPreferences.ShowHiddenFiles;
         ExplorerPreferenceBridge.ShowFolderSizes = () => ExplorerPreferences.ShowFolderSizes;
         ExplorerPreferenceBridge.TryFolderSize = FolderSizeCache.TryGet;
@@ -213,19 +216,20 @@ public partial class App : Application
         ]);
         Motion = new MotionService(new CompositeAnimationSettings(
             new WindowsAnimationSettings(),
-            () => AppearanceViewModel.Current.ReduceMotion));
+            // Closed-page callbacks can outlive the nullable global service slot.
+            () => appearance.Effective.ReduceMotion));
 
         ApplyApplicationTheme(settings);
 
         var launch = AppLifecycle.PendingLaunch;
+        AppLifecycle.TraceInternal("Constructing main window");
         var restored = Program.LanguageRestart?.Windows;
-        var window = new MainWindow(new AppPageFactory(), launch, hostTearOut: false, restored?.FirstOrDefault());
+        MainWindow window;
+        try { window = new MainWindow(new AppPageFactory(), launch, hostTearOut: false, restored?.FirstOrDefault()); }
+        catch (Exception error) { LogFailure("MainWindowConstruction", error); throw; }
+        AppLifecycle.TraceInternal("Main window constructed");
         TrackWindow(window);
-        DeliverQueuedLaunch(window);
-        foreach (var redirected in Program.IsUiTestBuild ? [] : AppLifecycle.TakePendingRedirects())
-        {
-            HandleRedirectedLaunch(redirected);
-        }
+
         ShareService = new WindowsShareService(window.NativeHandle);
         ApplyAppearance(settings);
         window.Activate();
@@ -240,78 +244,14 @@ public partial class App : Application
             }
         }
         ScheduleFeatureSetup(window);
+        _ = _recentFolders.InitializeAsync();
         if (!Program.IsUiTestBuild)
         {
             _ = CheckForUpdatesAfterStartupAsync();
-            _ = RefreshJumpListAsync();
             _autoIndexCts = new CancellationTokenSource();
             _ = RunAutoIndexAsync(_autoIndexCts.Token);
         }
-    }
-
-    internal void HandleRedirectedLaunch(LaunchTarget target)
-    {
-        if (target.Folder is null && target.SelectPath is null && target.SettingsSection is null && !target.ActivateOnly)
-        {
-            ToggleMainWindowFromActivation();
-            return;
-        }
-
-        if (IsDuplicateExternalLaunch(target))
-        {
-            var window = CurrentWindow ?? (_windows.Count > 0 ? _windows[0] : null);
-            if (window is not null)
-            {
-                window.DispatcherQueue.TryEnqueue(() =>
-                {
-                    if (window.AppWindow.Presenter is OverlappedPresenter presenter
-                        && presenter.State == OverlappedPresenterState.Minimized)
-                    {
-                        presenter.Restore();
-                    }
-
-                    window.Activate();
-                    AppLifecycle.TryBringToForeground(window.NativeHandle);
-                });
-            }
-
-            return;
-        }
-
-        if (_windows.Count == 0)
-        {
-            _queuedExternalLaunch = target;
-            return;
-        }
-
-        var existing = CurrentWindow ?? _windows[0];
-        DeliverExternalLaunch(existing, target);
-    }
-
-    internal void ToggleMainWindowFromActivation()
-    {
-        var window = CurrentWindow ?? (_windows.Count > 0 ? _windows[0] : null);
-        if (window is null)
-        {
-            AppLifecycle.TraceInternal("Toggle skipped: no main window");
-            return;
-        }
-
-        var queued = window.DispatcherQueue.TryEnqueue(() =>
-        {
-            try
-            {
-                window.ToggleTaskbarVisibility();
-            }
-            catch (Exception error)
-            {
-                LogFailure("TaskbarToggle", error);
-            }
-        });
-
-        AppLifecycle.TraceInternal(queued
-            ? "Toggle queued"
-            : "Toggle skipped: dispatcher queue rejected request");
+        CompleteActivationInitialization();
     }
 
     private bool IsDuplicateExternalLaunch(LaunchTarget target)
@@ -329,52 +269,15 @@ public partial class App : Application
         return false;
     }
 
-    private void DeliverQueuedLaunch(MainWindow window)
-    {
-        if (_queuedExternalLaunch is not { } queued)
-        {
-            return;
-        }
-
-        _queuedExternalLaunch = null;
-        DeliverExternalLaunch(window, queued);
-    }
-
-    private static void DeliverExternalLaunch(MainWindow window, LaunchTarget target)
-    {
-        window.DispatcherQueue.TryEnqueue(() =>
-        {
-            window.HandleLaunch(target);
-            if (window.AppWindow.Presenter is OverlappedPresenter presenter
-                && presenter.State == OverlappedPresenterState.Minimized)
-            {
-                presenter.Restore();
-            }
-
-            window.Activate();
-            AppLifecycle.TryBringToForeground(window.NativeHandle);
-        });
-    }
-
     internal void RecordRecentFolder(string? path)
     {
-        var updated = _recentFolders.Record(path);
-        _ = RefreshJumpListAsync(updated);
+        _recentFolders.Record(path);
     }
-
-    private Task RefreshJumpListAsync() => RefreshJumpListAsync(_recentFolders.Load());
 
     private static async Task RefreshJumpListAsync(IReadOnlyList<string> folders)
     {
         if (Program.IsUiTestBuild) return;
-        try
-        {
-            await JumpListService.ApplyRecentFoldersAsync(folders).ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Trace.TraceError("Jump list refresh failed: {0}", ex);
-        }
+        await JumpListService.ApplyRecentFoldersAsync(folders).ConfigureAwait(false);
     }
 
     internal void SaveWindowSession(MainWindow window)
@@ -467,6 +370,9 @@ public partial class App : Application
         {
             _systemThemeWatcher = new UISettings();
             _systemThemeWatcher.ColorValuesChanged += SystemTheme_ColorValuesChanged;
+            _systemThemeWatcher.AdvancedEffectsEnabledChanged += SystemTheme_ColorValuesChanged;
+            _accessibilityWatcher = new AccessibilitySettings();
+            _accessibilityWatcher.HighContrastChanged += SystemAccessibility_HighContrastChanged;
         }
         catch (Exception error)
         {
@@ -484,15 +390,27 @@ public partial class App : Application
 
         window.DispatcherQueue.TryEnqueue(() =>
         {
-            if (AppearanceViewModel?.Current is { Theme: AppThemeKind.System } settings)
+            if (AppearanceViewModel?.Effective is { } settings)
             {
                 ApplyAppearance(settings);
             }
         });
     }
 
+    private void SystemAccessibility_HighContrastChanged(AccessibilitySettings sender, object args)
+    {
+        if (CurrentWindow is not { } window) return;
+        window.DispatcherQueue.TryEnqueue(() =>
+        {
+            if (AppearanceViewModel?.Effective is { } settings) ApplyAppearance(settings);
+        });
+    }
+
     private static void ApplyAppearance(AppearanceSettings settings)
     {
+        // Retire XAML publication before the final window's later Closed/Unloaded
+        // preview callbacks. Model cleanup and durable commits remain independent.
+        if (Current is App ended && ended._appearanceUiEnded) return;
         Theming.AppTypography.Configure(settings);
         ApplyApplicationTheme(settings);
         Icons.ShellIconBinder.SetUseBundledIcons(settings.UseBundledFileIcons);
@@ -657,13 +575,17 @@ public partial class App : Application
             }
 
             if (version == Volatile.Read(ref _explorerPreferencesVersion))
+            {
+                ReplacementBackupBudget.Shared.Enabled = preferences.EnableUndoBackups;
                 ExplorerPreferencesChanged?.Invoke(null, preferences);
+            }
         }
         catch
         {
             if (version == Volatile.Read(ref _explorerPreferencesVersion))
             {
                 ExplorerPreferences = previous;
+                ReplacementBackupBudget.Shared.Enabled = previous.EnableUndoBackups;
                 ExplorerPreferencesChanged?.Invoke(null, previous);
             }
             throw;
@@ -692,6 +614,7 @@ public partial class App : Application
             }
         }
 
+        PruneUnavailableWindows();
         if (_windows.Count > 0)
         {
             RebindShareService();
@@ -703,59 +626,84 @@ public partial class App : Application
             return;
         }
 
-        // The last window can close within the view store's debounce interval.
-        FileUndo.Clear();
-        // Complete its atomic write before WinUI ends the process.
+        if (!_activationInbox.BeginClosing()) return;
+        if (ResumeAfterLastClose(HasPendingUserWork)) return;
+        // Durable writes do not use the closing UI dispatcher. An activation
+        // arriving during them still owns the right to cancel this close.
+        _recentFolders.FlushAsync().GetAwaiter().GetResult();
         try { FolderCustomizations.FlushAsync().GetAwaiter().GetResult(); }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
-        {
-            AppendCrashRecord("SaveFolderViews", error);
-        }
+        { AppendCrashRecord("SaveFolderViews", error); }
 
-        _autoIndexCts?.Cancel();
-        _autoIndexCts?.Dispose();
-        _autoIndexCts = null;
-        _pinnedLocationTracker?.Dispose();
-        _pinnedLocationTracker = null;
-        Motion.CancelWindowScope();
-        CurrentWindow = null;
-        AppearanceViewModel = null;
-        FileIdentityProvider = null;
-        if (ShareService is IDisposable share)
+        var shutdown = FileOperationLifetime.TryReserveShutdown();
+        if (shutdown is null)
         {
-            share.Dispose();
+            ResumeAfterLastClose(keepUserWorkAlive: true);
+            return;
         }
+        if (!_activationInbox.TryCommitExit(AppearanceViewModel?.HasPendingCommits == true))
+        {
+            shutdown.Dispose();
+            ResumeAfterLastClose(HasPendingUserWork);
+            return;
+        }
+        _shutdownReservation = shutdown;
+        _appearanceUiEnded = true;
+        GlobalSearchService.StopPortableHost();
+        AppLifecycle.EndMainInstance();
+        var late = _activationInbox.CompleteExit();
+        if (late.Count > 0) AppLifecycle.QueueRecoveryRequests(late.Select(request => request.Target));
+        try
+        {
+            FileUndo.Clear();
+            _autoIndexCts?.Cancel();
+            _autoIndexCts?.Dispose();
+            _autoIndexCts = null;
+            _pinnedLocationTracker?.Dispose();
+            _pinnedLocationTracker = null;
+            Motion.CancelWindowScope();
+            EndSearchAppearancePreview();
+            CurrentWindow = null;
+            AppearanceViewModel = null;
+            FileIdentityProvider = null;
+            if (ShareService is IDisposable share)
+            {
+                share.Dispose();
+            }
 
-        ShareService = null;
-        ShortcutSettingsStore = null;
-        ExplorerPreferencesStore = null;
-        ExplorerPreferences = ExplorerPreferences.Default;
-        ExplorerPreferenceBridge.ShowHiddenFiles = static () => false;
-        ExplorerPreferenceBridge.ShowFolderSizes = static () => false;
-        ExplorerPreferenceBridge.TryFolderSize = static (string _, out ulong size) =>
-        {
-            size = 0;
-            return false;
-        };
-        FolderSizeCache.SizeCached -= OnFolderSizeCached;
-        IsShortcutCaptureActive = false;
-        if (PreviewService is not null)
-        {
-            _ = PreviewService.DisposeAsync();
-            PreviewService = null;
-        }
-        if (SearchIndex is not null)
-        {
-            _ = SearchIndex.DisposeAsync();
-            SearchIndex = null;
-        }
+            ShareService = null;
+            ShortcutSettingsStore = null;
+            ExplorerPreferencesStore = null;
+            ExplorerPreferences = ExplorerPreferences.Default;
+            ReplacementBackupBudget.Shared.Enabled = ExplorerPreferences.EnableUndoBackups;
+            ExplorerPreferenceBridge.ShowHiddenFiles = static () => false;
+            ExplorerPreferenceBridge.ShowFolderSizes = static () => false;
+            ExplorerPreferenceBridge.TryFolderSize = static (string _, out ulong size) =>
+            {
+                size = 0;
+                return false;
+            };
+            FolderSizeCache.SizeCached -= OnFolderSizeCached;
+            IsShortcutCaptureActive = false;
+            if (PreviewService is not null)
+            {
+                _ = PreviewService.DisposeAsync();
+                PreviewService = null;
+            }
+            if (SearchIndex is not null)
+            {
+                _ = SearchIndex.DisposeAsync();
+                SearchIndex = null;
+            }
 
-        SearchIndexSettingsStore = null;
-        if (MetadataStore is not null)
-        {
-            _ = MetadataStore.DisposeAsync();
-            MetadataStore = null;
+            SearchIndexSettingsStore = null;
+            if (MetadataStore is not null)
+            {
+                _ = MetadataStore.DisposeAsync();
+                MetadataStore = null;
+            }
         }
+        finally { Exit(); }
     }
 
     private static async Task RunAutoIndexAsync(CancellationToken cancellationToken)
@@ -805,6 +753,10 @@ public partial class App : Application
     internal static async Task<SearchIndexMigrationResult> RelocateSearchIndexAsync(string directory)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(directory);
+        FilesMate.Core.Configuration.RuntimeProfile.RequireInside(directory);
+        if (FilesMate.Core.Configuration.RuntimeProfile.HasPrivateProfile && !string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory)),
+            FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("The isolated index stays in its profile directory.");
         using var operation = FileOperationLifetime.Begin();
         await IndexRelocationGate.WaitAsync();
         try

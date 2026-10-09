@@ -1,4 +1,5 @@
 using System.Xml;
+using FilesMate.App.Preview;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 
@@ -6,18 +7,21 @@ namespace FilesMate.SearchHost;
 
 internal static class PreviewHighlighting
 {
-    private static readonly Dictionary<bool, IHighlightingDefinition> Definitions = new();
-    internal static IHighlightingDefinition? ForPath(string path, bool dark)
+    // A skin picker can produce many distinct palettes in one preview session.
+    private const int MaximumDefinitions = 16;
+    private static readonly Dictionary<CodePreviewPalette, IHighlightingDefinition> Definitions = new();
+    internal static IHighlightingDefinition? ForPath(string path, uint background)
     {
         if (System.Windows.SystemParameters.HighContrast || Path.GetExtension(path).Equals(".txt", StringComparison.OrdinalIgnoreCase)) return null;
-        if (Definitions.TryGetValue(dark, out var cached)) return cached;
+        var palette = CodePreviewPalette.Resolve(background);
+        if (Definitions.TryGetValue(palette, out var cached)) return cached;
         var xml = $$"""
             <SyntaxDefinition name="FilesMate" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
-              <Color name="String" foreground="{{(dark ? "#CE9178" : "#9B3B08")}}"/>
-              <Color name="Number" foreground="{{(dark ? "#B5CEA8" : "#286B37")}}"/>
-              <Color name="Keyword" foreground="{{(dark ? "#82AAFF" : "#075AA4")}}"/>
-              <Color name="Comment" foreground="{{(dark ? "#8BA888" : "#547548")}}"/>
-              <Color name="Error" foreground="{{(dark ? "#FF9898" : "#B32323")}}" fontWeight="bold"/>
+              <Color name="String" foreground="#{{palette.String & 0xFFFFFF:X6}}"/>
+              <Color name="Number" foreground="#{{palette.Number & 0xFFFFFF:X6}}"/>
+              <Color name="Keyword" foreground="#{{palette.Keyword & 0xFFFFFF:X6}}"/>
+              <Color name="Comment" foreground="#{{palette.Comment & 0xFFFFFF:X6}}"/>
+              <Color name="Error" foreground="#{{palette.Error & 0xFFFFFF:X6}}" fontWeight="bold"/>
               <RuleSet>
                 <Span color="Comment" begin="//"/>
                 <Span color="Comment" begin="/\*" end="\*/" multiline="true"/>
@@ -31,6 +35,8 @@ internal static class PreviewHighlighting
             </SyntaxDefinition>
             """;
         using var reader = XmlReader.Create(new StringReader(xml), new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit });
-        return Definitions[dark] = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+        var definition = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+        if (Definitions.Count >= MaximumDefinitions) Definitions.Clear();
+        return Definitions[palette] = definition;
     }
 }

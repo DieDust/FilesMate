@@ -139,7 +139,7 @@ public sealed partial class SearchResultsPage : Page, IDisposable
     internal async Task SearchAsync(bool reset = true, bool debounce = false, bool append = false)
     {
         if (!_ready || _disposed || !IsLoaded || append && (!_hasMore || _query is not null || Results.IsMemoryReclamationBusy)) return;
-        Cancel();
+        Cancel(cancelMetadata: !append);
         var version = _version;
         var request = new CancellationTokenSource(TimeSpan.FromSeconds(15)); _query = request;
         if (!append)
@@ -214,7 +214,7 @@ public sealed partial class SearchResultsPage : Page, IDisposable
         }
         catch (Exception error) { ShowError(Loc.Get("Order_SaveFailed") + error.Message); }
     }
-    private void Cancel() { ++_version; _query?.Cancel(); _query = null; _resultSortBuild?.Cancel(); }
+    private void Cancel(bool cancelMetadata = true) { if (cancelMetadata) CancelResultMetadata(); ++_version; _query?.Cancel(); _query = null; _resultSortBuild?.Cancel(); }
     public void Dispose()
     { _disposed = true; Cancel(); _sortWatcher?.Dispose(); Clipboard.ContentChanged -= Clipboard_Changed; CloseQuickPreview(); HideShelf(); Results.ReleaseResources(); _rows = []; }
     private void ShowError(string text) { StatusLabel.Text = text; EmptyText.Text = text; EmptyPanel.Visibility = ResultCount == 0 ? Visibility.Visible : Visibility.Collapsed; }
@@ -277,17 +277,18 @@ public sealed partial class SearchResultsPage : Page, IDisposable
     private void BindRows(SearchResultRow[] rows, bool append = false)
     {
         var previousCount = append ? _rows.Length : 0;
-        if (!append) { _resultStore = new EntryStore(); _tags.Clear(); ++_generation; }
+        if (!append) { CancelResultMetadata(); _resultStore = new EntryStore(); _tags.Clear(); ++_generation; }
         _rows = rows;
         _resultStore.Append(rows.Skip(previousCount).Select((row, i) => new FileEntryCore(previousCount + i, row.Name, (ulong)Math.Max(0, row.Hit.Size ?? 0),
-            row.Hit.ModifiedUtcTicks ?? 0, 0, row.Hit.IsDirectory ? System.IO.FileAttributes.Directory : System.IO.FileAttributes.Normal,
+            row.Hit.ModifiedUtcTicks ?? 0, 0, row.Hit.IsDirectory ? System.IO.FileAttributes.Directory : 0,
             row.Hit.IsDirectory ? EntryKind.Directory : EntryKind.File)).ToArray());
         var scrollOffset = Results.ScrollOffset;
         Results.Bind(_resultStore, EntryViewIndex.InSourceOrder(_resultStore, _generation, SurfaceSort()), _generation, append);
-        if (append) Results.RestoreScrollOffset(scrollOffset);
+        if (append) Results.RestoreScrollOffset(scrollOffset, preserveExactOffset: true);
         Results.SetSort(SurfaceSort()); Commands.SetSort(SurfaceSort()); SyncCommands();
         if (_resultSort is not null) _ = ApplyResultSortAsync();
         if (rows.Length > 0) _ = LoadTagsAsync();
+        QueueResultMetadata(rows.Skip(previousCount).ToArray(), previousCount);
     }
 
     private EntrySort SurfaceSort() => _resultSort ?? (Request.Sort switch

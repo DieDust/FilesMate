@@ -72,6 +72,9 @@ internal sealed class WindowsApplicationCatalog(Func<string> managerPath) : IApp
 
         // Explicit launch entries also cover portable apps placed on the desktop
         // and installations whose Start menu items are not yet in AppsFolder.
+        // Reuse only the scratch bytes, not COM objects or link results. Each
+        // refresh still reads every link afresh; an empty scan allocates no buffer.
+        using var shortcutBuffer = new ApplicationShortcut.TargetBuffer();
         foreach (var root in new[] { Environment.SpecialFolder.Programs, Environment.SpecialFolder.CommonPrograms,
             Environment.SpecialFolder.DesktopDirectory, Environment.SpecialFolder.CommonDesktopDirectory }
             .Select(Environment.GetFolderPath).Where(Directory.Exists).Distinct(StringComparer.OrdinalIgnoreCase))
@@ -81,7 +84,7 @@ internal sealed class WindowsApplicationCatalog(Func<string> managerPath) : IApp
                 var options = new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true,
                     AttributesToSkip = FileAttributes.ReparsePoint | FileAttributes.System };
                 foreach (var link in Directory.EnumerateFiles(root, "*.lnk", options).Take(5000))
-                    if (ApplicationShortcut.ReadStoredTarget(link) is { } target)
+                    if (ApplicationShortcut.ReadStoredTarget(link, shortcutBuffer) is { } target)
                         entries.Add(new(link, Path.GetFileNameWithoutExtension(link), link, target.Target, target.Arguments));
             }
             catch (Exception error) when (error is IOException or UnauthorizedAccessException) { Trace.WriteLine(error.Message); }
@@ -91,6 +94,6 @@ internal sealed class WindowsApplicationCatalog(Func<string> managerPath) : IApp
             entries.RemoveAll(entry => entry.Name.Equals("FilesMate", StringComparison.OrdinalIgnoreCase));
             entries.Insert(0, new("FilesMate", "FilesMate", manager, manager, "--activate", IsFilesMate: true));
         }
-        return ApplicationCatalog.Normalize(entries);
+        return ApplicationCatalog.CreateSnapshot(entries);
     }
 }

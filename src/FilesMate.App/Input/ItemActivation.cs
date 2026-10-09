@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using FilesMate.App.Models;
+using FilesMate.Core.Diagnostics;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Input;
@@ -16,6 +17,7 @@ internal static class ItemActivation
     // second half of a single-click-mode double-click into another open action.
     private static readonly ConditionalWeakTable<XamlRoot, ItemClickTracker> Trackers = new();
     internal static InputSystemCursor HandCursor => DesktopCursors.Hand;
+    internal static TimeSpan DoubleClickInterval => TimeSpan.FromMilliseconds(GetDoubleClickTime());
 
     internal static void BindName(TextBlock name, Func<ItemOpeningMode> mode, Action<InputCursor?> cursor)
     {
@@ -38,13 +40,26 @@ internal static class ItemActivation
     {
         if (element.XamlRoot is not { } root) return false;
         var scale = root.RasterizationScale;
-        return Trackers.GetOrCreateValue(root).ShouldOpen(identity, mode, onName,
-            Environment.TickCount64, position.X, position.Y, (int)GetDoubleClickTime(),
-            GetSystemMetrics(36) / (2 * scale), GetSystemMetrics(37) / (2 * scale));
+        var tracker = Trackers.GetOrCreateValue(root);
+        var milliseconds = Environment.TickCount64;
+        var doubleClickTime = (int)GetDoubleClickTime();
+        var toleranceX = GetSystemMetrics(36) / (2 * scale);
+        var toleranceY = GetSystemMetrics(37) / (2 * scale);
+        if (PerformanceTrace.Enabled)
+            PerformanceTrace.Record(PerformanceStage.FileClickTrackerDecision,
+                operation: identity.GetHashCode(StringComparison.Ordinal), count: (long)mode * 2 + (onName ? 1 : 0),
+                durationTicks: milliseconds, auxiliary: tracker.ExplainNextClick(identity, mode, onName,
+                    milliseconds, position.X, position.Y, doubleClickTime, toleranceX, toleranceY));
+        return tracker.ShouldOpen(identity, mode, onName, milliseconds, position.X, position.Y,
+            doubleClickTime, toleranceX, toleranceY);
     }
 
-    internal static void CancelPendingClick(FrameworkElement element)
+    internal static void CancelPendingClick(FrameworkElement element,
+        [CallerLineNumber] int callerLine = 0, [CallerFilePath] string callerFile = "")
     {
+        if (PerformanceTrace.Enabled)
+            PerformanceTrace.Record(PerformanceStage.FileClickCancelled, operation: callerLine,
+                auxiliary: callerFile.EndsWith("FileDetailsSurface.xaml.cs", StringComparison.Ordinal) ? 1 : 0);
         if (element.XamlRoot is { } root && Trackers.TryGetValue(root, out var tracker))
             tracker.CancelPendingClick();
     }

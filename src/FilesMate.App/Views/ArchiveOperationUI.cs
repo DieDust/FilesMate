@@ -17,7 +17,8 @@ internal static class ArchiveOperationUI
 {
     public static async Task<FileTransferResult?> RunAsync(FrameworkElement host, CompactMateVerb verb,
         IReadOnlyList<string> paths, string? currentFolder, ILocalFileOperations operations,
-        CancellationToken token = default)
+        CancellationToken token = default, bool requireRecursiveCompatibility = false,
+        Func<bool>? recursiveOperationCurrent = null)
     {
         var sources = paths.ToArray();
         if (sources.Length == 0) return null;
@@ -28,6 +29,7 @@ internal static class ArchiveOperationUI
         {
             if (verb == CompactMateVerb.Open)
             {
+                await VerifyRecursiveSourcesAsync();
                 await ShellOperationWorker.RunAsync(() => CompactMateSession.Launch(verb, sources, new CurrentUserRegistry()));
                 return null;
             }
@@ -51,9 +53,10 @@ internal static class ArchiveOperationUI
             cancellation.Token.ThrowIfCancellationRequested();
             if (route!.Provider == ArchiveProvider.BuiltIn)
                 return await RunBuiltInAsync(host, verb, sources, currentFolder, operations, cancellation.Token,
-                    route.UsedFallback ? StringTable.Get("Archive_FallbackHint") : null);
+                    route.UsedFallback ? StringTable.Get("Archive_FallbackHint") : null, requireRecursiveCompatibility, recursiveOperationCurrent);
             if (route.Provider == ArchiveProvider.CompactMate)
             {
+                await VerifyRecursiveSourcesAsync();
                 await ShellOperationWorker.RunAsync(() =>
                 {
                     cancellation.Token.ThrowIfCancellationRequested();
@@ -65,6 +68,10 @@ internal static class ArchiveOperationUI
             var destination = currentFolder ?? Path.GetDirectoryName(sources[0]);
             if (verb == CompactMateVerb.ExtractToOther) destination = await PickFolderAsync(host);
             if (destination is null) return null;
+            CheckRecursiveCurrent(requireRecursiveCompatibility, recursiveOperationCurrent);
+            if (requireRecursiveCompatibility)
+                await RecursiveTransferCompatibility.VerifyAsync(sources, destination, cancellation.Token, inspectWholeDestination: true);
+            CheckRecursiveCurrent(requireRecursiveCompatibility, recursiveOperationCurrent);
             var externalSources = sets?.Select(set => set.PrimaryPath).ToArray() ?? sources;
             if (verb == CompactMateVerb.ExtractToFolder && route.Provider != ArchiveProvider.Bandizip)
                 destination = Path.Combine(destination, sets![0].Name);
@@ -81,11 +88,25 @@ internal static class ArchiveOperationUI
         catch (ArchiveOperationException error)
         { throw new IOException(StringTable.Get("Archive_Error" + error.ErrorCode), error); }
         finally { host.Unloaded -= Unloaded; }
+
+        async Task VerifyRecursiveSourcesAsync()
+        {
+            CheckRecursiveCurrent(requireRecursiveCompatibility, recursiveOperationCurrent);
+            if (requireRecursiveCompatibility) await RecursiveTransferCompatibility.VerifySourcesAsync(sources, cancellation.Token);
+            CheckRecursiveCurrent(requireRecursiveCompatibility, recursiveOperationCurrent);
+        }
+    }
+
+    private static void CheckRecursiveCurrent(bool recursive, Func<bool>? current)
+    {
+        if (recursive && current?.Invoke() != true)
+            throw new RecursiveCompatibilityException(StringTable.Get("Recursive_OperationUnavailable"));
     }
 
     internal static async Task<FileTransferResult?> RunBuiltInAsync(FrameworkElement host, CompactMateVerb verb,
         IReadOnlyList<string> sources, string? currentFolder, ILocalFileOperations operations,
-        CancellationToken token = default, string? providerHint = null)
+        CancellationToken token = default, string? providerHint = null, bool requireRecursiveCompatibility = false,
+        Func<bool>? recursiveOperationCurrent = null)
     {
         if (sources.Count == 0) return null;
         if (verb is CompactMateVerb.Open)
@@ -120,12 +141,17 @@ internal static class ArchiveOperationUI
                 if (destination is null) return null;
             }
             cancellation.Token.ThrowIfCancellationRequested();
+            CheckRecursiveCurrent(requireRecursiveCompatibility, recursiveOperationCurrent);
+            if (requireRecursiveCompatibility)
+                await RecursiveTransferCompatibility.VerifyAsync(sources, destination, cancellation.Token, inspectWholeDestination: true);
+            CheckRecursiveCurrent(requireRecursiveCompatibility, recursiveOperationCurrent);
             if (verb == CompactMateVerb.SmartExtract)
                 providerHint = string.Join("\n", new[] { providerHint, StringTable.Get("Archive_SmartBuiltinHint") }.Where(hint => hint is not null));
             var progressDialog = new ArchiveProgressDialog(host, compress, cancellation, providerHint);
             try
             {
                 await progressDialog.ShowAsync();
+                CheckRecursiveCurrent(requireRecursiveCompatibility, recursiveOperationCurrent);
                 return await BuiltInArchiveTransfer.RunAsync(operations, sources, destination, compress,
                     archiveName: archiveName, createSubfolder: verb == CompactMateVerb.ExtractToFolder,
                     resolveConflict: progressDialog.ResolveAsync,
@@ -144,6 +170,7 @@ internal static class ArchiveOperationUI
     internal static ShelfTransferResult AsShelfResult(FileTransferResult result) =>
         new(result.Completed, result.Errors, result.Cancelled)
         { Skipped = result.Skipped, Undo = result.Undo, WithoutUndo = result.WithoutUndo,
+            PreservesOrdinaryUndo = result.PreservesOrdinaryUndo,
             RemovedSourceDirectories = result.RemovedSourceDirectories };
 
     private static async Task<string?> PickFolderAsync(FrameworkElement host)

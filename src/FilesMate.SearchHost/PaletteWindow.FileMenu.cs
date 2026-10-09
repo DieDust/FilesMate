@@ -44,12 +44,12 @@ public partial class PaletteWindow
             if (key is System.Windows.Input.Key.Apps or System.Windows.Input.Key.F10) e.Handled = true;
         };
         TextBlock Glyph(string glyph) => new() { Text = glyph, FontFamily = new FontFamily("Segoe Fluent Icons"),
-            FontSize = 16, Foreground = (Brush)Resources["Accent"], VerticalAlignment = VerticalAlignment.Center };
+            FontSize = 16, VerticalAlignment = VerticalAlignment.Center };
         void Invoke(string command)
         {
             menu.IsOpen = false;
             // An asynchronous search may replace rows while a menu is open.
-            if (_pending || !selected.Select(row => row.Path).SequenceEqual(SelectedRows().Select(row => row.Path)))
+            if (_pending || !selected.Select(row => SearchHitIdentity.From(row.Hit)).SequenceEqual(SelectedRows().Select(row => SearchHitIdentity.From(row.Hit))))
             { ActionError(Loc.Get("Search_ResultsChanged")); return; }
             InvokeFileCommand(command);
         }

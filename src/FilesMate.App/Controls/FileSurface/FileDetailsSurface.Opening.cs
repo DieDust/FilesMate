@@ -50,6 +50,7 @@ public sealed partial class FileDetailsSurface
 
     private void ApplyOpeningPreferences()
     {
+        CancelNameClickRename();
         // A tab may have been unloaded while settings changed. Its retained
         // tiles must pick up thumbnail options when the surface loads again.
         ApplyThumbnailPreferences(App.ExplorerPreferences);
@@ -65,10 +66,17 @@ public sealed partial class FileDetailsSurface
         RefreshRealizedSelection();
     }
 
-    private bool IsNameAt(int index, Point position)
+    private bool IsNameAt(int index, Point position, DependencyObject? source = null)
     {
         if (index < 0 || Repeater.TryGetElement(index) is not FrameworkElement element
-            || element.FindName("NameText") is not TextBlock name || name.Visibility != Visibility.Visible) return false;
+            || Repeater.GetElementIndex(element) != index || element.Visibility != Visibility.Visible
+            || !element.IsHitTestVisible || element.FindName("NameText") is not TextBlock name
+            || name.Visibility != Visibility.Visible || name.Opacity <= 0 || !name.IsHitTestVisible) return false;
+        // The routed event already identifies the text that received the hit.
+        // Grid's centered text/visual transforms must not turn that native hit
+        // into a click on the icon or empty cell. Validate its current presenter
+        // first so recycling cannot borrow another item's name.
+        if (IsInside(source, name)) return true;
         var bounds = name.TransformToVisual(Scroller).TransformBounds(new Rect(0, 0, name.ActualWidth, name.ActualHeight));
         return bounds.Contains(position);
     }

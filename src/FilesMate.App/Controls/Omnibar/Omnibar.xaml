@@ -7,9 +7,86 @@
     xmlns:glass="using:FilesMate.App.Controls.Glass"
     xmlns:local="using:FilesMate.App.Controls.Omnibar"
     SizeChanged="Root_SizeChanged">
+    <UserControl.Resources>
+        <Style x:Key="SearchActionButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="36" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="CornerRadius" Value="7" />
+            <Setter Property="Foreground" Value="{ThemeResource FilesMate.Text.PrimaryBrush}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ActionFill" Background="Transparent"
+                            CornerRadius="{TemplateBinding CornerRadius}">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal" />
+                                    <VisualState x:Name="PointerOver">
+                                        <VisualState.Setters>
+                                            <Setter Target="ActionFill.Background" Value="{ThemeResource FilesMate.Item.HoverBrush}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <VisualState.Setters>
+                                            <Setter Target="ActionFill.Background" Value="{ThemeResource FilesMate.Item.SelectedBrush}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Disabled">
+                                        <VisualState.Setters>
+                                            <Setter Target="ActionFill.Opacity" Value="0.45" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <ContentPresenter Content="{TemplateBinding Content}"
+                                Foreground="{TemplateBinding Foreground}"
+                                HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SearchScopeSelectedItemStyle" TargetType="Button"
+            BasedOn="{StaticResource FilesMate.ContextMenuItemStyle}">
+            <Setter Property="Background" Value="{ThemeResource FilesMate.Menu.ItemSelectedBrush}" />
+            <Setter Property="Foreground" Value="{ThemeResource FilesMate.Menu.ItemSelectedForegroundBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Template"><Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="SelectedRoot" Background="{TemplateBinding Background}"
+                        CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter x:Name="SelectedContent" Content="{TemplateBinding Content}"
+                            Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}"
+                            FontWeight="{TemplateBinding FontWeight}"
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="Center" />
+                        <VisualStateManager.VisualStateGroups><VisualStateGroup x:Name="CommonStates">
+                            <VisualState x:Name="Normal" />
+                            <VisualState x:Name="PointerOver"><VisualState.Setters>
+                                <Setter Target="SelectedRoot.Background" Value="{ThemeResource FilesMate.Menu.ItemSelectedHoverBrush}" />
+                                <Setter Target="SelectedContent.Foreground" Value="{ThemeResource FilesMate.Menu.ItemSelectedForegroundBrush}" />
+                            </VisualState.Setters></VisualState>
+                            <VisualState x:Name="Pressed"><VisualState.Setters>
+                                <Setter Target="SelectedRoot.Background" Value="{ThemeResource FilesMate.Menu.ItemSelectedPressedBrush}" />
+                                <Setter Target="SelectedContent.Foreground" Value="{ThemeResource FilesMate.Menu.ItemSelectedForegroundBrush}" />
+                            </VisualState.Setters></VisualState>
+                            <VisualState x:Name="Disabled"><VisualState.Setters>
+                                <Setter Target="SelectedRoot.Opacity" Value="0.5" />
+                                <Setter Target="SelectedContent.Foreground" Value="{ThemeResource FilesMate.Text.DisabledBrush}" />
+                            </VisualState.Setters></VisualState>
+                        </VisualStateGroup></VisualStateManager.VisualStateGroups>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value></Setter>
+        </Style>
+    </UserControl.Resources>
     <Grid
         x:Name="RootGrid"
-        Height="{StaticResource FilesMate.Control.Height.Omnibar}"
+        VisualStateManager.CustomVisualStateManager="{StaticResource FilesMate.Motion.VisualStateManager}"
+        MinHeight="{StaticResource FilesMate.Control.Height.Omnibar}"
         ColumnSpacing="{StaticResource FilesMate.Space.2}">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="Modes">
@@ -32,6 +109,8 @@
                     <VisualState.Setters>
                         <Setter Target="Crumbs.Opacity" Value="0" />
                         <Setter Target="Crumbs.IsHitTestVisible" Value="False" />
+                        <Setter Target="SelectionLocationLabel.Opacity" Value="0" />
+                        <Setter Target="RecursiveRootCue.Opacity" Value="0" />
                         <Setter Target="PathBox.Opacity" Value="1" />
                         <Setter Target="PathBox.Visibility" Value="Visible" />
                         <Setter Target="PathBox.IsHitTestVisible" Value="True" />
@@ -41,21 +120,11 @@
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
-            <VisualStateGroup x:Name="SearchStates">
-                <VisualState x:Name="SearchClosed">
-                    <VisualState.Setters>
-                        <Setter Target="SearchBox.IsHitTestVisible" Value="False" />
-                        <Setter Target="SearchBox.IsTabStop" Value="False" />
-                    </VisualState.Setters>
-                </VisualState>
-                <VisualState x:Name="SearchOpen">
-                    <VisualState.Setters>
-                        <Setter Target="SearchBox.IsHitTestVisible" Value="True" />
-                        <Setter Target="SearchBox.IsTabStop" Value="True" />
-                    </VisualState.Setters>
-                </VisualState>
-            </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" MinWidth="160" />
@@ -86,17 +155,25 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
+                <TextBlock x:Name="SelectionLocationLabel" Grid.Column="0" Visibility="Collapsed"
+                    VerticalAlignment="Center" Margin="0,0,8,0" FontSize="12" IsHitTestVisible="False"
+                    Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
+                <TextBlock x:Name="RecursiveRootCue" Grid.Column="2" Visibility="Collapsed" MaxWidth="64"
+                    VerticalAlignment="Center" Margin="8,0,0,0" FontSize="12" TextTrimming="CharacterEllipsis"
+                    Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
                 <StackPanel
                     x:Name="Crumbs"
-                    Grid.ColumnSpan="2"
+                    KeyDown="CrumbFolder_KeyDown"
+                    Grid.Column="1"
                     Canvas.ZIndex="10"
                     Orientation="Horizontal"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center" />
                 <Border
                     x:Name="PathEditSurface"
-                    Grid.ColumnSpan="2"
+                    Grid.ColumnSpan="3"
                     MinWidth="24"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
@@ -108,7 +185,7 @@
                 <TextBox
                     x:Name="PathBox"
                     Visibility="Collapsed"
-                    Grid.ColumnSpan="2"
+                    Grid.ColumnSpan="3"
                     Canvas.ZIndex="20"
                     VerticalAlignment="Center"
                     Background="{ThemeResource FilesMate.TextControl.CaretHostBrush}"
@@ -152,12 +229,12 @@
             VerticalAlignment="Center">
             <Grid
                 x:Name="SearchSizer"
-                Width="36"
+                Width="240"
                 HorizontalAlignment="Right"
-                VerticalAlignment="Center"
-                SizeChanged="SearchSizer_SizeChanged">
+                VerticalAlignment="Center">
             <glass:LiquidGlassSurface
                 x:Name="SearchHost"
+                Height="38"
                 MinHeight="38"
                 Padding="0"
                 HorizontalAlignment="Stretch"
@@ -173,15 +250,29 @@
                 Style="{StaticResource FilesMate.LiquidGlassSurfaceStyle}">
                 <Grid>
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
+                    <Button x:Name="SearchScopeButton" Click="SearchScopeButton_Click"
+                        Style="{StaticResource SearchActionButtonStyle}" Width="46"
+                        Padding="8,0" VerticalAlignment="Center">
+                        <Grid ColumnSpacing="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <FontIcon x:Name="SearchScopeIcon" FontSize="16" Glyph="&#xE8B7;"
+                                FontFamily="Segoe Fluent Icons" VerticalAlignment="Center" />
+                            <FontIcon Grid.Column="1" Glyph="&#xE70D;" FontSize="9"
+                                FontFamily="Segoe Fluent Icons" VerticalAlignment="Center" />
+                        </Grid>
+                    </Button>
                     <Grid
-                        x:Name="SearchInputArea"
+                        x:Name="SearchInputArea" Grid.Column="1"
                         MinWidth="0"
-                        Background="Transparent"
-                        PointerPressed="SearchPane_PointerPressed">
+                        Background="Transparent">
                         <TextBlock
                             x:Name="SearchPlaceholderLabel"
                             Margin="12,0,8,0"
@@ -202,8 +293,8 @@
                             MinWidth="0"
                             Background="{ThemeResource FilesMate.TextControl.CaretHostBrush}"
                             BorderThickness="0"
-                            IsTabStop="False"
-                            IsHitTestVisible="False"
+                            IsTabStop="True"
+                            IsHitTestVisible="True"
                             IsSpellCheckEnabled="False"
                             IsTextPredictionEnabled="False"
                             Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}"
@@ -234,20 +325,20 @@
                     </Grid>
                     <Button
                         x:Name="ClearSearchButton"
-                        Grid.Column="1"
+                        Grid.Column="2"
                         Width="28"
                         MinWidth="28"
                         Padding="0"
                         Visibility="Collapsed"
                         Click="ClearSearchButton_Click"
-                        Style="{StaticResource ToolbarIconButtonStyle}">
+                        Style="{StaticResource SearchActionButtonStyle}">
                         <FontIcon FontFamily="Segoe Fluent Icons" FontSize="10" Glyph="&#xE711;" />
                     </Button>
                     <Button
                         x:Name="SearchButton"
-                        Grid.Column="2"
+                        Grid.Column="3"
                         Click="SearchButton_Click"
-                        Style="{StaticResource ToolbarIconButtonStyle}"
+                        Style="{StaticResource SearchActionButtonStyle}"
                         VerticalAlignment="Center"
                         AutomationProperties.Name="Search"
                         ToolTipService.ToolTip="Search">
@@ -263,6 +354,8 @@
             ShouldConstrainToRootBounds="True">
             <Border
                 x:Name="CrumbFolderHost"
+                IsHitTestVisible="False"
+                KeyDown="CrumbFolder_KeyDown"
                 MinWidth="220"
                 MaxHeight="360"
                 Padding="0,4"
@@ -277,61 +370,6 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel x:Name="CrumbFolderItems" />
                 </ScrollViewer>
-            </Border>
-        </Popup>
-        <Popup
-            x:Name="SearchSuggestPopup"
-            DesiredPlacement="BottomEdgeAlignedRight"
-            ShouldConstrainToRootBounds="True">
-            <Border
-                x:Name="SearchPanel"
-                Width="{Binding ActualWidth, ElementName=SearchHost, Mode=OneWay}"
-                MaxHeight="328"
-                Padding="0,4"
-                Background="{ThemeResource FilesMate.SearchPanel.BackgroundBrush}"
-                BorderBrush="{ThemeResource FilesMate.AddressBar.BorderBrush}"
-                BorderThickness="1"
-                CornerRadius="{StaticResource FilesMate.Corner.Omnibar}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <CheckBox x:Name="SearchEverywhere" Margin="12,0" Click="SearchEverywhere_Click"
-                        HorizontalContentAlignment="Stretch"
-                        Foreground="{ThemeResource FilesMate.Text.PrimaryBrush}">
-                        <TextBlock x:Name="SearchScopeLabel" TextWrapping="Wrap" />
-                    </CheckBox>
-                    <TextBlock x:Name="SearchStatus" Grid.Row="1" Margin="12,2,12,6" FontSize="12"
-                        TextWrapping="Wrap" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" />
-                <ListView
-                    x:Name="SearchHits"
-                    Grid.Row="2"
-                    MaxHeight="192"
-                    ScrollViewer.HorizontalScrollMode="Disabled"
-                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                    IsItemClickEnabled="True"
-                    ItemClick="SearchHits_ItemClick"
-                    SelectionMode="Single">
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem">
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                            <Setter Property="MinHeight" Value="0" />
-                            <Setter Property="Padding" Value="8,2" />
-                        </Style>
-                    </ListView.ItemContainerStyle>
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <local:SearchHitItem />
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-                <Button x:Name="MoreSearchButton" Grid.Row="3" Margin="8,6" HorizontalAlignment="Right"
-                    Height="32" MinHeight="32" Padding="14,0" CornerRadius="16"
-                    Background="{ThemeResource FilesMate.FileContent.BackgroundBrush}" Click="MoreSearch_Click" />
-                </Grid>
             </Border>
         </Popup>
     </Grid>

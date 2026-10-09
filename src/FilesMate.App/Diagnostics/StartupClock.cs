@@ -23,6 +23,21 @@ public static class StartupClock
         {
             Marks.Add(new StartupMark(name, (long)elapsed.TotalMilliseconds));
         }
+        // Preserve the historic marks. FirstFrame remains a Loaded lifecycle proxy.
+        if (FilesMate.Core.Diagnostics.PerformanceTrace.Enabled)
+        {
+            var stage = name switch
+            {
+                "ProcessEntry" => FilesMate.Core.Diagnostics.PerformanceStage.ManagedEntry,
+                "DatabaseRuntimeReady" => FilesMate.Core.Diagnostics.PerformanceStage.DatabaseRuntimeReady,
+                "AppConstructor" => FilesMate.Core.Diagnostics.PerformanceStage.AppConstructor,
+                "WindowConstructed" => FilesMate.Core.Diagnostics.PerformanceStage.WindowConstructed,
+                "WindowActivated" => FilesMate.Core.Diagnostics.PerformanceStage.WindowActivated,
+                "FirstFrame" => FilesMate.Core.Diagnostics.PerformanceStage.LoadedProxy,
+                _ => (FilesMate.Core.Diagnostics.PerformanceStage?)null
+            };
+            if (stage is { } value) FilesMate.Core.Diagnostics.PerformanceTrace.Record(value);
+        }
     }
 
     public static IReadOnlyList<StartupMark> Snapshot()

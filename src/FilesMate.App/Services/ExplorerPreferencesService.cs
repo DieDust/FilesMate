@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 
 using FilesMate.App.Models;
 
@@ -26,9 +26,7 @@ public sealed class ExplorerPreferencesService
 
     public string FilePath { get; }
 
-    public static string DefaultFilePath => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "FilesMate",
+    public static string DefaultFilePath => Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath,
         "explorer.json");
 
     public static bool LoadOpenInExistingWindow()
@@ -80,7 +78,7 @@ public sealed class ExplorerPreferencesService
                     dto.ShowAlphabetNavigationInDualPane, dto.PaneCount, dto.PaneArrangement,
                     dto.FileOpeningMode, dto.FolderOpeningMode, dto.ShowAlternatingRows, dto.DefaultSortAscending, dto.HiddenToolbarTools,
                     dto.DefaultEntryGrouping, dto.GroupingClickCycle,
-                    dto.ThumbnailQuality, dto.ShowFullThumbnails, dto.ShowGridFileSizes, dto.AutoFitNameColumn);
+                    dto.ThumbnailQuality, dto.ShowFullThumbnails, dto.ShowGridFileSizes, dto.AutoFitNameColumn, dto.ToolbarOrder, dto.GlobalSearchScope ?? dto.SearchEverywhere, dto.RecursiveAutoExpandDepth, dto.RecursiveAltExpandDepth, dto.EnableUndoBackups);
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
         {
@@ -103,11 +101,16 @@ public sealed class ExplorerPreferencesService
             ShowFullThumbnails = settings.ShowFullThumbnails,
             ShowGridFileSizes = settings.ShowGridFileSizes,
             AutoFitNameColumn = settings.AutoFitNameColumn,
+            GlobalSearchScope = settings.GlobalSearchScope,
+            RecursiveAutoExpandDepth = settings.RecursiveAutoExpandDepth,
+            RecursiveAltExpandDepth = settings.RecursiveAltExpandDepth,
+            EnableUndoBackups = settings.EnableUndoBackups,
             ShowAlternatingRows = settings.ShowAlternatingRows,
             DefaultEntryGrouping = settings.DefaultEntryGrouping.ToString(),
             GroupingClickCycle = settings.GroupingClickCycle?.Select(mode => mode.ToString()).ToArray(),
             DefaultSortAscending = settings.DefaultSortAscending,
             HiddenToolbarTools = settings.HiddenToolbarTools?.Select(tool => tool.ToString()).ToArray(),
+            ToolbarOrder = settings.ToolbarOrder?.Select(tool => tool.ToString()).ToArray(),
             DefaultView = settings.DefaultView.ToString(),
             DateFormat = settings.DateFormat.ToString(),
             StartupFolder = settings.StartupFolder.ToString(),
@@ -139,9 +142,15 @@ public sealed class ExplorerPreferencesService
         public bool? ShowFullThumbnails { get; set; }
         public bool? ShowGridFileSizes { get; set; }
         public bool? AutoFitNameColumn { get; set; }
+        public bool? GlobalSearchScope { get; set; }
+        public bool? SearchEverywhere { get; set; } // Read-only migration of an explicit older scope.
+        public int? RecursiveAutoExpandDepth { get; set; }
+        public int? RecursiveAltExpandDepth { get; set; }
+        public bool? EnableUndoBackups { get; set; }
         public string? DefaultEntryGrouping { get; set; }
         public string[]? GroupingClickCycle { get; set; }
         public string[]? HiddenToolbarTools { get; set; }
+        public string[]? ToolbarOrder { get; set; }
         public bool? ShowAlternatingRows { get; set; }
         public bool? DefaultSortAscending { get; set; }
         public string? FileOpeningMode { get; set; }

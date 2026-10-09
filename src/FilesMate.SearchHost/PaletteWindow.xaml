@@ -20,19 +20,43 @@
         <SolidColorBrush x:Key="Line" Color="#1CFFFFFF" />
         <SolidColorBrush x:Key="Outline" Color="#FF434343" />
         <SolidColorBrush x:Key="Selected" Color="#3096ABC7" />
+        <SolidColorBrush x:Key="SelectedHover" Color="#3C96ABC7" />
         <SolidColorBrush x:Key="SelectedInk" Color="#FFE8E8E8" />
         <SolidColorBrush x:Key="SelectedMuted" Color="#FFACACAC" />
         <SolidColorBrush x:Key="Hover" Color="#1096ABC7" />
+        <SolidColorBrush x:Key="ButtonHover" Color="#FF484D53" />
+        <SolidColorBrush x:Key="ButtonActiveInk" Color="#FFE8E8E8" />
         <SolidColorBrush x:Key="Accent" Color="#FF96ABC7" />
+        <SolidColorBrush x:Key="MatchInk" Color="#FF96ABC7" />
+        <SolidColorBrush x:Key="PreviewSurface" Color="#FF2C2C2C" />
+        <SolidColorBrush x:Key="MenuHover" Color="#FF43484E" />
+        <SolidColorBrush x:Key="MenuActiveInk" Color="#FFE8E8E8" />
+        <SolidColorBrush x:Key="OnAccent" Color="#FF000000" />
+        <SolidColorBrush x:Key="DisabledInk" Color="#FF848484" />
+        <SolidColorBrush x:Key="MenuPressed" Color="#FF4E555E" />
+        <SolidColorBrush x:Key="ResultHover" Color="#FF404449" />
+        <SolidColorBrush x:Key="SelectionBorder" Color="#FF96ABC7" />
+        <SolidColorBrush x:Key="ScrollThumb" Color="#FFACACAC" />
+        <SolidColorBrush x:Key="ScrollThumbActive" Color="#FFE8E8E8" />
+        <SolidColorBrush x:Key="ToggleTrack" Color="#FF96ABC7" />
+        <SolidColorBrush x:Key="ToggleOff" Color="#1CFFFFFF" />
+        <!-- Shared geometry is loaded from the embedded WinUI DesignTokens dictionary. -->
+        <CornerRadius x:Key="SmallCorner">10</CornerRadius>
+        <CornerRadius x:Key="SurfaceCorner">12</CornerRadius>
+        <CornerRadius x:Key="InputCorner">8</CornerRadius>
+        <CornerRadius x:Key="PillCorner">17</CornerRadius>
+        <Thickness x:Key="MenuAcceleratorGap">12,0,0,0</Thickness>
+        <Thickness x:Key="MenuChevronGap">8,0,0,0</Thickness>
+        <GridLength x:Key="MenuLeadingSlot">26</GridLength>
         <Style x:Key="SettingsCard" TargetType="Border">
-            <Setter Property="Background" Value="{DynamicResource Hover}" />
-            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Background" Value="{DynamicResource PillSurface}" />
+            <Setter Property="CornerRadius" Value="{DynamicResource SurfaceCorner}" />
             <Setter Property="Padding" Value="16,12" />
             <Setter Property="Margin" Value="0,0,0,8" />
         </Style>
         <Style x:Key="RankRow" TargetType="Border">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="CornerRadius" Value="{DynamicResource SurfaceCorner}" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="10,7" />
@@ -48,14 +72,14 @@
             <Setter Property="Width" Value="42" /><Setter Property="Height" Value="24" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ToggleButton">
-                <Border x:Name="Track" Background="{DynamicResource Line}" CornerRadius="12" BorderThickness="1" BorderBrush="{DynamicResource Muted}">
+                <Border x:Name="Track" Background="{DynamicResource ToggleOff}" CornerRadius="12" BorderThickness="1" BorderBrush="{DynamicResource Muted}">
                     <Ellipse x:Name="Thumb" Fill="{DynamicResource Ink}" Width="16" Height="16" Margin="3" HorizontalAlignment="Left" />
                 </Border>
                 <ControlTemplate.Triggers>
-                    <Trigger Property="IsChecked" Value="True"><Setter TargetName="Track" Property="Background" Value="{DynamicResource Accent}" /><Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource Accent}" /><Setter TargetName="Thumb" Property="Fill" Value="White" /><Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right" /></Trigger>
-                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Track" Property="Opacity" Value="0.8" /></Trigger>
+                    <Trigger Property="IsChecked" Value="True"><Setter TargetName="Track" Property="Background" Value="{DynamicResource ToggleTrack}" /><Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource Accent}" /><Setter TargetName="Thumb" Property="Fill" Value="{DynamicResource OnAccent}" /><Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right" /></Trigger>
+                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource Ink}" /></Trigger>
                     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource Ink}" /></Trigger>
-                </ControlTemplate.Triggers>
+                <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Thumb" Property="Fill" Value="{DynamicResource DisabledInk}" /><Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource DisabledInk}" /></Trigger></ControlTemplate.Triggers>
             </ControlTemplate></Setter.Value></Setter>
         </Style>
         <Style x:Key="Segment" TargetType="RadioButton">
@@ -67,15 +91,15 @@
             <Setter Property="Foreground" Value="{DynamicResource Muted}" /><Setter Property="Padding" Value="12,7" /><Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
                 <Grid Background="Transparent">
-                    <Border x:Name="InteractionHover" CornerRadius="7" Background="{DynamicResource Hover}" Opacity="0" IsHitTestVisible="False" />
-                    <Border x:Name="InteractionSelection" CornerRadius="7" Background="{DynamicResource Selected}" Opacity="0" IsHitTestVisible="False" />
-                    <Border x:Name="SegmentBody" CornerRadius="7" Padding="{TemplateBinding Padding}" BorderThickness="1" BorderBrush="Transparent"><ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center" /></Border>
+                    <Border x:Name="InteractionHover" CornerRadius="{DynamicResource SmallCorner}" Background="{DynamicResource Hover}" Opacity="0" IsHitTestVisible="False" />
+                    <Border x:Name="InteractionSelection" CornerRadius="{DynamicResource SmallCorner}" Background="{DynamicResource Selected}" Opacity="0" IsHitTestVisible="False" />
+                    <Border x:Name="SegmentBody" CornerRadius="{DynamicResource SmallCorner}" Padding="{TemplateBinding Padding}" BorderThickness="1" BorderBrush="Transparent"><ContentPresenter x:Name="SegmentContent" TextElement.Foreground="{TemplateBinding Foreground}" VerticalAlignment="Center" HorizontalAlignment="Center" /></Border>
                 </Grid>
                 <ControlTemplate.Triggers>
 
-                    <Trigger Property="IsChecked" Value="True"><Setter Property="Foreground" Value="{DynamicResource Ink}" /></Trigger>
+                    <Trigger Property="IsChecked" Value="True"><Setter TargetName="SegmentContent" Property="TextElement.Foreground" Value="{DynamicResource SelectedInk}" /></Trigger>
                     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="SegmentBody" Property="BorderBrush" Value="{DynamicResource Accent}" /></Trigger>
-                </ControlTemplate.Triggers>
+                <Trigger Property="IsEnabled" Value="False"><Setter TargetName="SegmentContent" Property="TextElement.Foreground" Value="{DynamicResource DisabledInk}" /></Trigger></ControlTemplate.Triggers>
             </ControlTemplate></Setter.Value></Setter>
         </Style>
         <Style x:Key="SearchCategoryTab" TargetType="RadioButton">
@@ -85,15 +109,15 @@
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
                 <Grid Background="Transparent">
-                    <Border x:Name="TabHover" CornerRadius="5" Background="Transparent" Margin="0,2,0,4" />
-                    <ContentPresenter Margin="{TemplateBinding Padding}" VerticalAlignment="Center" HorizontalAlignment="Center" />
-                    <Border x:Name="TabIndicator" Width="18" Height="2" Background="{DynamicResource Ink}" CornerRadius="1" HorizontalAlignment="Center" VerticalAlignment="Bottom" Visibility="Collapsed" />
+                    <Border x:Name="TabHover" CornerRadius="{DynamicResource SmallCorner}" Background="Transparent" Margin="0,2,0,4" />
+                    <ContentPresenter x:Name="CategoryContent" TextElement.Foreground="{TemplateBinding Foreground}" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" HorizontalAlignment="Center" />
                 </Grid>
                 <ControlTemplate.Triggers>
-                    <Trigger Property="IsChecked" Value="True"><Setter Property="Foreground" Value="{DynamicResource Ink}" /><Setter TargetName="TabIndicator" Property="Visibility" Value="Visible" /></Trigger>
+                    <Trigger Property="IsChecked" Value="True"><Setter TargetName="TabHover" Property="Background" Value="{DynamicResource Selected}" /><Setter TargetName="CategoryContent" Property="TextElement.Foreground" Value="{DynamicResource SelectedInk}" /><Setter Property="FontWeight" Value="SemiBold" /></Trigger>
                     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="TabHover" Property="Background" Value="{DynamicResource Hover}" /></Trigger>
-                    <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="TabHover" Property="Background" Value="{DynamicResource Selected}" /></Trigger>
-                </ControlTemplate.Triggers>
+                    <MultiTrigger><MultiTrigger.Conditions><Condition Property="IsChecked" Value="True" /><Condition Property="IsMouseOver" Value="True" /></MultiTrigger.Conditions><Setter TargetName="TabHover" Property="Background" Value="{DynamicResource SelectedHover}" /></MultiTrigger>
+                    <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="TabHover" Property="Background" Value="{DynamicResource Selected}" /><Setter TargetName="CategoryContent" Property="TextElement.Foreground" Value="{DynamicResource SelectedInk}" /></Trigger>
+                <Trigger Property="IsPressed" Value="True"><Setter TargetName="TabHover" Property="Background" Value="{DynamicResource Selected}" /><Setter TargetName="CategoryContent" Property="TextElement.Foreground" Value="{DynamicResource SelectedInk}" /></Trigger><Trigger Property="IsEnabled" Value="False"><Setter TargetName="TabHover" Property="Background" Value="Transparent" /><Setter TargetName="CategoryContent" Property="TextElement.Foreground" Value="{DynamicResource DisabledInk}" /></Trigger></ControlTemplate.Triggers>
             </ControlTemplate></Setter.Value></Setter>
         </Style>
         <Style x:Key="SecondaryResult" TargetType="TextBlock">
@@ -102,18 +126,18 @@
         </Style>
         <Style TargetType="ToolTip">
             <Setter Property="Foreground" Value="{DynamicResource Ink}" />
-            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ToolTip"><Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="8" Padding="12,8" MaxWidth="600"><ContentPresenter /></Border></ControlTemplate></Setter.Value></Setter>
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ToolTip"><Border Loaded="PopupSurface_Loaded" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="{DynamicResource SmallCorner}" Padding="12,8" MaxWidth="400"><ContentPresenter /></Border></ControlTemplate></Setter.Value></Setter>
         </Style>
         <Style TargetType="ScrollBar">
             <Setter Property="MinWidth" Value="0" />
             <Setter Property="MinHeight" Value="0" />
-            <Setter Property="Width" Value="6" />
+            <Setter Property="Width" Value="12" />
             <Setter Property="Height" Value="Auto" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ScrollBar">
                 <Track x:Name="PART_Track" IsDirectionReversed="True" Orientation="{TemplateBinding Orientation}" Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}" Value="{TemplateBinding Value}" ViewportSize="{TemplateBinding ViewportSize}">
                     <Track.DecreaseRepeatButton><RepeatButton x:Name="Decrease" Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False" /></Track.DecreaseRepeatButton>
-                    <Track.Thumb><Thumb x:Name="Grip" MinHeight="24"><Thumb.Template><ControlTemplate TargetType="Thumb"><Border Width="4" HorizontalAlignment="Center" Background="{DynamicResource Muted}" Opacity="0.45" CornerRadius="2" /></ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
+                    <Track.Thumb><Thumb x:Name="Grip" MinHeight="24"><Thumb.Template><ControlTemplate TargetType="Thumb"><Border x:Name="ThumbBody" Width="4" HorizontalAlignment="Center" Background="{DynamicResource ScrollThumb}" CornerRadius="2" /><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ThumbBody" Property="Width" Value="6" /><Setter TargetName="ThumbBody" Property="Background" Value="{DynamicResource ScrollThumbActive}" /></Trigger><Trigger Property="IsDragging" Value="True"><Setter TargetName="ThumbBody" Property="Width" Value="6" /><Setter TargetName="ThumbBody" Property="Background" Value="{DynamicResource ScrollThumbActive}" /></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ThumbBody" Property="Background" Value="{DynamicResource ScrollThumbActive}" /></Trigger></ControlTemplate.Triggers></ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
                     <Track.IncreaseRepeatButton><RepeatButton x:Name="Increase" Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="False" /></Track.IncreaseRepeatButton>
                 </Track>
                 <ControlTemplate.Triggers>
@@ -123,11 +147,11 @@
                         <Setter TargetName="Increase" Property="Command" Value="ScrollBar.PageRightCommand" />
                         <Setter TargetName="Grip" Property="MinHeight" Value="0" />
                         <Setter TargetName="Grip" Property="MinWidth" Value="24" />
-                        <Setter TargetName="Grip" Property="Template"><Setter.Value><ControlTemplate TargetType="Thumb"><Border Height="4" VerticalAlignment="Center" Background="{DynamicResource Muted}" Opacity="0.45" CornerRadius="2" /></ControlTemplate></Setter.Value></Setter>
+                        <Setter TargetName="Grip" Property="Template"><Setter.Value><ControlTemplate TargetType="Thumb"><Border x:Name="ThumbBody" Height="4" VerticalAlignment="Center" Background="{DynamicResource ScrollThumb}" CornerRadius="2" /><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ThumbBody" Property="Height" Value="6" /><Setter TargetName="ThumbBody" Property="Background" Value="{DynamicResource ScrollThumbActive}" /></Trigger><Trigger Property="IsDragging" Value="True"><Setter TargetName="ThumbBody" Property="Height" Value="6" /><Setter TargetName="ThumbBody" Property="Background" Value="{DynamicResource ScrollThumbActive}" /></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
                     </Trigger>
                 </ControlTemplate.Triggers>
             </ControlTemplate></Setter.Value></Setter>
-            <Style.Triggers><Trigger Property="Orientation" Value="Horizontal"><Setter Property="Width" Value="Auto" /><Setter Property="Height" Value="6" /></Trigger></Style.Triggers>
+            <Style.Triggers><Trigger Property="Orientation" Value="Horizontal"><Setter Property="Width" Value="Auto" /><Setter Property="Height" Value="12" /></Trigger></Style.Triggers>
         </Style>
         <Style x:Key="PreviewScrollViewer" TargetType="ScrollViewer">
             <Setter Property="Background" Value="Transparent" />
@@ -152,15 +176,16 @@
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
                 <Grid Background="Transparent">
-                    <Border Background="{TemplateBinding Background}" CornerRadius="6" />
-                    <Border x:Name="InteractionHover" Background="{DynamicResource Hover}" CornerRadius="6" Opacity="0" IsHitTestVisible="False" />
-                    <Border x:Name="ButtonBorder" BorderThickness="1" BorderBrush="Transparent" CornerRadius="6" Padding="{TemplateBinding Padding}"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                    <Border Background="{TemplateBinding Background}" CornerRadius="{DynamicResource SmallCorner}" />
+                    <Border x:Name="InteractionHover" Background="{DynamicResource ButtonHover}" CornerRadius="{DynamicResource SmallCorner}" Opacity="0" IsHitTestVisible="False" />
+                    <Border x:Name="ButtonBorder" BorderThickness="1" BorderBrush="Transparent" CornerRadius="{DynamicResource SmallCorner}" Padding="{TemplateBinding Padding}"><ContentPresenter x:Name="ButtonContent" TextElement.Foreground="{TemplateBinding Foreground}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
                 </Grid>
                 <ControlTemplate.Triggers>
 
-                    <Trigger Property="IsPressed" Value="True"><Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource Selected}" /></Trigger>
+                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ButtonContent" Property="TextElement.Foreground" Value="{DynamicResource ButtonActiveInk}" /></Trigger>
+                    <Trigger Property="IsPressed" Value="True"><Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource Selected}" /><Setter TargetName="ButtonContent" Property="TextElement.Foreground" Value="{DynamicResource SelectedInk}" /></Trigger>
                     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource Accent}" /></Trigger>
-                    <Trigger Property="IsEnabled" Value="False"><Setter TargetName="ButtonBorder" Property="Opacity" Value="0.45" /></Trigger>
+                    <Trigger Property="IsEnabled" Value="False"><Setter TargetName="ButtonContent" Property="TextElement.Foreground" Value="{DynamicResource DisabledInk}" /></Trigger>
                 </ControlTemplate.Triggers>
             </ControlTemplate></Setter.Value></Setter>
         </Style>
@@ -170,36 +195,40 @@
             <Setter Property="FontFamily" Value="Segoe Fluent Icons" /><Setter Property="FontSize" Value="16" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
+        <Style x:Key="SearchAccentAction" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="{DynamicResource Accent}" /><Setter Property="Foreground" Value="{DynamicResource OnAccent}" /><Setter Property="Padding" Value="14,8" />
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="ActionBody" Background="{TemplateBinding Background}" BorderBrush="Transparent" BorderThickness="1" CornerRadius="{DynamicResource InputCorner}" Padding="{TemplateBinding Padding}"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ActionBody" Property="BorderBrush" Value="{DynamicResource OnAccent}" /></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ActionBody" Property="BorderBrush" Value="{DynamicResource OnAccent}" /></Trigger><Trigger Property="IsPressed" Value="True"><Setter TargetName="ActionBody" Property="BorderBrush" Value="{DynamicResource OnAccent}" /></Trigger><Trigger Property="IsEnabled" Value="False"><Setter TargetName="ActionBody" Property="Background" Value="{DynamicResource PillSurface}" /><Setter Property="Foreground" Value="{DynamicResource DisabledInk}" /></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
+        </Style>
         <Style x:Key="MoreResultsPill" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
             <Setter Property="Height" Value="26" /><Setter Property="MinWidth" Value="0" />
             <Setter Property="Padding" Value="10,0" /><Setter Property="FontSize" Value="11" />
             <Setter Property="Background" Value="{DynamicResource PillSurface}" />
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
                 <Grid Background="Transparent">
-                    <Border Background="{TemplateBinding Background}" CornerRadius="13" />
-                    <Border x:Name="InteractionHover" Background="{DynamicResource Hover}" CornerRadius="13" Opacity="0" IsHitTestVisible="False" />
-                    <Border x:Name="PillBorder" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="13" Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Border Background="{TemplateBinding Background}" CornerRadius="{DynamicResource PillCorner}" />
+                    <Border x:Name="InteractionHover" Background="{DynamicResource Hover}" CornerRadius="{DynamicResource PillCorner}" Opacity="0" IsHitTestVisible="False" />
+                    <Border x:Name="PillBorder" BorderBrush="{DynamicResource Line}" BorderThickness="1" CornerRadius="{DynamicResource PillCorner}" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter x:Name="PillContent" TextElement.Foreground="{TemplateBinding Foreground}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                 </Grid>
                 <ControlTemplate.Triggers>
-                    <Trigger Property="IsPressed" Value="True"><Setter TargetName="PillBorder" Property="Background" Value="{DynamicResource Selected}" /></Trigger>
+                    <Trigger Property="IsPressed" Value="True"><Setter TargetName="PillBorder" Property="Background" Value="{DynamicResource Selected}" /><Setter TargetName="PillContent" Property="TextElement.Foreground" Value="{DynamicResource SelectedInk}" /></Trigger>
                     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="PillBorder" Property="BorderBrush" Value="{DynamicResource Accent}" /></Trigger>
-                    <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45" /></Trigger>
+                    <Trigger Property="IsEnabled" Value="False"><Setter TargetName="PillContent" Property="TextElement.Foreground" Value="{DynamicResource DisabledInk}" /></Trigger>
                 </ControlTemplate.Triggers>
             </ControlTemplate></Setter.Value></Setter>
         </Style>
         <Style x:Key="CloseButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
                 <Grid Background="Transparent">
-                    <Border x:Name="InteractionHover" Background="{DynamicResource CloseHover}" CornerRadius="6" Opacity="0" IsHitTestVisible="False" />
-                    <Border x:Name="CloseBody" CornerRadius="6" Padding="{TemplateBinding Padding}" BorderThickness="1" BorderBrush="Transparent"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                    <Border x:Name="InteractionHover" Background="{DynamicResource CloseHover}" CornerRadius="{DynamicResource SmallCorner}" Opacity="0" IsHitTestVisible="False" />
+                    <Border x:Name="CloseBody" CornerRadius="{DynamicResource SmallCorner}" Padding="{TemplateBinding Padding}" BorderThickness="1" BorderBrush="Transparent"><ContentPresenter x:Name="CloseContent" TextElement.Foreground="{TemplateBinding Foreground}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
                 </Grid>
                 <ControlTemplate.Triggers>
-                    <Trigger Property="IsMouseOver" Value="True"><Setter Property="Foreground" Value="{DynamicResource CloseInk}" /></Trigger>
-                    <Trigger Property="IsPressed" Value="True"><Setter TargetName="CloseBody" Property="Background" Value="{DynamicResource ClosePressed}" /><Setter Property="Foreground" Value="{DynamicResource CloseInk}" /></Trigger>
+                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="CloseContent" Property="TextElement.Foreground" Value="{DynamicResource CloseInk}" /></Trigger>
+                    <Trigger Property="IsPressed" Value="True"><Setter TargetName="CloseBody" Property="Background" Value="{DynamicResource ClosePressed}" /><Setter TargetName="CloseContent" Property="TextElement.Foreground" Value="{DynamicResource CloseInk}" /></Trigger>
                     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="CloseBody" Property="BorderBrush" Value="{DynamicResource Accent}" /></Trigger>
-                    <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45" /></Trigger>
+                    <Trigger Property="IsEnabled" Value="False"><Setter TargetName="CloseContent" Property="TextElement.Foreground" Value="{DynamicResource DisabledInk}" /></Trigger>
                 </ControlTemplate.Triggers>
             </ControlTemplate></Setter.Value></Setter>
         </Style>
@@ -221,17 +250,23 @@
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Foreground" Value="{DynamicResource Ink}" />
             <Setter Property="Padding" Value="10,5" />
-            <Setter Property="Height" Value="48" />
+            <Setter Property="MinHeight" Value="48" />
             <Setter Property="Margin" Value="0,1" />
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
                 <Grid Background="Transparent">
-                    <Border x:Name="InteractionHover" Background="{DynamicResource Hover}" CornerRadius="8" Opacity="0" IsHitTestVisible="False" />
-                    <Border x:Name="InteractionSelection" Background="{DynamicResource Selected}" CornerRadius="8" Opacity="0" IsHitTestVisible="False" />
-                    <Border x:Name="RowBorder" CornerRadius="8" Padding="{TemplateBinding Padding}"><ContentPresenter /></Border>
+                    <Border x:Name="InteractionHover" Background="{DynamicResource ResultHover}" CornerRadius="{DynamicResource InputCorner}" Opacity="0" IsHitTestVisible="False" />
+                    <Border x:Name="InteractionSelection" Background="{DynamicResource Selected}" CornerRadius="{DynamicResource InputCorner}" Opacity="0" IsHitTestVisible="False" />
+                    <Border x:Name="RowBorder" CornerRadius="{DynamicResource InputCorner}" BorderThickness="1" BorderBrush="Transparent" Padding="{TemplateBinding Padding}"><ContentPresenter /></Border>
+                    <Border x:Name="SelectedRail" Width="3" Height="24" CornerRadius="1.5" Background="{DynamicResource SelectionBorder}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="1,0,0,0" Visibility="Collapsed" IsHitTestVisible="False" />
+                    <Border x:Name="KeyboardFocusOutline" Margin="3" CornerRadius="{DynamicResource InputCorner}" BorderThickness="1" BorderBrush="{DynamicResource Ink}" Visibility="Collapsed" IsHitTestVisible="False" />
                 </Grid>
                 <ControlTemplate.Triggers>
-
-                    <Trigger Property="IsSelected" Value="True"><Setter Property="Foreground" Value="{DynamicResource SelectedInk}" /></Trigger>
+                    <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="KeyboardFocusOutline" Property="Visibility" Value="Visible" /></Trigger>
+                    <Trigger Property="IsSelected" Value="True"><Setter Property="Foreground" Value="{DynamicResource SelectedInk}" /><Setter TargetName="RowBorder" Property="BorderBrush" Value="{DynamicResource SelectionBorder}" /></Trigger>
+                    <Trigger Property="IsSelected" Value="True"><Setter TargetName="SelectedRail" Property="Visibility" Value="Visible" /></Trigger>
+                    <MultiTrigger><MultiTrigger.Conditions><Condition Property="IsSelected" Value="True" /><Condition Property="IsMouseOver" Value="True" /></MultiTrigger.Conditions><Setter TargetName="InteractionSelection" Property="Background" Value="{DynamicResource SelectedHover}" /></MultiTrigger>
+                    <MultiTrigger><MultiTrigger.Conditions><Condition Property="IsKeyboardFocusWithin" Value="True" /><Condition Property="IsSelected" Value="True" /></MultiTrigger.Conditions><Setter TargetName="KeyboardFocusOutline" Property="BorderBrush" Value="{DynamicResource SelectedInk}" /></MultiTrigger>
+                    <Trigger Property="IsEnabled" Value="False"><Setter Property="Foreground" Value="{DynamicResource DisabledInk}" /><Setter TargetName="KeyboardFocusOutline" Property="Visibility" Value="Collapsed" /></Trigger>
                 </ControlTemplate.Triggers>
             </ControlTemplate></Setter.Value></Setter>
         </Style>
@@ -239,27 +274,28 @@
             <Setter Property="Foreground" Value="{DynamicResource Ink}" />
             <Setter Property="Background" Value="{DynamicResource MenuSurface}" />
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ContextMenu">
-                <Border CornerRadius="12" Background="{TemplateBinding Background}" BorderBrush="{DynamicResource Line}" BorderThickness="1" Padding="6" MinWidth="248"><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" CanContentScroll="True"><StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" /></ScrollViewer></Border>
+                <Border Loaded="PopupSurface_Loaded" CornerRadius="{DynamicResource SurfaceCorner}" Background="{TemplateBinding Background}" BorderBrush="{DynamicResource Line}" BorderThickness="1" Padding="6" MinWidth="200"><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" CanContentScroll="True"><StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" /></ScrollViewer></Border>
             </ControlTemplate></Setter.Value></Setter>
         </Style>
         <Style TargetType="MenuItem">
             <Setter Property="Foreground" Value="{DynamicResource Ink}" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="MenuItem">
-                <Grid><Border x:Name="MenuBody" CornerRadius="8" Padding="10,8" Background="Transparent"><Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="26" /><ColumnDefinition /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                    <ContentPresenter ContentSource="Icon" VerticalAlignment="Center" />
-                    <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" />
-                    <TextBlock Grid.Column="2" Text="{TemplateBinding InputGestureText}" Foreground="{DynamicResource Muted}" FontSize="11" Margin="22,0,0,0" VerticalAlignment="Center" />
-                    <TextBlock x:Name="Chevron" Grid.Column="3" Text="" FontFamily="Segoe Fluent Icons" FontSize="11" Margin="12,0,0,0" Visibility="Collapsed" VerticalAlignment="Center" />
+                <Grid><Border x:Name="MenuBody" CornerRadius="{DynamicResource SurfaceCorner}" Padding="10,8" Background="Transparent"><Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="{DynamicResource MenuLeadingSlot}" /><ColumnDefinition /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <ContentPresenter x:Name="MenuIcon" TextElement.Foreground="{TemplateBinding Foreground}" ContentSource="Icon" VerticalAlignment="Center" />
+                    <ContentPresenter x:Name="MenuHeader" TextElement.Foreground="{TemplateBinding Foreground}" Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" />
+                    <TextBlock x:Name="MenuShortcut" Grid.Column="2" Text="{TemplateBinding InputGestureText}" Foreground="{DynamicResource Muted}" FontSize="11" Margin="{DynamicResource MenuAcceleratorGap}" VerticalAlignment="Center" />
+                    <TextBlock x:Name="Chevron" Grid.Column="3" Text="" FontFamily="Segoe Fluent Icons" FontSize="11" Margin="{DynamicResource MenuChevronGap}" Visibility="Collapsed" VerticalAlignment="Center" />
                 </Grid></Border>
-                <Popup x:Name="PART_Popup" AllowsTransparency="True" Focusable="False" IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" Placement="Right" PlacementTarget="{Binding ElementName=MenuBody}">
-                    <Border CornerRadius="10" Background="{DynamicResource MenuSurface}" BorderBrush="{DynamicResource Line}" BorderThickness="1" Padding="5" MinWidth="180"><StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" /></Border>
+                <Popup x:Name="PART_Popup" AllowsTransparency="False" Focusable="False" IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" Placement="Right" PlacementTarget="{Binding ElementName=MenuBody}">
+                    <Border Loaded="PopupSurface_Loaded" CornerRadius="{DynamicResource SurfaceCorner}" Background="{DynamicResource MenuSurface}" BorderBrush="{DynamicResource Line}" BorderThickness="1" Padding="5" MinWidth="180"><StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" /></Border>
                 </Popup></Grid>
                 <ControlTemplate.Triggers>
                     <Trigger Property="HasItems" Value="True"><Setter TargetName="Chevron" Property="Visibility" Value="Visible" /></Trigger>
-                    <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="MenuBody" Property="Background" Value="{DynamicResource Hover}" /></Trigger>
-                    <Trigger Property="IsEnabled" Value="False"><Setter TargetName="MenuBody" Property="Opacity" Value="0.45" /></Trigger>
+                    <Trigger Property="IsSubmenuOpen" Value="True"><Setter TargetName="MenuBody" Property="Background" Value="{DynamicResource MenuPressed}" /><Setter TargetName="MenuIcon" Property="TextElement.Foreground" Value="{DynamicResource MenuActiveInk}" /><Setter TargetName="MenuHeader" Property="TextElement.Foreground" Value="{DynamicResource MenuActiveInk}" /><Setter TargetName="MenuShortcut" Property="Foreground" Value="{DynamicResource MenuActiveInk}" /><Setter TargetName="Chevron" Property="Foreground" Value="{DynamicResource MenuActiveInk}" /></Trigger>
+                    <Trigger Property="IsHighlighted" Value="True"><Setter TargetName="MenuBody" Property="Background" Value="{DynamicResource MenuHover}" /><Setter TargetName="MenuIcon" Property="TextElement.Foreground" Value="{DynamicResource MenuActiveInk}" /><Setter TargetName="MenuHeader" Property="TextElement.Foreground" Value="{DynamicResource MenuActiveInk}" /><Setter TargetName="MenuShortcut" Property="Foreground" Value="{DynamicResource MenuActiveInk}" /><Setter TargetName="Chevron" Property="Foreground" Value="{DynamicResource MenuActiveInk}" /></Trigger>
+                    <Trigger Property="IsEnabled" Value="False"><Setter TargetName="MenuIcon" Property="TextElement.Foreground" Value="{DynamicResource DisabledInk}" /><Setter TargetName="MenuHeader" Property="TextElement.Foreground" Value="{DynamicResource DisabledInk}" /><Setter TargetName="MenuShortcut" Property="Foreground" Value="{DynamicResource DisabledInk}" /><Setter TargetName="Chevron" Property="Foreground" Value="{DynamicResource DisabledInk}" /></Trigger>
                 </ControlTemplate.Triggers>
             </ControlTemplate></Setter.Value></Setter>
         </Style>
@@ -272,10 +308,10 @@
         <StackPanel x:Name="PanelBody">
             <Grid x:Name="SearchHeader" Height="44" Margin="10,0,2,0">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="38" /><ColumnDefinition Width="34" /></Grid.ColumnDefinitions>
-                <TextBlock x:Name="SearchIcon" Text="" FontFamily="Segoe Fluent Icons" FontSize="18" Foreground="{DynamicResource Muted}" VerticalAlignment="Center" />
+                <Image x:Name="SearchIcon" Source="Assets/FilesMate.png" Width="24" Height="24" HorizontalAlignment="Left" VerticalAlignment="Center" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" IsHitTestVisible="False" />
                 <Grid Grid.Column="1" Margin="0,0,6,0">
-                    <TextBlock x:Name="Placeholder" Text="{loc:LocalizedText Key=Search_QueryHint}" TextTrimming="CharacterEllipsis" FontSize="19" Foreground="{DynamicResource Muted}" VerticalAlignment="Center" IsHitTestVisible="False" />
-                    <TextBox x:Name="QueryBox" AutomationProperties.AutomationId="GlobalSearchQuery" AutomationProperties.Name="{loc:LocalizedText Key=Search_AllIndexed}" Background="Transparent" Foreground="{DynamicResource Ink}" CaretBrush="{DynamicResource Ink}" SelectionBrush="{DynamicResource Accent}" BorderThickness="0" FontSize="19" VerticalContentAlignment="Center" Padding="0" MinHeight="34" TextChanged="Query_Changed" MaxLength="2048">
+                    <TextBlock x:Name="Placeholder" Text="{loc:LocalizedText Key=Search_PaletteQueryHint}" TextTrimming="CharacterEllipsis" FontSize="19" Foreground="{DynamicResource Muted}" VerticalAlignment="Center" IsHitTestVisible="False" />
+                    <TextBox x:Name="QueryBox" AutomationProperties.AutomationId="GlobalSearchQuery" AutomationProperties.Name="{loc:LocalizedText Key=Search_AllIndexed}" Background="Transparent" Foreground="{DynamicResource Ink}" CaretBrush="{DynamicResource Ink}" SelectionBrush="{DynamicResource Selected}" SelectionTextBrush="{DynamicResource SelectedInk}" SelectionOpacity="1" BorderThickness="0" FontSize="19" VerticalContentAlignment="Center" Padding="0" MinHeight="34" TextChanged="Query_Changed" MaxLength="2048">
                         <TextBox.Template><ControlTemplate TargetType="TextBox"><ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" Background="Transparent" Focusable="False" /></ControlTemplate></TextBox.Template>
                     </TextBox>
                 </Grid>
@@ -297,7 +333,7 @@
                             </ScrollViewer>
                             <Button x:Name="CategoryNextButton" Grid.Column="2" Style="{StaticResource IconButton}" Width="24" Height="26" FontSize="10" Content="" Visibility="Collapsed" Foreground="{DynamicResource Muted}" ToolTip="{loc:LocalizedText Key=Category_ScrollNext}" AutomationProperties.Name="{loc:LocalizedText Key=Category_ScrollNext}" Click="CategoryNext_Click" />
                         </Grid>
-                        <TextBlock x:Name="CountLabel" Grid.Column="1" MaxWidth="68" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource Muted}" FontSize="10" Margin="6,0" VerticalAlignment="Center" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                        <TextBlock x:Name="CountLabel" Grid.Column="1" MaxWidth="120" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource Muted}" FontSize="11" Margin="8,0" VerticalAlignment="Center" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                         <Button x:Name="MoreResultsButton" Grid.Column="2" Content="{loc:LocalizedText Key=SearchPage_MoreCompact}" ToolTip="{loc:LocalizedText Key=SearchPage_More}" Click="MoreResults_Click" Style="{StaticResource MoreResultsPill}" VerticalAlignment="Center" />
                     </Grid>
                     <Grid x:Name="ResultBody">
@@ -306,14 +342,14 @@
                         <ListBox.ContextMenu><ContextMenu /></ListBox.ContextMenu>
                         <ListBox.ItemTemplate><DataTemplate>
                             <Grid x:Name="ResultRowBody" ToolTip="{Binding Location}" MinHeight="34">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="42" /><ColumnDefinition Width="*" /><ColumnDefinition Width="64" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <CheckBox IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Mode=TwoWay}" Margin="0,0,8,0" VerticalAlignment="Center" AutomationProperties.Name="{loc:LocalizedText Key=Opening_SelectItem}"><CheckBox.Style><Style TargetType="CheckBox"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding SelectionCheckboxes, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></CheckBox.Style></CheckBox><Image Grid.Column="1" Source="{Binding Icon}" Width="30" Height="30" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="42" /><ColumnDefinition Width="*" /><ColumnDefinition Width="56" /><ColumnDefinition Width="92" /></Grid.ColumnDefinitions>
+                                <CheckBox IsChecked="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}, Mode=TwoWay}" Margin="0,0,8,0" VerticalAlignment="Center" AutomationProperties.Name="{loc:LocalizedText Key=Opening_SelectItem}"><CheckBox.Style><Style TargetType="CheckBox"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding SelectionCheckboxes, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></CheckBox.Style></CheckBox><Image Grid.Column="1" Source="{Binding Icon}" Width="32" Height="32" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
                                 <StackPanel Grid.Column="2" Margin="0,0,12,0" VerticalAlignment="Center">
-                                    <TextBlock x:Name="ResultName" HorizontalAlignment="Left" MouseEnter="ResultName_Enter" MouseLeave="ResultName_Leave" Text="{Binding DisplayName}" FontSize="14" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Text="{Binding CompactLocation}" Style="{StaticResource SecondaryResult}" FontSize="11" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock x:Name="ResultName" HorizontalAlignment="Left" MouseEnter="ResultName_Enter" MouseLeave="ResultName_Leave" loc:SearchMatchText.Text="{Binding DisplayName}" loc:SearchMatchText.Query="{Binding ActiveQuery, RelativeSource={RelativeSource AncestorType=Window}}" loc:SearchMatchText.Selected="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" FontSize="15" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Location}" Style="{StaticResource SecondaryResult}" FontSize="11" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
                                 <TextBlock x:Name="ResultKind" Grid.Column="3" Text="{Binding Kind}" FontSize="11" Style="{StaticResource SecondaryResult}" VerticalAlignment="Center" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" />
-                                <StackPanel x:Name="ResultActionStrip" Grid.Column="4" Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
+                                <StackPanel x:Name="ResultActionStrip" Grid.Column="4" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
                                     <StackPanel.Style><Style TargetType="StackPanel"><Style.Triggers>
                                         <DataTrigger Binding="{Binding CanLocate}" Value="False"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
                                     </Style.Triggers></Style></StackPanel.Style>
@@ -335,7 +371,7 @@
                         </DataTemplate></ListBox.ItemTemplate>
                     </ListBox>
                     <Popup x:Name="PreviewPopup" Placement="Right" PlacementTarget="{Binding ElementName=ResultBody}" HorizontalOffset="30" AllowsTransparency="False" StaysOpen="True" PopupAnimation="None">
-                    <Border x:Name="PreviewCard" PreviewKeyDown="Window_KeyDown" Width="400" Visibility="Collapsed" Padding="16" CornerRadius="16" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Line}" BorderThickness="1">
+                    <Border x:Name="PreviewCard" PreviewKeyDown="Window_KeyDown" Width="400" Visibility="Collapsed" Padding="16" CornerRadius="{DynamicResource SurfaceCorner}" Background="{DynamicResource PreviewSurface}" BorderBrush="{DynamicResource Line}" BorderThickness="1">
                         <Grid>
                             <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                             <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="28" /></Grid.ColumnDefinitions>
@@ -361,14 +397,43 @@
                     </Border>
                     </Popup>
                     </Grid>
-                    <TextBlock x:Name="StatusText" Foreground="{DynamicResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="12,8,12,8" />
-                    <Button x:Name="IndexHelpButton" Content="{loc:LocalizedText Key=Search_CheckIndex}" Visibility="Collapsed" HorizontalAlignment="Left" Margin="4,0,0,4" Click="ManageIndex_Click" />
+                    <Border x:Name="SearchEmptyCard" AutomationProperties.AutomationId="GlobalSearchEmpty" Background="{DynamicResource ResultSurface}" CornerRadius="{DynamicResource SurfaceCorner}" Padding="24,20" MinHeight="164" Visibility="Collapsed">
+                        <StackPanel HorizontalAlignment="Center">
+                            <Border Width="32" Height="32" Background="{DynamicResource PillSurface}" CornerRadius="{DynamicResource SmallCorner}" HorizontalAlignment="Center"><TextBlock Text="" FontFamily="Segoe Fluent Icons" FontSize="18" Foreground="{DynamicResource Muted}" VerticalAlignment="Center" HorizontalAlignment="Center" /></Border>
+                            <TextBlock Text="{loc:LocalizedText Key=Search_StateEmpty}" Foreground="{DynamicResource Ink}" FontWeight="SemiBold" FontSize="17" HorizontalAlignment="Center" Margin="0,8,0,0" />
+                            <TextBlock x:Name="SearchEmptyHint" Foreground="{DynamicResource Muted}" FontSize="12" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="400" Margin="0,6,0,0" />
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+                                <Button Style="{StaticResource SearchAccentAction}" Content="{loc:LocalizedText Key=Search_ClearFilters}" Click="ClearSearchFilters_Click" Margin="0,0,8,0" />
+                                <Button Content="{loc:LocalizedText Key=Search_EditQuery}" Background="{DynamicResource PillSurface}" Padding="14,8" Click="EditSearchQuery_Click" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Grid x:Name="SearchProgressNote" Margin="8,6,8,0" Visibility="Collapsed">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <TextBlock Text="{loc:LocalizedText Key=Search_Continuing}" Foreground="{DynamicResource Muted}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Grid.Column="1" Text="{loc:LocalizedText Key=Search_PartialReady}" Foreground="{DynamicResource Muted}" FontSize="10" Margin="8,0,0,0" />
+                    </Grid>
+                    <Border x:Name="SearchStateCard" AutomationProperties.AutomationId="GlobalSearchState" Background="{DynamicResource PillSurface}" CornerRadius="{DynamicResource SurfaceCorner}" Padding="16,14" Margin="0,8,0,4" Visibility="Collapsed">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal"><TextBlock x:Name="SearchFailureIcon" Text="" FontFamily="Segoe Fluent Icons" FontSize="16" Foreground="{DynamicResource Ink}" Margin="0,0,8,0" Visibility="Collapsed" /><TextBlock x:Name="SearchStateTitle" Foreground="{DynamicResource Ink}" FontSize="14" FontWeight="SemiBold" Visibility="Collapsed" /></StackPanel>
+                            <TextBlock x:Name="StatusText" Foreground="{DynamicResource Muted}" FontSize="12" TextWrapping="Wrap" Margin="0,5,0,0" />
+                            <Button x:Name="SearchRetryButton" Content="{loc:LocalizedText Key=Retry}" HorizontalAlignment="Left" Visibility="Collapsed" Margin="-6,8,0,0" Click="RetrySearch_Click" />
+                            <Button x:Name="IndexHelpButton" Content="{loc:LocalizedText Key=Search_CheckIndex}" Visibility="Collapsed" HorizontalAlignment="Left" Margin="-6,8,0,-4" Click="ManageIndex_Click" />
+                        </StackPanel>
+                    </Border>
+                    <Border x:Name="SearchKeyboardHints" BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Margin="0,10,0,0" Padding="8,8,8,0" Visibility="Collapsed">
+                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <TextBlock x:Name="SearchKeyboardHintsText" Foreground="{DynamicResource Muted}" FontSize="11" IsHitTestVisible="False" TextTrimming="CharacterEllipsis" />
+                            <TextBlock x:Name="SearchFooterStatus" Grid.Column="1" Foreground="{DynamicResource Muted}" FontSize="11" IsHitTestVisible="False" Margin="8,0,0,0" />
+                        </Grid>
+                    </Border>
                 </StackPanel>
             </Grid>
+            <ScrollViewer x:Name="CategoriesPageScroll" MaxHeight="430" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch" Visibility="{Binding Visibility, ElementName=CategoriesPanel}">
             <StackPanel x:Name="CategoriesPanel" Visibility="Collapsed" Margin="4">
                 <StackPanel.Resources><Style TargetType="TextBox">
                     <Setter Property="Background" Value="{DynamicResource Hover}" /><Setter Property="Foreground" Value="{DynamicResource Ink}" /><Setter Property="CaretBrush" Value="{DynamicResource Ink}" /><Setter Property="Padding" Value="8,6" /><Setter Property="BorderBrush" Value="{DynamicResource Line}" />
-                    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TextBox"><Border CornerRadius="7" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" Padding="{TemplateBinding Padding}"><ScrollViewer x:Name="PART_ContentHost" /></Border></ControlTemplate></Setter.Value></Setter>
+                    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TextBox"><Border x:Name="CategoryInputBorder" CornerRadius="7" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" Padding="{TemplateBinding Padding}"><ScrollViewer x:Name="PART_ContentHost" /></Border><ControlTemplate.Triggers><Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="CategoryInputBorder" Property="BorderBrush" Value="{DynamicResource Accent}" /></Trigger><Trigger Property="IsReadOnly" Value="True"><Setter Property="Foreground" Value="{DynamicResource Muted}" /></Trigger><Trigger Property="IsEnabled" Value="False"><Setter Property="Foreground" Value="{DynamicResource DisabledInk}" /></Trigger><Trigger Property="Validation.HasError" Value="True"><Setter TargetName="CategoryInputBorder" Property="BorderBrush" Value="{DynamicResource Accent}" /></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
                 </Style></StackPanel.Resources>
                 <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="36" /><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <Button Content="" FontFamily="Segoe Fluent Icons" Click="Categories_Back" ToolTip="{loc:LocalizedText Key=BackToSettings}" />
@@ -376,7 +441,7 @@
                     <Button Grid.Column="2" Content="{loc:LocalizedText Key=Shortcut_RestoreDefaults}" Click="Categories_Reset" />
                 </Grid>
                 <TextBlock Text="{loc:LocalizedText Key=Category_EditHint}" Foreground="{DynamicResource Muted}" FontSize="12" Margin="10,0,0,12" />
-                <ScrollViewer MaxHeight="280" VerticalScrollBarVisibility="Auto"><StackPanel x:Name="CategoryEditors" /></ScrollViewer>
+                <ScrollViewer x:Name="CategoryEditorsScroll" MaxHeight="280" VerticalScrollBarVisibility="Auto"><StackPanel x:Name="CategoryEditors" /></ScrollViewer>
                 <Border Style="{StaticResource SettingsCard}" Margin="0,10,0,0"><StackPanel>
                     <TextBlock Text="{loc:LocalizedText Key=Category_AddCustom}" FontWeight="SemiBold" Margin="0,0,0,8" />
                     <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="130" /><ColumnDefinition /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
@@ -390,6 +455,8 @@
                 </StackPanel></Border>
                 <TextBlock x:Name="CategoryStatus" Foreground="{DynamicResource Muted}" TextWrapping="Wrap" FontSize="12" Margin="10,6,0,0" />
             </StackPanel>
+            </ScrollViewer>
+            <ScrollViewer x:Name="SettingsPageScroll" MaxHeight="430" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch" Visibility="{Binding Visibility, ElementName=SettingsPanel}">
             <StackPanel x:Name="SettingsPanel" Visibility="Collapsed" Margin="4">
                 <StackPanel.Resources>
                     <Style TargetType="TextBlock"><Setter Property="TextWrapping" Value="Wrap" /></Style>
@@ -400,7 +467,7 @@
                     <TextBlock Grid.Column="1" Text="{loc:LocalizedText Key=Search_Settings}" FontSize="18" FontWeight="SemiBold" Margin="8,0,0,0" VerticalAlignment="Center" />
                     <Button Grid.Column="2" Content="" Style="{StaticResource CloseButton}" FontFamily="Segoe Fluent Icons" Click="Dismiss_Click" AutomationProperties.Name="{loc:LocalizedText Key=HideSettings}" />
                 </Grid>
-                <ScrollViewer x:Name="SearchSettingsScroll" MaxHeight="430" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel>
+                <StackPanel x:Name="SearchSettingsContent" HorizontalAlignment="Stretch">
                 <Border Style="{StaticResource SettingsCard}"><Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <StackPanel><TextBlock Text="{loc:LocalizedText Key=FilePreview}" /><TextBlock Text="{loc:LocalizedText Key=Search_PreviewCompactHint}" FontSize="12" Foreground="{DynamicResource Muted}" Margin="0,4,0,0" /></StackPanel>
@@ -446,8 +513,10 @@
                     <Button Content="{loc:LocalizedText Key=Search_ManageIndex}" HorizontalAlignment="Left" Foreground="{DynamicResource Muted}" Click="ManageIndex_Click" ToolTip="{loc:LocalizedText Key=Search_ManageIndexHint}" />
                 </Grid>
                 <TextBlock x:Name="SettingsStatus" TextWrapping="Wrap" Foreground="{DynamicResource Muted}" Margin="10,6,10,0" FontSize="12" />
-                </StackPanel></ScrollViewer>
+                </StackPanel>
             </StackPanel>
+            </ScrollViewer>
+            <ScrollViewer x:Name="HiddenResultsPageScroll" MaxHeight="430" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch" Visibility="{Binding Visibility, ElementName=HiddenResultsPanel}">
             <Grid x:Name="HiddenResultsPanel" Visibility="Collapsed" Margin="4">
                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                 <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="36" /><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
@@ -458,11 +527,13 @@
                 <TextBlock Grid.Row="1" Text="{loc:LocalizedText Key=Search_HiddenHint}" Foreground="{DynamicResource Muted}" TextWrapping="Wrap" Margin="8,0,0,12" />
                 <ListBox Grid.Row="2" x:Name="HiddenResultsList" MaxHeight="360" BorderThickness="0" Background="Transparent" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch">
                     <ListBox.ItemTemplate><DataTemplate><Grid Margin="4,6"><Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                        <StackPanel><TextBlock Text="{Binding Name}" Foreground="{DynamicResource Ink}" TextTrimming="CharacterEllipsis" /><TextBlock Text="{Binding Location}" Foreground="{DynamicResource Muted}" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip="{Binding Location}" /></StackPanel>
-                        <Button Grid.Column="1" Content="{loc:LocalizedText Key=Restore}" Margin="12,0,0,0" Click="HiddenResults_Restore" />
+                        <StackPanel><TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" /><TextBlock Text="{Binding Location}" Style="{StaticResource SecondaryResult}" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip="{Binding Location}" /></StackPanel>
+                        <Button Grid.Column="1" Content="{loc:LocalizedText Key=Restore}" Margin="12,0,0,0" Click="HiddenResults_Restore" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
                     </Grid></DataTemplate></ListBox.ItemTemplate>
                 </ListBox>
             </Grid>
+            </ScrollViewer>
+            <ScrollViewer x:Name="RankingPageScroll" MaxHeight="430" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch" Visibility="{Binding Visibility, ElementName=RankingPanel}">
             <StackPanel x:Name="RankingPanel" Visibility="Collapsed" Margin="4">
                 <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="36" /><ColumnDefinition /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                     <Button Content="" FontFamily="Segoe Fluent Icons" Click="RankingBack_Click" AutomationProperties.Name="{loc:LocalizedText Key=BackToSearchSettings}" />
@@ -485,6 +556,7 @@
                 </Border>
                 <TextBlock x:Name="RankingStatus" Foreground="{DynamicResource Muted}" TextWrapping="Wrap" FontSize="12" Margin="10,6,10,0" />
             </StackPanel>
+            </ScrollViewer>
         </StackPanel>
     </Border>
 </Window>

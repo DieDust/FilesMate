@@ -9,8 +9,6 @@ using FilesMate.Core.Operations;
 using FilesMate.Platform.Windows.Operations;
 using Microsoft.UI.Xaml;
 using Windows.ApplicationModel.DataTransfer;
-using Windows.Storage.Pickers;
-using WinRT.Interop;
 
 namespace FilesMate.App.Views;
 
@@ -45,7 +43,7 @@ public sealed partial class NavigatorPage
             if (_disposed || _viewRevisions.GetValueOrDefault(vm) != revision
                 || !string.Equals(vm.AddressText, path, StringComparison.OrdinalIgnoreCase))
                 return;
-            ApplyFolderView(vm, settings.View);
+            if (!vm.IsRecursive) ApplyFolderView(vm, settings.View);
         }
         finally
         {
@@ -77,7 +75,7 @@ public sealed partial class NavigatorPage
 
     private void PersistFolderView(PaneViewModel vm)
     {
-        if (_disposed || _applyingView.Contains(vm) || !_viewRevisions.ContainsKey(vm)
+        if (_disposed || vm.IsRecursive || _applyingView.Contains(vm) || !_viewRevisions.ContainsKey(vm)
             || FolderCustomizationStore.Key(vm.AddressText) is null)
             return;
         _viewRevisions[vm]++;
@@ -106,7 +104,14 @@ public sealed partial class NavigatorPage
     private async Task RunCustomizationCommandAsync(AppCommandId id)
     {
         var vm = ViewModel;
-        var selected = SelectedPaths();
+        if (vm.IsRecursive && id == AppCommandId.AddToShelf)
+        {
+            vm.ReportUserError(StringTable.Get("Recursive_ShelfUnavailable"));
+            return;
+        }
+        if (ViewModel.IsRecursive && id != AppCommandId.ShowShelf
+            && !(ActiveSurface.Selection.Count > 0 ? ActiveSurface.ValidateRecursiveSelection() : ActiveSurface.ValidateRecursiveRoot())) return;
+        var selected = id == AppCommandId.AddToShelf ? ActiveSurface.SelectedOperationPaths() : SelectedPaths();
         var folder = selected.Count == 1 ? selected[0] : vm.AddressText;
         try
         {
@@ -130,22 +135,15 @@ public sealed partial class NavigatorPage
                 if (!_disposed) await RestoreFolderViewAsync(vm);
                 return;
             }
-            if (selected.Count > 1 || !await Task.Run(() => Directory.Exists(folder))) return;
+            if (selected.Count > 1) return;
             string? cover = null;
             if (id == AppCommandId.ChooseFolderCover)
             {
-                var picker = new FileOpenPicker { SuggestedStartLocation = PickerLocationId.PicturesLibrary };
-                foreach (var extension in new[] { ".png", ".jpg", ".jpeg", ".webp", ".bmp", ".gif", ".tif", ".tiff", ".heic",
-                    ".mp4", ".mkv", ".avi", ".mov", ".wmv", ".webm", ".m4v", ".mpeg", ".mpg" })
-                    picker.FileTypeFilter.Add(extension);
-                InitializeWithWindow.Initialize(picker, App.WindowForElement(this)!.NativeHandle);
-                var file = await picker.PickSingleFileAsync();
-                if (file is null || _disposed) return;
-                cover = file.Path;
-                if (!string.Equals(FolderCustomizationStore.Key(Path.GetDirectoryName(cover)),
-                    FolderCustomizationStore.Key(folder), StringComparison.OrdinalIgnoreCase))
-                    throw new ArgumentException(StringTable.Get("Cover_DirectChild"));
+                cover = await FolderCoverPicker.PickAsync(this, folder);
+                if (cover is null || _disposed) return;
             }
+            else if (!await Task.Run(() => Directory.Exists(folder)))
+                throw new IOException(StringTable.Get("Cover_FolderUnavailable"));
             await App.FolderCustomizations.SetCoverAsync(folder, cover);
             FolderPreviewBinder.ClearCache();
             App.NotifyFolderCoversChanged();
@@ -162,7 +160,7 @@ public sealed partial class NavigatorPage
         if (_disposed || XamlRoot is null) return;
         if (_shelfPanel is null)
         {
-            _shelfPanel = new FileShelfPanel(this, RefreshFilePanes, SelectedPaths);
+            _shelfPanel = new FileShelfPanel(this, RefreshFilePanes, SelectionForShelf);
             _shelfPanel.CloseRequested += (_, _) =>
             {
                 _shelfPanel.IsOpen = false;
@@ -218,15 +216,23 @@ public sealed partial class NavigatorPage
 
     private async Task TransferShelfDropAsync(FileDropRequest request, string destination, PaneViewModel vm)
     {
-        if (FileOperationLifetime.IsBusy) { vm.ReportUserError(StringTable.Get("Files_Busy")); return; }
+        var recursiveTransfer = request.RecursiveSource || vm.IsRecursive;
+        if (FileOperationLifetime.IsBusy)
+        {
+            vm.ReportUserError(StringTable.Get("Files_Busy"));
+            if (recursiveTransfer) throw new RecursiveCompatibilityException(StringTable.Get("Files_Busy"));
+            return;
+        }
         using var lifetime = FileOperationLifetime.Begin();
         try
         {
             var move = request.Operation == DataPackageOperation.Move;
+            if (recursiveTransfer) await RecursiveTransferCompatibility.VerifyAsync(request.Paths, destination);
             if (move) await App.VacateFoldersAsync(request.Paths);
             var result = await FileShelfTransfer.RunAsync(new WindowsLocalFileOperations(), request.Paths, destination, move,
-                allowSameDirectoryCopy: request.AllowSameDirectoryCopy, resolveConflict: FileConflictDialog.For(this));
-            if (result.WithoutUndo > 0) App.FileUndo.Clear();
+                allowSameDirectoryCopy: request.AllowSameDirectoryCopy, resolveConflict: FileConflictDialog.For(this),
+                requireRecursiveCompatibility: false);
+            if (result.WithoutUndo > 0 && !result.PreservesOrdinaryUndo) App.FileUndo.Clear();
             if (result.Undo is not null)
             {
                 App.FileUndo.Push(result.Undo);
@@ -236,10 +242,18 @@ public sealed partial class NavigatorPage
             ShowTransferFeedback(result);
             if (TransferFeedback.NeedsAttention(result) && !_disposed)
                 vm.ReportUserError(TransferFeedback.Format(result));
+            if (recursiveTransfer && (result.Cancelled || result.Skipped > 0 || result.Errors.Count > 0))
+                throw new IOException(TransferFeedback.Format(result));
+        }
+        catch (RecursiveCompatibilityException error)
+        {
+            if (!_disposed) vm.ReportUserError(error.Message);
+            throw;
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException)
         {
             if (!_disposed) vm.ReportUserError(error.Message);
+            if (recursiveTransfer) throw;
         }
     }
 }

@@ -15,6 +15,7 @@ public partial class PaletteWindow
 
     private void ReleaseDocumentPreview()
     {
+        ResetReaderDocument();
         ReleaseNativeOffice();
         var view = _documentPreview;
         _documentPreview = null;
@@ -25,6 +26,7 @@ public partial class PaletteWindow
 
     private async Task ShowDocumentPreviewAsync(string path, string? markdown, CancellationToken token, string? officeHtml = null)
     {
+        ResetReaderDocument();
         var surface = ((SolidColorBrush)FindResource("Surface")).Color;
         // A native child window remains visible with WPF software rendering.
         // CompositionControl's internal capture can succeed while its image is blank.
@@ -71,7 +73,11 @@ public partial class PaletteWindow
             {
                 DocumentPreviewStatus = e.Uri.StartsWith("data:", StringComparison.Ordinal) ? "Generated Markdown" : "Document navigation";
                 var allowed = officeHtml is not null ? e.Uri.Split('#')[0] == "https://filesmate-office.local/preview.html" : markdown is null ? e.Uri.Split('#')[0] == pdfUri : MarkdownPreview.IsDocumentNavigation(e.Uri, e.IsUserInitiated);
-                if (allowed) return;
+                if (allowed)
+                {
+                    if (officeHtml is null) ReaderNavigationStarting(view, e.NavigationId);
+                    return;
+                }
                 e.Cancel = true;
                 if (e.IsUserInitiated && Uri.TryCreate(e.Uri, UriKind.Absolute, out var link) && link.Host != "filesmate-preview.local" && link.Scheme is "https" or "http")
                 {
@@ -83,9 +89,12 @@ public partial class PaletteWindow
             core.NavigationCompleted += (_, e) =>
             {
                 if (_documentPreview != view || token.IsCancellationRequested) return;
+                if (officeHtml is null && !_readerThemes.IsNavigation(e.NavigationId)) return;
+                if (!e.IsSuccess && e.WebErrorStatus == CoreWebView2WebErrorStatus.OperationCanceled) return;
                 DocumentPreviewStatus += $"; completed={e.IsSuccess}/{e.WebErrorStatus}";
                 // Native browser surfaces cover WPF siblings, including error text.
                 if (!e.IsSuccess) ReleaseDocumentPreview();
+                else if (officeHtml is null) ReaderNavigationCompleted(view, e.NavigationId);
                 PreviewMessage.Visibility = e.IsSuccess ? Visibility.Collapsed : Visibility.Visible;
                 PreviewMessage.Text = Loc.Get("Preview_UnavailableShort");
             };
@@ -114,6 +123,7 @@ public partial class PaletteWindow
                 core.AddWebResourceRequestedFilter(PdfPreviewAssets.DocumentUri, CoreWebView2WebResourceContext.All);
                 core.WebResourceRequested += (_, e) =>
                 {
+                    if (e.Request.Uri != PdfPreviewAssets.DocumentUri) return;
                     try
                     {
                         var response = PdfPreviewAssets.OpenResponse(path, e.Request.Headers.Contains("Range") ? e.Request.Headers.GetHeader("Range") : null);
@@ -121,16 +131,21 @@ public partial class PaletteWindow
                     }
                     catch (Exception error) when (error is IOException or UnauthorizedAccessException) { e.Response = core.Environment.CreateWebResourceResponse(null, 404, "Not Found", ""); }
                 };
+                var theme = BeginReaderDocument(view, token, pdf: true);
+                core.Profile.PreferredColorScheme = theme.Dark ? CoreWebView2PreferredColorScheme.Dark : CoreWebView2PreferredColorScheme.Light;
+                await core.AddScriptToExecuteOnDocumentCreatedAsync(PdfPreviewTheme.InitializationScript(theme));
+                token.ThrowIfCancellationRequested();
+                if (_documentPreview != view) return;
                 core.Navigate(pdfUri);
             }
             else
             {
                 core.SetVirtualHostNameToFolderMapping("filesmate-preview.local", Path.GetDirectoryName(Path.GetFullPath(path))!, CoreWebView2HostResourceAccessKind.DenyCors);
-                string Color(string name) { var color = ((SolidColorBrush)FindResource(name)).Color; return $"#{color.R:X2}{color.G:X2}{color.B:X2}"; }
-                var dark = PaletteAppearance.IsDark(_appearance);
-                var background = Color("Surface"); var foreground = Color("Ink"); var accent = Color("Accent");
-                var html = await Task.Run(() => MarkdownPreview.Render(markdown, dark, background, foreground, accent), token);
+                var theme = BeginReaderDocument(view, token);
+                var document = _readerThemes.Document;
+                var html = await Task.Run(() => MarkdownPreview.Render(markdown, theme), token);
                 token.ThrowIfCancellationRequested();
+                if (_documentPreview != view || document != _readerThemes.Document) return;
                 core.NavigateToString(html);
             }
         }

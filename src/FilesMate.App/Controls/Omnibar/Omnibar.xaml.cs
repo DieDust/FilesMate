@@ -32,28 +32,24 @@ public sealed partial class Omnibar : UserControl
     private bool _editRequestPending;
     private bool _searchFocused;
     private bool _searchHovered;
-    private bool _searchOpen;
-    private bool _searchRequestPending;
-    private bool _searchClosePending;
+    private bool _globalSearchScope;
+    private string _localSearchDraft = string.Empty;
+    private string _globalSearchDraft = string.Empty;
+    private string _submittedLocalQuery = string.Empty;
     private bool _overflowPending;
-    private int _searchGeneration;
-    private int _searchFocusVersion;
-    private CancellationTokenSource? _searchRequest;
     private CancellationTokenSource? _crumbRequest;
-    private IReadOnlyList<HomeSearchHit> _hits = [];
     private Storyboard? _crumbFolderStoryboard;
     private const double CrumbFolderSlideOffset = -8;
     private FrameworkElement? _crumbChevron;
     private string? _crumbFlyoutPath;
     private string? _crumbPath;
-    private bool _crumbFolderClosing;
+    private int _crumbFolderVersion;
     private bool _crumbFolderClosePending;
 
     public Omnibar()
     {
         InitializeComponent();
-        SearchScopeLabel.Text = StringTable.Get("Search_AllLocations");
-        SearchStatus.Text = StringTable.Get("Search_TypeToStart");
+        InitializePathContextMenu();
         AutomationProperties.SetName(ClearSearchButton, StringTable.Get("Search_Clear"));
         ToolTipService.SetToolTip(ClearSearchButton, StringTable.Get("Search_Clear"));
         PathHost.AddHandler(
@@ -67,20 +63,17 @@ public sealed partial class Omnibar : UserControl
         ToolTipService.SetToolTip(SearchButton, StringTable.Get("SearchPlaceholderFolder"));
         Loaded += (_, _) =>
         {
-            SearchSuggestPopup.PlacementTarget = SearchHost;
-            SearchSuggestPopup.DesiredPlacement = PopupPlacementMode.BottomEdgeAlignedRight;
             UpdateSearchPlaceholder();
             ApplyOverflow();
             ApplyMode(animate: false);
-            ApplySearchOpen(animate: false);
+            ApplySearchLayout();
 #if FILESMATE_UI_TEST
             if (Environment.GetEnvironmentVariable("FILESMATE_BREADCRUMB_SMOKE") == "1") _ = RunBreadcrumbSmokeAsync();
 #endif
         };
         Unloaded += (_, _) =>
         {
-            CancelSearch();
-            DismissCrumbFolders();
+            FinishCrumbFolderClose();
             SetCrumbDropTarget(null);
         };
     }
@@ -97,19 +90,9 @@ public sealed partial class Omnibar : UserControl
 
     public event EventHandler<string>? CrumbClicked;
 
-    public event EventHandler<string>? SearchChosen;
+    public event EventHandler<string>? LocalQueryChanged;
+    public string LocalQuery => _globalSearchScope ? string.Empty : _submittedLocalQuery;
     public event EventHandler<FilesMate.Search.SearchPageRequest>? MoreSearchRequested;
-
-    private void MoreSearch_Click(object sender, RoutedEventArgs e)
-    {
-        var scope = SearchEverywhere.IsChecked == true || HomeLocation.IsHome(_session.Path) ? null : _session.Path;
-        if (FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(scope, out _)) return;
-        var request = new FilesMate.Search.SearchPageRequest(SearchBox.Text, scope, Sort: FilesMate.Search.SearchSortConfiguration.Load(System.IO.Path.GetDirectoryName(Program.SettingsPath(Localization.LanguageSettings.DefaultFilePath))));
-        DismissSearch();
-        MoreSearchRequested?.Invoke(this, request);
-    }
-
-    public Func<string, IReadOnlyList<HomeSearchHit>>? SearchDeviceFolder { get; set; }
 
     public event EventHandler? ModeCanceled;
 
@@ -155,18 +138,21 @@ public sealed partial class Omnibar : UserControl
         {
             if (!string.Equals(_session.Path, value, StringComparison.OrdinalIgnoreCase))
             {
-                CancelSearch();
-                SearchEverywhere.IsChecked = false;
-                SearchBox.Text = string.Empty;
-                DismissCrumbFolders();
+                _pathInputLifetime.Changed();
+                _searchFocused = false;
+                _localSearchDraft = string.Empty;
+                _submittedLocalQuery = string.Empty;
+                // A folder change cannot change the saved scope or copy its query.
+                SetSearchText(_globalSearchScope ? _globalSearchDraft : string.Empty);
+                FinishCrumbFolderClose();
             }
 
             _session.SetPath(value);
             UpdateSearchPlaceholder();
             if (_session.Mode != OmnibarMode.PathEdit)
             {
-                PathBox.Text = _session.Path;
-                RebuildCrumbs(_session.Path);
+                PathBox.Text = DisplayPath;
+                RebuildCrumbs(DisplayPath);
                 ClearPathErrorVisual();
             }
         }
@@ -174,8 +160,12 @@ public sealed partial class Omnibar : UserControl
 
     public void BeginPathEdit()
     {
-        DismissCrumbFolders();
+        _pathInputLifetime.Changed();
+        _pasteFailureRestore = null;
+        _pathEditBase = DisplayDirectory;
+        FinishCrumbFolderClose();
         _session.BeginPathEdit();
+        _session.SetDraft(DisplayPath);
         PathBox.Text = _session.Draft;
         // Editing is a mode switch, not content navigation. Apply it atomically
         // so focus cannot land on the outgoing breadcrumb tree for one frame.
@@ -186,107 +176,108 @@ public sealed partial class Omnibar : UserControl
 
     public void BeginSearch()
     {
-        ++_searchFocusVersion;
-        _searchOpen = true;
-        ApplySearchOpen(animate: false);
+        FinishCrumbFolderClose();
+        ApplySearchLayout();
         FocusSearchBox();
     }
 
-    public void DismissSearch()
+    public async void BeginGlobalSearch()
     {
-        if (_searchOpen)
+        try
         {
-            RequestSearchClose();
+            var save = App.SetExplorerPreferencesAsync(App.ExplorerPreferences with { GlobalSearchScope = true });
+            ApplySearchScope(true);
+            await save;
+            BeginSearch();
+        }
+        catch (Exception error)
+        {
+            App.AppendCrashRecord("SearchScope", error);
+            ApplySearchScope(App.ExplorerPreferences.GlobalSearchScope);
         }
     }
 
-    public bool IsSearchOpen => _searchOpen;
+    // Dismiss ends focus mode; the field and draft remain visible.
+    public void DismissSearch()
+    {
+        _searchFocused = false;
+        ApplySearchChrome();
+        UpdatePlaceholderVisual();
+    }
 
-    public bool IsSearchSource(DependencyObject source) =>
-        IsInside(source, SearchCluster) || IsInside(source, SearchPanel);
-
+    public bool IsSearchOpen => _searchFocused;
+    public bool IsSearchSource(DependencyObject source) => IsInside(source, SearchCluster);
     public bool IsCrumbFolderSource(DependencyObject source) =>
         (_crumbChevron is not null && IsInside(source, _crumbChevron))
         || IsInside(source, CrumbFolderHost);
-
-    public void DismissCrumbFolders()
-    {
-        _crumbRequest?.Cancel();
-        if (CrumbFolderPopup.IsOpen && !_crumbFolderClosing)
-        {
-            RequestCrumbFolderClose();
-        }
-    }
-
-    private void SearchButton_Click(object sender, RoutedEventArgs e) => RequestSearch();
+    public void DismissCrumbFolders() => RequestCrumbFolderClose();
+    private void SearchButton_Click(object sender, RoutedEventArgs e) => SubmitSearch();
 
     private void ClearSearchButton_Click(object sender, RoutedEventArgs e)
     {
         SearchBox.Text = string.Empty;
+        if (!_globalSearchScope && _inlineFolderSearch)
+        {
+            _submittedLocalQuery = string.Empty;
+            LocalQueryChanged?.Invoke(this, string.Empty);
+        }
         BeginSearch();
     }
 
-    private void RequestSearch()
+    private void SubmitSearch()
     {
-        if (_searchRequestPending)
+        var target = FolderSearchPresentation.SubmitTarget(_globalSearchScope, _inlineFolderSearch);
+        if (target == SearchSubmitTarget.Unavailable) { UpdateSearchPlaceholder(); return; }
+        if (target == SearchSubmitTarget.Global)
         {
+            if (string.IsNullOrWhiteSpace(SearchBox.Text)) { BeginSearch(); return; }
+            _globalSearchDraft = SearchBox.Text;
+            MoreSearchRequested?.Invoke(this, new FilesMate.Search.SearchPageRequest(SearchBox.Text,
+                Sort: FilesMate.Search.SearchSortConfiguration.Load(System.IO.Path.GetDirectoryName(
+                    Program.SettingsPath(LanguageSettings.DefaultFilePath)))));
             return;
         }
-
-        _searchRequestPending = true;
-        if (!DispatcherQueue.TryEnqueue(() =>
-            {
-                _searchRequestPending = false;
-                if (IsLoaded)
-                {
-                    BeginSearch();
-                }
-            }))
-        {
-            _searchRequestPending = false;
-        }
+        _localSearchDraft = _submittedLocalQuery = SearchBox.Text;
+        _session.SetFilter(_submittedLocalQuery);
+        LocalQueryChanged?.Invoke(this, _submittedLocalQuery);
     }
 
-    private void RequestSearchClose(bool restoreFocus = false)
+    private void ApplySearchLayout()
     {
-        if (_searchClosePending || !_searchOpen)
-        {
-            return;
-        }
-
-        _searchClosePending = true;
-        var version = _searchFocusVersion;
-        if (!DispatcherQueue.TryEnqueue(() =>
-            {
-                _searchClosePending = false;
-                if (!IsLoaded || version != _searchFocusVersion)
-                {
-                    return;
-                }
-
-                _searchOpen = false;
-                _searchFocused = false;
-                ApplySearchOpen(animate: true);
-                ApplySearchChrome();
-                UpdatePlaceholderVisual();
-                SearchSuggestPopup.IsOpen = false;
-                if (restoreFocus) ModeCanceled?.Invoke(this, EventArgs.Empty);
-            }))
-        {
-            _searchClosePending = false;
-        }
+        if (SearchSizer is null || SearchScopeButton is null) return;
+        var stacked = ActualWidth < 720;
+        Grid.SetRow(SearchCluster, stacked ? 1 : 0);
+        Grid.SetColumn(SearchCluster, stacked ? 0 : 2);
+        Grid.SetColumnSpan(SearchCluster, stacked ? 3 : 1);
+        SearchCluster.Margin = new Thickness(0, 4, 0, 4);
+        SearchSizer.Width = FolderSearchPresentation.ControlWidth(ActualWidth, stacked);
+        UpdateSearchPlaceholder();
     }
 
-    private void ApplySearchOpen(bool animate)
+    private void SetSearchText(string text)
     {
-        var visible = _searchOpen || OmnibarSearchLayout.ShowField(ActualWidth);
-        SearchBox.IsTabStop = visible;
-        SearchBox.IsHitTestVisible = visible;
-        VisualStateManager.GoToState(this, visible ? "SearchOpen" : "SearchClosed", useTransitions: false);
-        // No dependent Width animation: Ctrl+F must accept the very next key,
-        // and the breadcrumb layout should not run again on every animation frame.
-        SearchSizer.Width = OmnibarSearchLayout.Width(ActualWidth, _searchOpen);
-        UpdatePlaceholderVisual();
+        var previous = _syncingInlineSearch;
+        _syncingInlineSearch = true;
+        try { SearchBox.Text = text; }
+        finally { _syncingInlineSearch = previous; }
+    }
+
+    private void ApplySearchScope(bool global)
+    {
+        if (_globalSearchScope != global)
+        {
+            if (_globalSearchScope) _globalSearchDraft = SearchBox.Text;
+            else _localSearchDraft = SearchBox.Text;
+            _globalSearchScope = global;
+            SetSearchText(global ? _globalSearchDraft : _localSearchDraft);
+            // Keep a local draft for later submission, never a hidden active filter.
+            if (_inlineFolderSearch && _submittedLocalQuery.Length > 0)
+            {
+                _submittedLocalQuery = string.Empty;
+                LocalQueryChanged?.Invoke(this, string.Empty);
+            }
+        }
+        UpdateSearchPlaceholder();
     }
 
     private void FocusSearchBox()
@@ -295,59 +286,19 @@ public sealed partial class Omnibar : UserControl
         SearchBox.Select(SearchBox.Text.Length, 0);
     }
 
-    private void SearchSizer_SizeChanged(object sender, SizeChangedEventArgs e)
-    {
-        SearchSizer.Clip = new RectangleGeometry
-        {
-            Rect = new Rect(0, 0, Math.Max(0, e.NewSize.Width), Math.Max(0, e.NewSize.Height)),
-        };
-    }
-
-    private void SearchPane_PointerPressed(object sender, PointerRoutedEventArgs e)
-    {
-        if (!_searchOpen)
-        {
-            e.Handled = true;
-            RequestSearch();
-            return;
-        }
-
-        SearchBox.Focus(FocusState.Keyboard);
-    }
-
     private void SearchBox_GotFocus(object sender, RoutedEventArgs e)
     {
-        ++_searchFocusVersion;
-        _searchOpen = true;
         _searchFocused = true;
-        ApplySearchOpen(animate: false);
+        FinishCrumbFolderClose();
         ApplySearchChrome();
         UpdatePlaceholderVisual();
-        SearchBox.Select(SearchBox.Text.Length, 0);
-        ShowSearchStatus(string.IsNullOrWhiteSpace(SearchBox.Text) ? StringTable.Get("Search_TypeToStart") : SearchStatus.Text);
     }
 
-    private void SearchBox_LostFocus(object sender, RoutedEventArgs e) =>
-        _ = DispatcherQueue.TryEnqueue(CloseSearchIfFocusLeft);
-
-    private void CloseSearchIfFocusLeft()
+    private void SearchBox_LostFocus(object sender, RoutedEventArgs e)
     {
-        if (XamlRoot is null)
-        {
-            return;
-        }
-
-        var focused = FocusManager.GetFocusedElement(XamlRoot) as DependencyObject;
-        if (focused is not null && IsSearchSource(focused))
-        {
-            return;
-        }
-
         _searchFocused = false;
         ApplySearchChrome();
         UpdatePlaceholderVisual();
-        SearchSuggestPopup.IsOpen = false;
-        RequestSearchClose();
     }
 
     private void SearchHost_PointerEntered(object sender, PointerRoutedEventArgs e)
@@ -371,32 +322,43 @@ public sealed partial class Omnibar : UserControl
 
     private void UpdateSearchPlaceholder()
     {
-        var key = HomeLocation.IsHome(_session.Path) ? "SearchPlaceholderHome" : "SearchPlaceholderFolder";
+        var key = _globalSearchScope ? "SearchPlaceholderHome"
+            : !_inlineFolderSearch ? "Search_SelectFolderOrGlobal"
+            : _inlineRecursiveSearch ? "Inline_RecursiveScope" : "Inline_CurrentScope";
         var text = StringTable.Get(key);
-        SearchPlaceholderLabel.Text = text;
+        SearchScopeIcon.Glyph = _globalSearchScope ? "\uE770" : "\uE8B7";
+        AutomationProperties.SetName(SearchScopeButton,
+            StringTable.Get(_globalSearchScope ? "GlobalSearch" : "Inline_CurrentScope"));
+        ToolTipService.SetToolTip(SearchScopeButton, text);
+        // The scope is already visible; do not repeat it inside the short query field.
+        SearchPlaceholderLabel.Text = StringTable.Get("SearchPage_Search");
         AutomationProperties.SetName(SearchBox, text);
-        AutomationProperties.SetName(SearchButton, text);
         ToolTipService.SetToolTip(SearchBox, text);
-        ToolTipService.SetToolTip(SearchButton, text);
+        var submit = StringTable.Get(_globalSearchScope ? "Search_SubmitGlobal" : "Search_SubmitFolder");
+        AutomationProperties.SetName(SearchButton, submit);
+        ToolTipService.SetToolTip(SearchButton, _inlineFolderSearch || _globalSearchScope ? submit : text);
+        SearchButton.IsEnabled = _inlineFolderSearch || _globalSearchScope;
         UpdatePlaceholderVisual();
     }
 
     private void UpdatePlaceholderVisual()
     {
-        var show = (_searchOpen || OmnibarSearchLayout.ShowField(ActualWidth))
-            && !_searchFocused && string.IsNullOrEmpty(SearchBox.Text);
-        SearchPlaceholderLabel.Opacity = show ? 1 : 0;
+        SearchPlaceholderLabel.Opacity = !_searchFocused && string.IsNullOrEmpty(SearchBox.Text) ? 1 : 0;
         ClearSearchButton.Visibility = string.IsNullOrEmpty(SearchBox.Text) ? Visibility.Collapsed : Visibility.Visible;
     }
 
     public bool CancelMode()
     {
+        // Escape also cancels a display-mode PasteGo still reading clipboard.
+        CancelPendingPathPaste();
         if (!_session.Cancel())
         {
             return false;
         }
 
-        PathBox.Text = _session.Path;
+        _pathInputLifetime.Changed();
+        _pasteFailureRestore = null;
+        ApplySelectionDisplay();
         ClearPathErrorVisual();
         ApplyMode(animate: false);
         ModeCanceled?.Invoke(this, EventArgs.Empty);
@@ -405,6 +367,8 @@ public sealed partial class Omnibar : UserControl
 
     public void ApplyCommittedPath(string path)
     {
+        _pathInputLifetime.Changed();
+        _pasteFailureRestore = null;
         _ = _session.Cancel();
         Text = path;
         ApplyMode(animate: false);
@@ -415,12 +379,21 @@ public sealed partial class Omnibar : UserControl
         _session.SetDraft(PathBox.Text);
         if (!_session.SubmitPath(commit))
         {
+            if (_pasteFailureRestore is { } restore && restore.Revision == AddressInputRevision)
+            {
+                PathBox.Text = restore.Draft;
+                _session.SetDraft(restore.Draft);
+                _pathEditBase = restore.Base;
+            }
+            _pasteFailureRestore = null;
             ShowErrorVisual(_session.PathError);
             ApplyMode(animate: false);
             PathBox.Focus(FocusState.Programmatic);
             return false;
         }
 
+        _pathInputLifetime.Changed();
+        _pasteFailureRestore = null;
         PathBox.Text = _session.Path;
         RebuildCrumbs(_session.Path);
         ClearPathErrorVisual();
@@ -469,7 +442,7 @@ public sealed partial class Omnibar : UserControl
         }
 
         Toolbar.ApplyOverflow(OmnibarOverflow.ForWidth(ActualWidth, ForceCompactNav));
-        ApplySearchOpen(animate: false);
+        ApplySearchLayout();
     }
 
     private void ApplyMode(bool animate)
@@ -482,11 +455,12 @@ public sealed partial class Omnibar : UserControl
         // tooltip here only obscures the text and selection under the pointer.
         ToolTipService.SetToolTip(
             PathHost,
-            _session.Mode == OmnibarMode.PathEdit ? _session.PathError : _session.Path);
+            _session.Mode == OmnibarMode.PathEdit ? _session.PathError : DisplayPath);
     }
 
     private void PathEditSurface_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        if (!e.GetCurrentPoint(PathEditSurface).Properties.IsLeftButtonPressed) return;
         if (_session.Mode != OmnibarMode.PathDisplay)
         {
             return;
@@ -509,6 +483,7 @@ public sealed partial class Omnibar : UserControl
 
     private void PathHost_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
+        if (!e.GetCurrentPoint(PathHost).Properties.IsLeftButtonPressed) return;
         if (_session.Mode != OmnibarMode.PathDisplay)
         {
             return;
@@ -558,6 +533,7 @@ public sealed partial class Omnibar : UserControl
     {
         if (e.Key == VirtualKey.Enter)
         {
+            CancelPendingPathPaste();
             PathSubmitted?.Invoke(this, PathBox.Text);
             e.Handled = true;
         }
@@ -578,7 +554,7 @@ public sealed partial class Omnibar : UserControl
 
     private void CancelPathEditWhenFocusLeaves()
     {
-        if (_session.Mode != OmnibarMode.PathEdit || XamlRoot is null)
+        if (_session.Mode != OmnibarMode.PathEdit || XamlRoot is null || _pathContextOpen)
         {
             return;
         }
@@ -590,168 +566,81 @@ public sealed partial class Omnibar : UserControl
         }
     }
 
-    private async void SearchBox_TextChanged(object sender, TextChangedEventArgs e) => await RunSearchAsync();
-
-    private async void SearchEverywhere_Click(object sender, RoutedEventArgs e) => await RunSearchAsync();
-
-    private void ShowSearchStatus(string message)
+    private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        MoreSearchButton.Content = StringTable.Get("SearchPage_More");
-        MoreSearchButton.Visibility = FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(_session.Path, out _) && SearchEverywhere.IsChecked != true
-            ? Visibility.Collapsed : Visibility.Visible;
-        SearchStatus.Text = message;
-        SearchSuggestPopup.IsOpen = _searchOpen && _searchFocused;
+        if (!_syncingInlineSearch)
+        {
+            if (_globalSearchScope) _globalSearchDraft = SearchBox.Text;
+            else _localSearchDraft = SearchBox.Text;
+        }
+        // Draft editing never filters a pane or runs a global query.
+        UpdatePlaceholderVisual();
     }
 
-    private async Task RunSearchAsync()
+    private void SearchScopeButton_Click(object sender, RoutedEventArgs e)
     {
-        _session.SetFilter(SearchBox.Text);
-        UpdatePlaceholderVisual();
-        CancelSearch(hide: false);
-        var generation = _searchGeneration;
-        var query = SearchBox.Text;
-        if (string.IsNullOrWhiteSpace(query))
+        var items = new StackPanel { Spacing = 0, MinWidth = 148 };
+        var flyout = new Flyout
         {
-            PublishHits(generation, []);
-            return;
+            Content = items, Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft,
+            AreOpenCloseAnimationsEnabled = false,
+            FlyoutPresenterStyle = (Style)Application.Current.Resources["FilesMate.RoundedFlyoutPresenterStyle"]
+        };
+        Theming.FlyoutTheme.FollowHost(flyout);
+        foreach (var global in new[] { false, true })
+        {
+            var text = StringTable.Get(global ? "GlobalSearch" : "Inline_CurrentScope");
+            var content = new Grid();
+            content.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(26) });
+            content.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            content.Children.Add(new FontIcon
+            {
+                Glyph = global ? "\uE770" : "\uE8B7", FontFamily = new("Segoe Fluent Icons"),
+                FontSize = 16, HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Center
+            });
+            var label = new TextBlock { Text = text, FontSize = 13, VerticalAlignment = VerticalAlignment.Center };
+            Grid.SetColumn(label, 1); content.Children.Add(label);
+            var button = new Button
+            {
+                Content = content, HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                Style = global == _globalSearchScope ? (Style)Resources["SearchScopeSelectedItemStyle"]
+                    : (Style)Application.Current.Resources["FilesMate.ContextMenuItemStyle"]
+            };
+            AutomationProperties.SetAutomationId(button, global ? "SearchScopeGlobal" : "SearchScopeFolder");
+            AutomationProperties.SetName(button, text);
+            button.Click += (_, _) => { flyout.Hide(); ChangeSearchScope(global); };
+            items.Children.Add(button);
         }
+        FlyoutBase.SetAttachedFlyout(SearchScopeButton, flyout);
+        flyout.ShowAt(SearchScopeButton);
+    }
 
-        var request = new CancellationTokenSource();
-        _searchRequest = request;
-        var scope = SearchEverywhere.IsChecked == true || HomeLocation.IsHome(_session.Path) ? null : _session.Path;
-        ShowSearchStatus(StringTable.Get("Search_Searching"));
-        request.CancelAfter(TimeSpan.FromSeconds(6));
+    private async void ChangeSearchScope(bool global)
+    {
+        if (global == App.ExplorerPreferences.GlobalSearchScope) { ApplySearchScope(global); return; }
         try
         {
-            await Task.Delay(TimeSpan.FromSeconds(0.2), request.Token);
-            if (generation != _searchGeneration) return;
-            if (scope is not null && FilesMate.Platform.Windows.Shell.PortableDeviceLocation.TryParse(scope, out _))
-            {
-                var hits = SearchDeviceFolder?.Invoke(query) ?? [];
-                PublishHits(generation, hits, StringTable.Format("Device_SearchCurrentFolder", hits.Count));
-                return;
-            }
-            if (App.SearchIndex is null)
-            {
-                PublishHits(generation, [], StringTable.Get("Search_Unavailable"));
-                return;
-            }
-
-            var rank = App.SearchIndexSettingsStore?.Load().RankOrder;
-            var index = App.SearchIndex;
-            var response = index is FileNameIndexService service
-                ? await service.SearchWithStatusAsync(query, scope, rank, request.Token)
-                : new FileNameSearchResponse(await index.SearchAsync(query, scope, rank, request.Token), false);
-            var message = string.Format(System.Globalization.CultureInfo.CurrentCulture,
-                StringTable.Get(response.Partial ? "Search_Partial" : "Search_Count"), response.Hits.Count);
-            PublishHits(generation, response.Hits, message);
-        }
-        catch (OperationCanceledException)
-        {
-            if (generation == _searchGeneration) PublishHits(generation, [], StringTable.Get("Search_Timeout"));
+            // Change shared state before nested pane sync. Receivers do not save.
+            var save = App.SetExplorerPreferencesAsync(App.ExplorerPreferences with { GlobalSearchScope = global });
+            ApplySearchScope(global);
+            await save;
         }
         catch (Exception error)
         {
-            App.AppendCrashRecord("Search", error);
-            PublishHits(generation, [], StringTable.Get("Search_Unavailable"));
-        }
-        finally
-        {
-            if (ReferenceEquals(_searchRequest, request))
-            {
-                _searchRequest = null;
-            }
-
-            request.Dispose();
-        }
-    }
-
-    private void CancelSearch(bool hide = true)
-    {
-        ++_searchGeneration;
-        _searchRequest?.Cancel();
-        _hits = [];
-        SearchHits.ItemsSource = _hits;
-        if (hide) SearchSuggestPopup.IsOpen = false;
-    }
-
-    private void PublishHits(int generation, IReadOnlyList<HomeSearchHit> hits, string? message = null)
-    {
-        if (generation != _searchGeneration)
-        {
-            return;
-        }
-
-        _ = DispatcherQueue.TryEnqueue(() =>
-        {
-            if (generation != _searchGeneration)
-            {
-                return;
-            }
-
-            _hits = hits;
-            SearchHits.ItemsSource = hits;
-            ShowSearchStatus(message ?? StringTable.Get("Search_TypeToStart"));
-        });
-    }
-
-    private void SearchHits_ItemClick(object sender, ItemClickEventArgs e)
-    {
-        if (e.ClickedItem is HomeSearchHit hit)
-        {
-            RaiseSearch(hit);
+            App.AppendCrashRecord("SearchScope", error);
+            ApplySearchScope(App.ExplorerPreferences.GlobalSearchScope);
         }
     }
 
     private void SearchBox_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (e.Key == VirtualKey.Escape)
+        if (e.Key == VirtualKey.Enter) { SubmitSearch(); e.Handled = true; }
+        else if (e.Key == VirtualKey.Escape)
         {
+            DismissSearch();
+            ModeCanceled?.Invoke(this, EventArgs.Empty);
             e.Handled = true;
-            var version = _searchFocusVersion;
-            _ = DispatcherQueue.TryEnqueue(() =>
-            {
-                if (!IsLoaded || version != _searchFocusVersion) return;
-                CancelSearch();
-                SearchBox.Text = string.Empty;
-                _session.SetFilter(string.Empty);
-                RequestSearchClose(restoreFocus: true);
-            });
-            return;
-        }
-
-        if (e.Key == VirtualKey.Enter)
-        {
-            if (SearchHits.SelectedItem is HomeSearchHit selected)
-            {
-                RaiseSearch(selected);
-            }
-            else if (_hits.Count > 0)
-            {
-                RaiseSearch(_hits[0]);
-            }
-
-            e.Handled = true;
-            return;
-        }
-
-        if ((e.Key == VirtualKey.Down || e.Key == VirtualKey.Up) && _hits.Count > 0)
-        {
-            SearchSuggestPopup.IsOpen = true;
-            var index = SearchHits.SelectedIndex < 0 ? 0 : Math.Clamp(SearchHits.SelectedIndex + (e.Key == VirtualKey.Down ? 1 : -1), 0, _hits.Count - 1);
-            SearchHits.SelectedIndex = index;
-            SearchHits.ScrollIntoView(_hits[index]);
-            e.Handled = true;
-        }
-    }
-
-    private void RaiseSearch(HomeSearchHit hit)
-    {
-        var path = hit.Path;
-        if (!string.IsNullOrEmpty(path))
-        {
-            SearchChosen?.Invoke(this, path);
-            SearchSuggestPopup.IsOpen = false;
         }
     }
 
@@ -760,6 +649,7 @@ public sealed partial class Omnibar : UserControl
         if (sender is FrameworkElement { Tag: string path } && !string.IsNullOrEmpty(path))
         {
             DismissSearch();
+            FinishCrumbFolderClose();
             RaiseCrumb(path);
         }
     }
@@ -772,37 +662,51 @@ public sealed partial class Omnibar : UserControl
         }
 
         DismissSearch();
-        _ = DispatcherQueue.TryEnqueue(() => ShowCrumbFolders(path, chevron));
+        if (_crumbFolderClosePending)
+        {
+            FinishCrumbFolderClose();
+        }
+
+        _crumbRequest?.Cancel();
+        var version = ++_crumbFolderVersion;
+        if (!DispatcherQueue.TryEnqueue(() =>
+            {
+                if (version == _crumbFolderVersion)
+                {
+                    ShowCrumbFolders(path, chevron);
+                }
+            }))
+        {
+            FinishCrumbFolderClose();
+        }
     }
 
     private async void ShowCrumbFolders(string path, FrameworkElement chevron)
     {
         if (!IsLoaded || !chevron.IsLoaded || chevron.XamlRoot is null)
         {
+            FinishCrumbFolderClose();
             return;
         }
 
-        _crumbRequest?.Cancel();
-        if (_crumbFolderClosing)
-        {
-            _crumbFolderStoryboard?.Stop();
-            _crumbFolderClosing = false;
-        }
-
-        if (CrumbFolderPopup.IsOpen
+        if (!_crumbFolderClosePending && CrumbFolderPopup.IsOpen
             && string.Equals(_crumbFlyoutPath, path, StringComparison.OrdinalIgnoreCase))
         {
             AnimateCrumbFolder(open: false);
             return;
         }
 
+        // The previous menu must not remain actionable while a different folder loads.
+        FinishCrumbFolderClose();
+        var version = _crumbFolderVersion;
         var request = new CancellationTokenSource();
         _crumbRequest = request;
         IReadOnlyList<NavigationPathSegment> folders;
         try
         {
             folders = await PathChildren.FoldersAsync(path, App.ExplorerPreferences.ShowHiddenFiles, request.Token);
-            if (request.IsCancellationRequested || !IsLoaded || !chevron.IsLoaded || chevron.XamlRoot is null)
+            if (request.IsCancellationRequested || version != _crumbFolderVersion
+                || !IsLoaded || !chevron.IsLoaded || chevron.XamlRoot is null)
             {
                 return;
             }
@@ -836,9 +740,8 @@ public sealed partial class Omnibar : UserControl
 
     private void ShowCrumbFolderItems(IReadOnlyList<NavigationPathSegment> folders, FrameworkElement chevron, string path)
     {
-        _crumbFolderStoryboard?.Stop();
-        _crumbFolderClosing = false;
-        CrumbFolderItems.Children.Clear();
+        // A replacement owns a new lifetime; any queued close/open belongs to the old one.
+        FinishCrumbFolderClose();
         Style? itemStyle = null;
         if (Application.Current.Resources.TryGetValue("FilesMate.ContextMenuItemStyle", out var resource)
             && resource is Style style)
@@ -870,55 +773,71 @@ public sealed partial class Omnibar : UserControl
         CrumbFolderPopup.DesiredPlacement = PopupPlacementMode.BottomEdgeAlignedLeft;
         CrumbFolderHost.Opacity = 0;
         CrumbFolderSlide.Y = CrumbFolderSlideOffset;
+        CrumbFolderHost.IsHitTestVisible = true;
         CrumbFolderPopup.IsOpen = true;
         AnimateCrumbFolder(open: true);
     }
 
     private void RequestCrumbFolderClose()
     {
-        if (_crumbFolderClosePending || _crumbFolderClosing || !CrumbFolderPopup.IsOpen)
+        _crumbRequest?.Cancel();
+        if (_crumbFolderClosePending)
         {
             return;
         }
 
+        if (!IsLoaded || !CrumbFolderPopup.IsOpen)
+        {
+            FinishCrumbFolderClose();
+            return;
+        }
+
+        // Outside presses finish their input route before we detach the popup tree.
+        // Hide and disarm it now; there is no exit animation or animation-owned close.
         _crumbFolderClosePending = true;
+        var version = ++_crumbFolderVersion;
+        _crumbFolderStoryboard?.Stop();
+        _crumbFolderStoryboard = null;
+        CrumbFolderHost.IsHitTestVisible = false;
+        CrumbFolderHost.Opacity = 0;
         if (!DispatcherQueue.TryEnqueue(() =>
             {
-                _crumbFolderClosePending = false;
-                if (IsLoaded && CrumbFolderPopup.IsOpen)
+                if (version == _crumbFolderVersion && _crumbFolderClosePending)
                 {
-                    AnimateCrumbFolder(open: false);
+                    FinishCrumbFolderClose();
                 }
             }))
         {
-            _crumbFolderClosePending = false;
+            FinishCrumbFolderClose();
         }
     }
 
     private void AnimateCrumbFolder(bool open)
     {
-        _crumbFolderStoryboard?.Stop();
-        _crumbFolderStoryboard = null;
-        _crumbFolderClosing = !open;
-        var duration = App.Motion.Resolve(MotionDurations.Fast);
-        var opacityTo = open ? 1d : 0d;
-        var slideTo = open ? 0d : CrumbFolderSlideOffset;
-        if (duration <= TimeSpan.Zero)
+        if (!open)
         {
-            CrumbFolderHost.Opacity = opacityTo;
-            CrumbFolderSlide.Y = slideTo;
-            if (!open)
-            {
-                FinishCrumbFolderClose();
-            }
-
+            FinishCrumbFolderClose();
             return;
         }
 
-        var opacityEase = new CubicEase { EasingMode = open ? EasingMode.EaseOut : EasingMode.EaseIn };
-        var slideEase = new CubicEase { EasingMode = open ? EasingMode.EaseOut : EasingMode.EaseIn };
-        var opacity = new DoubleAnimation { To = opacityTo, Duration = duration, EasingFunction = opacityEase };
-        var slide = new DoubleAnimation { To = slideTo, Duration = duration, EasingFunction = slideEase };
+        _crumbFolderStoryboard?.Stop();
+        _crumbFolderStoryboard = null;
+        var duration = App.Motion.Resolve(MotionDurations.Fast);
+        if (duration <= TimeSpan.Zero)
+        {
+            CrumbFolderHost.Opacity = 1;
+            CrumbFolderSlide.Y = 0;
+            return;
+        }
+
+        var opacity = new DoubleAnimation
+        {
+            To = 1, Duration = duration, EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+        };
+        var slide = new DoubleAnimation
+        {
+            To = 0, Duration = duration, EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
+        };
         Storyboard.SetTarget(opacity, CrumbFolderHost);
         Storyboard.SetTargetProperty(opacity, nameof(UIElement.Opacity));
         Storyboard.SetTarget(slide, CrumbFolderSlide);
@@ -926,23 +845,18 @@ public sealed partial class Omnibar : UserControl
         var storyboard = new Storyboard();
         storyboard.Children.Add(opacity);
         storyboard.Children.Add(slide);
-        if (!open)
-        {
-            storyboard.Completed += (_, _) =>
-            {
-                if (_crumbFolderClosing)
-                {
-                    FinishCrumbFolderClose();
-                }
-            };
-        }
-
         _crumbFolderStoryboard = storyboard;
         storyboard.Begin();
     }
 
     private void FinishCrumbFolderClose()
     {
+        ++_crumbFolderVersion;
+        _crumbFolderClosePending = false;
+        _crumbRequest?.Cancel();
+        _crumbFolderStoryboard?.Stop();
+        _crumbFolderStoryboard = null;
+        CrumbFolderHost.IsHitTestVisible = false;
         CrumbFolderPopup.IsOpen = false;
         CrumbFolderPopup.PlacementTarget = null;
         CrumbFolderItems.Children.Clear();
@@ -950,13 +864,37 @@ public sealed partial class Omnibar : UserControl
         CrumbFolderSlide.Y = CrumbFolderSlideOffset;
         _crumbFlyoutPath = null;
         _crumbChevron = null;
-        _crumbFolderClosing = false;
-        _crumbFolderStoryboard = null;
+    }
+
+    private void CrumbFolder_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != VirtualKey.Escape || !CrumbFolderPopup.IsOpen || _crumbFolderClosePending
+            || e.OriginalSource is not DependencyObject source || !IsCrumbFolderSource(source))
+        {
+            return;
+        }
+
+        var chevron = _crumbChevron;
+        FinishCrumbFolderClose();
+        e.Handled = true;
+        // Only Escape restores the opener. Outside presses, navigation and unload
+        // must leave focus with the control the user is moving to.
+        if (IsLoaded && chevron is Control { IsLoaded: true, IsEnabled: true } opener
+            && chevron.XamlRoot == XamlRoot)
+        {
+            opener.Focus(FocusState.Keyboard);
+        }
     }
 
     private void CrumbChild_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { Tag: string path } && !string.IsNullOrEmpty(path))
+        if (_crumbFolderClosePending || !CrumbFolderPopup.IsOpen || !CrumbFolderHost.IsHitTestVisible)
+        {
+            return;
+        }
+
+        if (sender is FrameworkElement { Tag: string path } item && !string.IsNullOrEmpty(path)
+            && CrumbFolderItems.Children.Contains(item))
         {
             AnimateCrumbFolder(open: false);
             RaiseCrumb(path);
@@ -1078,12 +1016,7 @@ public sealed partial class Omnibar : UserControl
 
     private void PublishCrumbs()
     {
-        _crumbRequest?.Cancel();
-        if (CrumbFolderPopup.IsOpen && !_crumbFolderClosing)
-        {
-            FinishCrumbFolderClose();
-        }
-
+        FinishCrumbFolderClose();
         BuildAdaptiveCrumbs();
         _ = DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, ClearCrumbHover);
     }

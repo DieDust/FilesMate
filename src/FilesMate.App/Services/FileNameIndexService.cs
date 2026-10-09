@@ -67,10 +67,21 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
         CancellationToken cancellationToken = default) =>
         (await SearchWithStatusAsync(query, directory, rankOrder, cancellationToken).ConfigureAwait(false)).Hits;
 
-    public async Task<FileNameSearchResponse> SearchWithStatusAsync(
+    public Task<FileNameSearchResponse> SearchWithStatusAsync(
         string query, string? directory = null, IReadOnlyList<SearchHitKind>? rankOrder = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        SearchWithStatusAsync(query, directory, rankOrder, cancellationToken, 0, Guid.Empty);
+
+    public async Task<FileNameSearchResponse> SearchWithStatusAsync(
+        string query, string? directory, IReadOnlyList<SearchHitKind>? rankOrder,
+        CancellationToken cancellationToken, long diagnosticUiGeneration, Guid diagnosticOwner)
     {
+        var diagnosticOperation = FilesMate.Core.Diagnostics.PerformanceTrace.NextOperation();
+        FilesMate.Core.Diagnostics.PerformanceTrace.Record(FilesMate.Core.Diagnostics.PerformanceStage.SearchReceived,
+            pane: diagnosticOwner, generation: diagnosticUiGeneration, operation: diagnosticOperation);
+        var diagnosticOutcome = FilesMate.Core.Diagnostics.PerformanceOutcome.Completed;
+        try
+        {
         ObjectDisposedException.ThrowIf(_disposed, this);
         if (string.IsNullOrWhiteSpace(query) || !TryGetPathPrefix(directory, out var prefix)) return new([], false);
         var includeExecutables = _includeExecutables();
@@ -88,6 +99,9 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
                     .Select(hit => new HomeSearchHit(hit.Name, hit.Path, hit.IsDirectory)).ToArray(), cancellationToken).ConfigureAwait(false);
         }
         finally { _gate.Release(); }
+        if (FilesMate.Core.Diagnostics.PerformanceTrace.Enabled)
+            FilesMate.Core.Diagnostics.PerformanceTrace.Record(FilesMate.Core.Diagnostics.PerformanceStage.SearchIndexed,
+                pane: diagnosticOwner, generation: diagnosticUiGeneration, operation: diagnosticOperation, count: indexed.Count);
 
         // Overlay a bounded, cancelable live walk for current-folder searches, so
         // newly created files and folders outside the configured index are usable.
@@ -96,10 +110,27 @@ public sealed class FileNameIndexService : IFileNameSearchIndex
                 prefix is null ? HomePlaces.UserFolders().Select(item => item.Path) : [prefix],
                 FetchLimit, cancellationToken, Include), cancellationToken).ConfigureAwait(false)
             : new FileNameSearchResponse([], false);
+        if (FilesMate.Core.Diagnostics.PerformanceTrace.Enabled)
+            FilesMate.Core.Diagnostics.PerformanceTrace.Record(FilesMate.Core.Diagnostics.PerformanceStage.SearchLive,
+                pane: diagnosticOwner, generation: diagnosticUiGeneration, operation: diagnosticOperation, count: live.Hits.Count,
+                outcome: live.Partial ? FilesMate.Core.Diagnostics.PerformanceOutcome.Partial : FilesMate.Core.Diagnostics.PerformanceOutcome.Completed);
         var combined = live.Hits.Concat(indexed).Where(hit => Include(hit.Path, hit.IsDirectory))
             .DistinctBy(hit => hit.Path, StringComparer.OrdinalIgnoreCase).ToArray();
-        return new(SearchHitRanking.Sort(combined, rankOrder, ResultLimit, query),
+        var response = new FileNameSearchResponse(SearchHitRanking.Sort(combined, rankOrder, ResultLimit, query),
             live.Partial || combined.Length >= ResultLimit);
+        diagnosticOutcome = response.Partial ? FilesMate.Core.Diagnostics.PerformanceOutcome.Partial : FilesMate.Core.Diagnostics.PerformanceOutcome.Completed;
+        if (FilesMate.Core.Diagnostics.PerformanceTrace.Enabled)
+            FilesMate.Core.Diagnostics.PerformanceTrace.Record(FilesMate.Core.Diagnostics.PerformanceStage.SearchReturned,
+                pane: diagnosticOwner, generation: diagnosticUiGeneration, operation: diagnosticOperation, count: response.Hits.Count, outcome: diagnosticOutcome);
+        return response;
+        }
+        catch (OperationCanceledException) { diagnosticOutcome = FilesMate.Core.Diagnostics.PerformanceOutcome.Cancelled; throw; }
+        catch { diagnosticOutcome = FilesMate.Core.Diagnostics.PerformanceOutcome.Failed; throw; }
+        finally
+        {
+            FilesMate.Core.Diagnostics.PerformanceTrace.Record(FilesMate.Core.Diagnostics.PerformanceStage.SearchEnd,
+                pane: diagnosticOwner, generation: diagnosticUiGeneration, operation: diagnosticOperation, outcome: diagnosticOutcome);
+        }
     }
 
     public async Task RebuildAsync(SearchIndexSettings settings, CancellationToken cancellationToken = default)

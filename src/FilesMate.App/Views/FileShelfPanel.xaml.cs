@@ -296,6 +296,8 @@ public sealed partial class FileShelfPanel : UserControl
     }
     internal async Task AddDataAsync(DataPackageView data)
     {
+        if (data.Contains(FileDropRequest.RecursiveMarker))
+            throw new IOException(StringTable.Get("Recursive_ShelfUnavailable"));
         if (!data.Contains(StandardDataFormats.StorageItems)) return;
         var items = await data.GetStorageItemsAsync();
         await AddPathsAsync(items.Select(item => item.Path).ToArray());
@@ -329,7 +331,7 @@ public sealed partial class FileShelfPanel : UserControl
             var result = await ArchiveOperationUI.RunAsync(_host, CompactMateVerb.CompressNew,
                 Selected(), null, new WindowsLocalFileOperations(), _transfer.Token);
             if (result is null) return;
-            if (result.WithoutUndo > 0) App.FileUndo.Clear();
+            if (result.WithoutUndo > 0 && !result.PreservesOrdinaryUndo) App.FileUndo.Clear();
             if (result.Undo is not null) App.FileUndo.Push(result.Undo);
             if (_host.IsLoaded && (result.Undo is not null || result.Completed.Count > 0)) _refresh();
             SetStatus(TransferFeedback.Format(ArchiveOperationUI.AsShelfResult(result)));
@@ -366,7 +368,7 @@ public sealed partial class FileShelfPanel : UserControl
                 progress, _transfer.Token, allowSameDirectoryCopy: !move, resolveConflict: FileConflictDialog.For(_host),
                 byteProgress: new Progress<FileCopyProgress>(value => SetStatus(StringTable.Format("Transfer_CopyByteProgress", Path.GetFileName(value.Source),
                     (value.Transferred / 1048576d).ToString("N1"), (value.Total / 1048576d).ToString("N1")))));
-            if (result.WithoutUndo > 0) App.FileUndo.Clear();
+            if (result.WithoutUndo > 0 && !result.PreservesOrdinaryUndo) App.FileUndo.Clear();
             if (result.Undo is not null)
             {
                 App.FileUndo.Push(result.Undo);
@@ -379,7 +381,8 @@ public sealed partial class FileShelfPanel : UserControl
     }
 
     internal static bool CanAccept(DataPackageView data) =>
-        data.Contains(StandardDataFormats.StorageItems) && !data.Properties.ContainsKey(DragMarker);
+        data.Contains(StandardDataFormats.StorageItems) && !data.Properties.ContainsKey(DragMarker)
+        && !data.Contains(FileDropRequest.RecursiveMarker);
 
     internal void PreviewDrop(DragEventArgs e)
     {

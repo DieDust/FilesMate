@@ -14,28 +14,43 @@ namespace FilesMate.App.Views;
 internal sealed partial class PaneFileActions
 {
     internal static bool IsBusy => _fileWorkActive;
-    public async Task<string?> RenamePathAsync(string source, string name)
+    public Task<string?> RenamePathAsync(string source, string name) =>
+        RenamePathOwnedAsync(source, name, CaptureRecursiveContext());
+
+    internal Task<string?> RenamePathCapturedAsync(string source, string name, bool recursive, Func<bool> guard) =>
+        RenamePathOwnedAsync(source, name, new(recursive, guard));
+
+    private async Task<string?> RenamePathOwnedAsync(string source, string name, RecursiveActionContext context)
     {
         if (_fileWorkActive || FileOperationLifetime.IsBusy) { _reportError(Loc.Get("Files_Busy")); return null; }
         _fileWorkActive = true;
         using var lifetime = FileOperationLifetime.Begin();
-        try { return await RenameCoreAsync(source, name); }
+        try { return await RenameCoreAsync(source, name, context); }
         finally { _fileWorkActive = false; }
     }
 
-    private async Task<string?> RenameCoreAsync(string source, string name)
+    private async Task<string?> RenameCoreAsync(string source, string name, RecursiveActionContext context = default)
     {
         try
         {
+            CheckRecursiveContext(context);
             FileNameRules.Validate(name);
             var parent = Path.GetDirectoryName(source) ?? throw new IOException(Loc.Get("Files_ParentUnknown"));
             var destination = Path.Combine(parent, name);
             if (string.Equals(source, destination, StringComparison.Ordinal)) return source;
             var samePath = string.Equals(source, destination, StringComparison.OrdinalIgnoreCase);
-            if (!samePath && Path.Exists(destination)) return await ResolveRenameConflictAsync(source, destination);
+            if (!samePath && Path.Exists(destination))
+            {
+                if (context.Active) throw new IOException(Loc.Get("Recursive_OperationUnavailable"));
+                return await ResolveRenameConflictAsync(source, destination);
+            }
+            await CheckRecursiveSourcesAsync(context, [source]);
             try { await Task.Run(() => _operations.Rename(source, destination)); }
             catch (IOException) when (!samePath && Path.Exists(destination))
-            { return await ResolveRenameConflictAsync(source, destination); }
+            {
+                if (context.Active) throw new IOException(Loc.Get("Recursive_OperationUnavailable"));
+                return await ResolveRenameConflictAsync(source, destination);
+            }
             App.RelocatePinnedFolder(source, destination);
             App.FileUndo.Push(await Task.Run(() => FileUndoRecord.Relocated([new(source, destination)])));
             _refresh();
@@ -44,7 +59,7 @@ internal sealed partial class PaneFileActions
         catch (Exception error)
         {
             _reportError(error.Message);
-            await ShowRenameMessageAsync(Loc.Get("Command_Rename"), error.Message);
+            if (_host.IsLoaded) await ShowRenameMessageAsync(Loc.Get("Command_Rename"), error.Message);
             return null;
         }
     }
@@ -53,10 +68,11 @@ internal sealed partial class PaneFileActions
     {
         var result = await WindowsFileTransfer.RunAsync(_operations, [new(source, destination)], move: true,
             FileConflictDialog.For(_host));
-        if (result.WithoutUndo > 0) App.FileUndo.Clear();
+        if (result.WithoutUndo > 0 && !result.PreservesOrdinaryUndo) App.FileUndo.Clear();
         if (result.Undo is not null) App.FileUndo.Push(result.Undo);
         if (_host is NavigatorPage page) page.ShowTransferFeedback(new(result.Completed, result.Errors, result.Cancelled)
-        { Undo = result.Undo, Skipped = result.Skipped, WithoutUndo = result.WithoutUndo });
+        { Undo = result.Undo, Skipped = result.Skipped, WithoutUndo = result.WithoutUndo,
+            PreservesOrdinaryUndo = result.PreservesOrdinaryUndo });
         _refresh();
         if (result.Errors.Count > 0)
             await ShowRenameMessageAsync(Loc.Get("Command_Rename"), string.Join(Environment.NewLine, result.Errors));
@@ -161,19 +177,29 @@ internal sealed partial class PaneFileActions
 
     private async Task GroupSelectionAsync()
     {
+        var context = CaptureRecursiveContext();
         var folder = RequireFolder();
-        var selected = _selectedPaths().ToArray();
+        var selected = CaptureOperationPaths().ToArray();
         if (selected.Length == 0) return;
         var suggestion = Path.GetFileName(UniquePath.CombineAvailable(folder, Loc.Get("Command_NewFolder"), Path.Exists));
         var name = await RequestNameAsync(Loc.Format("Files_GroupSelection", selected.Length), folder, suggestion);
         if (name is null) return;
         var target = Path.Combine(folder, name);
         if (Path.Exists(target)) throw new IOException(Loc.Get("Files_TargetExists"));
+        await CheckRecursiveSourcesAsync(context, selected);
+        if (context.Active) await RecursiveTransferCompatibility.VerifyAsync([], folder);
+        CheckRecursiveContext(context);
         _operations.CreateDirectory(target, failIfExists: true);
-        var result = await FileShelfTransfer.RunAsync(_operations, selected, target, move: true, resolveConflict: FileConflictDialog.For(_host));
-        if (result.WithoutUndo > 0) App.FileUndo.Clear();
-        else if (result.Completed.Count > 0) App.FileUndo.Push(await Task.Run(() => FileUndoRecord.Grouped(target, result.Completed)));
-        else RecordCreated([target]);
+        var result = await FileShelfTransfer.RunAsync(_operations, selected, target, move: true, resolveConflict: FileConflictDialog.For(_host), requireRecursiveCompatibility: context.Active);
+        if (result.WithoutUndo > 0 && !result.PreservesOrdinaryUndo) App.FileUndo.Clear();
+        else if (result.Undo is { } transfer)
+        {
+            var grouped = await Task.Run(() => FileUndoRecord.Merged(
+                transfer.Kind == FileUndoKind.Merged ? transfer.Paths : [], transfer.Pairs) with
+            { Replacements = transfer.Replacements, CreatedDirectories = [target, .. transfer.CreatedDirectories] });
+            App.FileUndo.Push(grouped);
+        }
+        else if (result.Completed.Count == 0) RecordCreated([target]);
         if (_host is NavigatorPage page) page.ShowTransferFeedback(result);
         if (TransferFeedback.NeedsAttention(result)) _reportError(TransferFeedback.Format(result));
         _refresh();

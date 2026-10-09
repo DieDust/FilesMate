@@ -1,4 +1,4 @@
-﻿namespace FilesMate.App.Models;
+namespace FilesMate.App.Models;
 
 /// <summary>
 /// Preferences that change file browsing behavior rather than window chrome.
@@ -38,7 +38,10 @@ public sealed record ExplorerPreferences(
     ThumbnailQuality ThumbnailQuality = ThumbnailQuality.Standard,
     bool ShowFullThumbnails = false,
     bool ShowGridFileSizes = false,
-    bool AutoFitNameColumn = false)
+    bool AutoFitNameColumn = false,
+    IReadOnlyList<ToolbarTool>? ToolbarOrder = null,
+    bool GlobalSearchScope = false,
+    int? RecursiveAutoExpandDepth = 0, int RecursiveAltExpandDepth = 2, bool EnableUndoBackups = true)
 {
     public IReadOnlyList<FilesMate.Core.Entries.EntryGrouping> EffectiveGroupingCycle => GroupingClickCycle is { Count: > 0 }
         ? GroupingClickCycle : [FilesMate.Core.Entries.EntryGrouping.FoldersFirst, FilesMate.Core.Entries.EntryGrouping.Mixed];
@@ -121,7 +124,10 @@ public sealed record ExplorerPreferences(
         string? thumbnailQuality = null,
         bool? showFullThumbnails = null,
         bool? showGridFileSizes = null,
-        bool? autoFitNameColumn = null) =>
+        bool? autoFitNameColumn = null,
+        string[]? toolbarOrder = null,
+        bool? globalSearchScope = null,
+        int? recursiveAutoExpandDepth = null, int? recursiveAltExpandDepth = null, bool? enableUndoBackups = null) =>
         new(
             showHiddenFiles ?? Default.ShowHiddenFiles,
             confirmPermanentDelete ?? Default.ConfirmPermanentDelete,
@@ -157,7 +163,11 @@ public sealed record ExplorerPreferences(
             Parse(thumbnailQuality, Default.ThumbnailQuality),
             showFullThumbnails ?? Default.ShowFullThumbnails,
             showGridFileSizes ?? Default.ShowGridFileSizes,
-            autoFitNameColumn ?? Default.AutoFitNameColumn);
+            autoFitNameColumn ?? Default.AutoFitNameColumn,
+            ToolbarToolCatalog.ParseOrder(toolbarOrder),
+            globalSearchScope ?? Default.GlobalSearchScope,
+            (recursiveAutoExpandDepth is >= 0 and <= 5 || recursiveAutoExpandDepth == int.MaxValue) ? recursiveAutoExpandDepth.Value : 0, (recursiveAltExpandDepth is >= 1 and <= 5 || recursiveAltExpandDepth == int.MaxValue) ? recursiveAltExpandDepth.Value : Default.RecursiveAltExpandDepth,
+            enableUndoBackups ?? Default.EnableUndoBackups);
 
     private static IReadOnlyList<FilesMate.Core.Entries.EntryGrouping>? ParseGroupingCycle(string[]? values)
     {
@@ -209,7 +219,7 @@ public enum FolderViewKind
 public enum ToolbarTool
 {
     New, Cut, Copy, Paste, Rename, Share, Delete, CopyPath, HiddenFiles,
-    Shelf, Sort, FolderSizes, DetailsView, GridView, ListView, SplitView, Preview, Grouping, ViewMenu,
+    Shelf, Sort, FolderSizes, DetailsView, GridView, ListView, SplitView, Preview, Grouping, ViewMenu, Filters,
 }
 
 public enum DateFormatKind

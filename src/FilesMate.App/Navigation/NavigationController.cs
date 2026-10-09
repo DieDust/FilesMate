@@ -63,7 +63,9 @@ public sealed class NavigationController
         var generation = _gate.Begin();
         var intent = new NavigationIntent(PaneId, generation, normalizedPath);
         Navigating?.Invoke(this, intent);
-        CurrentPath = normalizedPath;
+        // A navigation callback may synchronously open a newer destination. Keep
+        // that owner's path; callers can reject this now-obsolete returned intent.
+        if (Allows(generation)) CurrentPath = normalizedPath;
         return intent;
     }
 

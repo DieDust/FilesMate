@@ -35,6 +35,12 @@ public sealed partial class NavigatorPage
         var path = vm.AddressText;
         ChromeOf(vm).SetFolderCaption(path);
         var generation = vm.Navigation.CurrentGeneration;
+        if (vm.IsRecursive)
+        {
+            CancelFolderStatus(vm);
+            ChromeOf(vm).ZoomText = string.Empty;
+            return;
+        }
         if (vm.IsPortableDevice)
         {
             CancelFolderStatus(vm);

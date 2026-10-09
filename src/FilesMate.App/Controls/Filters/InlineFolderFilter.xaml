@@ -1,0 +1,18 @@
+<UserControl x:Class="FilesMate.App.Controls.Filters.InlineFolderFilter"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Visibility="Collapsed">
+ <StackPanel x:Name="Root" Spacing="0">
+  <Grid x:Name="Header" VerticalAlignment="Center">
+   <Button x:Name="ExpandButton" Height="32" Padding="9,0" Style="{StaticResource CommandBarButtonStyle}" Click="Expand_Click"/>
+  </Grid>
+  <Grid x:Name="Editor" HorizontalAlignment="Stretch" Margin="9,1,9,3" RowSpacing="6" SizeChanged="Editor_SizeChanged">
+   <Grid.ColumnDefinitions><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+   <Grid.RowDefinitions><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+   <StackPanel x:Name="TypeHost" HorizontalAlignment="Left"/>
+   <StackPanel x:Name="DateHost" HorizontalAlignment="Left"/>
+   <StackPanel x:Name="SizeHost" HorizontalAlignment="Left"/>
+   <Button x:Name="ClearButton" Height="32" Padding="9,0" HorizontalAlignment="Left" Style="{StaticResource QuietButtonStyle}" Click="Clear_Click"/>
+  </Grid>
+  <TextBlock x:Name="Validation" Margin="9,0,9,3" FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource FilesMate.Text.SecondaryBrush}" Visibility="Collapsed"/>
+ </StackPanel>
+</UserControl>

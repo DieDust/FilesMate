@@ -12,8 +12,7 @@ namespace FilesMate.App.Updates;
 internal sealed class UpdateController
 {
     private readonly HttpClient _http = new(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = Timeout.InfiniteTimeSpan };
-    private readonly UpdateSettingsStore _settings = new(Program.SettingsPath(Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FilesMate", "updates.json")));
+    private readonly UpdateSettingsStore _settings = new(Program.SettingsPath(Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "updates.json")));
     private readonly SemaphoreSlim _checkGate = new(1, 1);
     public UpdateRelease? Available { get; private set; }
     public bool IsInstalling { get; private set; }
@@ -47,10 +46,11 @@ internal sealed class UpdateController
 
     public async Task<string> DownloadAsync(UpdateRelease release, IProgress<double> progress, CancellationToken cancellationToken)
     {
+        FilesMate.Core.Configuration.RuntimeProfile.RequireInstallerUpdates();
 #if FILESMATE_UI_TEST
         if (TestDownload is { } testDownload) return await testDownload(progress, cancellationToken);
 #endif
-        var cache = Program.SettingsPath(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FilesMate", "Updates", "cache"));
+        var cache = Program.SettingsPath(Path.Combine(FilesMate.Core.Configuration.RuntimeProfile.DirectoryPath, "Updates", "cache"));
         Directory.CreateDirectory(cache);
         // Only our generated download files, and only stale ones; never traverse user folders.
         foreach (var file in Directory.EnumerateFiles(cache))
@@ -67,6 +67,7 @@ internal sealed class UpdateController
 
     public async Task InstallAsync(UpdateRelease release, string installer, CancellationToken cancellationToken = default)
     {
+        FilesMate.Core.Configuration.RuntimeProfile.RequireInstallerUpdates();
         if (IsInstalling) throw new InvalidOperationException(Loc.Get("Update_Busy"));
         if (release.ParsedVersion <= CurrentVersion) throw new InvalidOperationException(Loc.Get("Update_VersionNotNewer"));
         if (FileOperationLifetime.IsBusy || !App.CanInstallUpdate()) throw new InvalidOperationException(Loc.Get("Update_FinishOperations"));

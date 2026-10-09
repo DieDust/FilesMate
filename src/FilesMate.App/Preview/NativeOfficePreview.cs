@@ -100,7 +100,9 @@ public sealed class NativeOfficePreview : IDisposable
             var exe = Path.Combine(AppContext.BaseDirectory, "SearchHost", "FilesMate.SearchHost.exe");
             if (!File.Exists(exe)) exe = Path.Combine(AppContext.BaseDirectory, "FilesMate.SearchHost.exe");
             var start = new ProcessStartInfo(exe) { UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden, RedirectStandardInput = true, RedirectStandardOutput = true };
-            foreach (var arg in new[] { "--native-office-preview", Path.GetFullPath(path), parent.ToString(), Environment.ProcessId.ToString(), string.Join(",", handlers) }) start.ArgumentList.Add(arg);
+            foreach (var arg in FilesMate.Core.Configuration.RuntimeProfile.ForExecutable(exe,
+                ["--native-office-preview", Path.GetFullPath(path), parent.ToString(), Environment.ProcessId.ToString(), string.Join(",", handlers)]))
+                start.ArgumentList.Add(arg);
             var process = Process.Start(start) ?? throw new IOException("Native preview process did not start.");
             session._process = process;
             session._commandPump = session.SendCommandsAsync(process);

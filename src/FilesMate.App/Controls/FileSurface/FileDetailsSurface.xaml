@@ -62,12 +62,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <DataTemplate x:Key="RowTemplate">
-            <local:FileRow />
-        </DataTemplate>
-        <DataTemplate x:Key="TileTemplate">
-            <local:FileTile />
-        </DataTemplate>
     </UserControl.Resources>
     <Grid Background="Transparent">
         <Grid.RowDefinitions>
@@ -245,6 +239,7 @@
         </ScrollViewer>
         <ScrollViewer
             x:Name="Scroller"
+            IsDeferredScrollingEnabled="False"
             Grid.Row="1"
             Background="Transparent"
             HorizontalSnapPointsType="None"
@@ -254,8 +249,7 @@
             <ItemsRepeater
                 x:Name="Repeater"
                 HorizontalCacheLength="0"
-                ItemTemplate="{StaticResource TileTemplate}"
-                VerticalCacheLength="1"
+                VerticalCacheLength="0.25"
                 ElementPrepared="Repeater_ElementPrepared"
                 ElementClearing="Repeater_ElementClearing">
                 <ItemsRepeater.Layout>
@@ -270,7 +264,9 @@
                 </ItemsRepeater.Layout>
             </ItemsRepeater>
         </ScrollViewer>
+        <!-- Standalone bars have no ScrollViewer to select a visible indicator. -->
         <ScrollBar x:Name="ListColumnScroller" Grid.Row="2" Orientation="Horizontal"
+                   IndicatorMode="MouseIndicator" MinHeight="16"
                    Minimum="0" SmallChange="1" LargeChange="1" IsTabStop="False"
                    Visibility="Collapsed" ValueChanged="ListColumnScroller_ValueChanged" />
         <Border
@@ -288,25 +284,24 @@
             VerticalAlignment="Top"
             BorderBrush="{ThemeResource FilesMate.Selection.AccentBrush}"
             BorderThickness="1"
-            Background="{ThemeResource FilesMate.Selection.AccentBrush}"
-            Opacity="0.12"
+            Background="{ThemeResource SystemControlHighlightListAccentLowBrush}"
             IsHitTestVisible="False"
             Visibility="Collapsed" />
         <Grid x:Name="AlphabetOverlay" Grid.Row="1" Width="220" IsTabStop="True" HorizontalAlignment="Right" Visibility="Collapsed">
             <Border x:Name="AlphabetTrack" Width="24" HorizontalAlignment="Right" Background="Transparent" CornerRadius="8">
                 <Grid Margin="0,8">
                     <Border x:Name="AlphabetRange" Width="12" VerticalAlignment="Top" CornerRadius="6"
-                            Background="{ThemeResource FilesMate.Selection.AccentBrush}" Opacity="0.25" IsHitTestVisible="False" Visibility="Collapsed" />
+                            Background="{ThemeResource FilesMate.Selection.AccentBrush}" Opacity="{ThemeResource FilesMate.Alphabet.RangeOpacity}" IsHitTestVisible="False" Visibility="Collapsed" />
                     <Border x:Name="AlphabetThumb" Width="4" Height="24" VerticalAlignment="Top" CornerRadius="2"
                             Background="{ThemeResource FilesMate.Text.SecondaryBrush}" IsHitTestVisible="False" />
                 </Grid>
             </Border>
             <Border x:Name="AlphabetLetters" Width="34" Margin="0,4,28,4" HorizontalAlignment="Right" CornerRadius="10"
-                    Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource FilesMate.Divider.Brush}" BorderThickness="1" Visibility="Collapsed">
+                    Background="{ThemeResource FilesMate.Menu.BackgroundBrush}" BorderBrush="{ThemeResource FilesMate.Divider.Brush}" BorderThickness="1" Visibility="Collapsed">
                 <Grid x:Name="AlphabetList" Margin="2" />
             </Border>
             <Border x:Name="AlphabetChoices" Width="120" Margin="0,0,62,0" HorizontalAlignment="Right" VerticalAlignment="Top"
-                    Padding="4" CornerRadius="10" Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    Padding="4" CornerRadius="10" Background="{ThemeResource FilesMate.Menu.BackgroundBrush}"
                     BorderBrush="{ThemeResource FilesMate.Divider.Brush}" BorderThickness="1" Visibility="Collapsed">
                 <StackPanel x:Name="AlphabetChoiceList" />
             </Border>

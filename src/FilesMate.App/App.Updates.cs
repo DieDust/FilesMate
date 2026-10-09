@@ -24,7 +24,7 @@ public partial class App
         }
     }
 
-    internal static bool CanInstallUpdate() => !FileOperationLifetime.IsBusy
+    internal static bool CanInstallUpdate() => !HasPendingUserWork
         && Current is App app && app._windows.All(window => window.CanInstallUpdate);
 
     internal static void CloseForUpdate()
