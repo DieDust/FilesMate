@@ -7,17 +7,32 @@
   <p><img src="https://img.shields.io/badge/Windows_11-x64-0078D4" alt="Windows 11 x64" /> <img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache 2.0" /> <img src="https://img.shields.io/badge/status-preview-orange" alt="Preview software" /></p>
 </div>
 
-![FilesMate dark workspace with tabs, breadcrumb navigation and file details](docs/images/workspace-dark.png)
+![FilesMate 1.1.210 with demonstration files (Chinese interface)](docs/images/workspace-1.1.210.png)
 
 Browse folders in two or three panes, keep common locations in favorites, and collect files in the shelf before moving them. Preview documents and media as you browse, check names before a batch rename, and use global search after closing the main window.
 
 ## Download and get started
 
-1. Download the **win-x64 installer** from [GitHub Releases](https://github.com/DieDust/FilesMate/releases).
-2. Install on **Windows 11 22H2 (build 22621) or later, x64**. The installer includes the .NET runtime. This build does not support Windows 10 or ARM64.
-3. Choose optional features in the first-run guide. Configure indexing and the background search shortcut in **Settings → Search**.
+Choose the [installer (~83 MiB)](https://github.com/DieDust/FilesMate/releases/download/v1.1.210-preview.1/FilesMate-Setup-1.1.210-preview.1-win-x64.exe) or [portable ZIP (~170 MiB)](https://github.com/DieDust/FilesMate/releases/download/v1.1.210-preview.1/FilesMate-Portable-1.1.210-preview.1-win-x64.zip) from [1.1.210-preview.1](https://github.com/DieDust/FilesMate/releases/tag/v1.1.210-preview.1). Both include .NET and WinUI runtimes and require **Windows 11 22H2 (build 22621) or later, x64**. WebView2 Runtime is required for PDF and HTML previews.
 
-Already installed? Open **Settings → About → Check for updates**. Updates use the project's HTTPS server with a signed manifest and installer hash verification. This is preview software; see [known limitations](docs/public-release.md).
+For the installer, follow the setup guide and configure indexing in **Settings → Search**. Installed copies update through **Settings → About → Check for updates**, using the existing HTTPS server with a signed manifest and installer hash verification.
+
+For the portable ZIP, extract it to a writable folder and run **FilesMate.App.exe**. Settings, indexes and temporary data stay in the adjacent **data** folder. To update, close the portable app, replace its program files and keep **data**. Portable copies use manual ZIP updates and skip folder associations and login startup by default.
+
+## New in 1.1.210-preview.1
+
+- Add a recursive folder view with relative paths and sorting within branches.
+- Add combined folder filters for names, types/extensions, dates and sizes, with current-folder or recursive scope.
+- Add skin presets, color editing and import/export; improve appearance persistence and previews shared with global search.
+- Improve toolbar ordering, visibility and edit previews, along with menus, breadcrumbs and selection feedback.
+- Improve document-preview theming, cancellation and resource cleanup.
+- Allow undo backups to be disabled; group replacement backups by parent folder and operation batch while retaining old-backup compatibility.
+- Add a portable ZIP with an independent adjacent data folder; update by replacing program files and keeping data.
+
+Known limitation: expanding large recursive trees and fast scrolling can still cause noticeable delays.
+Known dependency risk: NPOI 2.7.6 retains ImageSharp 2.1.11 with three High and two Moderate security advisories involving particular image-processing paths: out-of-bounds access, excessive memory allocation and a non-progressing loop. These vulnerabilities are not fixed in this release. The release owner accepted deferring the upgrade; audit findings remain visible.
+
+[Release verification](docs/verification/2026-10-09-release-1.1.210.md)
 
 ## Features
 
@@ -31,29 +46,17 @@ The built-in engine also handles supported encrypted archives and multi-volume s
 
 Keep folders open in tabs, or choose a two- or three-pane layout. The compact picker offers horizontal, vertical, and asymmetric arrangements; select the active layout again to return to a single pane. Reopen a closed tab with `Ctrl+Shift+T` and restore tabs at startup. Idle-tab hibernation is configurable.
 
-![Two folders open side by side](docs/images/dual-pane.png)
-
-![Three folders in a layout with a large left pane](docs/images/three-pane.png)
-
 ### Independent global search
 
 With background search enabled, press **Alt+Space** by default to search indexed filenames and applications. Filter by type, preview supported files, or jump to their folder. The search process can stay open when you close the file manager; its shortcut, residency and login startup are configurable.
 
 Search covers **filenames and applications**. Categories appear directly in a scrollable row, and **View more** opens a full search tab with location, type, size, date, and advanced filters. You choose the index scope; the file manager builds and refreshes the index.
 
-![Global search showing matching project files](docs/images/global-search.png)
-
-![Search results with location, type, size and date filters](docs/images/search-page.png)
-
 ### Media thumbnails, folder covers and previews
 
 Switch to **Large icons** to recognize images and supported videos from their thumbnails. Folders can show an automatic cover taken from their contents; choose a cover from an image or video inside the folder through **Folder appearance**, or restore the automatic cover. Thumbnail sizes are adjustable. Video thumbnails depend on Windows format and codec support.
 
-![Image and video thumbnails alongside folders with visual covers](docs/images/media-thumbnails.png)
-
 Use **Alt+P** for the side preview, or **Space** for quick preview. Inspect text and code, images, PDF, Markdown and supported Office formats without repeatedly opening another application. Format support and conversion behavior depend on the file and installed Windows components.
-
-![JSON preview beside the file list](docs/images/document-preview.png)
 
 ### Favorites and groups
 
@@ -76,10 +79,6 @@ Select several items and press **F2**. Choose a naming rule, inspect original an
 ### Appearance and workspace settings
 
 Choose light, dark or system theme; adjust glass transparency, accent color and layered or unified surfaces. Use FilesMate icons or Windows file-association icons. Customize home sections, bookmarks, tags and folder views. **English, Simplified Chinese and Japanese** are included; changing the language automatically restarts the app after transfers finish and restores tabs.
-
-![FilesMate light theme](docs/images/workspace-light.png)
-
-![Appearance settings in the refreshed dark theme](docs/images/appearance.png)
 
 <details>
 <summary>More everyday tools</summary>
@@ -121,13 +120,15 @@ For reproducible bugs, [open an issue](https://github.com/DieDust/FilesMate/issu
 
 Use **Windows 11 x64**, **PowerShell 7**, the **.NET 10 SDK** selected by `global.json`, and Windows/WinUI build prerequisites. Packaging additionally needs Inno Setup 6.
 
+This preview retains the five ImageSharp 2.1.11 advisories described in [the release verification record](docs/verification/2026-10-09-release-1.1.210.md). Default build/test scripts keep strict audit errors. The packaging command explicitly accepts only those findings and leaves the audit enabled; review the risk record before using it.
+
 ```powershell
 git clone https://github.com/DieDust/FilesMate.git
 cd FilesMate
 pwsh ./scripts/build.ps1 -Configuration Release
 pwsh ./scripts/test.ps1 -Configuration Release
 # Optional: create a self-contained installer
-pwsh ./scripts/package.ps1
+pwsh ./scripts/package.ps1 -IncludePortable -AllowLegacyImageSharpRisk
 ```
 
 Build in a separate checkout if your installation uses a development output directory. No update-signing private key is needed to build or package. Forks distributing updates must use their own feed and signing identity; see [updates](docs/updates.md).

@@ -4,6 +4,10 @@
 
 Use the established 1.1.81–1.1.83 GitHub release format: an English installer link, system requirements, and a Changes list, followed by separate `<details>` sections for Simplified Chinese and Japanese. Give each language the same concrete user-facing changes and its own installer link. Keep build logs, test counts, and verification reports in this document and the verification records rather than in the release body.
 
+## 1.1.210-preview.1 — 2026-10-09
+
+Installer and portable ZIP are published with cumulative feature changes since 1.1.133. The actual packages, portable isolation and preview worker were checked; the five retained ImageSharp advisories and recursive-view delays remain disclosed. See [the exact verification scope and package hashes](verification/2026-10-09-release-1.1.210.md).
+
 ## 1.1.133-preview.1 — 2026-10-01
 
 - The independent public source export builds with zero warnings and errors. App 1092, Core 183, Integration 20, and Windows platform 373 tests pass (1668 total). Bounded PDF layout and both resource checks also pass.

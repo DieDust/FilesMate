@@ -4,9 +4,32 @@
 
 FilesMate は、日常のファイル操作に使う Windows 向けファイルマネージャーです。タブ、2・3 ペイン表示、ファイル名検索、ドキュメントのプレビュー、お気に入りバー、フォルダーごとの表示設定に対応しています。
 
-![新しいダークテーマの FilesMate](docs/images/workspace-ja.png)
+![FilesMate 1.1.210 の実画面とデモファイル（中国語 UI）](docs/images/workspace-1.1.210.png)
 
 現在はプレビュー版です。Windows 11 22H2（ビルド 22621）以降の x64 環境が必要です。Windows 10 と ARM64 は、このインストーラーではサポートしていません。
+
+## ダウンロードと使い方
+
+[1.1.210-preview.1](https://github.com/DieDust/FilesMate/releases/tag/v1.1.210-preview.1) から[インストーラー（約 83 MiB）](https://github.com/DieDust/FilesMate/releases/download/v1.1.210-preview.1/FilesMate-Setup-1.1.210-preview.1-win-x64.exe)または[ポータブル ZIP（約 170 MiB）](https://github.com/DieDust/FilesMate/releases/download/v1.1.210-preview.1/FilesMate-Portable-1.1.210-preview.1-win-x64.zip)を選べます。どちらも .NET と WinUI ランタイムを含み、**Windows 11 22H2（ビルド 22621）以降の x64** が必要です。PDF と HTML のプレビューには WebView2 ランタイムが必要です。
+
+インストール版は **設定 → バージョン情報 → 更新を確認** で更新できます。既存の HTTPS サーバーから署名付きマニフェストを取得し、インストーラーのハッシュを検証します。
+
+ポータブル版は書き込み可能な場所に展開して **FilesMate.App.exe** を起動します。設定、インデックス、一時データは隣の **data** フォルダーに保存します。更新時はアプリを閉じ、**data** を残してプログラムを置き換えます。更新は ZIP で手動で行い、フォルダー関連付けとログイン時の起動は既定で行いません。
+
+## 1.1.210-preview.1 の更新
+
+- 相対パス表示と分岐内の並べ替えに対応した再帰フォルダービューを追加しました。
+- 名前、種類や拡張子、日付、サイズを組み合わせるフィルターと、現在のフォルダー・再帰範囲の切り替えを追加しました。
+- スキンのプリセット、配色編集、インポート・エクスポートを追加し、外観の保存とグローバル検索のプレビュー連携を改善しました。
+- ツールバーの並び順、表示設定、編集プレビューと、メニュー、パンくず、選択時の表示を改善しました。
+- 文書プレビューのテーマ、キャンセル、リソース解放を改善しました。
+- 元に戻すためのバックアップを無効にでき、同じ親フォルダーのバックアップを操作ごとにまとめます。従来のバックアップとの互換性を維持します。
+- 独立した data フォルダーを使うポータブル ZIP を追加しました。更新時は data を残してプログラムを置き換えます。
+
+既知の制限：大きな再帰ツリーの展開や高速スクロールでは、目立つ遅延が残ります。
+既知の依存関係のリスク：NPOI 2.7.6 が利用する ImageSharp 2.1.11 には、高危険度三件と中危険度二件の既知の脆弱性があります。特定の画像処理で範囲外アクセス、過剰なメモリー確保、停止しないループが発生します。本リリースでは未修正です。更新の延期を承認し、監査と警告を維持しています。
+
+[検証範囲と残る制限](docs/verification/2026-10-09-release-1.1.210.md)
 
 ## 表示言語
 
@@ -20,13 +43,11 @@ FilesMate は、日常のファイル操作に使う Windows 向けファイル�
 - 選択したファイルは Space でプレビューできます。対応形式や互換プレビューの条件は、[プレビュー版の説明](installer/Preview-Readme.ja.txt)をご覧ください。
 - 外観、透明度、表示する列、ホーム画面のセクションなどを調整できます。
 
-![左側が大きい 3 ペインのレイアウト](docs/images/three-pane-ja.png)
-
-![カテゴリを直接選べるグローバル検索](docs/images/global-search-ja.png)
-
 ## ビルドとテスト
 
 PowerShell 7、`global.json` が指定する .NET 10 SDK、およびプロジェクトが参照する WinUI ビルド依存関係を使用します。
+
+このプレビューは ImageSharp 2.1.11 の既知の警告五件を維持します。[検証記録](docs/verification/2026-10-09-release-1.1.210.md)を確認してください。通常のビルド・テストでは監査警告をエラーとして扱います。以下のパッケージコマンドはこの五件だけを明示的に許容し、監査を有効に保ちます。
 
 ```powershell
 pwsh ./scripts/build.ps1 -Configuration Release
@@ -36,7 +57,7 @@ pwsh ./scripts/test.ps1 -Configuration Release
 インストーラーの作成には Inno Setup 6 が必要です。
 
 ```powershell
-pwsh ./scripts/package.ps1
+pwsh ./scripts/package.ps1 -IncludePortable -AllowLegacyImageSharpRisk
 ```
 
 作成したインストーラーには実行環境が含まれるため、利用者が .NET SDK をインストールする必要はありません。
