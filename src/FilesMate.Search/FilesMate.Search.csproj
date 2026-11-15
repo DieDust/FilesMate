@@ -9,7 +9,7 @@
     <InternalsVisibleTo Include="FilesMate.App" />
     <InternalsVisibleTo Include="FilesMate.SearchHost" />
     <InternalsVisibleTo Include="FilesMate.App.Tests" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="11.0.0" />
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
   </ItemGroup>
 </Project>
